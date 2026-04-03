@@ -592,7 +592,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             float spawnZoneWidth = NPC.width / 2f - 16f;
             float spawnZoneHeight = NPC.height - 32f;
             Vector2 spawnPosition = new(NPC.Center.X + Main.rand.NextFloat(-spawnZoneWidth, spawnZoneWidth), NPC.Bottom.Y - Main.rand.NextFloat(spawnZoneHeight));
-            NPC.NewNPCAction(NPC.GetSource_FromAI(), spawnPosition, type, action: n =>
+            NPC.NewNPCAction(SourceAI, spawnPosition, type, action: n =>
             {
                 n.velocity = new Vector2(Main.rand.NextFloat(-1.5f, 1.5f), Main.rand.NextFloat(-3f, 3f));
                 n.ai[0] = -1000 * Main.rand.Next(3);
@@ -617,7 +617,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
             if (NPC.LifeRatio < JewelRubyLifeRatio && !JewelRubySpawned)
             {
-                NPC.NewNPCAction<KingSlimeJewelRuby>(NPC.GetSource_FromAI(), GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
+                NPC.NewNPCAction<KingSlimeJewelRuby>(SourceAI, GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
                 {
                     SpawnJewelAction(n);
                     JewelRuby = n;
@@ -626,7 +626,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             }
             if (NPC.LifeRatio < JewelEmeraldLifeRatio && !JewelEmeraldSpawned)
             {
-                NPC.NewNPCAction<KingSlimeJewelEmerald>(NPC.GetSource_FromAI(), GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
+                NPC.NewNPCAction<KingSlimeJewelEmerald>(SourceAI, GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
                 {
                     SpawnJewelAction(n);
                     JewelEmerald = n;
@@ -635,7 +635,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             }
             if (NPC.LifeRatio < JewelSapphireLifeRatio && !JewelSapphireSpawned)
             {
-                NPC.NewNPCAction<KingSlimeJewelSapphire>(NPC.GetSource_FromAI(), GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
+                NPC.NewNPCAction<KingSlimeJewelSapphire>(SourceAI, GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
                 {
                     SpawnJewelAction(n);
                     JewelSapphire = n;
@@ -916,7 +916,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     TeleportScaleMultiplier -= MathHelper.Lerp(Ultra ? 0.016f : 0.013f, Ultra ? 0.02f : 0.015f, NPC.LostLifeRatio);
                     if (StopHorizontalMovement() && TeleportScaleMultiplier <= 0.2f)
                     {
-                        Gore.NewGoreAction(NPC.GetSource_FromAI(), NPC.Center + new Vector2(-40f, -NPC.height / 2f), NPC.velocity, GoreID.KingSlimeCrown, g => g.timeLeft += 180);
+                        Gore.NewGoreAction(SourceAI, NPC.Center + new Vector2(-40f, -NPC.height / 2f), NPC.velocity, GoreID.KingSlimeCrown, g => g.timeLeft += 180);
                         NPC.Bottom = TeleportDestination;
                         CurrentAttackPhase = 2;
                     }
@@ -969,7 +969,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                         KingSlime_Handler.CreateDustFromJewelTo(JewelSapphire, position, Main.zenithWorld ? DustID.GemTopaz : DustID.GemSapphire);
                         KingSlime_Handler.Kill(JewelSapphire);
                     }
-                    NPC.NewNPCAction<KingSlimeJewelRainbow>(NPC.GetSource_FromAI(), GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
+                    NPC.NewNPCAction<KingSlimeJewelRainbow>(SourceAI, GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
                     {
                         SpawnJewelAction(n);
                         JewelRainbow = n;

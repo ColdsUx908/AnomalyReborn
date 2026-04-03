@@ -1370,6 +1370,8 @@ public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
         set => NPC.localAI[3] = value.f;
     }
 
+    public IEntitySource SourceAI => NPC.GetSource_FromAI();
+
     #region 虚成员
     #region Defaults
     /// <inheritdoc cref="GlobalNPC.SetDefaultsFromNetId"/>
@@ -1671,6 +1673,8 @@ public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile
         get => (Union32)Projectile.localAI[2];
         set => Projectile.localAI[2] = value.f;
     }
+
+    public IEntitySource SourceAI => Projectile.GetSource_FromAI();
 
     #region 虚成员
     #region Lifetime

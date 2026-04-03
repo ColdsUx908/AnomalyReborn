@@ -1,4 +1,5 @@
-﻿using CalamityMod.Events;
+﻿using System.Diagnostics.CodeAnalysis;
+using CalamityMod.Events;
 using CalamityMod.NPCs;
 using CalamityMod.NPCs.CeaselessVoid;
 using CalamityMod.NPCs.ExoMechs.Apollo;
@@ -6,7 +7,6 @@ using CalamityMod.NPCs.ExoMechs.Artemis;
 using CalamityMod.NPCs.Ravager;
 using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.UI;
-using System.Diagnostics.CodeAnalysis;
 using Terraria.GameContent.Events;
 using Terraria.GameContent.UI.BigProgressBar;
 using Transoceanic.Framework.Helpers.AbstractionHandlers;

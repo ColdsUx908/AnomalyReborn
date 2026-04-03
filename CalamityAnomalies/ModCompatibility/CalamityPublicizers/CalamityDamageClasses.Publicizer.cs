@@ -1,8 +1,8 @@
 ﻿using CalamityMod;
 
-namespace CalamityAnomalies.Publicizers.CalamityMod;
+namespace CalamityAnomalies.ModCompatibility.CalamityPublicizers;
 
-public record TrueMeleeDamageClass_Publicizer : PublicizerNoSource<TrueMeleeDamageClass>
+internal record TrueMeleeDamageClass_Publicizer : Publicizer<TrueMeleeDamageClass>
 {
     // Instance (static field)
     public static readonly FieldInfo s_f_Instance = GetStaticField("Instance");
@@ -13,7 +13,7 @@ public record TrueMeleeDamageClass_Publicizer : PublicizerNoSource<TrueMeleeDama
     }
 }
 
-public record TrueMeleeNoSpeedDamageClass_Publicizer : PublicizerNoSource<TrueMeleeNoSpeedDamageClass>
+internal record TrueMeleeNoSpeedDamageClass_Publicizer : Publicizer<TrueMeleeNoSpeedDamageClass>
 {
     // Instance (static field)
     public static readonly FieldInfo s_f_Instance = GetStaticField("Instance");
@@ -24,7 +24,7 @@ public record TrueMeleeNoSpeedDamageClass_Publicizer : PublicizerNoSource<TrueMe
     }
 }
 
-public record AverageDamageClass_Publicizer : PublicizerNoSource<AverageDamageClass>
+internal record AverageDamageClass_Publicizer : Publicizer<AverageDamageClass>
 {
     // Instance (static field)
     public static readonly FieldInfo s_f_Instance = GetStaticField("Instance");

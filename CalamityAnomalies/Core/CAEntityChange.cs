@@ -1,10 +1,10 @@
-﻿using CalamityAnomalies.Visuals;
+﻿using System.Collections.ObjectModel;
+using CalamityAnomalies.Visuals;
 using CalamityMod.CalPlayer;
 using CalamityMod.Items;
 using CalamityMod.NPCs;
 using CalamityMod.Projectiles;
 using MonoMod.RuntimeDetour;
-using System.Collections.ObjectModel;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Transoceanic.Framework.Helpers.AbstractionHandlers;

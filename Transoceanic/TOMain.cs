@@ -1,7 +1,3 @@
-global using Microsoft.Xna.Framework;
-global using Microsoft.Xna.Framework.Graphics;
-global using ReLogic.Content;
-global using ReLogic.Graphics;
 global using System;
 global using System.Collections.Generic;
 global using System.Collections.ObjectModel;
@@ -13,6 +9,10 @@ global using System.Runtime.CompilerServices;
 global using System.Runtime.InteropServices;
 global using System.Text;
 global using System.Text.RegularExpressions;
+global using Microsoft.Xna.Framework;
+global using Microsoft.Xna.Framework.Graphics;
+global using ReLogic.Content;
+global using ReLogic.Graphics;
 global using Terraria;
 global using Terraria.DataStructures;
 global using Terraria.Enums;
@@ -34,7 +34,7 @@ global using ZLinq;
 
 namespace Transoceanic;
 
-// Developed by ColdsUx
+// Designed by ColdsUx
 
 public sealed class TOMain : Mod
 {

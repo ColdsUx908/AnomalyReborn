@@ -138,7 +138,7 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
             float singleRadian = MathHelper.ToRadians(HasEnteredPhase2 ? (Main.zenithWorld ? 18f : 9f) : (Main.zenithWorld ? 18f : Ultra ? 13.5f : 12f));
             float radian = singleRadian * (amount - 1);
             float initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
-            Projectile.RotatedProj<JewelProjectile>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(Main.zenithWorld ? 16f : 15f, initialRotation), JewelProjectileDamage, 0f, Main.myPlayer, p =>
+            Projectile.RotatedProj<JewelProjectile>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(Main.zenithWorld ? 16f : 15f, initialRotation), JewelProjectileDamage, 0f, Main.myPlayer, p =>
             {
                 if (Main.zenithWorld)
                 {
@@ -154,7 +154,7 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
 
                 int type = Main.zenithWorld ? ModContent.ProjectileType<KingSlimeJewelEmeraldShadow>() : ModContent.ProjectileType<JewelProjectile>();
                 int amount1 = Ultra ? 7 : Main.zenithWorld ? 9 : 5;
-                Projectile.RotatedProj(amount1, MathHelper.TwoPi / amount1, NPC.GetSource_FromAI(), NPC.Center, NPC.GetVelocityTowards(NPC.PlayerTarget, Main.zenithWorld ? 13.5f : 18f), type, JewelProjectileDamage, 0f, Main.myPlayer, BuffedRubyProjectileAction);
+                Projectile.RotatedProj(amount1, MathHelper.TwoPi / amount1, SourceAI, NPC.Center, NPC.GetVelocityTowards(NPC.PlayerTarget, Main.zenithWorld ? 13.5f : 18f), type, JewelProjectileDamage, 0f, Main.myPlayer, BuffedRubyProjectileAction);
             }
 
             void BuffedRubyProjectileAction(Projectile p)

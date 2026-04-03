@@ -265,7 +265,7 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
                     int amount = Ultra ? 4 : 3;
                     for (int i = -amount; i <= amount; i++)
                     {
-                        Projectile.NewProjectileAction(NPC.GetSource_FromAI(), NPC.Center + offset * 24f * i + velocityUnit * (60f - 20f * Math.Abs(i)), velocityUnit * chargeSpeed, type, KingSlimeJewelEmeraldCloneDamage, 0f, Main.myPlayer, p =>
+                        Projectile.NewProjectileAction(SourceAI, NPC.Center + offset * 24f * i + velocityUnit * (60f - 20f * Math.Abs(i)), velocityUnit * chargeSpeed, type, KingSlimeJewelEmeraldCloneDamage, 0f, Main.myPlayer, p =>
                         {
                             if (Main.zenithWorld)
                                 p.timeLeft = 60;

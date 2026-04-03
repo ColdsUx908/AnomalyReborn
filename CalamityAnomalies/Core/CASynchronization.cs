@@ -1,6 +1,6 @@
 ﻿namespace CalamityAnomalies.Core;
 
-public sealed class CANetSync : ICALoader
+public sealed class CASynchronization : ICALoader
 {
     public static class ID
     {

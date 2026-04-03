@@ -241,7 +241,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                                         }
                                     }
 
-                                    NPC.NewNPCAction(NPC.GetSource_FromAI(), beeSpawnLocation, spawnType, action: n =>
+                                    NPC.NewNPCAction(SourceAI, beeSpawnLocation, spawnType, action: n =>
                                     {
                                         n.velocity = n.GetVelocityTowards(Target.Center, 5f);
 
@@ -441,7 +441,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                             Vector2 stingerVelocity = new(stingerTargetX, stingerTargetY);
                             int type = Main.zenithWorld ? (Phase1_3 ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.FlamingWood) : ProjectileID.QueenBeeStinger;
 
-                            Projectile.NewProjectileAction(NPC.GetSource_FromAI(), stingerSpawnLocation, stingerVelocity, type, StingerDamage, 0f, action: p =>
+                            Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation, stingerVelocity, type, StingerDamage, 0f, action: p =>
                             {
                                 p.ai[1] = (Main.zenithWorld && Phase1_3) ? Target.position.Y : 0f;
                                 p.timeLeft = 1200;
@@ -453,7 +453,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                                 int numExtraStingers = Phase2_3 ? 4 : 2;
                                 for (int i = 0; i < numExtraStingers; i++)
                                 {
-                                    Projectile.NewProjectileAction(NPC.GetSource_FromAI(), stingerSpawnLocation + Main.rand.NextVector2CircularEdge(16f, 16f) * (i + 1), stingerVelocity * MathHelper.Lerp(0.75f, 1f, i / (float)numExtraStingers), type, StingerDamage, 0f, action: p =>
+                                    Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation + Main.rand.NextVector2CircularEdge(16f, 16f) * (i + 1), stingerVelocity * MathHelper.Lerp(0.75f, 1f, i / (float)numExtraStingers), type, StingerDamage, 0f, action: p =>
                                     {
                                         p.timeLeft = 1200;
                                         p.extraUpdates = 1;

@@ -2,7 +2,7 @@
 
 #pragma warning disable IDE1006
 
-public sealed record NPC_HitModifiers_Publicizer(NPC.HitModifiers Source) : Publicizer<NPC.HitModifiers>(Source)
+public sealed record NPC_HitModifiers_Publicizer(NPC.HitModifiers Source) : InstancedPublicizer<NPC.HitModifiers>(Source)
 {
     // _damageLimit (instance field)
     public static readonly FieldInfo i_f__damageLimit = GetInstanceField("_damageLimit");

@@ -91,6 +91,8 @@ public abstract class TOModNPC : ModNPC, ITOModNPC
         get => (Union32)NPC.localAI[3];
         set => NPC.localAI[3] = value.f;
     }
+
+    public IEntitySource SourceAI => NPC.GetSource_FromAI();
 }
 
 public interface ITOModProjectile
@@ -159,6 +161,8 @@ public abstract class TOModProjectile : ModProjectile, ITOModProjectile
         get => (Union32)Projectile.localAI[2];
         set => Projectile.localAI[2] = value.f;
     }
+
+    public IEntitySource SourceAI => Projectile.GetSource_FromAI();
 }
 
 public interface ITOModItem

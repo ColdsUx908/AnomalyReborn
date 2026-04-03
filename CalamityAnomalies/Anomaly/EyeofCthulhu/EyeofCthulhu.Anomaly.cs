@@ -546,23 +546,26 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
         void TrySpawnZenithSpinServant(int timer)
         {
-            int servantSpawnGateValue = 5;
+            int servantSpawnGateValue = 4;
             if (Main.zenithWorld && timer >= 0 && timer % servantSpawnGateValue == 0)
             {
-                PolarVector2 servantVelocity = Main.rand.NextPolarVector2(6f, 7.5f);
+                PolarVector2 servantVelocity = Main.rand.NextPolarVector2(6f, 7f);
 
-                NPC.NewNPCAction(NPC.GetSource_FromAI(), NPC.Center, NPCID.ServantofCthulhu, action: n =>
+                if (CurrentPhase == Phase.PhaseChange_1To2 || NPC.ActiveNPCs.Count(n => n.type == NPCID.ServantofCthulhu && n.Master == NPC) < 30)
                 {
-                    n.velocity = servantVelocity;
-                    n.Master = NPC;
-                    ServantSpawnCounter++;
-                    SpawnServantAction(n);
-                });
+                    NPC.NewNPCAction(SourceAI, NPC.Center, NPCID.ServantofCthulhu, action: n =>
+                    {
+                        n.velocity = servantVelocity;
+                        n.Master = NPC;
+                        ServantSpawnCounter++;
+                        SpawnServantAction(n);
+                    });
+                }
 
                 if (TOSharedData.LegendaryMode)
                 {
                     float radian = MathHelper.ToRadians(15);
-                    Projectile.RotatedProj(3, radian, NPC.GetSource_FromAI(), NPC.Center, servantVelocity.RotatedBy(-radian) * 4f, ProjectileID.BloodNautilusShot, BloodDamage, 0f, action: p => p.timeLeft = Main.rand.Next(180, 240));
+                    Projectile.RotatedProj(3, radian, SourceAI, NPC.Center, servantVelocity.RotatedBy(-radian) * 3f, ProjectileID.BloodNautilusShot, BloodDamage, 0f, action: p => p.timeLeft = Main.rand.Next(180, 240));
                 }
             }
         }
@@ -677,7 +680,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         {
                             if (shouldSpawnServant)
                             {
-                                NPC.NewNPCAction(NPC.GetSource_FromAI(), servantSpawnCenter, NPCID.ServantofCthulhu, action: n =>
+                                NPC.NewNPCAction(SourceAI, servantSpawnCenter, NPCID.ServantofCthulhu, action: n =>
                                 {
                                     n.velocity = servantSpawnVelocity;
                                     n.Master = NPC;
@@ -801,7 +804,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     for (int phase2Gore = 0; phase2Gore < 2; phase2Gore++)
                     {
                         for (int type = 8; type >= 6; type--)
-                            Gore.NewGoreAction(NPC.GetSource_FromAI(), NPC.position, new Vector2(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-6f, 6f)), type);
+                            Gore.NewGoreAction(SourceAI, NPC.position, new Vector2(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-6f, 6f)), type);
                     }
 
                     for (int i = 0; i < 20; i++)
@@ -815,7 +818,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
                         for (int i = 0; i < 2; i++)
                         {
-                            NPC.NewNPCAction<BloodlettingServant>(NPC.GetSource_FromAI(), NPC.Center, NPC.whoAmI, n =>
+                            NPC.NewNPCAction<BloodlettingServant>(SourceAI, NPC.Center, NPC.whoAmI, n =>
                             {
                                 n.Master = NPC;
                                 BloodlettingServant modN = n.GetModNPC<BloodlettingServant>();
@@ -840,7 +843,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         //GFB世界：生成三个流血仆从（原灾厄AI）
 
                         for (int i = 0; i < 3; i++)
-                            NPC.NewNPCAction<BloodlettingServant>(NPC.GetSource_FromAI(), NPC.Center, NPC.whoAmI, n => n.velocity = Main.rand.NextPolarVector2(10f, 15f));
+                            NPC.NewNPCAction<BloodlettingServant>(SourceAI, NPC.Center, NPC.whoAmI, n => n.velocity = Main.rand.NextPolarVector2(10f, 15f));
                     }
 
                     CurrentAttackPhase = 1;
@@ -1260,12 +1263,12 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                                 if (bloodlettingServantCount < 3)
                                 {
                                     SoundEngine.PlaySound(SoundID.NPCDeath13, NPC.Center);
-                                    NPC.NewNPCAction<BloodlettingServant>(NPC.GetSource_FromAI(), NPC.Center, NPC.whoAmI, n => n.velocity = NPC.velocity);
+                                    NPC.NewNPCAction<BloodlettingServant>(SourceAI, NPC.Center, NPC.whoAmI, n => n.velocity = NPC.velocity);
                                 }
                                 else if (servantCount < 10)
                                 {
                                     SoundEngine.PlaySound(SoundID.NPCDeath13, NPC.Center);
-                                    NPC.NewNPCAction(NPC.GetSource_FromAI(), NPC.Center, NPCID.ServantofCthulhu, NPC.whoAmI, n => n.velocity = NPC.velocity);
+                                    NPC.NewNPCAction(SourceAI, NPC.Center, NPCID.ServantofCthulhu, NPC.whoAmI, n => n.velocity = NPC.velocity);
                                 }
                             }
                         }
@@ -1334,9 +1337,12 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
             void ZenithSpin()
             {
+                StopMovement();
                 NPC.rotation += PhaseChange_1To2_RotationSpeedFunction.Process(Timer1);
 
-                TrySpawnZenithSpinServant(Timer1 - 1);
+                TrySpawnZenithSpinServant(Timer1);
+
+                Timer1++;
 
                 switch (Timer1)
                 {
@@ -1347,7 +1353,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         for (int phase2Gore = 0; phase2Gore < 2; phase2Gore++)
                         {
                             for (int type = 8; type >= 6; type--)
-                                Gore.NewGoreAction(NPC.GetSource_FromAI(), NPC.position, new Vector2(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-6f, 6f)), type);
+                                Gore.NewGoreAction(SourceAI, NPC.position, new Vector2(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-6f, 6f)), type);
                         }
 
                         for (int i = 0; i < 20; i++)
@@ -1363,7 +1369,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
                         int bloodlettingServantSpawnAmount = 3 - bloodLettingServantCount;
                         for (int i = 0; i < bloodlettingServantSpawnAmount; i++)
-                            NPC.NewNPCAction<BloodlettingServant>(NPC.GetSource_FromAI(), NPC.Center, NPC.whoAmI, n => n.velocity = Main.rand.NextPolarVector2(10f, 15f));
+                            NPC.NewNPCAction<BloodlettingServant>(SourceAI, NPC.Center, NPC.whoAmI, n => n.velocity = Main.rand.NextPolarVector2(10f, 15f));
                         break;
                     case PhaseChangeTime_1To2:
                         SelectNextAttack();
@@ -1377,10 +1383,9 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                 {
                     Timer3++;
 
-                    float flamethrowerSpeed = 10f * Math.Clamp(Timer3 / 60f, 0f, 1f);
-                    Vector2 flamethrowerVelocity = new PolarVector2(flamethrowerSpeed, ActualRotation) + NPC.velocity * 0.45f;
-                    flamethrowerVelocity.Modulus = Math.Min(flamethrowerVelocity.Modulus, MathF.Sqrt(NPC.velocity.LengthSquared() + 16));
-                    Projectile.NewProjectileAction<BloodFlame>(NPC.GetSource_FromAI(), NPC.Center + new PolarVector2(ProjectileOffset, ActualRotation), flamethrowerVelocity, BloodFlameDamage, 0f, Main.myPlayer);
+                    float flamethrowerSpeed = (CurrentBehavior == Behavior.Phase2_ZenithSpin ? 16f : 10f) * Math.Clamp(Timer3 / 60f, 0f, 1f);
+                    Vector2 flamethrowerVelocity = new PolarVector2(flamethrowerSpeed, ActualRotation) + NPC.velocity * 0.5f;
+                    Projectile.NewProjectileAction<BloodFlame>(SourceAI, NPC.Center + new PolarVector2(ProjectileOffset, ActualRotation), flamethrowerVelocity, BloodFlameDamage, 0f, Main.myPlayer);
                 }
             }
         }
@@ -1426,7 +1431,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     Phase3ArenaCenter = NPC.Center;
                     SendCommandToServants(BehaviorCommand_Servant.GetToArenaPosition);
                     if (TOSharedData.GeneralClient)
-                        Projectile.NewProjectileAction<EyeofCthulhuArena>(NPC.GetSource_FromAI(), Phase3ArenaCenter, Vector2.Zero, ArenaDamage, 0f, action: p =>
+                        Projectile.NewProjectileAction<EyeofCthulhuArena>(SourceAI, Phase3ArenaCenter, Vector2.Zero, ArenaDamage, 0f, action: p =>
                         {
                             p.GetModProjectile<EyeofCthulhuArena>().Master = NPC;
                             ArenaProjectile = p;
@@ -1440,7 +1445,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         Dust.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.Blood, new Vector2(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-6f, 6f)));
 
                     //生成冲击波清除克苏鲁之仆；使竞技场激活，流血仆从脱战（通过弹幕实现），克苏鲁之仆死亡
-                    Projectile.NewProjectileAction<BloodShockwave>(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, 100, 0f, action: p =>
+                    Projectile.NewProjectileAction<BloodShockwave>(SourceAI, NPC.Center, Vector2.Zero, 100, 0f, action: p =>
                     {
                         p.scale = 0f;
                         BloodShockwave modP = p.GetModProjectile<BloodShockwave>();
@@ -1586,7 +1591,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     {
                         Vector2 flamethrowerVelocity = NPC.velocity * 1.15f;
                         flamethrowerVelocity.Modulus += 2f;
-                        Projectile.NewProjectileAction<BloodFlame>(NPC.GetSource_FromAI(), NPC.Center + new PolarVector2(ProjectileOffset, ActualRotation), flamethrowerVelocity, BloodFlameDamage, 0f, Main.myPlayer);
+                        Projectile.NewProjectileAction<BloodFlame>(SourceAI, NPC.Center + new PolarVector2(ProjectileOffset, ActualRotation), flamethrowerVelocity, BloodFlameDamage, 0f, Main.myPlayer);
                     }
 
                     if (CurrentAttackPhase == firstAttackPhase && NPC.Distance(ArenaProjectile.Center) <= ArenaModProjectile.RealArenaRadius + 20f)
@@ -1812,7 +1817,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             Timer3++;
                             int projectileSpawnGateValue = 7;
                             if (Phase3_2 && IsInPhase3Arena && Timer3 % projectileSpawnGateValue == 0)
-                                Projectile.RotatedProj(2, MathHelper.Pi, NPC.GetSource_FromAI(), NPC.Center, NPC.velocity.RotatedBy(MathHelper.PiOver2) * 0.25f, ProjectileID.BloodShot, BloodDamage, 0f, action: p => p.timeLeft = 100);
+                                Projectile.RotatedProj(2, MathHelper.Pi, SourceAI, NPC.Center, NPC.velocity.RotatedBy(MathHelper.PiOver2) * 0.25f, ProjectileID.BloodShot, BloodDamage, 0f, action: p => p.timeLeft = 100);
 
                             if (Timer2 == 1) //下一次攻击的粒子预警
                             {
@@ -1935,7 +1940,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                                     PolarVector2 originalvelocity = ArenaModProjectile.GetEyeCenterDirection(UsedEyeIndex1) * (ArenaModProjectile.RealArenaRadius - 15f) / 90f * 0.5f;
                                     int projectileAmount2 = 64;
                                     float singleRadian2 = MathHelper.TwoPi / projectileAmount2;
-                                    Projectile.RotatedProj(projectileAmount2, singleRadian2, NPC.GetSource_FromAI(), NPC.Center, originalvelocity, ProjectileID.BloodShot, BloodDamage, 0f, action: p => p.timeLeft = 90);
+                                    Projectile.RotatedProj(projectileAmount2, singleRadian2, SourceAI, NPC.Center, originalvelocity, ProjectileID.BloodShot, BloodDamage, 0f, action: p => p.timeLeft = 90);
                                 }
 
                                 CheckPhaseChange();
@@ -1949,7 +1954,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                 {
                     PolarVector2 originalvelocity = ArenaModProjectile.GetEyeCenterDirection(UsedEyeIndex1) * (ArenaModProjectile.RealArenaRadius - 15f) * EyeofCthulhu_Handler.EyeShapeHelper.InnerVelocityMultiplier / EyeofCthulhu_Handler.EyeSpinPhase2Time;
                     float singleRadian = MathHelper.TwoPi / projectileAmount;
-                    Projectile.RotatedProj(projectileAmount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, originalvelocity, ProjectileID.BloodShot, BloodDamage, 0f, action: p =>
+                    Projectile.RotatedProj(projectileAmount, singleRadian, SourceAI, NPC.Center, originalvelocity, ProjectileID.BloodShot, BloodDamage, 0f, action: p =>
                     {
                         p.Anomaly.OverrideType = (int)OverrideType_BloodShot.AnomalyEyeofCthulhu_EyeSpin2;
 

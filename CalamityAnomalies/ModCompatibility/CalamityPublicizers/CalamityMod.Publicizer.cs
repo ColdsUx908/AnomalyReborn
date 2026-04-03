@@ -1,8 +1,8 @@
-﻿namespace CalamityAnomalies.Publicizers.CalamityMod;
+﻿namespace CalamityAnomalies.ModCompatibility.CalamityPublicizers;
 
 #pragma warning disable IDE1006
 
-public record CalamityMod_Publicizer(CalamityMod_ Source) : Publicizer<CalamityMod_>(Source)
+internal record CalamityMod_Publicizer(CalamityMod_ Source) : InstancedPublicizer<CalamityMod_>(Source)
 {
     // _Instance (static field)
     public static readonly FieldInfo s_f__Instance = GetStaticField("_Instance");

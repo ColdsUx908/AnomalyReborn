@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.Framework.RuntimeEditing;
+﻿namespace Transoceanic.Framework.Abstractions;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class CustomManipulatorPrefixAttribute : Attribute

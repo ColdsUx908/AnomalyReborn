@@ -1,7 +1,7 @@
-﻿using MonoMod.RuntimeDetour;
-using System.ComponentModel;
+﻿using System.ComponentModel;
+using MonoMod.RuntimeDetour;
 
-namespace Transoceanic.Framework.RuntimeEditing;
+namespace Transoceanic.Framework.Abstractions;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class CustomDetourSourceAttribute : Attribute

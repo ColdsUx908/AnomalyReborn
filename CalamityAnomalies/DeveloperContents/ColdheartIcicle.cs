@@ -1,7 +1,6 @@
 ﻿#define CELESS_DEV
 
 using CalamityAnomalies.GameContents;
-using CalamityAnomalies.Publicizers.CalamityMod;
 using CalamityMod.NPCs.DevourerofGods;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework.Input;

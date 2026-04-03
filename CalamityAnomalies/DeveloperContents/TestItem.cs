@@ -2,7 +2,6 @@
 
 #if TEST_DEV
 using CalamityAnomalies.GameContents;
-using CalamityAnomalies.Publicizers.CalamityMod;
 
 namespace CalamityAnomalies.DeveloperContents;
 

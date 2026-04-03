@@ -54,25 +54,25 @@ public sealed class CASharedData : ModSystem
         get;
         internal set
         {
-            if (field ^ value)
+            if (field == value)
+                return;
+
+            if (!value && AnomalyUltramundane)
+                AnomalyModeHandler.DisableUltra();
+
+            field = value;
+
+            if (TOSharedData.GeneralClient)
             {
-                if (!value && AnomalyUltramundane)
-                    AnomalyModeHandler.DisableUltra();
-
-                field = value;
-
-                if (TOSharedData.GeneralClient)
-                {
-                    string key = AnomalyLocalizationPrefix + "AnomalyMode." + (value ? "Activate" : "Deactivate") + (Main.zenithWorld ? "_GFB" : "");
-                    Color color = Main.zenithWorld ? GFBColor : MainColor;
-                    TOLocalizationUtils.ChatLocalizedText(key, color);
-                }
-                if (value)
-                    AnomalyModeHandler.CheckAnomalyUltra();
-
-                CANetSync.SyncAnomalyMode();
-                OnAnomalyModeToggled?.Invoke(value);
+                string key = AnomalyLocalizationPrefix + "AnomalyMode." + (value ? "Activate" : "Deactivate") + (Main.zenithWorld ? "_GFB" : "");
+                Color color = Main.zenithWorld ? GFBColor : MainColor;
+                TOLocalizationUtils.ChatLocalizedText(key, color);
             }
+            if (value)
+                AnomalyModeHandler.CheckAnomalyUltra();
+
+            CASynchronization.SyncAnomalyMode();
+            OnAnomalyModeToggled?.Invoke(value);
         }
     }
     public static event Action<bool> OnAnomalyModeToggled;
@@ -85,14 +85,14 @@ public sealed class CASharedData : ModSystem
         get;
         internal set
         {
-            if (field ^ value)
-            {
-                field = value;
-                if (TOSharedData.GeneralClient)
-                    TOLocalizationUtils.ChatLocalizedText(AnomalyLocalizationPrefix + "AnomalyMode." + (value ? "UltraActivate" : "UltraDeactivate"), Color.Red);
+            if (field == value)
+                return;
 
-                OnAnomalyUltramundaneToggled?.Invoke(value);
-            }
+            field = value;
+            if (TOSharedData.GeneralClient)
+                TOLocalizationUtils.ChatLocalizedText(AnomalyLocalizationPrefix + "AnomalyMode." + (value ? "UltraActivate" : "UltraDeactivate"), Color.Red);
+
+            OnAnomalyUltramundaneToggled?.Invoke(value);
         }
 
     }

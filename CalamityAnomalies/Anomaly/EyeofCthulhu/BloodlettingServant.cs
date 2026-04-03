@@ -35,7 +35,7 @@ public partial class BloodlettingServant : CAModNPC
     {
         Main.npcFrameCount[Type] = 4;
         NPCID.Sets.TrailingMode[Type] = 3;
-        NPCID.Sets.TrailCacheLength[Type] = 5;
+        NPCID.Sets.TrailCacheLength[Type] = 10;
         NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, new NPCID.Sets.NPCBestiaryDrawModifiers() { Hide = true });
     }
 
@@ -398,7 +398,7 @@ public partial class BloodlettingServant : CAModNPC
                 {
                     int projType = ProjectileID.BloodShot;
                     int projDamage = BloodDamage_Zenith;
-                    int proj = Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center + projectileVelocity.SafeNormalize(Vector2.UnitY) * 10f, projectileVelocity, projType, projDamage, 0f, Main.myPlayer);
+                    int proj = Projectile.NewProjectile(SourceAI, NPC.Center + projectileVelocity.SafeNormalize(Vector2.UnitY) * 10f, projectileVelocity, projType, projDamage, 0f, Main.myPlayer);
                     Main.projectile[proj].timeLeft = 600;
                 }
 

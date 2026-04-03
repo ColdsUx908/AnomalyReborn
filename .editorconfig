@@ -315,5 +315,8 @@ dotnet_diagnostic.CA2211.severity = silent
 # IDE0044: 添加只读修饰符
 dotnet_diagnostic.IDE0044.severity = silent
 
+# CA1707: 标识符不应包含下划线
+dotnet_diagnostic.CA1707.severity = none
+
 [*.vb]
 dotnet_diagnostic.CA1047.severity = warning

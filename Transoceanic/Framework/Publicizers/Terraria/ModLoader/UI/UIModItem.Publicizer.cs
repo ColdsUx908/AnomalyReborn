@@ -1,6 +1,7 @@
 ﻿namespace Transoceanic.Framework.Publicizers.Terraria.ModLoader.UI;
 
 #pragma warning disable IDE1006
+
 public record UIModItem_Publicizer : IPublicizer
 {
     public static Type C_type => field ??= TOReflectionUtils.GetTerrariaType("UIModItem");

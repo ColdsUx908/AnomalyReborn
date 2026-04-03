@@ -1,6 +1,6 @@
-﻿using MonoMod.Cil;
+﻿using System.Collections;
+using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
-using System.Collections;
 
 namespace Transoceanic.Framework.RuntimeEditing;
 

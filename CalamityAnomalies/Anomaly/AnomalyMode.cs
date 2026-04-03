@@ -176,5 +176,5 @@ public sealed class AnomalyModePlayerSync : CAPlayerBehavior
 {
     public override decimal Priority => 100m;
 
-    public override void OnEnterWorld() => CANetSync.SyncAnomalyModeFromServer();
+    public override void OnEnterWorld() => CASynchronization.SyncAnomalyModeFromServer();
 }

@@ -5,35 +5,6 @@ namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
 
 public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
 {
-    #region 嵌套类型
-    public sealed class ArenaStatModifier
-    {
-        public enum ModifierType
-        {
-            ArenaRadius,
-            RotationSpeed,
-        }
-
-        public ModifierType Type;
-        public int LifeTime;
-        public bool Linear;
-        public float Delta;
-        public int Timer;
-
-        public float LifeCompletion => (float)Timer / LifeTime;
-
-        public ArenaStatModifier(ModifierType type, int lifeTime, float delta, bool linear = false)
-        {
-            Type = type;
-            LifeTime = lifeTime;
-            Delta = delta;
-            Linear = linear;
-        }
-
-        public float GetDeltaValue() => (Linear ? LifeCompletion : TOMathUtils.Interpolation.QuadraticEaseInOut(LifeCompletion)) * Delta;
-    }
-    #endregion 嵌套类型
-
     #region 数据
     public static int EyeSpawnGateValue => 15;
     public static float NormalRotationSpeed => 0.005f;
@@ -433,7 +404,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
 
                             Vector2 velocity = (destination - offsetCenter) / EyeofCthulhu_Handler.EyeSpinPhase2Time;
 
-                            Projectile.NewProjectileAction(Projectile.GetSource_FromAI(), offsetCenter, velocity, ProjectileID.BloodShot, EyeofCthulhu_Anomaly.BloodDamage, 0f, action: p =>
+                            Projectile.NewProjectileAction(SourceAI, offsetCenter, velocity, ProjectileID.BloodShot, EyeofCthulhu_Anomaly.BloodDamage, 0f, action: p =>
                             {
                                 p.Anomaly.OverrideType = (int)OverrideType_BloodShot.AnomalyEyeofCthulhu_EyeSpin;
                                 p.timeLeft = 120;
@@ -456,7 +427,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
 
                                 Vector2 velocity2 = (destination2 - offsetCenter) / EyeofCthulhu_Handler.EyeSpinPhase2Time;
 
-                                Projectile.NewProjectileAction(Projectile.GetSource_FromAI(), offsetCenter, velocity2, ProjectileID.BloodShot, EyeofCthulhu_Anomaly.BloodDamage, 0f, action: p =>
+                                Projectile.NewProjectileAction(SourceAI, offsetCenter, velocity2, ProjectileID.BloodShot, EyeofCthulhu_Anomaly.BloodDamage, 0f, action: p =>
                                 {
                                     p.Anomaly.OverrideType = (int)OverrideType_BloodShot.AnomalyEyeofCthulhu_EyeSpin;
                                     p.timeLeft = 120;

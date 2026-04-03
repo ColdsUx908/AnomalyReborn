@@ -5,7 +5,7 @@ public interface IPublicizer
     public static abstract Type C_type { get; }
 }
 
-public abstract record PublicizerNoSource<T> : IPublicizer
+public abstract record Publicizer<T> : IPublicizer
 {
     public static Type C_type { get; } = typeof(T);
 
@@ -47,9 +47,4 @@ public abstract record PublicizerNoSource<T> : IPublicizer
     public static EventInfo GetStaticEvent(string name) => PublicizerHandler.GetStaticEvent(C_type, name);
 }
 
-public abstract class InstancedPublicizer(object Source)
-{
-    public object Source { get; } = Source;
-}
-
-public abstract record Publicizer<T>(T Source) : PublicizerNoSource<T>;
+public abstract record InstancedPublicizer<T>(T Source) : Publicizer<T>;

@@ -1,21 +1,22 @@
 //不全局引用任何灾厄命名空间
 
-global using CalamityAnomalies.Assets;
-global using CalamityAnomalies.Core;
-global using CalamityAnomalies.GlobalInstances;
-global using CalamityAnomalies.ModCompatibility.CalamityBridge;
-global using CalamityAnomalies.Visual;
-global using Microsoft.Xna.Framework;
-global using Microsoft.Xna.Framework.Graphics;
-global using ReLogic.Content;
-global using ReLogic.Graphics;
-global using ReLogic.Utilities;
 global using System;
 global using System.Collections.Generic;
 global using System.IO;
 global using System.Linq;
 global using System.Reflection;
 global using System.Runtime.CompilerServices;
+global using CalamityAnomalies.Assets;
+global using CalamityAnomalies.Core;
+global using CalamityAnomalies.GlobalInstances;
+global using CalamityAnomalies.ModCompatibility;
+global using CalamityAnomalies.ModCompatibility.CalamityBridge;
+global using CalamityAnomalies.ModCompatibility.CalamityPublicizers;
+global using CalamityAnomalies.Visual;
+global using Microsoft.Xna.Framework;
+global using Microsoft.Xna.Framework.Graphics;
+global using ReLogic.Content;
+global using ReLogic.Graphics;
 global using Terraria;
 global using Terraria.Audio;
 global using Terraria.DataStructures;
@@ -34,11 +35,10 @@ global using Transoceanic.Framework;
 global using Transoceanic.Framework.Abstractions;
 global using Transoceanic.Framework.Helpers;
 global using ZLinq;
-using CalamityAnomalies.ModCompatibility;
 
 namespace CalamityAnomalies;
 
-// Developed by ColdsUx
+// Designed by ColdsUx
 
 public sealed class CAMain : Mod, IContentLoader
 {
@@ -100,5 +100,5 @@ public sealed class CAMain : Mod, IContentLoader
 
     public override object Call(params object[] args) => CAModCall.Call(args);
 
-    public override void HandlePacket(BinaryReader reader, int whoAmI) => CANetSync.HandlePacket(this, reader, whoAmI);
+    public override void HandlePacket(BinaryReader reader, int whoAmI) => CASynchronization.HandlePacket(this, reader, whoAmI);
 }

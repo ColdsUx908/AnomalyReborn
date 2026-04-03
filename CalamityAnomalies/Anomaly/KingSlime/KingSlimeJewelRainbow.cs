@@ -154,7 +154,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
 
         if (!HasInitialized)
         {
-            Projectile.NewProjectileAction<RainbowShockwave>(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, 100, 0f, action: p =>
+            Projectile.NewProjectileAction<RainbowShockwave>(SourceAI, NPC.Center, Vector2.Zero, 100, 0f, action: p =>
             {
                 p.scale = 0f;
                 RainbowShockwave modP = p.GetModProjectile<RainbowShockwave>();
@@ -250,9 +250,9 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
 
-                    Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), NPC.Center, velocity, JewelProjectileRainbowDamage, 0f);
+                    Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity, JewelProjectileRainbowDamage, 0f);
                     if (ShouldUseBuffedAttack)
-                        Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), NPC.Center, velocity * -1f, JewelProjectileRainbowDamage, 0f);
+                        Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity * -1f, JewelProjectileRainbowDamage, 0f);
                 }
             }
 
@@ -283,9 +283,9 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
 
-                    Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), NPC.Center, velocity, JewelProjectileRainbowDamage, 0f);
+                    Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity, JewelProjectileRainbowDamage, 0f);
                     if (ShouldUseBuffedAttack)
-                        Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), NPC.Center, velocity * -1f, JewelProjectileRainbowDamage, 0f);
+                        Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity * -1f, JewelProjectileRainbowDamage, 0f);
                 }
             }
 
@@ -328,9 +328,9 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
 
-                    Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), NPC.Center, velocity, JewelProjectileRainbowDamage, 0f);
+                    Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity, JewelProjectileRainbowDamage, 0f);
                     if (ShouldUseBuffedAttack)
-                        Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), NPC.Center, velocity * -1f, JewelProjectileRainbowDamage, 0f);
+                        Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity * -1f, JewelProjectileRainbowDamage, 0f);
                 }
             }
         }
@@ -392,10 +392,10 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                     switch (attackNum)
                     {
                         case <= 5:
-                            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(20f - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f);
+                            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(20f - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f);
                             break;
                         case 6 or 7:
-                            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(7f - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f);
+                            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(7f - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f);
                             break;
                     }
                 }

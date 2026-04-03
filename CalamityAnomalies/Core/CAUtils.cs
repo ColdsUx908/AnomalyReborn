@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies.Publicizers.CalamityMod;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace CalamityAnomalies.Core;
 
