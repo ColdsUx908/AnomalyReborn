@@ -18,14 +18,14 @@ public sealed class CAGlobalProjectile : GlobalProjectile
     public readonly Union32[] AnomalyAI32 = new Union32[AISlot];
     public readonly Union64[] AnomalyAI64 = new Union64[AISlot2];
 
-    public ref Bits32 AIChanged32 => ref AnomalyAI32[^1].bits;
-    public ref Bits64 AIChanged64 => ref AnomalyAI64[^1].bits;
+    public ref BitArray32 AIChanged32 => ref AnomalyAI32[^1].bits;
+    public ref BitArray64 AIChanged64 => ref AnomalyAI64[^1].bits;
 
     private readonly Union32[] InternalAnomalyAI32 = new Union32[AISlot];
     private readonly Union64[] InternalAnomalyAI64 = new Union64[AISlot2];
 
-    private ref Bits32 InternalAIChanged32 => ref InternalAnomalyAI32[^1].bits;
-    private ref Bits64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;
+    private ref BitArray32 InternalAIChanged32 => ref InternalAnomalyAI32[^1].bits;
+    private ref BitArray64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;
 
     public override GlobalProjectile Clone(Projectile from, Projectile to)
     {
@@ -144,6 +144,19 @@ public sealed class CAGlobalProjectile : GlobalProjectile
             {
                 InternalAnomalyAI32[0].bits[0] = value;
                 InternalAIChanged32[0] = true;
+            }
+        }
+    }
+
+    public int OverrideType
+    {
+        get => InternalAnomalyAI32[1].i;
+        set
+        {
+            if (InternalAnomalyAI32[1].i != value)
+            {
+                InternalAnomalyAI32[1].i = value;
+                InternalAIChanged32[1] = true;
             }
         }
     }

@@ -1,52 +1,12 @@
 ﻿namespace Transoceanic.GlobalInstances;
 
-public sealed class TOPlayer : ModPlayer, IResourceLoader
+public sealed class TOPlayer : ModPlayer, IContentLoader
 {
     public CommandCallInfo CommandCallInfo { get; internal set; }
 
     public int GameTime { get; internal set; }
 
     public bool IsHurt;
-
-    /*
-    /// <summary>
-    /// 透支生命值。
-    /// </summary>
-    public double OverdrawnLife
-    {
-        get;
-        set
-        {
-            if ((field = Math.Max(value, 0)) > Player.statLife)
-                PlayerOverdrawnLife.KillPlayer(Player);
-        }
-    }
-
-    /// <summary>
-    /// 透支生命值的最大值，可超过玩家生命值，默认为零。
-    /// </summary>
-    public double OverdrawnLifeLimit;
-
-    /// <summary>
-    /// 透支生命值回复指数，默认为2。
-    /// </summary>
-    public double OverdrawnLifeRegenExponent = 2;
-
-    /// <summary>
-    /// 每帧回复透支生命值的最大值，默认为0.5。
-    /// </summary>
-    public double OverdrawnLifeRegenLimit = 0.5;
-
-    /// <summary>
-    /// 透支生命值回复乘数，默认为1。
-    /// </summary>
-    public double OverdrawnLifeRegenMult = 1;
-
-    /// <summary>
-    /// 回复透支生命值所需的最小未受击时间，默认为600。
-    /// </summary>
-    public int OverdrawnLifeRegenThreshold = 600;
-    */
 
     public int TimeWithoutHurt;
 
@@ -56,6 +16,35 @@ public sealed class TOPlayer : ModPlayer, IResourceLoader
     /// </summary>
     public AddableFloat[] WingTimeMaxMultipliers = new AddableFloat[5];
 
+    public Vector2? ScreenFocusCenter;
+
+    /// <summary>
+    /// 屏幕位置更改的插值参数，限制在区间 [0, 1] 内。
+    /// <br/>值越大，表示屏幕的真实中心将越靠近 <see cref="ScreenFocusCenter"/>。
+    /// <br/>当 <see cref="ScreenFocusCenter"/> 不为 <see langword="null"/> 时每帧递减 0.1，否则自动设为 0。
+    /// </summary>
+    public float ScreenFocusInterpolant
+    {
+        get;
+        set => field = Math.Clamp(value, 0f, 1f);
+    }
+
+    /// <summary>
+    /// 当此值大于0时，<see cref="ScreenFocusInterpolant"/> 将不会更新。
+    /// 每帧递减。
+    /// </summary>
+    public int ScreenFocusHoldInPlaceTime
+    {
+        get;
+        set => field = Math.Max(value, 0);
+    }
+
+    public float CurrentScreenShakePower
+    {
+        get;
+        set => field = Math.Max(value, 0f);
+    }
+
     public override ModPlayer Clone(Player newEntity)
     {
         TOPlayer clone = (TOPlayer)base.Clone(newEntity);
@@ -63,16 +52,12 @@ public sealed class TOPlayer : ModPlayer, IResourceLoader
         clone.CommandCallInfo = CommandCallInfo;
         clone.GameTime = GameTime;
         clone.IsHurt = IsHurt;
-        /*
-        clone.OverdrawnLife = OverdrawnLife;
-        clone.OverdrawnLifeLimit = OverdrawnLifeLimit;
-        clone.OverdrawnLifeRegenExponent = OverdrawnLifeRegenExponent;
-        clone.OverdrawnLifeRegenLimit = OverdrawnLifeRegenLimit;
-        clone.OverdrawnLifeRegenMult = OverdrawnLifeRegenMult;
-        clone.OverdrawnLifeRegenThreshold = OverdrawnLifeRegenThreshold;
-        */
         clone.TimeWithoutHurt = TimeWithoutHurt;
         Array.Copy(WingTimeMaxMultipliers, clone.WingTimeMaxMultipliers, WingTimeMaxMultipliers.Length);
+        clone.ScreenFocusCenter = ScreenFocusCenter;
+        clone.ScreenFocusInterpolant = ScreenFocusInterpolant;
+        clone.ScreenFocusHoldInPlaceTime = ScreenFocusHoldInPlaceTime;
+        clone.CurrentScreenShakePower = CurrentScreenShakePower;
 
         return clone;
     }

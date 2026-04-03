@@ -9,27 +9,31 @@
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
 	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<NoWarn>1701;1702;649</NoWarn>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<NoWarn>1701;1702;649</NoWarn>
+	</PropertyGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\Transoceanic\Transoceanic.csproj" />
+		<AdditionalFiles Remove="Tweaks\**" />
+		<Compile Remove="Tweaks\**" />
+		<EmbeddedResource Remove="Tweaks\**" />
+		<None Remove="Tweaks\**" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Reference Include="CalamityMod">
-	    <HintPath>..\..\CalamityMod\CalamityMod.dll</HintPath>
-	  </Reference>
+		<ProjectReference Include="..\Transoceanic\Transoceanic.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Tweaks\1.1.Beginning\" />
-	  <Folder Include="Tweaks\3.3.PostCultist\" />
-	  <Folder Include="Tweaks\4.2.PostProvidence\" />
-	  <Folder Include="Tweaks\1.2.PostEvil1\" />
-	  <Folder Include="Tweaks\1.3.PostEvil2\" />
-	  <Folder Include="Tweaks\2.1.Hardmode\" />
-	  <Folder Include="Tweaks\2.2.PostMechanics\" />
-	  <Folder Include="Tweaks\3.1.PostPlantera\" />
-	  <Folder Include="Tweaks\6.Focus\" />
+		<Reference Include="CalamityMod">
+			<HintPath>..\..\CalamityMod\CalamityMod.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="ZLinq" Version="1.4.9" />
+		<PackageReference Include="ZLinq" Version="1.5.5" />
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="CalamityEditing\" />
 	</ItemGroup>
 
 	<!-- References -->

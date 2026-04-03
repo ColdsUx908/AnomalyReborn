@@ -1,3 +1,7 @@
+global using Microsoft.Xna.Framework;
+global using Microsoft.Xna.Framework.Graphics;
+global using ReLogic.Content;
+global using ReLogic.Graphics;
 global using System;
 global using System.Collections.Generic;
 global using System.Collections.ObjectModel;
@@ -9,10 +13,6 @@ global using System.Runtime.CompilerServices;
 global using System.Runtime.InteropServices;
 global using System.Text;
 global using System.Text.RegularExpressions;
-global using Microsoft.Xna.Framework;
-global using Microsoft.Xna.Framework.Graphics;
-global using ReLogic.Content;
-global using ReLogic.Graphics;
 global using Terraria;
 global using Terraria.DataStructures;
 global using Terraria.Enums;
@@ -26,12 +26,10 @@ global using Terraria.ModLoader.Core;
 global using Terraria.ModLoader.IO;
 global using Terraria.Utilities;
 global using Transoceanic.Commands;
-global using Transoceanic.Core;
-global using Transoceanic.Data;
-global using Transoceanic.Extensions;
+global using Transoceanic.Framework.Abstractions;
+global using Transoceanic.Framework.Helpers;
+global using Transoceanic.Framework.Helpers.AbstractionHandlers;
 global using Transoceanic.GlobalInstances;
-global using Transoceanic.Localization;
-global using Transoceanic.Utilities;
 global using ZLinq;
 
 namespace Transoceanic;
@@ -58,7 +56,7 @@ public sealed class TOMain : Mod
             Instance = this;
 
             foreach (ITOLoader loader in
-                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(Assembly).AsValueEnumerable()
+                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOReflectionUtils.Assembly).AsValueEnumerable()
                 orderby pair.Type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                 select pair.Instance)
             {
@@ -74,9 +72,9 @@ public sealed class TOMain : Mod
 
     public override void PostSetupContent()
     {
-        foreach (IResourceLoader loader in
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IResourceLoader>().AsValueEnumerable()
-            orderby pair.type.GetMethod(nameof(IResourceLoader.PostSetupContent), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+        foreach (IContentLoader loader in
+            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>().AsValueEnumerable()
+            orderby pair.type.GetMethod(nameof(IContentLoader.PostSetupContent), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
             select pair.instance)
         {
             loader.PostSetupContent();
@@ -97,7 +95,8 @@ public sealed class TOMain : Mod
                 {
                     loader.Unload();
                 }
-                SyncEnabled = false;
+
+                TOSharedData.SyncEnabled = false;
                 Instance = null;
             }
         }
@@ -108,47 +107,4 @@ public sealed class TOMain : Mod
             Unloading = false;
         }
     }
-
-    public static bool DEBUG { get; internal set; } =
-#if DEBUG
-        true;
-#else
-        false;
-#endif
-
-
-    private const string DEBUGPlayerName = "~ColdsUx";
-
-    public static bool IsDEBUGPlayer(Player player) => DEBUG && player.name == DEBUGPlayerName;
-
-    /// <summary>
-    /// 是否启用Transoceanic模组内置的网络同步。
-    /// <br/>由于Transoceanic为客户端模组，该选项必须由依赖模组手动开启。
-    /// </summary>
-    public static bool SyncEnabled
-    {
-        get;
-        set
-        {
-            if (field && !value && !Unloading)
-                throw new InvalidOperationException("SyncEnabled cannot be set to false after it has been set to true, unless unloading.");
-            field = value;
-        }
-    }
-
-    public static Assembly Assembly => field ??= Instance.Code;
-    public static Assembly TerrariaAssembly => field ??= typeof(Main).Assembly;
-    public static Dictionary<string, Type[]> TerrariaTypes => field ??= TerrariaAssembly.GetTypes().GroupBy(t => t.Name).ToDictionary(g => g.Key, g => g.ToArray());
-
-    #region Constant
-    public const string ModLocalizationPrefix = "Mods.Transoceanic.";
-    public const string DebugPrefix = ModLocalizationPrefix + "DEBUG.";
-    public const string DebugErrorMessageKey = ModLocalizationPrefix + "DEBUG.ErrorMessage";
-    public const string StringEmptyError = "String cannot be null or whitespace.";
-
-    public static readonly Color TODebugWarnColor = Color.Orange;
-    public static readonly Color TODebugErrorColor = new(0xFF, 0x00, 0x00);
-    public static readonly Color CelestialColor = new(0xAF, 0xFF, 0xFF);
-
-    #endregion Constant
 }

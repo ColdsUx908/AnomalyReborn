@@ -1,6 +1,6 @@
 ﻿namespace CalamityAnomalies.Core;
 
-public static class CANetSync
+public sealed class CANetSync : ICALoader
 {
     public static class ID
     {
@@ -12,24 +12,24 @@ public static class CANetSync
 
     public static void SyncAnomalyMode(int ignoreClient = -1)
     {
-        if (!TOWorld.Multiplayer)
+        if (!TOSharedData.Multiplayer)
             return;
 
         ModPacket packet = GetCAPacket();
         packet.Write(ID.SyncAnomalyMode);
-        packet.Write(CAWorld.Anomaly);
+        packet.Write(CASharedData.Anomaly);
         packet.Send(-1, ignoreClient);
     }
 
     public static void SyncAnomalyModeFromServer(int toClient = -1)
     {
-        if (!TOWorld.Multiplayer)
+        if (!TOSharedData.Multiplayer)
             return;
 
         ModPacket packet = GetCAPacket();
         packet.Write(ID.SyncAnomalyModeFromServer);
         if (Main.dedServ)
-            packet.Write(CAWorld.Anomaly);
+            packet.Write(CASharedData.Anomaly);
         packet.Send(toClient);
     }
 
@@ -39,7 +39,7 @@ public static class CANetSync
         switch (id)
         {
             case ID.SyncAnomalyMode:
-                CAWorld.Anomaly = reader.ReadBoolean();
+                CASharedData.Anomaly = reader.ReadBoolean();
                 if (Main.dedServ)
                     SyncAnomalyMode(whoAmI);
                 break;
@@ -47,8 +47,13 @@ public static class CANetSync
                 if (Main.dedServ)
                     SyncAnomalyModeFromServer(whoAmI);
                 else
-                    CAWorld.Anomaly = reader.ReadBoolean();
+                    CASharedData.Anomaly = reader.ReadBoolean();
                 break;
         }
+    }
+
+    void ICALoader.Load()
+    {
+        TOSharedData.SyncEnabled = true;
     }
 }

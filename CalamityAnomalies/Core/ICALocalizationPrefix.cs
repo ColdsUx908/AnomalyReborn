@@ -24,7 +24,7 @@ public interface ICALocalizationPrefix : ILocalizationPrefix
     public abstract CAGamePhase Phase { get; }
     public abstract string LocalizationName { get; }
 
-    string ILocalizationPrefix.LocalizationPrefix => CAMain.TweakLocalizationPrefix + Phase switch
+    string ILocalizationPrefix.LocalizationPrefix => CASharedData.TweakLocalizationPrefix + Phase switch
     {
         CAGamePhase.Beginning => "1.1.",
         CAGamePhase.PostEvil1 => "1.2.",
@@ -44,3 +44,4 @@ public interface ICALocalizationPrefix : ILocalizationPrefix
         _ => ""
     } + LocalizationName;
 }
+

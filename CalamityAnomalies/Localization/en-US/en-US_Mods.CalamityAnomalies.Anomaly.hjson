@@ -1,23 +1,26 @@
 AnomalyMode: {
-	Anomaly: Anomaly
-	AnomalyShortInfo: "[c/FFCFFF:Extreme]"
-	AnomalyExpandedInfo:
+	Name: Anomaly
+	Name_GFB: Ylamona
+	ShortInfo: '''[c/FFCCFF:"Final challenge after transcending the abyss"]'''
+	ExpandedInfo:
 		'''
 		[c/AFFFFF:Do you think you are worthy of transcending the gods?]
-		[c/AFFFFF:If you crave a challenge beyond Legendary+Death Mode...]
+		[c/AFFFFF:If you crave a challenge beyond Death or Malice...]
 		[c/FF0000:Then...]
 		'''
-	AnomalyActivate: Anomaly is active... are you serious?
-	AnomalyDeactivate: Anomaly is not active; wise choice.
-	AnomalyInvalid: Anomaly is only available in TRUE Master difficulty.
-	AnomalyUltraInvalidNotLegendary: Anomaly Ultramundane is only available in TRUE Legendary difficulty.
-	AnomalyUltraInvalidZenith: Anomaly Ultramundane is not supported in Get fixed boi worlds.
-	AnomalyUltramundaneActivate:
+	Activate: Anomaly is active... are you serious?
+	Activate_GFB: Ylamona is active! Your world is going to be delicious~
+	Deactivate: Anomaly is not active; wise choice.
+	Deactivate_GFB: Ylamona is not active. Don't you want something delicious?
+	Invalid: Anomaly is only available in TRUE Master difficulty.
+	UltraInvalid_NotLegendary: Anomaly Ultramundane is only available in TRUE Legendary difficulty.
+	UltraInvalid_Zenith: Anomaly Ultramundane is not supported in Get fixed boi worlds.
+	UltraActivate:
 		'''
 		Anomaly Ultramundane is fully activated, please make sure you know what you're doing!
 		Note: This difficulty is extremely difficult and only suitable for ALIEN players!
 		'''
-	AnomalyUltramundaneDeactivate:
+	UltraDeactivate:
 		'''
 		Anomaly Ultramundane is back to normal...
 		Did you try it?
@@ -26,7 +29,17 @@ AnomalyMode: {
 
 KingSlime: {
 	GFBSummon: King Slime has cloned itself!
+	KingSlimeJewelEmerald.DisplayName: Emerald Jewel
+	KingSlimeJewelSapphire.DisplayName: Sapphire Jewel
 	KingSlimeJewelRainbow.DisplayName: Rainbow Jewel
-	RainbowShield.DisplayName: Rainbow Shield
+	KingSlimeJewelEmeraldShadow.DisplayName: Emerald Jewel Shadow
+	RainbowShockwave.DisplayName: Rainbow Shockwave
 	JewelProjectileRainbow.DisplayName: Rainbow Bolt
+}
+
+EyeofCthulhu: {
+	BloodlettingServant.DisplayName: Bloodletting Servant
+	BloodFlame.DisplayName: Blood Flame
+	EyeofCthulhuArena.DisplayName: Eye of Cthulhu Arena
+	BloodShockwave.DisplayName: Blood Shockwave
 }

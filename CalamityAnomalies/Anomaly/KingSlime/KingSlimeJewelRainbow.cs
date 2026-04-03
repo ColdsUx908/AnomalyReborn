@@ -1,32 +1,101 @@
-﻿using CalamityMod.Projectiles.Boss;
+﻿using CalamityAnomalies.DataStructures;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
-public sealed class KingSlimeJewelRainbow : CAModNPC
+public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
 {
-    public const float DespawnDistance = 5000f;
-    public const int AttackTypes = 4;
-    public int ShootCooldownTime => (int)MathHelper.Lerp(210f, 180f, NPC.LostLifeRatio);
+    public enum Attack
+    {
+        NormalAttack1 = 1,
+        NormalAttack2 = 2,
+        NormalAttack3 = 3,
+        RingAttack = 4,
+    }
 
-    public int CurrentAttackType
+    public const float DespawnDistance = 5000f;
+    public static int ShootCooldownTime => 120;
+
+    private static readonly ProjectileDamageContainer _jewelProjectileRainbowDamage = new(40, 65, 90, 110, 105, 125);
+    public static int JewelProjectileRainbowDamage => _jewelProjectileRainbowDamage.Value;
+
+    public Attack CurrentAttack
+    {
+        get => (Attack)(int)NPC.ai[0];
+        set => NPC.ai[0] = (int)value;
+    }
+
+    public int AttackCounter
     {
         get => (int)NPC.ai[1];
-        set => NPC.ai[1] = value % AttackTypes;
+        set => NPC.ai[1] = value;
+    }
+
+    public bool HasInitialized
+    {
+        get => AI_Union_2.bits[0];
+        set
+        {
+            Union32 union = AI_Union_2;
+            union.bits[0] = value;
+            AI_Union_2 = union;
+        }
+    }
+
+    public bool ShouldUseBuffedAttack
+    {
+        get => AI_Union_2.bits[1];
+        set
+        {
+            Union32 union = AI_Union_2;
+            union.bits[1] = value;
+            AI_Union_2 = union;
+        }
     }
 
     public bool HasEnteredPhase2
     {
-        get => NPC.ai[2] == 1f;
-        set => NPC.ai[2] = value.ToInt();
+        get => AI_Union_2.bits[2];
+        set
+        {
+            Union32 union = AI_Union_2;
+            union.bits[2] = value;
+            AI_Union_2 = union;
+        }
     }
 
     public bool CanAttack
     {
-        get => NPC.ai[3] != 1f;
-        set => NPC.ai[3] = (!value).ToInt();
+        get => AI_Union_2.bits[2];
+        set
+        {
+            Union32 union = AI_Union_2;
+            union.bits[2] = value;
+            AI_Union_2 = union;
+        }
     }
 
-    public override string Texture => JewelHandler.JewelTexturePath;
+    public bool KingSlimeDead
+    {
+        get => AI_Union_2.bits[3];
+        set
+        {
+            Union32 union = AI_Union_2;
+            union.bits[3] = value;
+            AI_Union_2 = union;
+        }
+    }
+
+    public bool IsAttacking
+    {
+        get => AI_Union_2.bits[4];
+        set
+        {
+            Union32 union = AI_Union_2;
+            union.bits[4] = value;
+            AI_Union_2 = union;
+        }
+    }
+
     public override string LocalizationCategory => "Anomaly.KingSlime";
 
     public override void SetStaticDefaults()
@@ -42,12 +111,11 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
         NPC.width = 28;
         NPC.height = 28;
         NPC.defense = 10;
-        NPC.DR_NERD(0.1f);
 
-        NPC.lifeMax = 600;
+        NPC.lifeMax = 700;
         NPC.ApplyCalamityBossHealthBoost();
 
-        NPC.knockBackResist = 0.5f;
+        NPC.knockBackResist = 0.2f;
         NPC.noGravity = true;
         NPC.noTileCollide = true;
         NPC.HitSound = SoundID.NPCHit5;
@@ -55,11 +123,19 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
         CalamityNPC.VulnerableToSickness = false;
     }
 
+    public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) => NPC.lifeMax = (int)(NPC.lifeMax * balance);
+
     public override void AI()
     {
-        if (!OceanNPC.TryGetMaster(NPCID.KingSlime, out NPC master))
+        if (KingSlimeDead)
         {
-            JewelHandler.Despawn(NPC);
+            KingSlime_Handler.Kill(NPC);
+            return;
+        }
+
+        if (!NPC.TryGetMaster(NPCID.KingSlime, out NPC master))
+        {
+            KingSlime_Handler.Despawn(NPC);
             return;
         }
 
@@ -69,93 +145,266 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
             return;
         }
 
+        KingSlime_Anomaly masterBehavior = new() { _entity = master };
+
         Lighting.AddLight(NPC.Center, 1f, 0f, 0f);
 
         NPC.damage = 0;
         CalamityNPC.CanHaveBossHealthBar = true;
 
+        if (!HasInitialized)
+        {
+            Projectile.NewProjectileAction<RainbowShockwave>(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, 100, 0f, action: p =>
+            {
+                p.scale = 0f;
+                RainbowShockwave modP = p.GetModProjectile<RainbowShockwave>();
+                modP.Jewel = NPC;
+                modP.Master = master;
+            });
+
+            CanAttack = true;
+
+            HasInitialized = true;
+        }
+
         if (CanAttack)
         {
-            JewelHandler.Move(NPC, Target.Center, 15f, 15f, 0.175f, 0.125f, 250f, -250f, -250f, -400f);
-            Timer1++;
+            KingSlime_Handler.Move(NPC, Target.Center, 15f, 15f, 0.175f, 0.125f, 250f, -250f, -250f, -400f);
+            if (!IsAttacking)
+                Timer1++;
         }
         else
         {
-            JewelHandler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.15f, 150f, -150f, 0f, -200f);
-            Timer1 -= 2;
+            KingSlime_Handler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.15f, 150f, -150f, 0f, -200f);
+            Timer2 = Math.Max(Timer2 - 1, 0);
         }
 
         if (Timer1 >= ShootCooldownTime)
         {
             Timer1 = 0;
-            Shoot();
-            SpawnParticle();
+            EnterNextAttack();
         }
+
+        if (CanAttack)
+        {
+            if (IsAttacking)
+            {
+                switch (CurrentAttack)
+                {
+                    case Attack.NormalAttack1:
+                        NormalAttack1();
+                        break;
+                    case Attack.NormalAttack2:
+                        NormalAttack2();
+                        break;
+                    case Attack.NormalAttack3:
+                        NormalAttack3();
+                        break;
+                    case Attack.RingAttack:
+                        RingAttack();
+                        break;
+                }
+            }
+        }
+        else
+            IsAttacking = false;
 
         NPC.netUpdate = true;
 
         return;
 
-        void Shoot()
+        void EnterNextAttack()
         {
-            SoundEngine.PlaySound(SoundID.Item8, NPC.Center);
-            if (!TOWorld.GeneralClient)
-                return;
-
-            bool buffedAttack = NPC.LifeRatio < 0.5f;
-            switch (++CurrentAttackType)
+            CurrentAttack = AttackCounter switch
             {
-                case 0:
-                    {
-                        int amount = 24;
-                        float initialRotation = (Target.Center - NPC.Center).ToRotation();
-                        Projectile.RotatedProj<JewelProjectileRainbow>(amount, MathHelper.TwoPi / amount, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(16.5f, initialRotation), NPC.GetProjectileDamage<JewelProjectile>(), 0f);
-                        for (int i = 0; i < 50; i++)
-                            Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), Target.Center + new Vector2(Main.rand.NextFloat(-2500f, 2500f), Main.rand.NextFloat(-2200f, -900f)), new PolarVector2(Main.rand.NextFloat(9f, 13f), MathHelper.PiOver2 + Main.rand.NextFloat(-TOMathHelper.PiOver8, TOMathHelper.PiOver8)), NPC.GetProjectileDamage<JewelProjectileRainbow>(), 0f);
-                    }
-                    break;
-                case 1 or 2:
-                    {
-                        int amount = 7;
-                        float singleRadian = MathHelper.ToRadians(15f);
-                        float radian = singleRadian * (amount - 1);
-                        float initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
-                        Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(15f, initialRotation), NPC.GetProjectileDamage<JewelProjectileRainbow>(), 0f);
-                    }
-                    break;
-                case 3:
-                    {
-                        int amount = buffedAttack ? 11 : 9;
-                        float singleRadian = MathHelper.ToRadians(17.5f);
-                        float radian = singleRadian * (amount - 1);
-                        float initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
-                        Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(16.5f, initialRotation), NPC.GetProjectileDamage<JewelProjectileRainbow>(), 0f);
-                        amount--;
-                        radian = singleRadian * (amount - 1);
-                        initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
-                        Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(15f, initialRotation), NPC.GetProjectileDamage<JewelProjectileRainbow>(), 0f);
-                    }
-                    break;
+                0 => Attack.NormalAttack1,
+                1 => Attack.NormalAttack2,
+                2 => Attack.NormalAttack3,
+                3 => Attack.RingAttack,
+                _ => Attack.NormalAttack1,
+            };
+            AttackCounter = (AttackCounter + 1) % 4;
+            ShouldUseBuffedAttack = masterBehavior.Phase2_2;
+            IsAttacking = true;
+        }
+
+        void NormalAttack1()
+        {
+            SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
+            for (int i = 0; i < 20; i++)
+                KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
+            KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
+
+            if (TOSharedData.GeneralClient)
+            {
+                int amount = 30;
+                float totalAngle = MathHelper.TwoPi;
+                float singleRadian = totalAngle / amount;
+                Vector2 originalVelocity = (PolarVector2)NPC.GetVelocityTowards(Target, 20f);
+                Vector2 rotatedOriginalVelocity = originalVelocity.RotatedBy(TOMathUtils.PiOver3 * 2);
+                Vector2 rotatedOriginalVelocity2 = rotatedOriginalVelocity.RotatedBy(TOMathUtils.PiOver3 * 2);
+
+                List<Vector2> originalVelocityList = [originalVelocity, rotatedOriginalVelocity, rotatedOriginalVelocity2, originalVelocity];
+
+                for (int i = 0; i < amount; i++)
+                {
+                    Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
+
+                    Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), NPC.Center, velocity, JewelProjectileRainbowDamage, 0f);
+                    if (ShouldUseBuffedAttack)
+                        Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), NPC.Center, velocity * -1f, JewelProjectileRainbowDamage, 0f);
+                }
+            }
+
+            IsAttacking = false;
+        }
+
+        void NormalAttack2()
+        {
+            SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
+            for (int i = 0; i < 20; i++)
+                KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
+            KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
+
+            if (TOSharedData.GeneralClient)
+            {
+                int amount = 60;
+                float totalAngle = MathHelper.TwoPi;
+                float singleRadian = totalAngle / amount;
+                Vector2 originalVelocity = (PolarVector2)NPC.GetVelocityTowards(Target, 20f);
+                Vector2 rotatedOriginalVelocity = originalVelocity.RotatedBy(TOMathUtils.PiOver5 * 4);
+                Vector2 rotatedOriginalVelocity2 = rotatedOriginalVelocity.RotatedBy(TOMathUtils.PiOver5 * 4);
+                Vector2 rotatedOriginalVelocity3 = rotatedOriginalVelocity2.RotatedBy(TOMathUtils.PiOver5 * 4);
+                Vector2 rotatedOriginalVelocity4 = rotatedOriginalVelocity3.RotatedBy(TOMathUtils.PiOver5 * 4);
+
+                List<Vector2> originalVelocityList = [originalVelocity, rotatedOriginalVelocity, rotatedOriginalVelocity2, rotatedOriginalVelocity3, rotatedOriginalVelocity4, originalVelocity];
+
+                for (int i = 0; i < amount; i++)
+                {
+                    Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
+
+                    Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), NPC.Center, velocity, JewelProjectileRainbowDamage, 0f);
+                    if (ShouldUseBuffedAttack)
+                        Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), NPC.Center, velocity * -1f, JewelProjectileRainbowDamage, 0f);
+                }
+            }
+
+            IsAttacking = false;
+        }
+
+        void NormalAttack3()
+        {
+            Timer1++;
+
+            if (TOSharedData.GeneralClient)
+            {
+                if (Timer1 == 1)
+                    NormalAttack3Core();
+                else if (Timer1 == 11)
+                {
+                    NormalAttack3Core(MathHelper.PiOver4);
+                    IsAttacking = false;
+                }
+            }
+
+            void NormalAttack3Core(float offset = 0f)
+            {
+                SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
+                for (int i = 0; i < 20; i++)
+                    KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
+                KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
+
+                int amount = 32;
+                float totalAngle = MathHelper.TwoPi;
+                float singleRadian = totalAngle / amount;
+                Vector2 originalVelocity = (PolarVector2)NPC.GetVelocityTowards(Target, 20f).RotatedBy(offset);
+                Vector2 rotatedOriginalVelocity = originalVelocity.RotatedBy(MathHelper.PiOver2);
+                Vector2 rotatedOriginalVelocity2 = rotatedOriginalVelocity.RotatedBy(MathHelper.PiOver2);
+                Vector2 rotatedOriginalVelocity3 = rotatedOriginalVelocity2.RotatedBy(MathHelper.PiOver2);
+
+                List<Vector2> originalVelocityList = [originalVelocity, rotatedOriginalVelocity, rotatedOriginalVelocity2, rotatedOriginalVelocity3, originalVelocity];
+
+                for (int i = 0; i < amount; i++)
+                {
+                    Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
+
+                    Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), NPC.Center, velocity, JewelProjectileRainbowDamage, 0f);
+                    if (ShouldUseBuffedAttack)
+                        Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), NPC.Center, velocity * -1f, JewelProjectileRainbowDamage, 0f);
+                }
             }
         }
 
-        void SpawnParticle()
+        void RingAttack()
         {
-            int particleAmount = Main.zenithWorld ? 30 : CurrentAttackType switch
+            int totalAttackNum = ShouldUseBuffedAttack ? 8 : 6;
+
+            if (Timer1 % 4 == 0)
             {
-                2 => 30,
-                3 => 50,
-                _ => 20
-            };
-            float minVelocity = 3f;
-            float maxVelocity = CurrentAttackType switch
-            {
-                2 => 8f,
-                3 => 10f,
-                _ => 6f
-            };
-            for (int i = 0; i < particleAmount; i++)
-                JewelHandler.SpawnParticle(NPC, Main.rand.NextFloat(minVelocity, maxVelocity), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
+                int attackNum = Timer1 / 4;
+                int orbParticleAmount = attackNum switch
+                {
+                    0 => 5,
+                    1 => 5,
+                    2 => 5,
+                    3 => 10,
+                    4 => 15,
+                    5 => ShouldUseBuffedAttack ? 20 : 30,
+                    6 => 15,
+                    7 => 40,
+                    _ => 0
+                };
+                int pointingParticleAmount = attackNum switch
+                {
+                    0 => 2,
+                    1 => 2,
+                    2 => 2,
+                    3 => 3,
+                    4 => 4,
+                    5 => ShouldUseBuffedAttack ? 4 : 8,
+                    6 => 5,
+                    7 => 10,
+                    _ => 0
+                };
+                SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
+                for (int i = 0; i < orbParticleAmount; i++)
+                    KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
+                KingSlime_Handler.SpawnPointingParticle(NPC, pointingParticleAmount, true);
+
+
+                if (TOSharedData.GeneralClient)
+                {
+                    int amount = attackNum switch
+                    {
+                        0 => 3,
+                        1 => 6,
+                        2 => 9,
+                        3 => 12,
+                        4 => 16,
+                        5 => 36,
+                        6 => 24,
+                        7 => 60,
+                        _ => 0
+                    };
+                    float singleRadian = MathHelper.TwoPi / amount;
+                    float radian = singleRadian * (amount - 1);
+                    float initialRotation = (Target.Center - NPC.Center).ToRotation() + attackNum * TOMathUtils.PiOver5 + Main.rand.NextFloat(TOMathUtils.PiOver12);
+                    switch (attackNum)
+                    {
+                        case <= 5:
+                            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(20f - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f);
+                            break;
+                        case 6 or 7:
+                            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(7f - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f);
+                            break;
+                    }
+                }
+            }
+
+            Timer1++;
+
+            if (Timer1 > 4 * (totalAttackNum - 1))
+                IsAttacking = false;
         }
     }
 
@@ -163,7 +412,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
     {
         DrawRainbowTrail(spriteBatch, screenPos, NPC, NPC.oldPos);
 
-        float timeLeftGateValue = CurrentAttackType switch
+        float timeLeftGateValue = AttackCounter switch
         {
             2 => 45,
             3 => 55,
@@ -171,21 +420,20 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
         };
         float gateValue = ShootCooldownTime - timeLeftGateValue;
         float ratio = Timer1 > gateValue ? (Timer1 - gateValue) / timeLeftGateValue : 0f;
-        float radius = CurrentAttackType switch
+        float radius = AttackCounter switch
         {
             2 => 145f,
             3 => 160f,
             _ => 135f
         };
-        float scale = CurrentAttackType switch
+        float scale = AttackCounter switch
         {
             2 => 0.375f,
             3 => 0.425f,
             _ => 0.35f
         };
-        if (CAClientConfig.Instance.AuxiliaryVisualEffects && ratio > 0f)
-            JewelHandler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, radius, scale);
-        JewelHandler.DrawJewel(spriteBatch, screenPos, NPC, ratio);
+        KingSlime_Handler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, radius, scale);
+        KingSlime_Handler.DrawJewel(spriteBatch, screenPos, NPC, ratio);
         return false;
     }
 
@@ -200,11 +448,21 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
             {
                 Vector2 old = oldPos[i - 1];
                 Vector2 oldold = oldPos[i];
-                float rotation = (old - oldold).ToRotation() - MathHelper.PiOver2;
+                float rotation = (old - oldold).ToRotation(-MathHelper.PiOver2);
                 Vector2 scale = new(1f, Vector2.Distance(oldold, old) / texture.Height);
                 Color color = white * (1f - (float)i / oldPos.Length);
                 spriteBatch.Draw(texture, oldold + entity.Size / 2f - screenPos, null, color, rotation, origin, scale, effects, 0f);
             }
         }
+    }
+
+    public override void HitEffect(NPC.HitInfo hit)
+    {
+        KingSlime_Handler.HitEffect(NPC);
+    }
+
+    public override void OnKill()
+    {
+        KingSlime_Handler.OnKill(NPC);
     }
 }

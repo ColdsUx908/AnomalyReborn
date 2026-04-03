@@ -33,6 +33,6 @@ Commands: {
 			Debug Mode is enabled.
 			This may show additional information and may affect performance.
 			'''
-		Off: Debug Mod is disabled.
+		Off: Debug Mode is disabled.
 	}
 }

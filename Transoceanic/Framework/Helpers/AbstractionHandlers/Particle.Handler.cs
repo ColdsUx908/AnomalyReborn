@@ -1,0 +1,305 @@
+﻿namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
+
+public sealed class ParticleHandler : ModSystem, IContentLoader
+{
+    public const string BaseParticleTexturePath = "Transoceanic/DataStructures/Particles/";
+
+    /// <summary>
+    /// 粒子数量限制。
+    /// <br/>当 <see cref="_particles"/> 中的粒子数量达到该值时，除非新生成的粒子被标记为重要粒子，否则将不会被生成。
+    /// </summary>
+    public static int ParticleLimit { get; set; } = 5000;
+
+    internal sealed record ParticleDataCache
+    {
+        public static int _nextID = 0;
+
+        public readonly Type Type;
+        public readonly Particle TemplateInstance;
+        public readonly int ID;
+
+        private ParticleDataCache(Type type, Particle templateInstance)
+        {
+            Type = type;
+            TemplateInstance = templateInstance;
+            ID = _nextID++;
+            if (templateInstance.AutoLoadTexture)
+            {
+                string texturePath = templateInstance.TexturePath != "" ? templateInstance.TexturePath : type.Namespace.Replace('.', '/') + "/" + type.Name;
+                Asset<Texture2D> asset = ModContent.Request<Texture2D>(texturePath);
+                TemplateInstance.Asset = asset;
+            }
+        }
+
+        public static ParticleDataCache Create(Type type, Particle templateInstance)
+        {
+            if (_particleTypes.TryGetValue(type, out int existingId) && _particleCache.TryGetValue(existingId, out ParticleDataCache existingCache))
+                return existingCache;
+
+            ParticleDataCache newCache = new(type, templateInstance);
+
+            _particleCache[newCache.ID] = newCache;
+            _particleTypes[type] = newCache.ID;
+
+            return newCache;
+        }
+    }
+
+    internal static Dictionary<int, ParticleDataCache> _particleCache;
+    internal static Dictionary<Type, int> _particleTypes;
+
+    private static List<Particle> _particles;
+    private static List<Particle> _particlesToKill;
+
+    private static List<Particle> _particlesToDraw_AlphaBlend;
+    private static List<Particle> _particlesToDraw_NonPremultiplied;
+    private static List<Particle> _particlesToDraw_Additive;
+    private static List<Particle> _particlesToDraw_Opaque;
+
+    public static void Draw(SpriteBatch spriteBatch)
+    {
+        if (Main.dedServ)
+            return;
+
+        if (_particles.Count == 0)
+            return;
+
+        //提前分类粒子以减少spriteBatch状态切换次数
+        foreach (Particle particle in _particles)
+        {
+            if (particle is null)
+                continue;
+
+            BlendState blendState = particle.DrawBlendState;
+            if (blendState == BlendState.AlphaBlend)
+                _particlesToDraw_AlphaBlend.Add(particle);
+            else if (blendState == BlendState.NonPremultiplied)
+                _particlesToDraw_NonPremultiplied.Add(particle);
+            else if (blendState == BlendState.Additive)
+                _particlesToDraw_Additive.Add(particle);
+            else if (blendState == BlendState.Opaque)
+                _particlesToDraw_Opaque.Add(particle);
+        }
+
+        if (_particlesToDraw_AlphaBlend.Count > 0)
+        {
+            EnterDrawRegion_AlphaBlend(spriteBatch);
+
+            foreach (Particle particle in _particlesToDraw_AlphaBlend)
+                DrawParticle(spriteBatch, particle);
+        }
+
+        if (_particlesToDraw_NonPremultiplied.Count > 0)
+        {
+            EnterDrawRegion_NonPremultiplied(spriteBatch);
+
+            foreach (Particle particle in _particlesToDraw_NonPremultiplied)
+                DrawParticle(spriteBatch, particle);
+        }
+
+        if (_particlesToDraw_Additive.Count > 0)
+        {
+            EnterDrawRegion_Additive(spriteBatch);
+
+            foreach (Particle particle in _particlesToDraw_Additive)
+                DrawParticle(spriteBatch, particle);
+        }
+
+        if (_particlesToDraw_Opaque.Count > 0)
+        {
+            EnterDrawRegion_Opaque(spriteBatch);
+
+            foreach (Particle particle in _particlesToDraw_Opaque)
+                DrawParticle(spriteBatch, particle);
+        }
+
+        _particlesToDraw_AlphaBlend.Clear();
+        _particlesToDraw_NonPremultiplied.Clear();
+        _particlesToDraw_Additive.Clear();
+
+        ExitParticleDrawRegion(spriteBatch);
+
+        static void DrawParticle(SpriteBatch spriteBatch, Particle particle)
+        {
+            if (particle.PreDraw(spriteBatch))
+            {
+                Texture2D texture = particle.Texture;
+                Rectangle? frame = particle.GetFrame(texture);
+                spriteBatch.DrawFromCenter(texture, particle.Center - Main.screenPosition, frame, particle.Color, particle.Rotation, particle.Scale, SpriteEffects.None, 0f);
+            }
+
+            particle.PostDraw(spriteBatch);
+        }
+    }
+
+    public static void EnterDrawRegion_AlphaBlend(SpriteBatch spriteBatch)
+    {
+        spriteBatch.End();
+        Main.Rasterizer.ScissorTestEnable = true;
+        Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
+        Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+    }
+
+    public static void EnterDrawRegion_NonPremultiplied(SpriteBatch spriteBatch)
+    {
+        spriteBatch.End();
+        Main.Rasterizer.ScissorTestEnable = true;
+        Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
+        Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, DepthStencilState.Default, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+    }
+
+    public static void EnterDrawRegion_Additive(SpriteBatch spriteBatch)
+    {
+        spriteBatch.End();
+        Main.Rasterizer.ScissorTestEnable = true;
+        Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
+        Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.Default, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+    }
+
+    public static void EnterDrawRegion_Opaque(SpriteBatch spriteBatch)
+    {
+        spriteBatch.End();
+        Main.Rasterizer.ScissorTestEnable = true;
+        Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
+        Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.Default, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+    }
+
+    public static void ExitParticleDrawRegion(SpriteBatch spriteBatch)
+    {
+        spriteBatch.End();
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
+    }
+
+    public override void PostUpdateEverything()
+    {
+        if (Main.dedServ)
+            return;
+
+        foreach (Particle particle in _particles)
+        {
+            if (particle is null)
+                continue;
+            UpdateParticle(particle);
+        }
+
+        _particles.RemoveAll(particle => particle is null || (particle.Timer >= particle.Lifetime && particle.AutoKillByLifeTime) || _particlesToKill.Contains(particle));
+        _particlesToKill.Clear();
+    }
+
+    internal static void UpdateParticle(Particle particle)
+    {
+        particle.Timer++;
+        particle.Update();
+        if (particle.AutoUpdatePosition)
+            particle.Center += particle.Velocity;
+    }
+
+    void IContentLoader.PostSetupContent()
+    {
+        _particleCache = [];
+        _particleTypes = [];
+        _particles = [];
+        _particlesToKill = [];
+        _particlesToDraw_AlphaBlend = [];
+        _particlesToDraw_NonPremultiplied = [];
+        _particlesToDraw_Additive = [];
+        _particlesToDraw_Opaque = [];
+
+        ParticleDataCache._nextID = 0;
+
+        foreach ((Type type, Particle instance) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<Particle>(true))
+            ParticleDataCache.Create(type, instance);
+
+        //在绘制狱火药水效果前绘制粒子
+        On_Main.DrawInfernoRings += (orig, self) =>
+        {
+            Draw(Main.spriteBatch);
+            orig(self);
+        };
+    }
+
+    void IContentLoader.OnModUnload()
+    {
+        ParticleDataCache._nextID = 0;
+
+        _particleCache = null;
+        _particleTypes = null;
+        _particles = null;
+        _particlesToKill = null;
+        _particlesToDraw_AlphaBlend = null;
+        _particlesToDraw_NonPremultiplied = null;
+        _particlesToDraw_Additive = null;
+        _particlesToDraw_Opaque = null;
+    }
+
+    /// <summary>
+    /// 向 <see cref="_particles"/> 中添加一个粒子实例以生成该粒子。
+    /// </summary>
+    public static void SpawnParticle(Particle particle) => SpawnParticle_Inner(particle, false);
+
+    /// <summary>
+    /// 尝试向 <see cref="_particles"/> 中添加一个粒子实例以生成该粒子。
+    /// </summary>
+    public static bool TrySpawnParticle(Particle particle) => SpawnParticle_Inner(particle, false);
+
+    /// <summary>
+    /// 向 <see cref="_particles"/> 中添加一组粒子实例以生成这些粒子。
+    /// <br/>若需生成由多个粒子组成的效果，而不希望在粒子数量过多时生成部分粒子而破坏效果完整性，请使用该方法并将 <paramref name="onlySpawnWhenSpaceEnough"/> 设置为 true。
+    /// </summary>
+    public static void SpawnParticles(List<Particle> particles, bool onlySpawnWhenSpaceEnough) => SpawnParticles_Inner(particles, false, onlySpawnWhenSpaceEnough);
+
+    /// <summary>
+    /// 尝试向 <see cref="_particles"/> 中添加一组粒子实例以生成这些粒子。
+    /// <br/>若需生成由多个粒子组成的效果，而不希望在粒子数量过多时生成部分粒子而破坏效果完整性，请使用该方法并将 <paramref name="onlySpawnWhenSpaceEnough"/> 设置为 true。
+    /// </summary>
+    public static bool TrySpawnParticles(List<Particle> particles, bool onlySpawnWhenSpaceEnough) => SpawnParticles_Inner(particles, false, onlySpawnWhenSpaceEnough);
+
+    private static bool SpawnParticle_Inner(Particle particle, bool forceSpawn)
+    {
+        if (Main.gamePaused || Main.dedServ || _particles is null)
+            return false;
+
+        if (_particles.Count >= ParticleLimit && !particle.Important && !forceSpawn)
+            return false;
+
+        if (particle.PreSpawn())
+            _particles.Add(particle);
+        particle.PostSpawn();
+
+        return true;
+    }
+
+    private static bool SpawnParticles_Inner(List<Particle> particles, bool forceSpawn, bool onlySpawnWhenSpaceEnough)
+    {
+        if (Main.gamePaused || Main.dedServ || _particles is null)
+            return false;
+
+        int newParticlesCount = particles.Count;
+        if (!forceSpawn && onlySpawnWhenSpaceEnough && _particles.Count + newParticlesCount > ParticleLimit)
+            return false;
+
+        foreach (Particle particle in particles)
+        {
+            if (particle.PreSpawn())
+                _particles.Add(particle);
+            particle.PostSpawn();
+        }
+
+        return true;
+    }
+
+    public static void AddToRemoveList(Particle particle)
+    {
+        if (Main.dedServ)
+            return;
+
+        _particlesToKill.Add(particle);
+    }
+
+    public static T GetTemplateInstance<T>() where T : Particle => (T)_particleCache[_particleTypes[typeof(T)]].TemplateInstance;
+    public static Texture2D GetTexture<T>() where T : Particle => _particleCache[_particleTypes[typeof(T)]].TemplateInstance.Texture;
+}

@@ -1,7 +1,14 @@
-﻿using System.Collections.ObjectModel;
+﻿using CalamityAnomalies.Visuals;
+using CalamityMod.CalPlayer;
+using CalamityMod.Items;
+using CalamityMod.NPCs;
+using CalamityMod.Projectiles;
 using MonoMod.RuntimeDetour;
+using System.Collections.ObjectModel;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
+using Transoceanic.Framework.Helpers.AbstractionHandlers;
+using Transoceanic.Framework.RuntimeEditing;
 
 namespace CalamityAnomalies.Core;
 
@@ -10,9 +17,8 @@ public abstract class CAPlayerBehavior : PlayerBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAPlayer AnomalyPlayer => _entity.Anomaly();
-
-    public CalamityPlayer CalamityPlayer => _entity.Calamity();
+    public CAPlayer AnomalyPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }
+    public CalamityPlayer CalamityPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Calamity; }
 }
 
 public abstract class CAGlobalNPCBehavior : GlobalNPCBehavior
@@ -67,31 +73,13 @@ public abstract class CAGlobalItemBehavior : GlobalItemBehavior
     /// <param name="baseDR">由灾厄方法计算出的基础DR。</param>
     public virtual void ModifyHitNPC_DR(Item item, NPC target, Player player, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 }
-
-public abstract class CAPlayerBehavior2 : CAPlayerBehavior
-{
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
-}
-
-public abstract class CAGlobalNPCBehavior2 : CAGlobalNPCBehavior
-{
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
-}
-
-public abstract class CAGlobalProjectileBehavior2 : CAGlobalProjectileBehavior
-{
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
-}
-
-public abstract class CAGlobalItemBehavior2 : CAGlobalItemBehavior
-{
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
-}
 #endregion General Behavior
 
 #region Single Behavior
-public enum OrigMethodType_CalamityGlobalNPC
+public enum CalamityLogicType_NPCBehavior
 {
+    VanillaOverrideAI,
+
     PreAI,
     GetAlpha,
     PreDraw,
@@ -99,16 +87,18 @@ public enum OrigMethodType_CalamityGlobalNPC
 
 public abstract class CASingleNPCBehavior : SingleNPCBehavior
 {
+    public static bool Ultra => CASharedData.AnomalyUltramundane;
+
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAGlobalNPC AnomalyNPC => _entity.Anomaly();
-    public CalamityGlobalNPC CalamityNPC => _entity.Calamity();
+    public CAGlobalNPC AnomalyNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }
+    public CalamityGlobalNPC CalamityNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Calamity; }
 
     /// <summary>
-    /// 是否允许灾厄的相关方法执行。
+    /// 是否允许灾厄的相关逻辑执行。
     /// <br/>默认返回 <see langword="true"/>，即全部允许。
     /// </summary>
-    public virtual bool AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC method) => true;
+    public virtual bool AllowCalamityLogic(CalamityLogicType_NPCBehavior method) => true;
 
     /// <summary>
     /// 在更新灾厄的Boss血条之前调用。
@@ -150,14 +140,14 @@ public abstract class AnomalyNPCBehavior : CASingleNPCBehavior
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
+    public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
 }
 
 public abstract class AnomalyNPCBehavior<T> : CASingleNPCBehavior<T> where T : ModNPC
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
+    public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
 }
 
 public enum OrigMethodType_CalamityGlobalProjectile
@@ -169,11 +159,12 @@ public enum OrigMethodType_CalamityGlobalProjectile
 
 public abstract class CASingleProjectileBehavior : SingleProjectileBehavior
 {
+    public static bool Ultra => CASharedData.AnomalyUltramundane;
+
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAGlobalProjectile AnomalyProjectile => _entity.Anomaly();
-
-    public CalamityGlobalProjectile CalamityProjectile => _entity.Calamity();
+    public CAGlobalProjectile AnomalyProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }
+    public CalamityGlobalProjectile CalamityProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Calamity; }
 
     /// <summary>
     /// 是否允许灾厄的相关方法执行。
@@ -201,23 +192,24 @@ public abstract class AnomalyProjectileBehavior : CASingleProjectileBehavior
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
+    public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
 }
 
 public abstract class AnomalyProjecileBehavior<T> : CASingleProjectileBehavior<T> where T : ModProjectile
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
+    public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
 }
 
 public abstract class CASingleItemBehavior : SingleItemBehavior
 {
+    public static bool Ultra => CASharedData.AnomalyUltramundane;
+
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAGlobalItem AnomalyItem => _entity.Anomaly();
-
-    public CalamityGlobalItem CalamityItem => _entity.Calamity();
+    public CAGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }
+    public CalamityGlobalItem CalamityItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Calamity; }
 
     /// <summary>
     /// 编辑受击NPC的DR。
@@ -247,11 +239,9 @@ public abstract class CANPCTweak : CASingleNPCBehavior, ICALocalizationPrefix, I
     public abstract CAGamePhase Phase { get; }
     public abstract string LocalizationName { get; }
 
-    void ICATweak.RegisterTweak() => CASet.TweakedNPCs[ApplyingType] = true;
+    void ICATweak.RegisterTweak() => CASharedData.TweakedNPCs[ApplyingType] = true;
 
     public override decimal Priority => 5m;
-
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 
 public abstract class CANPCTweak<T> : CASingleNPCBehavior<T>, ICALocalizationPrefix, ICATweak where T : ModNPC
@@ -259,11 +249,9 @@ public abstract class CANPCTweak<T> : CASingleNPCBehavior<T>, ICALocalizationPre
     public abstract CAGamePhase Phase { get; }
     public virtual string LocalizationName => Type.Name;
 
-    void ICATweak.RegisterTweak() => CASet.TweakedNPCs[ApplyingType] = true;
+    void ICATweak.RegisterTweak() => CASharedData.TweakedNPCs[ApplyingType] = true;
 
     public override decimal Priority => 5m;
-
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 
 public abstract class CAProjectileTweak : CASingleProjectileBehavior, ICALocalizationPrefix, ICATweak
@@ -271,11 +259,9 @@ public abstract class CAProjectileTweak : CASingleProjectileBehavior, ICALocaliz
     public abstract CAGamePhase Phase { get; }
     public abstract string LocalizationName { get; }
 
-    void ICATweak.RegisterTweak() => CASet.TweakedProjectiles[ApplyingType] = true;
+    void ICATweak.RegisterTweak() => CASharedData.TweakedProjectiles[ApplyingType] = true;
 
     public override decimal Priority => 5m;
-
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 
 public abstract class CAProjectileTweak<T> : CASingleProjectileBehavior<T>, ICALocalizationPrefix, ICATweak where T : ModProjectile
@@ -296,16 +282,14 @@ public abstract class CAProjectileTweak<T> : CASingleProjectileBehavior<T>, ICAL
 
     void ICATweak.RegisterTweak()
     {
-        CASet.TweakedProjectiles[ApplyingType] = true;
+        CASharedData.TweakedProjectiles[ApplyingType] = true;
         foreach (int npcType in RelatedNPCs)
-            CASet.TweakedNPCs[npcType] = true;
+            CASharedData.TweakedNPCs[npcType] = true;
         foreach (int itemType in RelatedItems)
-            CASet.TweakedItems[itemType] = true;
+            CASharedData.TweakedItems[itemType] = true;
     }
 
     public override decimal Priority => 5m;
-
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 
 public abstract class CAItemTweak : CASingleItemBehavior, ICALocalizationPrefix, ICATweak
@@ -313,11 +297,9 @@ public abstract class CAItemTweak : CASingleItemBehavior, ICALocalizationPrefix,
     public abstract CAGamePhase Phase { get; }
     public abstract string LocalizationName { get; }
 
-    void ICATweak.RegisterTweak() => CASet.TweakedItems[ApplyingType] = true;
+    void ICATweak.RegisterTweak() => CASharedData.TweakedItems[ApplyingType] = true;
 
     public override decimal Priority => 5m;
-
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 
 public abstract class CAItemTweak<T> : CASingleItemBehavior<T>, ICALocalizationPrefix, ICATweak where T : ModItem
@@ -325,11 +307,9 @@ public abstract class CAItemTweak<T> : CASingleItemBehavior<T>, ICALocalizationP
     public abstract CAGamePhase Phase { get; }
     public virtual string LocalizationName => Type.Name;
 
-    void ICATweak.RegisterTweak() => CASet.TweakedItems[ApplyingType] = true;
+    void ICATweak.RegisterTweak() => CASharedData.TweakedItems[ApplyingType] = true;
 
     public override decimal Priority => 5m;
-
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 
 /// <summary>
@@ -340,7 +320,7 @@ public abstract class CAItemTweak<T> : CASingleItemBehavior<T>, ICALocalizationP
 /// <br/>3. <strong>避免</strong>在该类中使用实例字段。
 /// </summary>
 /// <typeparam name="TSource">待覆盖的 <see cref="ModNPC"/> 类。</typeparam>
-public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocalizationPrefix, ICATweak where TSource : ModNPC
+public abstract class CANPCOverride<TSource> : ModNPCDetour<TSource>, ICALocalizationPrefix, ICATweak where TSource : ModNPC
 {
     private static readonly HashSet<string> _exclusiveDetours = ["get_LocalizationCategory", "get_Texture", "get_HeadTexture", "get_BossHeadTexture"];
     private static readonly HashSet<string> _criticalDetours = [];
@@ -350,18 +330,18 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
     public abstract CAGamePhase Phase { get; }
     public virtual string LocalizationName => Name ?? SourceType.Name;
 
-    void ICATweak.RegisterTweak() => CASet.TweakedNPCs[ContentType] = true;
+    void ICATweak.RegisterTweak() => CASharedData.TweakedNPCs[ContentType] = true;
 
     protected override Hook ApplySingleDetour<TDelegate>(TDelegate detour, bool hasThis = true)
     {
-        if (TODetourUtils.EvaluateDetourName(detour.Method, out string sourceName) && SourceType.HasMethod(sourceName, hasThis ? TOReflectionUtils.InstanceBindingFlags : TOReflectionUtils.StaticBindingFlags, out MethodInfo sourceMethod))
+        if (TODetourHandler.EvaluateDetourName(detour.Method, out string sourceName) && SourceType.HasMethod(sourceName, hasThis ? TOReflectionUtils.InstanceBindingFlags : TOReflectionUtils.StaticBindingFlags, out MethodInfo sourceMethod))
         {
             if (_criticalDetours.Contains(sourceName))
-                return TODetourUtils.Modify(sourceMethod, detour);
+                return TODetourHandler.Modify(sourceMethod, detour);
             switch (GetType().HasRealMethod(sourceName, TOReflectionUtils.UniversalBindingFlags), sourceMethod.DeclaringType == SourceType)
             {
                 case (true, true):
-                    return TODetourUtils.Modify(sourceMethod, detour);
+                    return TODetourHandler.Modify(sourceMethod, detour);
                 case (false, true):
                     if (_exclusiveDetours.Contains(sourceName))
                         return null;
@@ -377,86 +357,66 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
     public TSource Self;
     public NPC NPC => Self.NPC;
 
-    /// <summary>
     /// <inheritdoc cref="ModNPC.Type"/>
-    /// </summary>
     public int Type => NPC.type;
 
-    /// <summary>
     /// <inheritdoc cref="ModNPC.AIType"/>
-    /// </summary>
     public int AIType
     {
         get => Self.AIType;
         set => Self.AIType = value;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModNPC.AnimationType"/>
-    /// </summary>
     public int AnimationType
     {
         get => Self.AnimationType;
         set => Self.AnimationType = value;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModNPC.Music"/>
-    /// </summary>
     public int Music
     {
         get => Self.Music;
         set => Self.Music = value;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModNPC.SceneEffectPriority"/>
-    /// </summary>
     public SceneEffectPriority SceneEffectPriority
     {
         get => Self.SceneEffectPriority;
         set => Self.SceneEffectPriority = value;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModNPC.DrawOffsetY"/>
-    /// </summary>
     public float DrawOffsetY
     {
         get => Self.DrawOffsetY;
         set => Self.DrawOffsetY = value;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModNPC.Banner"/>
-    /// </summary>
     public int Banner
     {
         get => Self.Banner;
         set => Self.Banner = value;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModNPC.BannerItem"/>
-    /// </summary>
     public int BannerItem
     {
         get => Self.BannerItem;
         set => Self.BannerItem = value;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModNPC.SpawnModBiomes"/>
-    /// </summary>
     public int[] SpawnModBiomes
     {
         get => Self.SpawnModBiomes;
         set => Self.SpawnModBiomes = value;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModNPC.TownNPCStayingHomeless"/>
-    /// </summary>
     public bool TownNPCStayingHomeless
     {
         get => Self.TownNPCStayingHomeless;
@@ -487,9 +447,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return Name;
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.Name"/>
-    /// </summary>
     public virtual string Name => Self.Name;
 
     // Load
@@ -498,9 +456,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         Load();
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.Load"/>
-    /// </summary>
     public virtual void Load() { }
 
     // IsLoadingEnabled
@@ -509,9 +465,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return IsLoadingEnabled(mod);
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.IsLoadingEnabled(Mod)"/>
-    /// </summary>
     public virtual bool IsLoadingEnabled(Mod mod) => true;
 
     // SetupContent
@@ -520,9 +474,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         SetupContent();
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.SetupContent"/>
-    /// </summary>
     public virtual void SetupContent() { }
 
     // SetStaticDefaults
@@ -531,9 +483,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         SetStaticDefaults();
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.SetStaticDefaults"/>
-    /// </summary>
     public virtual void SetStaticDefaults() { }
 
     // Unload
@@ -542,9 +492,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         Unload();
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.Unload"/>
-    /// </summary>
     public virtual void Unload() { }
 
     // ModNPC
@@ -554,9 +502,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return LocalizationCategory;
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.LocalizationCategory"/>
-    /// </summary>
     public virtual string LocalizationCategory => "NPCs";
 
     // DisplayName
@@ -565,9 +511,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return DisplayName;
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.DisplayName"/>
-    /// </summary>
     public virtual LocalizedText DisplayName => Self.GetLocalization("DisplayName", Self.PrettyPrintName);
 
     // DeathMessage
@@ -576,9 +520,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return DeathMessage;
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.DeathMessage"/>
-    /// </summary>
     public virtual LocalizedText DeathMessage => null;
 
     // Texture
@@ -587,9 +529,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return Texture;
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.Texture"/>
-    /// </summary>
     public virtual string Texture => (Self.GetType().Namespace + "." + Self.Name).Replace('.', '/');
 
     // HeadTexture
@@ -598,9 +538,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return HeadTexture;
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.HeadTexture"/>
-    /// </summary>
     public virtual string HeadTexture => Texture + "_Head";
 
     // BossHeadTexture
@@ -609,9 +547,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return BossHeadTexture;
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.BossHeadTexture"/>
-    /// </summary>
     public virtual string BossHeadTexture => Texture + "_Head_Boss";
 
     // PickEmote
@@ -620,9 +556,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return PickEmote(closestPlayer, emoteList, otherAnchor);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.PickEmote"/>
-    /// </summary>
     public virtual int? PickEmote(Player closestPlayer, List<int> emoteList, WorldUIAnchor otherAnchor) => null;
 
     // SetDefaults
@@ -631,9 +565,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         SetDefaults();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.SetDefaults"/>
-    /// </summary>
     public virtual void SetDefaults() { }
 
     // OnSpawn
@@ -642,9 +574,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         OnSpawn(source);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.OnSpawn"/>
-    /// </summary>
     public virtual void OnSpawn(IEntitySource source) { }
 
     // AutoStaticDefaults
@@ -653,9 +583,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         AutoStaticDefaults();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.AutoStaticDefaults"/>
-    /// </summary>
     public virtual void AutoStaticDefaults() { }
 
     // ApplyDifficultyAndPlayerScaling
@@ -664,9 +592,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         ApplyDifficultyAndPlayerScaling(numPlayers, balance, bossAdjustment);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ApplyDifficultyAndPlayerScaling"/>
-    /// </summary>
     public virtual void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) { }
 
     // SetBestiary
@@ -675,9 +601,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         SetBestiary(database, bestiaryEntry);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.SetBestiary"/>
-    /// </summary>
     public virtual void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry) { }
 
     // ModifyTypeName
@@ -686,9 +610,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         ModifyTypeName(ref typeName);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ModifyTypeName"/>
-    /// </summary>
     public virtual void ModifyTypeName(ref string typeName) { }
 
     // ModifyHoverBoundingBox
@@ -697,9 +619,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         ModifyHoverBoundingBox(ref boundingBox);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ModifyHoverBoundingBox"/>
-    /// </summary>
     public virtual void ModifyHoverBoundingBox(ref Rectangle boundingBox) { }
 
     // PreHoverInteract
@@ -708,9 +628,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return PreHoverInteract(mouseIntersects);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.PreHoverInteract"/>
-    /// </summary>
     public virtual bool PreHoverInteract(bool mouseIntersects) => true;
 
     // SetNPCNameList
@@ -719,9 +637,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return SetNPCNameList();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.SetNPCNameList"/>
-    /// </summary>
     public virtual List<string> SetNPCNameList() => [];
 
     // TownNPCProfile
@@ -730,9 +646,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return TownNPCProfile();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.TownNPCProfile"/>
-    /// </summary>
     public virtual ITownNPCProfile TownNPCProfile() => null;
 
     // ResetEffects
@@ -741,9 +655,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         ResetEffects();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ResetEffects"/>
-    /// </summary>
     public virtual void ResetEffects() { }
 
     // PreAI
@@ -752,9 +664,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return PreAI();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.PreAI"/>
-    /// </summary>
     public virtual bool PreAI() => true;
 
     // AI
@@ -763,9 +673,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         AI();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.AI"/>
-    /// </summary>
     public virtual void AI() { }
 
     // PostAI
@@ -774,9 +682,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         PostAI();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.PostAI"/>
-    /// </summary>
     public virtual void PostAI() { }
 
     // SendExtraAI
@@ -785,9 +691,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         SendExtraAI(writer);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.SendExtraAI"/>
-    /// </summary>
     public virtual void SendExtraAI(BinaryWriter writer) { }
 
     // ReceiveExtraAI
@@ -796,9 +700,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         ReceiveExtraAI(reader);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ReceiveExtraAI"/>
-    /// </summary>
     public virtual void ReceiveExtraAI(BinaryReader reader) { }
 
     // FindFrame
@@ -807,9 +709,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         FindFrame(frameHeight);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.FindFrame"/>
-    /// </summary>
     public virtual void FindFrame(int frameHeight) { }
 
     // HitEffect
@@ -818,9 +718,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         HitEffect(hit);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.HitEffect"/>
-    /// </summary>
     public virtual void HitEffect(NPC.HitInfo hit) { }
 
     // UpdateLifeRegen
@@ -829,9 +727,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         UpdateLifeRegen(ref damage);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.UpdateLifeRegen"/>
-    /// </summary>
     public virtual void UpdateLifeRegen(ref int damage) { }
 
     // CheckActive
@@ -840,9 +736,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return CheckActive();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.CheckActive"/>
-    /// </summary>
     public virtual bool CheckActive() => true;
 
     // CheckDead
@@ -851,9 +745,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return CheckDead();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.CheckDead"/>
-    /// </summary>
     public virtual bool CheckDead() => true;
 
     // SpecialOnKill
@@ -862,9 +754,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return SpecialOnKill();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.SpecialOnKill"/>
-    /// </summary>
     public virtual bool SpecialOnKill() => false;
 
     // PreKill
@@ -873,9 +763,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return PreKill();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.PreKill"/>
-    /// </summary>
     public virtual bool PreKill() => true;
 
     // OnKill
@@ -884,9 +772,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         OnKill();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.OnKill"/>
-    /// </summary>
     public virtual void OnKill() { }
 
     // CanFallThroughPlatforms
@@ -895,9 +781,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return CanFallThroughPlatforms();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.CanFallThroughPlatforms"/>
-    /// </summary>
     public virtual bool? CanFallThroughPlatforms() => null;
 
     // CanBeCaughtBy
@@ -906,9 +790,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return CanBeCaughtBy(item, player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.CanBeCaughtBy"/>
-    /// </summary>
     public virtual bool? CanBeCaughtBy(Item item, Player player) => null;
 
     // OnCaughtBy
@@ -917,9 +799,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         OnCaughtBy(player, item, failed);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.OnCaughtBy"/>
-    /// </summary>
     public virtual void OnCaughtBy(Player player, Item item, bool failed) { }
 
     // ModifyNPCLoot
@@ -928,9 +808,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         ModifyNPCLoot(npcLoot);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ModifyNPCLoot"/>
-    /// </summary>
     public virtual void ModifyNPCLoot(NPCLoot npcLoot) { }
 
     // BossLoot
@@ -939,9 +817,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         BossLoot(ref name, ref potionType);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.BossLoot"/>
-    /// </summary>
     public virtual void BossLoot(ref string name, ref int potionType) { }
 
     // CanHitPlayer
@@ -950,9 +826,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return CanHitPlayer(target, ref cooldownSlot);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.CanHitPlayer"/>
-    /// </summary>
     public virtual bool CanHitPlayer(Player target, ref int cooldownSlot) => true;
 
     // ModifyHitPlayer
@@ -961,9 +835,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         ModifyHitPlayer(target, ref modifiers);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ModifyHitPlayer"/>
-    /// </summary>
     public virtual void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers) { }
 
     // OnHitPlayer
@@ -972,9 +844,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         OnHitPlayer(target, hurtInfo);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.OnHitPlayer"/>
-    /// </summary>
     public virtual void OnHitPlayer(Player target, Player.HurtInfo hurtInfo) { }
 
     // CanHitNPC
@@ -983,9 +853,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return CanHitNPC(target);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.CanHitNPC"/>
-    /// </summary>
     public virtual bool CanHitNPC(NPC target) => true;
 
     // CanBeHitByNPC
@@ -994,9 +862,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return CanBeHitByNPC(attacker);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.CanBeHitByNPC"/>
-    /// </summary>
     public virtual bool CanBeHitByNPC(NPC attacker) => true;
 
     // ModifyHitNPC
@@ -1005,9 +871,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         ModifyHitNPC(target, ref modifiers);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ModifyHitNPC"/>
-    /// </summary>
     public virtual void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) { }
 
     // OnHitNPC
@@ -1016,9 +880,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         OnHitNPC(target, hit);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.OnHitNPC"/>
-    /// </summary>
     public virtual void OnHitNPC(NPC target, NPC.HitInfo hit) { }
 
     // CanBeHitByItem
@@ -1027,9 +889,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return CanBeHitByItem(player, item);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.CanBeHitByItem"/>
-    /// </summary>
     public virtual bool? CanBeHitByItem(Player player, Item item) => null;
 
     // CanCollideWithPlayerMeleeAttack
@@ -1038,9 +898,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return CanCollideWithPlayerMeleeAttack(player, item, meleeAttackHitbox);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.CanCollideWithPlayerMeleeAttack"/>
-    /// </summary>
     public virtual bool? CanCollideWithPlayerMeleeAttack(Player player, Item item, Rectangle meleeAttackHitbox) => null;
 
     // ModifyHitByItem
@@ -1049,9 +907,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         ModifyHitByItem(player, item, ref modifiers);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ModifyHitByItem"/>
-    /// </summary>
     public virtual void ModifyHitByItem(Player player, Item item, ref NPC.HitModifiers modifiers) { }
 
     // OnHitByItem
@@ -1060,9 +916,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         OnHitByItem(player, item, hit, damageDone);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.OnHitByItem"/>
-    /// </summary>
     public virtual void OnHitByItem(Player player, Item item, NPC.HitInfo hit, int damageDone) { }
 
     // CanBeHitByProjectile
@@ -1071,9 +925,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return CanBeHitByProjectile(projectile);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.CanBeHitByProjectile"/>
-    /// </summary>
     public virtual bool? CanBeHitByProjectile(Projectile projectile) => null;
 
     // ModifyHitByProjectile
@@ -1082,9 +934,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         ModifyHitByProjectile(projectile, ref modifiers);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ModifyHitByProjectile"/>
-    /// </summary>
     public virtual void ModifyHitByProjectile(Projectile projectile, ref NPC.HitModifiers modifiers) { }
 
     // OnHitByProjectile
@@ -1093,9 +943,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         OnHitByProjectile(projectile, hit, damageDone);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.OnHitByProjectile"/>
-    /// </summary>
     public virtual void OnHitByProjectile(Projectile projectile, NPC.HitInfo hit, int damageDone) { }
 
     // ModifyIncomingHit
@@ -1104,9 +952,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         ModifyIncomingHit(ref modifiers);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ModifyIncomingHit"/>
-    /// </summary>
     public virtual void ModifyIncomingHit(ref NPC.HitModifiers modifiers) { }
 
     // BossHeadSlot
@@ -1115,9 +961,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         BossHeadSlot(ref index);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.BossHeadSlot"/>
-    /// </summary>
     public virtual void BossHeadSlot(ref int index) { }
 
     // BossHeadRotation
@@ -1126,9 +970,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         BossHeadRotation(ref rotation);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.BossHeadRotation"/>
-    /// </summary>
     public virtual void BossHeadRotation(ref float rotation) { }
 
     // BossHeadSpriteEffects
@@ -1137,9 +979,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         BossHeadSpriteEffects(ref spriteEffects);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.BossHeadSpriteEffects"/>
-    /// </summary>
     public virtual void BossHeadSpriteEffects(ref SpriteEffects spriteEffects) { }
 
     // GetAlpha
@@ -1148,9 +988,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return GetAlpha(drawColor);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.GetAlpha"/>
-    /// </summary>
     public virtual Color? GetAlpha(Color drawColor) => null;
 
     // DrawEffects
@@ -1159,9 +997,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         DrawEffects(ref drawColor);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.DrawEffects"/>
-    /// </summary>
     public virtual void DrawEffects(ref Color drawColor) { }
 
     // PreDraw
@@ -1170,9 +1006,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return PreDraw(spriteBatch, screenPos, drawColor);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.PreDraw"/>
-    /// </summary>
     public virtual bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) => true;
 
     // PostDraw
@@ -1181,9 +1015,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         PostDraw(spriteBatch, screenPos, drawColor);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.PostDraw"/>
-    /// </summary>
     public virtual void PostDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) { }
 
     // DrawBehind
@@ -1192,9 +1024,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         DrawBehind(index);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.DrawBehind"/>
-    /// </summary>
     public virtual void DrawBehind(int index) { }
 
     // DrawHealthBar
@@ -1203,9 +1033,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return DrawHealthBar(hbPosition, ref scale, ref position);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.DrawHealthBar"/>
-    /// </summary>
     public virtual bool? DrawHealthBar(byte hbPosition, ref float scale, ref Vector2 position) => null;
 
     // SpawnChance
@@ -1214,9 +1042,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return SpawnChance(spawnInfo);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.SpawnChance"/>
-    /// </summary>
     public virtual float SpawnChance(NPCSpawnInfo spawnInfo) => 0f;
 
     // SpawnNPC
@@ -1225,9 +1051,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return SpawnNPC(tileX, tileY);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.SpawnNPC"/>
-    /// </summary>
     public virtual int SpawnNPC(int tileX, int tileY) => NPC.NewNPC(null, tileX * 16 + 8, tileY * 16, NPC.type);
 
     // CanTownNPCSpawn
@@ -1236,9 +1060,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return CanTownNPCSpawn(numTownNPCs);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.CanTownNPCSpawn"/>
-    /// </summary>
     public virtual bool CanTownNPCSpawn(int numTownNPCs) => false;
 
     // CheckConditions
@@ -1247,9 +1069,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return CheckConditions(left, right, top, bottom);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.CheckConditions"/>
-    /// </summary>
     public virtual bool CheckConditions(int left, int right, int top, int bottom) => true;
 
     // UsesPartyHat
@@ -1258,9 +1078,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return UsesPartyHat();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.UsesPartyHat"/>
-    /// </summary>
     public virtual bool UsesPartyHat() => true;
 
     // CanChat
@@ -1269,9 +1087,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return CanChat();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.CanChat"/>
-    /// </summary>
     public virtual bool CanChat() => NPC.townNPC;
 
     // GetChat
@@ -1280,9 +1096,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return GetChat();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.GetChat"/>
-    /// </summary>
     public virtual string GetChat() => Language.GetTextValue("tModLoader.DefaultTownNPCChat");
 
     // SetChatButtons
@@ -1291,9 +1105,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         SetChatButtons(ref button, ref button2);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.SetChatButtons"/>
-    /// </summary>
     public virtual void SetChatButtons(ref string button, ref string button2) { }
 
     // OnChatButtonClicked
@@ -1302,9 +1114,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         OnChatButtonClicked(firstButton, ref shopName);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.OnChatButtonClicked"/>
-    /// </summary>
     public virtual void OnChatButtonClicked(bool firstButton, ref string shopName) { }
 
     // AddShops
@@ -1313,9 +1123,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         AddShops();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.AddShops"/>
-    /// </summary>
     public virtual void AddShops() { }
 
     // ModifyActiveShop
@@ -1324,9 +1132,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         ModifyActiveShop(shopName, items);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ModifyActiveShop"/>
-    /// </summary>
     public virtual void ModifyActiveShop(string shopName, Item[] items) { }
 
     // CanGoToStatue
@@ -1335,9 +1141,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return CanGoToStatue(toKingStatue);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.CanGoToStatue"/>
-    /// </summary>
     public virtual bool CanGoToStatue(bool toKingStatue) => false;
 
     // OnGoToStatue
@@ -1346,9 +1150,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         OnGoToStatue(toKingStatue);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.OnGoToStatue"/>
-    /// </summary>
     public virtual void OnGoToStatue(bool toKingStatue) { }
 
     // ModifyDeathMessage
@@ -1357,9 +1159,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return ModifyDeathMessage(ref customText, ref color);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ModifyDeathMessage"/>
-    /// </summary>
     public virtual bool ModifyDeathMessage(ref NetworkText customText, ref Color color) => true;
 
     // TownNPCAttackStrength
@@ -1368,9 +1168,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         TownNPCAttackStrength(ref damage, ref knockback);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.TownNPCAttackStrength"/>
-    /// </summary>
     public virtual void TownNPCAttackStrength(ref int damage, ref float knockback) { }
 
     // TownNPCAttackCooldown
@@ -1379,9 +1177,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         TownNPCAttackCooldown(ref cooldown, ref randExtraCooldown);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.TownNPCAttackCooldown"/>
-    /// </summary>
     public virtual void TownNPCAttackCooldown(ref int cooldown, ref int randExtraCooldown) { }
 
     // TownNPCAttackProj
@@ -1390,9 +1186,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         TownNPCAttackProj(ref projType, ref attackDelay);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.TownNPCAttackProj"/>
-    /// </summary>
     public virtual void TownNPCAttackProj(ref int projType, ref int attackDelay) { }
 
     // TownNPCAttackProjSpeed
@@ -1401,9 +1195,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         TownNPCAttackProjSpeed(ref multiplier, ref gravityCorrection, ref randomOffset);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.TownNPCAttackProjSpeed"/>
-    /// </summary>
     public virtual void TownNPCAttackProjSpeed(ref float multiplier, ref float gravityCorrection, ref float randomOffset) { }
 
     // TownNPCAttackShoot
@@ -1412,9 +1204,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         TownNPCAttackShoot(ref inBetweenShots);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.TownNPCAttackShoot"/>
-    /// </summary>
     public virtual void TownNPCAttackShoot(ref bool inBetweenShots) { }
 
     // TownNPCAttackMagic
@@ -1423,9 +1213,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         TownNPCAttackMagic(ref auraLightMultiplier);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.TownNPCAttackMagic"/>
-    /// </summary>
     public virtual void TownNPCAttackMagic(ref float auraLightMultiplier) { }
 
     // TownNPCAttackSwing
@@ -1434,9 +1222,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         TownNPCAttackSwing(ref itemWidth, ref itemHeight);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.TownNPCAttackSwing"/>
-    /// </summary>
     public virtual void TownNPCAttackSwing(ref int itemWidth, ref int itemHeight) { }
 
     // DrawTownAttackGun
@@ -1445,9 +1231,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         DrawTownAttackGun(ref item, ref itemFrame, ref scale, ref horizontalHoldoutOffset);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.DrawTownAttackGun"/>
-    /// </summary>
     public virtual void DrawTownAttackGun(ref Texture2D item, ref Rectangle itemFrame, ref float scale, ref int horizontalHoldoutOffset) { }
 
     // DrawTownAttackSwing
@@ -1456,9 +1240,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         DrawTownAttackSwing(ref item, ref itemFrame, ref itemSize, ref scale, ref offset);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.DrawTownAttackSwing"/>
-    /// </summary>
     public virtual void DrawTownAttackSwing(ref Texture2D item, ref Rectangle itemFrame, ref int itemSize, ref float scale, ref Vector2 offset) { }
 
     // ModifyCollisionData
@@ -1467,9 +1249,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return ModifyCollisionData(victimHitbox, ref immunityCooldownSlot, ref damageMultiplier, ref npcHitbox);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ModifyCollisionData"/>
-    /// </summary>
     public virtual bool ModifyCollisionData(Rectangle victimHitbox, ref int immunityCooldownSlot, ref MultipliableFloat damageMultiplier, ref Rectangle npcHitbox) => true;
 
     // NeedSaving
@@ -1478,9 +1258,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         return NeedSaving();
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.NeedSaving"/>
-    /// </summary>
     public virtual bool NeedSaving() => false;
 
     // SaveData
@@ -1489,9 +1267,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         SaveData(tag);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.SaveData"/>
-    /// </summary>
     public virtual void SaveData(TagCompound tag) { }
 
     // LoadData
@@ -1500,9 +1276,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         LoadData(tag);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.LoadData"/>
-    /// </summary>
     public virtual void LoadData(TagCompound tag) { }
 
     // ChatBubblePosition
@@ -1511,9 +1285,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         ChatBubblePosition(ref position, ref spriteEffects);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.ChatBubblePosition"/>
-    /// </summary>
     public virtual void ChatBubblePosition(ref Vector2 position, ref SpriteEffects spriteEffects) { }
 
     // PartyHatPosition
@@ -1522,9 +1294,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         PartyHatPosition(ref position, ref spriteEffects);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.PartyHatPosition"/>
-    /// </summary>
     public virtual void PartyHatPosition(ref Vector2 position, ref SpriteEffects spriteEffects) { }
 
     // EmoteBubblePosition
@@ -1533,9 +1303,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
         Self = self;
         EmoteBubblePosition(ref position, ref spriteEffects);
     }
-    /// <summary>
     /// <inheritdoc cref="ModNPC.EmoteBubblePosition"/>
-    /// </summary>
     public virtual void EmoteBubblePosition(ref Vector2 position, ref SpriteEffects spriteEffects) { }
 }
 
@@ -1547,7 +1315,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
 /// <br/>3. <strong>避免</strong>在该类中使用实例字段。
 /// </summary>
 /// <typeparam name="TSource">待覆盖的 <see cref="ModProjectile"/> 类。</typeparam>
-public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSource>, ICALocalizationPrefix, ICATweak where TSource : ModProjectile
+public abstract class CAProjectileOverride<TSource> : ModProjectileDetour<TSource>, ICALocalizationPrefix, ICATweak where TSource : ModProjectile
 {
     private static readonly HashSet<string> _exclusiveDetours = ["get_LocalizationCategory", "get_Texture", "get_GlowTexture"];
     private static readonly HashSet<string> _criticalDetours = [];
@@ -1570,23 +1338,23 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
 
     void ICATweak.RegisterTweak()
     {
-        CASet.TweakedProjectiles[ContentType] = true;
+        CASharedData.TweakedProjectiles[ContentType] = true;
         foreach (int npcType in RelatedNPCs)
-            CASet.TweakedNPCs[npcType] = true;
+            CASharedData.TweakedNPCs[npcType] = true;
         foreach (int itemType in RelatedItems)
-            CASet.TweakedItems[itemType] = true;
+            CASharedData.TweakedItems[itemType] = true;
     }
 
     protected override Hook ApplySingleDetour<TDelegate>(TDelegate detour, bool hasThis = true)
     {
-        if (TODetourUtils.EvaluateDetourName(detour.Method, out string sourceName) && SourceType.HasMethod(sourceName, hasThis ? TOReflectionUtils.InstanceBindingFlags : TOReflectionUtils.StaticBindingFlags, out MethodInfo sourceMethod))
+        if (TODetourHandler.EvaluateDetourName(detour.Method, out string sourceName) && SourceType.HasMethod(sourceName, hasThis ? TOReflectionUtils.InstanceBindingFlags : TOReflectionUtils.StaticBindingFlags, out MethodInfo sourceMethod))
         {
             if (_criticalDetours.Contains(sourceName))
-                return TODetourUtils.Modify(sourceMethod, detour);
+                return TODetourHandler.Modify(sourceMethod, detour);
             switch (GetType().HasRealMethod(sourceName, TOReflectionUtils.UniversalBindingFlags), sourceMethod.DeclaringType == SourceType)
             {
                 case (true, true):
-                    return TODetourUtils.Modify(sourceMethod, detour);
+                    return TODetourHandler.Modify(sourceMethod, detour);
                 case (false, true):
                     if (_exclusiveDetours.Contains(sourceName))
                         return null;
@@ -1602,59 +1370,45 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
     public TSource Self;
     public Projectile Projectile => Self.Projectile;
 
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.Type"/>
-    /// </summary>
     public int Type => Self.Type;
 
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.AIType"/>
-    /// </summary>
     public int AIType
     {
         get => Self.AIType;
         set => Self.AIType = value;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.CooldownSlot"/>
-    /// </summary>
     public int CooldownSlot
     {
         get => Self.CooldownSlot;
         set => Self.CooldownSlot = value;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.DrawOffsetX"/>
-    /// </summary>
     public int DrawOffsetX
     {
         get => Self.DrawOffsetX;
         set => Self.DrawOffsetX = value;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.DrawOriginOffsetY"/>
-    /// </summary>
     public int DrawOriginOffsetY
     {
         get => Self.DrawOriginOffsetY;
         set => Self.DrawOriginOffsetY = value;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.DrawOriginOffsetX"/>
-    /// </summary>
     public float DrawOriginOffsetX
     {
         get => Self.DrawOriginOffsetX;
         set => Self.DrawOriginOffsetX = value;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.DrawHeldProjInFrontOfHeldItemAndArms"/>
-    /// </summary>
     public bool DrawHeldProjInFrontOfHeldItemAndArms
     {
         get => Self.DrawHeldProjInFrontOfHeldItemAndArms;
@@ -1685,9 +1439,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return Name;
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.Name"/>
-    /// </summary>
     public virtual string Name => Self.Name;
 
     // Load
@@ -1696,9 +1448,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         Load();
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.Load"/>
-    /// </summary>
     public virtual void Load() { }
 
     // IsLoadingEnabled
@@ -1707,9 +1457,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return IsLoadingEnabled(mod);
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.IsLoadingEnabled(Mod)"/>
-    /// </summary>
     public virtual bool IsLoadingEnabled(Mod mod) => true;
 
     // SetupContent
@@ -1718,9 +1466,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         SetupContent();
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.SetupContent"/>
-    /// </summary>
     public virtual void SetupContent() { }
 
     // SetStaticDefaults
@@ -1729,9 +1475,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         SetStaticDefaults();
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.SetupContent"/>
-    /// </summary>
     public virtual void SetStaticDefaults() { }
 
     // Unload
@@ -1740,9 +1484,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         Unload();
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.Unload"/>
-    /// </summary>
     public virtual void Unload() { }
 
     // ModProjectile
@@ -1752,9 +1494,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return LocalizationCategory;
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.LocalizationCategory"/>
-    /// </summary>
     public virtual string LocalizationCategory => "Projectiles";
 
     // DisplayName
@@ -1763,9 +1503,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return DisplayName;
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.DisplayName"/>
-    /// </summary>
     public virtual LocalizedText DisplayName => Self.GetLocalization("DisplayName", Self.PrettyPrintName);
 
     // Texture
@@ -1774,9 +1512,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return Texture;
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.Texture"/>
-    /// </summary>
     public virtual string Texture => (Self.GetType().Namespace + "." + Self.Name).Replace('.', '/');
 
     // GlowTexture
@@ -1785,9 +1521,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return GlowTexture;
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.GlowTexture"/>
-    /// </summary>
     public virtual string GlowTexture => Texture + "_Glow";
 
     // SetDefaults
@@ -1796,9 +1530,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         SetDefaults();
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.SetDefaults"/>
-    /// </summary>
     public virtual void SetDefaults() { }
 
     // OnSpawn
@@ -1807,9 +1539,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         OnSpawn(source);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.OnSpawn"/>
-    /// </summary>
     public virtual void OnSpawn(IEntitySource source) { }
 
     // AutoStaticDefaults
@@ -1818,9 +1548,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         AutoStaticDefaults();
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.AutoStaticDefaults"/>
-    /// </summary>
     public virtual void AutoStaticDefaults() { }
 
     // PreAI
@@ -1829,9 +1557,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return PreAI();
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.PreAI"/>
-    /// </summary>
     public virtual bool PreAI() => true;
 
     // AI
@@ -1840,9 +1566,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         AI();
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.AI"/>
-    /// </summary>
     public virtual void AI() { }
 
     // PostAI
@@ -1851,9 +1575,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         PostAI();
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.PostAI"/>
-    /// </summary>
     public virtual void PostAI() { }
 
     // SendExtraAI
@@ -1862,9 +1584,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         SendExtraAI(writer);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.SendExtraAI"/>
-    /// </summary>
     public virtual void SendExtraAI(BinaryWriter writer) { }
 
     // ReceiveExtraAI
@@ -1873,9 +1593,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         ReceiveExtraAI(reader);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.ReceiveExtraAI"/>
-    /// </summary>
     public virtual void ReceiveExtraAI(BinaryReader reader) { }
 
     // ShouldUpdatePosition
@@ -1884,9 +1602,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return ShouldUpdatePosition();
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.ShouldUpdatePosition"/>
-    /// </summary>
     public virtual bool ShouldUpdatePosition() => true;
 
     // TileCollideStyle
@@ -1895,9 +1611,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return TileCollideStyle(ref width, ref height, ref fallThrough, ref hitboxCenterFrac);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.TileCollideStyle"/>
-    /// </summary>
     public virtual bool TileCollideStyle(ref int width, ref int height, ref bool fallThrough, ref Vector2 hitboxCenterFrac) => true;
 
     // OnTileCollide
@@ -1906,9 +1620,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return OnTileCollide(oldVelocity);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.OnTileCollide"/>
-    /// </summary>
     public virtual bool OnTileCollide(Vector2 oldVelocity) => true;
 
     // CanCutTiles
@@ -1917,9 +1629,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return CanCutTiles();
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.CanCutTiles"/>
-    /// </summary>
     public virtual bool? CanCutTiles() => null;
 
     // CutTiles
@@ -1928,9 +1638,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         CutTiles();
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.CutTiles"/>
-    /// </summary>
     public virtual void CutTiles() { }
 
     // PreKill
@@ -1939,9 +1647,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return PreKill(timeLeft);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.PreKill"/>
-    /// </summary>
     public virtual bool PreKill(int timeLeft) => true;
 
     // OnKill
@@ -1950,9 +1656,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         OnKill(timeLeft);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.OnKill"/>
-    /// </summary>
     public virtual void OnKill(int timeLeft) { }
 
     // CanDamage
@@ -1961,9 +1665,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return CanDamage();
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.CanDamage"/>
-    /// </summary>
     public virtual bool? CanDamage() => null;
 
     // MinionContactDamage
@@ -1972,9 +1674,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return MinionContactDamage();
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.MinionContactDamage"/>
-    /// </summary>
     public virtual bool MinionContactDamage() => false;
 
     // ModifyDamageHitbox
@@ -1983,9 +1683,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         ModifyDamageHitbox(ref hitbox);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.ModifyDamageHitbox"/>
-    /// </summary>
     public virtual void ModifyDamageHitbox(ref Rectangle hitbox) { }
 
     // CanHitNPC
@@ -1994,9 +1692,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return CanHitNPC(target);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.CanHitNPC"/>
-    /// </summary>
     public virtual bool? CanHitNPC(NPC target) => null;
 
     // ModifyHitNPC
@@ -2005,9 +1701,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         ModifyHitNPC(target, ref modifiers);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.ModifyHitNPC"/>
-    /// </summary>
     public virtual void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) { }
 
     // OnHitNPC
@@ -2016,9 +1710,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         OnHitNPC(target, hit, damageDone);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.OnHitNPC"/>
-    /// </summary>
     public virtual void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) { }
 
     // CanHitPvp
@@ -2027,9 +1719,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return CanHitPvp(target);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.CanHitPvp"/>
-    /// </summary>
     public virtual bool CanHitPvp(Player target) => true;
 
     // CanHitPlayer
@@ -2038,9 +1728,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return CanHitPlayer(target);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.CanHitPlayer"/>
-    /// </summary>
     public virtual bool CanHitPlayer(Player target) => true;
 
     // ModifyHitPlayer
@@ -2049,9 +1737,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         ModifyHitPlayer(target, ref modifiers);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.ModifyHitPlayer"/>
-    /// </summary>
     public virtual void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers) { }
 
     // OnHitPlayer
@@ -2060,9 +1746,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         OnHitPlayer(target, info);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.OnHitPlayer"/>
-    /// </summary>
     public virtual void OnHitPlayer(Player target, Player.HurtInfo info) { }
 
     // Colliding
@@ -2071,9 +1755,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return Colliding(projHitbox, targetHitbox);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.Colliding"/>
-    /// </summary>
     public virtual bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => null;
 
     // GetAlpha
@@ -2082,9 +1764,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return GetAlpha(lightColor);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.GetAlpha"/>
-    /// </summary>
     public virtual Color? GetAlpha(Color lightColor) => null;
 
     // PreDrawExtras
@@ -2093,9 +1773,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return PreDrawExtras();
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.PreDrawExtras"/>
-    /// </summary>
     public virtual bool PreDrawExtras() => true;
 
     // PreDraw
@@ -2104,9 +1782,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return PreDraw(ref lightColor);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.PreDraw"/>
-    /// </summary>
     public virtual bool PreDraw(ref Color lightColor) => true;
 
     // PostDraw
@@ -2115,9 +1791,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         PostDraw(lightColor);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.PostDraw"/>
-    /// </summary>
     public virtual void PostDraw(Color lightColor) { }
 
     // CanUseGrapple
@@ -2126,9 +1800,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return CanUseGrapple(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.CanUseGrapple"/>
-    /// </summary>
     public virtual bool? CanUseGrapple(Player player) => null;
 
     // UseGrapple
@@ -2137,9 +1809,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         UseGrapple(player, ref type);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.UseGrapple"/>
-    /// </summary>
     public virtual void UseGrapple(Player player, ref int type) { }
 
     // GrappleRange
@@ -2148,9 +1818,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return GrappleRange(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.GrappleRange"/>
-    /// </summary>
     public virtual float GrappleRange(Player player) => 300f;
 
     // NumGrappleHooks
@@ -2159,9 +1827,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         NumGrappleHooks(player, ref numHooks);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.NumGrappleHooks"/>
-    /// </summary>
     public virtual void NumGrappleHooks(Player player, ref int numHooks) { }
 
     // GrappleRetreatSpeed
@@ -2170,9 +1836,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         GrappleRetreatSpeed(player, ref speed);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.GrappleRetreatSpeed"/>
-    /// </summary>
     public virtual void GrappleRetreatSpeed(Player player, ref float speed) { }
 
     // GrapplePullSpeed
@@ -2181,9 +1845,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         GrapplePullSpeed(player, ref speed);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.GrapplePullSpeed"/>
-    /// </summary>
     public virtual void GrapplePullSpeed(Player player, ref float speed) { }
 
     // GrappleTargetPoint
@@ -2192,9 +1854,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         GrappleTargetPoint(player, ref grappleX, ref grappleY);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.GrappleTargetPoint"/>
-    /// </summary>
     public virtual void GrappleTargetPoint(Player player, ref float grappleX, ref float grappleY) { }
 
     // GrappleCanLatchOnTo
@@ -2203,9 +1863,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         return GrappleCanLatchOnTo(player, x, y);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.GrappleCanLatchOnTo"/>
-    /// </summary>
     public virtual bool? GrappleCanLatchOnTo(Player player, int x, int y) => null;
 
     // DrawBehind
@@ -2214,9 +1872,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         DrawBehind(index, behindNPCsAndTiles, behindNPCs, behindProjectiles, overPlayers, overWiresUI);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.DrawBehind"/>
-    /// </summary>
     public virtual void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI) { }
 
     // PrepareBombToBlow
@@ -2225,9 +1881,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         PrepareBombToBlow();
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.PrepareBombToBlow"/>
-    /// </summary>
     public virtual void PrepareBombToBlow() { }
 
     // EmitEnchantmentVisualsAt
@@ -2236,9 +1890,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
         Self = self;
         EmitEnchantmentVisualsAt(boxPosition, boxWidth, boxHeight);
     }
-    /// <summary>
     /// <inheritdoc cref="ModProjectile.EmitEnchantmentVisualsAt"/>
-    /// </summary>
     public virtual void EmitEnchantmentVisualsAt(Vector2 boxPosition, int boxWidth, int boxHeight) { }
 }
 
@@ -2250,7 +1902,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
 /// <br/>3. <strong>避免</strong>在该类中使用实例字段。
 /// </summary>
 /// <typeparam name="TSource">待覆盖的 <see cref="ModItem"/> 类。</typeparam>
-public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALocalizationPrefix, ICATweak where TSource : ModItem
+public abstract class CAItemOverride<TSource> : ModItemDetour<TSource>, ICALocalizationPrefix, ICATweak where TSource : ModItem
 {
     private static readonly HashSet<string> _exclusiveDetours = ["get_LocalizationCategory", "get_Texture"];
     private static readonly HashSet<string> _criticalDetours = [];
@@ -2260,18 +1912,18 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
     public abstract CAGamePhase Phase { get; }
     public virtual string LocalizationName => Name ?? SourceType.Name;
 
-    void ICATweak.RegisterTweak() => CASet.TweakedItems[ContentType] = true;
+    void ICATweak.RegisterTweak() => CASharedData.TweakedItems[ContentType] = true;
 
     protected override Hook ApplySingleDetour<TDelegate>(TDelegate detour, bool hasThis = true)
     {
-        if (TODetourUtils.EvaluateDetourName(detour.Method, out string sourceName) && SourceType.HasMethod(sourceName, hasThis ? TOReflectionUtils.InstanceBindingFlags : TOReflectionUtils.StaticBindingFlags, out MethodInfo sourceMethod))
+        if (TODetourHandler.EvaluateDetourName(detour.Method, out string sourceName) && SourceType.HasMethod(sourceName, hasThis ? TOReflectionUtils.InstanceBindingFlags : TOReflectionUtils.StaticBindingFlags, out MethodInfo sourceMethod))
         {
             if (_criticalDetours.Contains(sourceName))
-                return TODetourUtils.Modify(sourceMethod, detour);
+                return TODetourHandler.Modify(sourceMethod, detour);
             switch (GetType().HasRealMethod(sourceName, TOReflectionUtils.UniversalBindingFlags), sourceMethod.DeclaringType == SourceType)
             {
                 case (true, true):
-                    return TODetourUtils.Modify(sourceMethod, detour);
+                    return TODetourHandler.Modify(sourceMethod, detour);
                 case (false, true):
                     if (_exclusiveDetours.Contains(sourceName))
                         return null;
@@ -2286,14 +1938,10 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
 
     public TSource Self;
 
-    /// <summary>
     /// <inheritdoc cref="ModItem.Item"/>
-    /// </summary>
     public Item Item => Self.Item;
 
-    /// <summary>
     /// <inheritdoc cref="ModItem.Type"/>
-    /// </summary>
     public int Type => Self.Type;
 
     // ModType
@@ -2308,9 +1956,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return Name;
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.Name"/>
-    /// </summary>
     public virtual string Name => Self.Name;
 
     // Load
@@ -2319,9 +1965,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         Load();
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.Load"/>
-    /// </summary>
     public virtual void Load() { }
 
     // IsLoadingEnabled
@@ -2330,9 +1974,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return IsLoadingEnabled(mod);
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.IsLoadingEnabled(Mod)"/>
-    /// </summary>
     public virtual bool IsLoadingEnabled(Mod mod) => true;
 
     // SetupContent
@@ -2341,9 +1983,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         SetupContent();
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.SetupContent"/>
-    /// </summary>
     public virtual void SetupContent() { }
 
     // SetStaticDefaults
@@ -2352,9 +1992,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         SetStaticDefaults();
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.SetStaticDefaults"/>
-    /// </summary>
     public virtual void SetStaticDefaults() { }
 
     // Unload
@@ -2363,9 +2001,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         Unload();
     }
-    /// <summary>
     /// <inheritdoc cref="ModType.Unload"/>
-    /// </summary>
     public virtual void Unload() { }
 
     // ModItem
@@ -2375,9 +2011,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return LocalizationCategory;
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.LocalizationCategory"/>
-    /// </summary>
     public virtual string LocalizationCategory => "Items";
 
     // DisplayName
@@ -2386,9 +2020,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return DisplayName;
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.DisplayName"/>
-    /// </summary>
     public virtual LocalizedText DisplayName => Self.GetLocalization("DisplayName", Self.PrettyPrintName);
 
     // Tooltip
@@ -2397,9 +2029,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return Tooltip;
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.Tooltip"/>
-    /// </summary>
     public virtual LocalizedText Tooltip => Self.GetLocalization("Tooltip", () => "");
 
     // Texture
@@ -2408,9 +2038,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return Texture;
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.Texture"/>
-    /// </summary>
     public virtual string Texture => (Self.GetType().Namespace + "." + Self.Name).Replace('.', '/');
 
     // SetDefaults
@@ -2419,9 +2047,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         SetDefaults();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.SetDefaults"/>
-    /// </summary>
     public virtual void SetDefaults() { }
 
     // OnSpawn
@@ -2430,9 +2056,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         OnSpawn(source);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.OnSpawn"/>
-    /// </summary>
     public virtual void OnSpawn(IEntitySource source) { }
 
     // OnCreated
@@ -2441,9 +2065,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         OnCreated(context);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.OnCreated"/>
-    /// </summary>
     public virtual void OnCreated(ItemCreationContext context) { }
 
     // AutoDefaults
@@ -2452,9 +2074,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         AutoDefaults();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.AutoDefaults"/>
-    /// </summary>
     public virtual void AutoDefaults() { }
 
     // AutoStaticDefaults
@@ -2463,9 +2083,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         AutoStaticDefaults();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.AutoStaticDefaults"/>
-    /// </summary>
     public virtual void AutoStaticDefaults() { }
 
     // ChoosePrefix
@@ -2474,9 +2092,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return ChoosePrefix(rand);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ChoosePrefix"/>
-    /// </summary>
     public virtual int ChoosePrefix(UnifiedRandom rand) => -1;
 
     // MeleePrefix
@@ -2485,9 +2101,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return MeleePrefix();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.MeleePrefix"/>
-    /// </summary>
     public virtual bool MeleePrefix() => true;
 
     // WeaponPrefix
@@ -2496,9 +2110,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return WeaponPrefix();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.WeaponPrefix"/>
-    /// </summary>
     public virtual bool WeaponPrefix() => true;
 
     // RangedPrefix
@@ -2507,9 +2119,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return RangedPrefix();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.RangedPrefix"/>
-    /// </summary>
     public virtual bool RangedPrefix() => true;
 
     // MagicPrefix
@@ -2518,9 +2128,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return MagicPrefix();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.MagicPrefix"/>
-    /// </summary>
     public virtual bool MagicPrefix() => true;
 
     // PrefixChance
@@ -2529,9 +2137,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return PrefixChance(pre, rand);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.PrefixChance"/>
-    /// </summary>
     public virtual bool? PrefixChance(int pre, UnifiedRandom rand) => null;
 
     // AllowPrefix
@@ -2540,9 +2146,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return AllowPrefix(pre);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.AllowPrefix"/>
-    /// </summary>
     public virtual bool AllowPrefix(int pre) => true;
 
     // CanUseItem
@@ -2551,9 +2155,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanUseItem(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanUseItem"/>
-    /// </summary>
     public virtual bool CanUseItem(Player player) => true;
 
     // CanAutoReuseItem
@@ -2562,9 +2164,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanAutoReuseItem(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanAutoReuseItem"/>
-    /// </summary>
     public virtual bool? CanAutoReuseItem(Player player) => null;
 
     // UseStyle
@@ -2573,9 +2173,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         UseStyle(player, heldItemFrame);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UseStyle"/>
-    /// </summary>
     public virtual void UseStyle(Player player, Rectangle heldItemFrame) { }
 
     // HoldStyle
@@ -2584,9 +2182,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         HoldStyle(player, heldItemFrame);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.HoldStyle"/>
-    /// </summary>
     public virtual void HoldStyle(Player player, Rectangle heldItemFrame) { }
 
     // HoldItem
@@ -2595,9 +2191,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         HoldItem(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.HoldItem"/>
-    /// </summary>
     public virtual void HoldItem(Player player) { }
 
     // UseTimeMultiplier
@@ -2606,9 +2200,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return UseTimeMultiplier(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UseTimeMultiplier"/>
-    /// </summary>
     public virtual float UseTimeMultiplier(Player player) => 1f;
 
     // UseAnimationMultiplier
@@ -2617,9 +2209,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return UseAnimationMultiplier(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UseAnimationMultiplier"/>
-    /// </summary>
     public virtual float UseAnimationMultiplier(Player player) => 1f;
 
     // UseSpeedMultiplier
@@ -2628,9 +2218,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return UseSpeedMultiplier(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UseSpeedMultiplier"/>
-    /// </summary>
     public virtual float UseSpeedMultiplier(Player player) => 1f;
 
     // GetHealLife
@@ -2639,9 +2227,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         GetHealLife(player, quickHeal, ref healValue);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.GetHealLife"/>
-    /// </summary>
     public virtual void GetHealLife(Player player, bool quickHeal, ref int healValue) { }
 
     // GetHealMana
@@ -2650,9 +2236,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         GetHealMana(player, quickHeal, ref healValue);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.GetHealMana"/>
-    /// </summary>
     public virtual void GetHealMana(Player player, bool quickHeal, ref int healValue) { }
 
     // ModifyManaCost
@@ -2661,9 +2245,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ModifyManaCost(player, ref reduce, ref mult);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ModifyManaCost"/>
-    /// </summary>
     public virtual void ModifyManaCost(Player player, ref float reduce, ref float mult) { }
 
     // OnMissingMana
@@ -2672,9 +2254,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         OnMissingMana(player, neededMana);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.OnMissingMana"/>
-    /// </summary>
     public virtual void OnMissingMana(Player player, int neededMana) { }
 
     // OnConsumeMana
@@ -2683,10 +2263,26 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         OnConsumeMana(player, manaConsumed);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.OnConsumeMana"/>
-    /// </summary>
     public virtual void OnConsumeMana(Player player, int manaConsumed) { }
+
+    // ModifyPotionDelay
+    public override void Detour_ModifyPotionDelay(Orig_ModifyPotionDelay orig, TSource self, Player player, ref int baseDelay)
+    {
+        Self = self;
+        ModifyPotionDelay(player, ref baseDelay);
+    }
+    /// <inheritdoc cref="ModItem.ModifyPotionDelay"/>
+    public virtual void ModifyPotionDelay(Player player, ref int baseDelay) { }
+
+    // ApplyPotionDelay
+    public override bool Detour_ApplyPotionDelay(Orig_ApplyPotionDelay orig, TSource self, Player player, int potionDelay)
+    {
+        Self = self;
+        return ApplyPotionDelay(player, potionDelay);
+    }
+    /// <inheritdoc cref="ModItem.ApplyPotionDelay"/>
+    public virtual bool ApplyPotionDelay(Player player, int potionDelay) => true;
 
     // ModifyWeaponDamage
     public sealed override void Detour_ModifyWeaponDamage(Orig_ModifyWeaponDamage orig, TSource self, Player player, ref StatModifier damage)
@@ -2694,9 +2290,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ModifyWeaponDamage(player, ref damage);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ModifyWeaponDamage"/>
-    /// </summary>
     public virtual void ModifyWeaponDamage(Player player, ref StatModifier damage) { }
 
     // ModifyResearchSorting
@@ -2705,9 +2299,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ModifyResearchSorting(ref itemGroup);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ModifyResearchSorting"/>
-    /// </summary>
     public virtual void ModifyResearchSorting(ref ContentSamples.CreativeHelper.ItemGroup itemGroup) { }
 
     // CanConsumeBait
@@ -2716,9 +2308,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanConsumeBait(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanConsumeBait"/>
-    /// </summary>
     public virtual bool? CanConsumeBait(Player player) => null;
 
     // CanResearch
@@ -2727,9 +2317,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanResearch();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanResearch"/>
-    /// </summary>
     public virtual bool CanResearch() => true;
 
     // OnResearched
@@ -2738,9 +2326,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         OnResearched(fullyResearched);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.OnResearched"/>
-    /// </summary>
     public virtual void OnResearched(bool fullyResearched) { }
 
     // ModifyWeaponKnockback
@@ -2749,9 +2335,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ModifyWeaponKnockback(player, ref knockback);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ModifyWeaponKnockback"/>
-    /// </summary>
     public virtual void ModifyWeaponKnockback(Player player, ref StatModifier knockback) { }
 
     // ModifyWeaponCrit
@@ -2760,9 +2344,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ModifyWeaponCrit(player, ref crit);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ModifyWeaponCrit"/>
-    /// </summary>
     public virtual void ModifyWeaponCrit(Player player, ref float crit) { }
 
     // NeedsAmmo
@@ -2771,9 +2353,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return NeedsAmmo(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.NeedsAmmo"/>
-    /// </summary>
     public virtual bool NeedsAmmo(Player player) => true;
 
     // PickAmmo
@@ -2782,9 +2362,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         PickAmmo(weapon, player, ref type, ref speed, ref damage, ref knockback);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.PickAmmo"/>
-    /// </summary>
     public virtual void PickAmmo(Item weapon, Player player, ref int type, ref float speed, ref StatModifier damage, ref float knockback) { }
 
     // CanChooseAmmo
@@ -2793,9 +2371,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanChooseAmmo(ammo, player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanChooseAmmo"/>
-    /// </summary>
     public virtual bool? CanChooseAmmo(Item ammo, Player player) => null;
 
     // CanBeChosenAsAmmo
@@ -2804,9 +2380,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanBeChosenAsAmmo(weapon, player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanBeChosenAsAmmo"/>
-    /// </summary>
     public virtual bool? CanBeChosenAsAmmo(Item weapon, Player player) => null;
 
     // CanConsumeAmmo
@@ -2815,9 +2389,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanConsumeAmmo(ammo, player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanConsumeAmmo"/>
-    /// </summary>
     public virtual bool CanConsumeAmmo(Item ammo, Player player) => true;
 
     // CanBeConsumedAsAmmo
@@ -2826,9 +2398,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanBeConsumedAsAmmo(weapon, player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanBeConsumedAsAmmo"/>
-    /// </summary>
     public virtual bool CanBeConsumedAsAmmo(Item weapon, Player player) => true;
 
     // OnConsumeAmmo
@@ -2837,9 +2407,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         OnConsumeAmmo(ammo, player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.OnConsumeAmmo"/>
-    /// </summary>
     public virtual void OnConsumeAmmo(Item ammo, Player player) { }
 
     // OnConsumedAsAmmo
@@ -2848,9 +2416,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         OnConsumedAsAmmo(weapon, player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.OnConsumedAsAmmo"/>
-    /// </summary>
     public virtual void OnConsumedAsAmmo(Item weapon, Player player) { }
 
     // CanShoot
@@ -2859,9 +2425,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanShoot(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanShoot"/>
-    /// </summary>
     public virtual bool CanShoot(Player player) => true;
 
     // ModifyShootStats
@@ -2870,9 +2434,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ModifyShootStats(player, ref position, ref velocity, ref type, ref damage, ref knockback);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ModifyShootStats"/>
-    /// </summary>
     public virtual void ModifyShootStats(Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback) { }
 
     // Shoot
@@ -2881,9 +2443,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return Shoot(player, source, position, velocity, type, damage, knockback);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.Shoot"/>
-    /// </summary>
     public virtual bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback) => true;
 
     // UseItemHitbox
@@ -2892,9 +2452,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         UseItemHitbox(player, ref hitbox, ref noHitbox);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UseItemHitbox"/>
-    /// </summary>
     public virtual void UseItemHitbox(Player player, ref Rectangle hitbox, ref bool noHitbox) { }
 
     // MeleeEffects
@@ -2903,9 +2461,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         MeleeEffects(player, hitbox);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.MeleeEffects"/>
-    /// </summary>
     public virtual void MeleeEffects(Player player, Rectangle hitbox) { }
 
     // CanCatchNPC
@@ -2914,9 +2470,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanCatchNPC(target, player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanCatchNPC"/>
-    /// </summary>
     public virtual bool? CanCatchNPC(NPC target, Player player) => null;
 
     // OnCatchNPC
@@ -2925,9 +2479,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         OnCatchNPC(npc, player, failed);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.OnCatchNPC"/>
-    /// </summary>
     public virtual void OnCatchNPC(NPC npc, Player player, bool failed) { }
 
     // ModifyItemScale
@@ -2936,9 +2488,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ModifyItemScale(player, ref scale);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ModifyItemScale"/>
-    /// </summary>
     public virtual void ModifyItemScale(Player player, ref float scale) { }
 
     // CanHitNPC
@@ -2947,9 +2497,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanHitNPC(player, target);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanHitNPC"/>
-    /// </summary>
     public virtual bool? CanHitNPC(Player player, NPC target) => null;
 
     // CanMeleeAttackCollideWithNPC
@@ -2958,9 +2506,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanMeleeAttackCollideWithNPC(meleeAttackHitbox, player, target);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanMeleeAttackCollideWithNPC"/>
-    /// </summary>
     public virtual bool? CanMeleeAttackCollideWithNPC(Rectangle meleeAttackHitbox, Player player, NPC target) => null;
 
     // ModifyHitNPC
@@ -2969,9 +2515,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ModifyHitNPC(player, target, ref modifiers);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ModifyHitNPC"/>
-    /// </summary>
     public virtual void ModifyHitNPC(Player player, NPC target, ref NPC.HitModifiers modifiers) { }
 
     // OnHitNPC
@@ -2980,9 +2524,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         OnHitNPC(player, target, hit, damageDone);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.OnHitNPC"/>
-    /// </summary>
     public virtual void OnHitNPC(Player player, NPC target, NPC.HitInfo hit, int damageDone) { }
 
     // CanHitPvp
@@ -2991,9 +2533,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanHitPvp(player, target);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanHitPvp"/>
-    /// </summary>
     public virtual bool CanHitPvp(Player player, Player target) => true;
 
     // ModifyHitPvp
@@ -3002,9 +2542,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ModifyHitPvp(player, target, ref modifiers);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ModifyHitPvp"/>
-    /// </summary>
     public virtual void ModifyHitPvp(Player player, Player target, ref Player.HurtModifiers modifiers) { }
 
     // OnHitPvp
@@ -3013,9 +2551,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         OnHitPvp(player, target, hurtInfo);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.OnHitPvp"/>
-    /// </summary>
     public virtual void OnHitPvp(Player player, Player target, Player.HurtInfo hurtInfo) { }
 
     // UseItem
@@ -3024,9 +2560,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return UseItem(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UseItem"/>
-    /// </summary>
     public virtual bool? UseItem(Player player) => null;
 
     // UseAnimation
@@ -3035,9 +2569,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         UseAnimation(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UseAnimation"/>
-    /// </summary>
     public virtual void UseAnimation(Player player) { }
 
     // ConsumeItem
@@ -3046,9 +2578,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return ConsumeItem(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ConsumeItem"/>
-    /// </summary>
     public virtual bool ConsumeItem(Player player) => true;
 
     // OnConsumeItem
@@ -3057,9 +2587,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         OnConsumeItem(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.OnConsumeItem"/>
-    /// </summary>
     public virtual void OnConsumeItem(Player player) { }
 
     // UseItemFrame
@@ -3068,9 +2596,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         UseItemFrame(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UseItemFrame"/>
-    /// </summary>
     public virtual void UseItemFrame(Player player) { }
 
     // HoldItemFrame
@@ -3079,9 +2605,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         HoldItemFrame(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.HoldItemFrame"/>
-    /// </summary>
     public virtual void HoldItemFrame(Player player) { }
 
     // AltFunctionUse
@@ -3090,9 +2614,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return AltFunctionUse(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.AltFunctionUse"/>
-    /// </summary>
     public virtual bool AltFunctionUse(Player player) => false;
 
     // UpdateInventory
@@ -3101,9 +2623,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         UpdateInventory(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UpdateInventory"/>
-    /// </summary>
     public virtual void UpdateInventory(Player player) { }
 
     // UpdateInfoAccessory
@@ -3112,9 +2632,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         UpdateInfoAccessory(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UpdateInfoAccessory"/>
-    /// </summary>
     public virtual void UpdateInfoAccessory(Player player) { }
 
     // UpdateEquip
@@ -3123,9 +2641,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         UpdateEquip(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UpdateEquip"/>
-    /// </summary>
     public virtual void UpdateEquip(Player player) { }
 
     // UpdateAccessory
@@ -3134,9 +2650,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         UpdateAccessory(player, hideVisual);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UpdateAccessory"/>
-    /// </summary>
     public virtual void UpdateAccessory(Player player, bool hideVisual) { }
 
     // UpdateVanity
@@ -3145,9 +2659,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         UpdateVanity(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UpdateVanity"/>
-    /// </summary>
     public virtual void UpdateVanity(Player player) { }
 
     // UpdateVisibleAccessory
@@ -3156,9 +2668,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         UpdateVisibleAccessory(player, hideVisual);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UpdateVisibleAccessory"/>
-    /// </summary>
     public virtual void UpdateVisibleAccessory(Player player, bool hideVisual) { }
 
     // UpdateItemDye
@@ -3167,9 +2677,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         UpdateItemDye(player, dye, hideVisual);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UpdateItemDye"/>
-    /// </summary>
     public virtual void UpdateItemDye(Player player, int dye, bool hideVisual) { }
 
     // EquipFrameEffects
@@ -3178,9 +2686,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         EquipFrameEffects(player, type);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.EquipFrameEffects"/>
-    /// </summary>
     public virtual void EquipFrameEffects(Player player, EquipType type) { }
 
     // IsArmorSet
@@ -3189,9 +2695,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return IsArmorSet(head, body, legs);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.IsArmorSet"/>
-    /// </summary>
     public virtual bool IsArmorSet(Item head, Item body, Item legs) => false;
 
     // UpdateArmorSet
@@ -3200,9 +2704,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         UpdateArmorSet(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UpdateArmorSet"/>
-    /// </summary>
     public virtual void UpdateArmorSet(Player player) { }
 
     // IsVanitySet
@@ -3211,9 +2713,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return IsVanitySet(head, body, legs);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.IsVanitySet"/>
-    /// </summary>
     public virtual bool IsVanitySet(int head, int body, int legs) => false;
 
     // PreUpdateVanitySet
@@ -3222,9 +2722,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         PreUpdateVanitySet(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.PreUpdateVanitySet"/>
-    /// </summary>
     public virtual void PreUpdateVanitySet(Player player) { }
 
     // UpdateVanitySet
@@ -3233,9 +2731,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         UpdateVanitySet(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.UpdateVanitySet"/>
-    /// </summary>
     public virtual void UpdateVanitySet(Player player) { }
 
     // ArmorSetShadows
@@ -3244,9 +2740,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ArmorSetShadows(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ArmorSetShadows"/>
-    /// </summary>
     public virtual void ArmorSetShadows(Player player) { }
 
     // SetMatch
@@ -3255,9 +2749,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         SetMatch(male, ref equipSlot, ref robes);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.SetMatch"/>
-    /// </summary>
     public virtual void SetMatch(bool male, ref int equipSlot, ref bool robes) { }
 
     // CanRightClick
@@ -3266,9 +2758,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanRightClick();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanRightClick"/>
-    /// </summary>
     public virtual bool CanRightClick() => false;
 
     // RightClick
@@ -3277,9 +2767,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         RightClick(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.RightClick"/>
-    /// </summary>
     public virtual void RightClick(Player player) { }
 
     // ModifyItemLoot
@@ -3288,9 +2776,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ModifyItemLoot(itemLoot);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ModifyItemLoot"/>
-    /// </summary>
     public virtual void ModifyItemLoot(ItemLoot itemLoot) { }
 
     // CanStack
@@ -3299,9 +2785,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanStack(source);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanStack"/>
-    /// </summary>
     public virtual bool CanStack(Item source) => true;
 
     // CanStackInWorld
@@ -3310,9 +2794,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanStackInWorld(source);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanStackInWorld"/>
-    /// </summary>
     public virtual bool CanStackInWorld(Item source) => true;
 
     // OnStack
@@ -3321,9 +2803,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         OnStack(source, numToTransfer);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.OnStack"/>
-    /// </summary>
     public virtual void OnStack(Item source, int numToTransfer) { }
 
     // SplitStack
@@ -3332,9 +2812,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         SplitStack(source, numToTransfer);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.SplitStack"/>
-    /// </summary>
     public virtual void SplitStack(Item source, int numToTransfer) { }
 
     // ReforgePrice
@@ -3343,9 +2821,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return ReforgePrice(ref reforgePrice, ref canApplyDiscount);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ReforgePrice"/>
-    /// </summary>
     public virtual bool ReforgePrice(ref int reforgePrice, ref bool canApplyDiscount) => true;
 
     // CanReforge
@@ -3354,9 +2830,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanReforge();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanReforge"/>
-    /// </summary>
     public virtual bool CanReforge() => true;
 
     // PreReforge
@@ -3365,9 +2839,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         PreReforge();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.PreReforge"/>
-    /// </summary>
     public virtual void PreReforge() { }
 
     // PostReforge
@@ -3376,9 +2848,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         PostReforge();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.PostReforge"/>
-    /// </summary>
     public virtual void PostReforge() { }
 
     // DrawArmorColor
@@ -3387,9 +2857,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         DrawArmorColor(drawPlayer, shadow, ref color, ref glowMask, ref glowMaskColor);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.DrawArmorColor"/>
-    /// </summary>
     public virtual void DrawArmorColor(Player drawPlayer, float shadow, ref Color color, ref int glowMask, ref Color glowMaskColor) { }
 
     // ArmorArmGlowMask
@@ -3398,9 +2866,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ArmorArmGlowMask(drawPlayer, shadow, ref glowMask, ref color);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ArmorArmGlowMask"/>
-    /// </summary>
     public virtual void ArmorArmGlowMask(Player drawPlayer, float shadow, ref int glowMask, ref Color color) { }
 
     // VerticalWingSpeeds
@@ -3409,9 +2875,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         VerticalWingSpeeds(player, ref ascentWhenFalling, ref ascentWhenRising, ref maxCanAscendMultiplier, ref maxAscentMultiplier, ref constantAscend);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.VerticalWingSpeeds"/>
-    /// </summary>
     public virtual void VerticalWingSpeeds(Player player, ref float ascentWhenFalling, ref float ascentWhenRising, ref float maxCanAscendMultiplier, ref float maxAscentMultiplier, ref float constantAscend) { }
 
     // HorizontalWingSpeeds
@@ -3420,9 +2884,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         HorizontalWingSpeeds(player, ref speed, ref acceleration);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.HorizontalWingSpeeds"/>
-    /// </summary>
     public virtual void HorizontalWingSpeeds(Player player, ref float speed, ref float acceleration) { }
 
     // WingUpdate
@@ -3431,9 +2893,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return WingUpdate(player, inUse);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.WingUpdate"/>
-    /// </summary>
     public virtual bool WingUpdate(Player player, bool inUse) => false;
 
     // Update
@@ -3442,9 +2902,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         Update(ref gravity, ref maxFallSpeed);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.Update"/>
-    /// </summary>
     public virtual void Update(ref float gravity, ref float maxFallSpeed) { }
 
     // PostUpdate
@@ -3453,9 +2911,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         PostUpdate();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.PostUpdate"/>
-    /// </summary>
     public virtual void PostUpdate() { }
 
     // GrabRange
@@ -3464,9 +2920,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         GrabRange(player, ref grabRange);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.GrabRange"/>
-    /// </summary>
     public virtual void GrabRange(Player player, ref int grabRange) { }
 
     // GrabStyle
@@ -3475,9 +2929,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return GrabStyle(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.GrabStyle"/>
-    /// </summary>
     public virtual bool GrabStyle(Player player) => false;
 
     // CanPickup
@@ -3486,9 +2938,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanPickup(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanPickup"/>
-    /// </summary>
     public virtual bool CanPickup(Player player) => true;
 
     // OnPickup
@@ -3497,9 +2947,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return OnPickup(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.OnPickup"/>
-    /// </summary>
     public virtual bool OnPickup(Player player) => true;
 
     // ItemSpace
@@ -3508,9 +2956,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return ItemSpace(player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ItemSpace"/>
-    /// </summary>
     public virtual bool ItemSpace(Player player) => false;
 
     // GetAlpha
@@ -3519,9 +2965,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return GetAlpha(lightColor);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.GetAlpha"/>
-    /// </summary>
     public virtual Color? GetAlpha(Color lightColor) => null;
 
     // PreDrawInWorld
@@ -3530,9 +2974,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return PreDrawInWorld(spriteBatch, lightColor, alphaColor, ref rotation, ref scale, whoAmI);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.PreDrawInWorld"/>
-    /// </summary>
     public virtual bool PreDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI) => true;
 
     // PostDrawInWorld
@@ -3541,9 +2983,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         PostDrawInWorld(spriteBatch, lightColor, alphaColor, rotation, scale, whoAmI);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.PostDrawInWorld"/>
-    /// </summary>
     public virtual void PostDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, float rotation, float scale, int whoAmI) { }
 
     // PreDrawInInventory
@@ -3552,9 +2992,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return PreDrawInInventory(spriteBatch, position, frame, drawColor, itemColor, origin, scale);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.PreDrawInInventory"/>
-    /// </summary>
     public virtual bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) => true;
 
     // PostDrawInInventory
@@ -3563,9 +3001,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         PostDrawInInventory(spriteBatch, position, frame, drawColor, itemColor, origin, scale);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.PostDrawInInventory"/>
-    /// </summary>
     public virtual void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) { }
 
     // HoldoutOffset
@@ -3574,9 +3010,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return HoldoutOffset();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.HoldoutOffset"/>
-    /// </summary>
     public virtual Vector2? HoldoutOffset() => null;
 
     // HoldoutOrigin
@@ -3585,9 +3019,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return HoldoutOrigin();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.HoldoutOrigin"/>
-    /// </summary>
     public virtual Vector2? HoldoutOrigin() => null;
 
     // CanEquipAccessory
@@ -3596,9 +3028,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanEquipAccessory(player, slot, modded);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanEquipAccessory"/>
-    /// </summary>
     public virtual bool CanEquipAccessory(Player player, int slot, bool modded) => true;
 
     // CanAccessoryBeEquippedWith
@@ -3607,9 +3037,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return CanAccessoryBeEquippedWith(equippedItem, incomingItem, player);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CanAccessoryBeEquippedWith"/>
-    /// </summary>
     public virtual bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player) => true;
 
     // ExtractinatorUse
@@ -3618,9 +3046,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ExtractinatorUse(extractinatorBlockType, ref resultType, ref resultStack);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ExtractinatorUse"/>
-    /// </summary>
     public virtual void ExtractinatorUse(int extractinatorBlockType, ref int resultType, ref int resultStack) { }
 
     // ModifyFishingLine
@@ -3629,9 +3055,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ModifyFishingLine(bobber, ref lineOriginOffset, ref lineColor);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ModifyFishingLine"/>
-    /// </summary>
     public virtual void ModifyFishingLine(Projectile bobber, ref Vector2 lineOriginOffset, ref Color lineColor) { }
 
     // CaughtFishStack
@@ -3640,9 +3064,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         CaughtFishStack(ref stack);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.CaughtFishStack"/>
-    /// </summary>
     public virtual void CaughtFishStack(ref int stack) { }
 
     // IsQuestFish
@@ -3651,9 +3073,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return IsQuestFish();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.IsQuestFish"/>
-    /// </summary>
     public virtual bool IsQuestFish() => false;
 
     // IsAnglerQuestAvailable
@@ -3662,9 +3082,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return IsAnglerQuestAvailable();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.IsAnglerQuestAvailable"/>
-    /// </summary>
     public virtual bool IsAnglerQuestAvailable() => true;
 
     // AnglerQuestChat
@@ -3673,9 +3091,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         AnglerQuestChat(ref description, ref catchLocation);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.AnglerQuestChat"/>
-    /// </summary>
     public virtual void AnglerQuestChat(ref string description, ref string catchLocation) { }
 
     // SaveData
@@ -3684,9 +3100,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         SaveData(tag);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.SaveData"/>
-    /// </summary>
     public virtual void SaveData(TagCompound tag) { }
 
     // LoadData
@@ -3695,9 +3109,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         LoadData(tag);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.LoadData"/>
-    /// </summary>
     public virtual void LoadData(TagCompound tag) { }
 
     // NetSend
@@ -3706,9 +3118,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         NetSend(writer);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.NetSend"/>
-    /// </summary>
     public virtual void NetSend(BinaryWriter writer) { }
 
     // NetReceive
@@ -3717,9 +3127,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         NetReceive(reader);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.NetReceive"/>
-    /// </summary>
     public virtual void NetReceive(BinaryReader reader) { }
 
     // AddRecipes
@@ -3728,9 +3136,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         AddRecipes();
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.AddRecipes"/>
-    /// </summary>
     public virtual void AddRecipes() { }
 
     // PreDrawTooltip
@@ -3739,9 +3145,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return PreDrawTooltip(lines, ref x, ref y);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.PreDrawTooltip"/>
-    /// </summary>
     public virtual bool PreDrawTooltip(ReadOnlyCollection<TooltipLine> lines, ref int x, ref int y) => true;
 
     // PostDrawTooltip
@@ -3750,9 +3154,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         PostDrawTooltip(lines);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.PostDrawTooltip"/>
-    /// </summary>
     public virtual void PostDrawTooltip(ReadOnlyCollection<DrawableTooltipLine> lines) { }
 
     // PreDrawTooltipLine
@@ -3761,9 +3163,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         return PreDrawTooltipLine(line, ref yOffset);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.PreDrawTooltipLine"/>
-    /// </summary>
     public virtual bool PreDrawTooltipLine(DrawableTooltipLine line, ref int yOffset) => true;
 
     // PostDrawTooltipLine
@@ -3772,9 +3172,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         PostDrawTooltipLine(line);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.PostDrawTooltipLine"/>
-    /// </summary>
     public virtual void PostDrawTooltipLine(DrawableTooltipLine line) { }
 
     // ModifyTooltips
@@ -3783,9 +3181,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
         Self = self;
         ModifyTooltips(tooltips);
     }
-    /// <summary>
     /// <inheritdoc cref="ModItem.ModifyTooltips"/>
-    /// </summary>
     public virtual void ModifyTooltips(List<TooltipLine> tooltips) { }
 }
 #endregion
@@ -3794,8 +3190,6 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
 public sealed class CASingleNPCBehaviorHandler : SingleNPCBehaviorHandler<CASingleNPCBehavior>
 {
     public override CAMain Mod => CAMain.Instance;
-
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 
     public override decimal Priority => 50m;
 
@@ -3806,8 +3200,6 @@ public sealed class CASingleProjectileBehaviorHandler : SingleProjectileBehavior
 {
     public override CAMain Mod => CAMain.Instance;
 
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
-
     public override decimal Priority => 50m;
 
     protected override SingleEntityBehaviorSet<Projectile, CASingleProjectileBehavior> BehaviorSet => CAEntityChangeHelper.ProjectileBehaviors;
@@ -3817,14 +3209,12 @@ public sealed class CASingleItemBehaviorHandler : SingleItemBehaviorHandler<CASi
 {
     public override CAMain Mod => CAMain.Instance;
 
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
-
     public override decimal Priority => 50m;
 
     protected override SingleEntityBehaviorSet<Item, CASingleItemBehavior> BehaviorSet => CAEntityChangeHelper.ItemBehaviors;
 }
 
-public sealed class CAEntityChangeHelper : IResourceLoader
+public sealed class CAEntityChangeHelper : IContentLoader
 {
     internal static readonly SingleEntityBehaviorSet<NPC, CASingleNPCBehavior> NPCBehaviors = new();
 
@@ -3832,42 +3222,33 @@ public sealed class CAEntityChangeHelper : IResourceLoader
 
     internal static readonly SingleEntityBehaviorSet<Item, CASingleItemBehavior> ItemBehaviors = new();
 
-    void IResourceLoader.PostSetupContent()
+    void IContentLoader.PostSetupContent()
     {
-        Assembly assembly = CAMain.Assembly;
+        Assembly assembly = CASharedData.Assembly;
         NPCBehaviors.FillSet(assembly);
         ProjectileBehaviors.FillSet(assembly);
         ItemBehaviors.FillSet(assembly);
 
-        foreach (ICATweak caOverride in TOReflectionUtils.GetTypeInstancesDerivedFrom<ICATweak>(CAMain.Assembly))
-            caOverride.RegisterTweak();
+        foreach (ICATweak caTweak in TOReflectionUtils.GetTypeInstancesDerivedFrom<ICATweak>(CASharedData.Assembly))
+            caTweak.RegisterTweak();
     }
 
-    void IResourceLoader.OnModUnload()
+    void IContentLoader.OnModUnload()
     {
         NPCBehaviors.Clear();
         ProjectileBehaviors.Clear();
         ItemBehaviors.Clear();
     }
 }
-
-public sealed class CAItemTweakTooltip : CAGlobalItemBehavior2
-{
-    public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
-    {
-        if (CASet.TweakedItems[item.type])
-            tooltips.ModifyVanillaTooltipByName("ItemName", l => l.Text += TOMain.CelestialColor.FormatString(" " + Language.GetTextValue(CAMain.TweakLocalizationPrefix + "TweakIdentifier")));
-    }
-}
 #endregion Handler
 
 #region Detour
-public sealed class CalamityGlobalNPCBehaviorDetour : CACalamityGlobalNPCDetour
+public sealed class CalamityGlobalNPCBehaviorDetour : CalamityGlobalNPCDetour
 {
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalNPC self, NPC npc)
     {
         if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreAI)) &&
-            !npcBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.PreAI))
+            !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.PreAI))
             return true;
 
         return orig(self, npc);
@@ -3876,7 +3257,7 @@ public sealed class CalamityGlobalNPCBehaviorDetour : CACalamityGlobalNPCDetour
     public override Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalNPC self, NPC npc, Color drawColor)
     {
         if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.GetAlpha)) &&
-            !npcBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.GetAlpha))
+            !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.GetAlpha))
             return null;
 
         return orig(self, npc, drawColor);
@@ -3885,14 +3266,26 @@ public sealed class CalamityGlobalNPCBehaviorDetour : CACalamityGlobalNPCDetour
     public override bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalNPC self, NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreDraw))
-            && npcBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.PreDraw))
+            && npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.PreDraw))
             return true;
 
         return orig(self, npc, spriteBatch, screenPos, drawColor);
     }
 }
 
-public sealed class CalamityGlobalProjectileBehaviorDetour : CACalamityGlobalProjectileDetour
+public sealed class CalamityVanillaAIOverrideDetour : GlobalNPCDetour<CalamityVanillaAIOverrideNPC>
+{
+    public override bool Detour_PreAI(Orig_PreAI orig, CalamityVanillaAIOverrideNPC self, NPC npc)
+    {
+        if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreAI)) &&
+            !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.VanillaOverrideAI))
+            return true;
+
+        return orig(self, npc);
+    }
+}
+
+public sealed class CalamityGlobalProjectileBehaviorDetour : CalamityGlobalProjectileDetour
 {
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalProjectile self, Projectile projectile)
     {

@@ -17,16 +17,16 @@ public static class CAModCall
                 {
                     case "anomaly":
                         if (args.Length == 2)
-                            return CAWorld.Anomaly;
+                            return CASharedData.Anomaly;
                         else if (args[2] is bool newValue)
-                            return CAWorld.Anomaly = newValue;
+                            return CASharedData.Anomaly = newValue;
                         else
                             return null;
                     case "anomalyultra":
                         if (args.Length == 2)
-                            return CAWorld.AnomalyUltramundane;
+                            return CASharedData.AnomalyUltramundane;
                         else if (args[2] is bool newValue)
-                            return CAWorld.AnomalyUltramundane = newValue;
+                            return CASharedData.AnomalyUltramundane = newValue;
                         else
                             return null;
                 }

@@ -1,23 +1,21 @@
+//不全局引用任何灾厄命名空间
+
+global using CalamityAnomalies.Assets;
+global using CalamityAnomalies.Core;
+global using CalamityAnomalies.GlobalInstances;
+global using CalamityAnomalies.ModCompatibility.CalamityBridge;
+global using CalamityAnomalies.Visual;
+global using Microsoft.Xna.Framework;
+global using Microsoft.Xna.Framework.Graphics;
+global using ReLogic.Content;
+global using ReLogic.Graphics;
+global using ReLogic.Utilities;
 global using System;
 global using System.Collections.Generic;
 global using System.IO;
 global using System.Linq;
 global using System.Reflection;
 global using System.Runtime.CompilerServices;
-global using CalamityAnomalies.Core;
-global using CalamityAnomalies.GlobalInstances;
-global using CalamityAnomalies.UI;
-global using CalamityAnomalies.Visual;
-global using CalamityMod;
-global using CalamityMod.CalPlayer;
-global using CalamityMod.Items;
-global using CalamityMod.NPCs;
-global using CalamityMod.Projectiles;
-global using Microsoft.Xna.Framework;
-global using Microsoft.Xna.Framework.Graphics;
-global using ReLogic.Content;
-global using ReLogic.Graphics;
-global using ReLogic.Utilities;
 global using Terraria;
 global using Terraria.Audio;
 global using Terraria.DataStructures;
@@ -28,20 +26,21 @@ global using Terraria.ModLoader;
 global using Terraria.ModLoader.IO;
 global using Terraria.Utilities;
 global using Transoceanic;
-global using Transoceanic.Core;
-global using Transoceanic.Data;
-global using Transoceanic.Extensions;
-global using Transoceanic.GlobalInstances;
-global using Transoceanic.Localization;
-global using Transoceanic.RuntimeEditing;
-global using Transoceanic.Utilities;
+global using Transoceanic.DataStructures;
+global using Transoceanic.DataStructures.Assets;
+global using Transoceanic.DataStructures.Geometry;
+global using Transoceanic.DataStructures.Particles;
+global using Transoceanic.Framework;
+global using Transoceanic.Framework.Abstractions;
+global using Transoceanic.Framework.Helpers;
 global using ZLinq;
-global using CalamityMod_ = CalamityMod.CalamityMod;
 using CalamityAnomalies.ModCompatibility;
 
 namespace CalamityAnomalies;
 
-public sealed class CAMain : Mod, IResourceLoader
+// Developed by ColdsUx
+
+public sealed class CAMain : Mod, IContentLoader
 {
     internal static CAMain Instance { get; private set; }
 
@@ -61,7 +60,7 @@ public sealed class CAMain : Mod, IResourceLoader
             Instance = this;
 
             foreach (ICALoader loader in
-                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(Assembly).AsValueEnumerable()
+                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(CASharedData.Assembly).AsValueEnumerable()
                 orderby pair.Type.GetMethod(nameof(ICALoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                 select pair.Instance)
             {
@@ -75,11 +74,6 @@ public sealed class CAMain : Mod, IResourceLoader
         }
     }
 
-    public override void PostSetupContent()
-    {
-        //TOMain.SyncEnabled = true;
-    }
-
     public override void Unload()
     {
         Unloading = true;
@@ -88,7 +82,7 @@ public sealed class CAMain : Mod, IResourceLoader
             if (Loaded)
             {
                 foreach (ICALoader loader in (
-                    from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(Assembly).AsValueEnumerable()
+                    from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(CASharedData.Assembly).AsValueEnumerable()
                     orderby pair.Type.GetMethod(nameof(ICALoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                     select pair.Instance).Reverse())
                 {
@@ -107,25 +101,4 @@ public sealed class CAMain : Mod, IResourceLoader
     public override object Call(params object[] args) => CAModCall.Call(args);
 
     public override void HandlePacket(BinaryReader reader, int whoAmI) => CANetSync.HandlePacket(this, reader, whoAmI);
-
-    public static Assembly Assembly => field ??= Instance.Code;
-
-    public static string ModName => field ??= Instance.Name;
-
-    public static readonly Color MainColor = Color.HotPink;
-
-    public static readonly Color SecondaryColor = Color.Pink;
-
-    public static readonly List<Color> ColorList = [MainColor, SecondaryColor, MainColor];
-
-    public static Color GetGradientColor(float ratio = 0.5f) => Color.LerpMany(ColorList, TOMathHelper.GetTimeSin(ratio / 2f, unsigned: true));
-
-    public const string ModLocalizationPrefix = "Mods.CalamityAnomalies.";
-    public const string AnomalyLocalizationPrefix = ModLocalizationPrefix + "Anomaly.";
-    public const string TweakLocalizationPrefix = ModLocalizationPrefix + "Tweaks.";
-    public const string CalamityModLocalizationPrefix = "Mods.CalamityMod.";
-    public const string CalamityInvisibleProj = "CalamityMod/Projectiles/InvisibleProj";
-    public const string CATexturePath = "CalamityAnomalies/Assets/Textures/";
-
-    public static readonly Color AnomalyUltramundaneColor = new(0xE8, 0x97, 0xFF);
 }

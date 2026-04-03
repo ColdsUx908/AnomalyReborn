@@ -12,13 +12,6 @@ public sealed class CAServerConfig : ModConfig
     public override bool AcceptClientChanges(ModConfig pendingConfig, int whoAmI, ref NetworkText message) => false;
 
     public override void OnLoaded() => Instance = this;
-
-    /// <summary>
-    /// 是否启用模组内容。
-    /// </summary>
-    [ReloadRequired]
-    [DefaultValue(true)]
-    public bool Contents;
 }
 
 public sealed class CAClientConfig : ModConfig

@@ -1,4 +1,9 @@
-﻿namespace CalamityAnomalies.Core;
+﻿using CalamityAnomalies.Visuals;
+using CalamityMod.Items;
+using CalamityMod.NPCs;
+using CalamityMod.Projectiles;
+
+namespace CalamityAnomalies.Core;
 
 public interface ICAModNPC
 {
@@ -31,8 +36,10 @@ public interface ICAModNPC
 
 public abstract class CAModNPC : TOModNPC, ICAModNPC
 {
-    public CAGlobalNPC AnomalyNPC => NPC.Anomaly();
-    public CalamityGlobalNPC CalamityNPC => NPC.Calamity();
+    public static bool Ultra => CASharedData.AnomalyUltramundane;
+
+    public CAGlobalNPC AnomalyNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => NPC.Anomaly; }
+    public CalamityGlobalNPC CalamityNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => NPC.Calamity; }
 
     public virtual bool PreUpdateCalBossBar(BetterBossHPUI newBar) => true;
     public virtual void PostUpdateCalBossBar(BetterBossHPUI newBar) { }
@@ -47,8 +54,10 @@ public interface ICAModProjectile
 
 public abstract class CAModProjectile : TOModProjectile, ICAModProjectile
 {
-    public CAGlobalProjectile AnomalyProjectile => Projectile.Anomaly();
-    public CalamityGlobalProjectile CalamityProjectile => Projectile.Calamity();
+    public static bool Ultra => CASharedData.AnomalyUltramundane;
+
+    public CAGlobalProjectile AnomalyProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Projectile.Anomaly; }
+    public CalamityGlobalProjectile CalamityProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Projectile.Calamity; }
 
     public virtual void ModifyHitNPC_DR(NPC target, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 }
@@ -60,8 +69,10 @@ public interface ICAModItem
 
 public abstract class CAModItem : TOModItem, ICAModItem
 {
-    public CAGlobalItem AnomalyItem => Item.Anomaly();
-    public CalamityGlobalItem CalamityItem => Item.Calamity();
+    public static bool Ultra => CASharedData.AnomalyUltramundane;
+
+    public CAGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Item.Anomaly; }
+    public CalamityGlobalItem CalamityItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Item.Calamity; }
 
     public virtual void ModifyHitNPC_DR(NPC target, Player player, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 }

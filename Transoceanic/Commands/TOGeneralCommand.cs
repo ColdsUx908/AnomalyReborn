@@ -1,21 +1,5 @@
 ﻿namespace Transoceanic.Commands;
 
-public abstract class TOCommand
-{
-    public abstract CommandType Type { get; }
-
-    public abstract string Command { get; }
-
-    /// <summary>
-    /// 执行命令的函数。
-    /// </summary>
-    /// <param name="caller"></param>
-    /// <param name="args">参数数组。</param>
-    public abstract void Action(CommandCaller caller, string[] args);
-
-    public virtual void Help(CommandCaller caller, string[] args) { }
-}
-
 public sealed record CommandCallInfo(CommandType CommandType, string Command, CommandCaller Caller, string[] Args)
 {
     public CommandCallInfo(TOCommand commandInstance, CommandCaller caller, string[] args) : this(commandInstance.Type, commandInstance.Command, caller, args) { }
@@ -55,12 +39,16 @@ public sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
 
     public override string Command => "/chat"; //需要使用的指令是"//chat"（两个斜杠）
 
-    public string LocalizationPrefix => TOMain.ModLocalizationPrefix + "Commands.GeneralCommand";
+    public string LocalizationPrefix => TOSharedData.ModLocalizationPrefix + "Commands.GeneralCommand";
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
         if (args.Length == 0 || string.IsNullOrEmpty(args[0]))
+        {
             caller.ReplyLocalizedText(this, "Helper");
+            return;
+        }
+
         switch (args[0].ToLower())
         {
             case "help":
@@ -69,7 +57,7 @@ public sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
                 caller.ReplyLocalizedText(this, "Helper");
                 break;
             case "redo":
-                CommandCallInfo commandCallInfo = caller.Player.Ocean().CommandCallInfo;
+                CommandCallInfo commandCallInfo = caller.Player.Ocean.CommandCallInfo;
                 if (commandCallInfo is not null && commandCallInfo.CommandType == CommandType.Chat)
                     TOCommandHelper.Instance.TryExecute(caller, commandCallInfo.Command, CommandType.Chat, commandCallInfo.Args);
                 break;
@@ -80,15 +68,15 @@ public sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
     }
 }
 
-public sealed class TOCommandHelper : IResourceLoader, ILocalizationPrefix
+public sealed class TOCommandHelper : IContentLoader, ILocalizationPrefix
 {
     internal static TOCommandHelper Instance { get; private set; }
 
     internal static readonly Dictionary<string, TOCommand> CommandSet = [];
 
-    public string LocalizationPrefix => TOMain.ModLocalizationPrefix + "Commands.GeneralCommand";
+    public string LocalizationPrefix => TOSharedData.ModLocalizationPrefix + "Commands.GeneralCommand";
 
-    void IResourceLoader.PostSetupContent()
+    void IContentLoader.PostSetupContent()
     {
         Instance = this;
 
@@ -99,7 +87,7 @@ public sealed class TOCommandHelper : IResourceLoader, ILocalizationPrefix
         }
     }
 
-    void IResourceLoader.OnModUnload() => CommandSet.Clear();
+    void IContentLoader.OnModUnload() => CommandSet.Clear();
 
     public void TryExecute(CommandCaller caller, string command, CommandType commandType, string[] args)
     {
@@ -107,7 +95,7 @@ public sealed class TOCommandHelper : IResourceLoader, ILocalizationPrefix
         {
             try
             {
-                caller.Player.Ocean().CommandCallInfo = new(commandType, command, caller, args);
+                caller.Player.Ocean.CommandCallInfo = new(commandType, command, caller, args);
                 value.Action(caller, args);
             }
             catch (CommandArgumentException e)

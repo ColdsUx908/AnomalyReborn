@@ -1,9 +1,8 @@
 ﻿#define TEST_DEV
 
 #if TEST_DEV
-using CalamityAnomalies.Anomaly.KingSlime;
 using CalamityAnomalies.GameContents;
-using CalamityAnomalies.Publicizer.CalamityMod;
+using CalamityAnomalies.Publicizers.CalamityMod;
 
 namespace CalamityAnomalies.DeveloperContents;
 
@@ -43,10 +42,6 @@ public sealed class TestItem : CAModItem
 
     public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
     {
-        Projectile.NewProjectileAction<JewelProjectileRainbow>(source, position, velocity, damage, knockback, Main.myPlayer, p =>
-        {
-            p.hostile = false;
-        });
         return false;
     }
 }

@@ -1,10 +1,12 @@
-﻿namespace Transoceanic.GlobalInstances;
+﻿using Transoceanic.DataStructures;
+using Transoceanic.DataStructures.Particles;
+
+namespace Transoceanic.GlobalInstances;
 
 public class TOGlobalNPC : GlobalNPC, ITOLoader
 {
     public override bool InstancePerEntity => true;
 
-    #region Data
     /// <summary>
     /// 标识符分配器。
     /// </summary>
@@ -22,16 +24,18 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     /// NPC生成时 <see cref="TOMain.GameTimer"/> 的值。
     /// <br/>不同步。
     /// </summary>
-    public int SpawnTime { get; internal set; } = -1;
+    internal int SpawnTime = -1;
+
+    public readonly List<AfterimageParticle> Afterimages = [];
 
     private const int AISlot = 33;
     private const int AISlot2 = 17;
 
-    private readonly Union32[] OceanAI32 = new Union32[AISlot];
-    private readonly Union64[] OceanAI64 = new Union64[AISlot2];
+    internal readonly Union32[] OceanAI32 = new Union32[AISlot];
+    internal readonly Union64[] OceanAI64 = new Union64[AISlot2];
 
-    private ref Bits32 AIChanged32 => ref OceanAI32[^1].bits;
-    private ref Bits64 AIChanged64 => ref OceanAI64[^1].bits;
+    internal ref BitArray32 AIChanged32 => ref OceanAI32[^1].bits;
+    internal ref BitArray64 AIChanged64 => ref OceanAI64[^1].bits;
 
     public override GlobalNPC Clone(NPC from, NPC to)
     {
@@ -46,7 +50,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
 
     public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
     {
-        if (!TOMain.SyncEnabled)
+        if (!TOSharedData.SyncEnabled)
             return;
 
         Dictionary<int, float> aiToSend = [];
@@ -80,7 +84,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
 
     public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
     {
-        if (!TOMain.SyncEnabled)
+        if (!TOSharedData.SyncEnabled)
             return;
 
         int recievedAICount = binaryReader.ReadInt32();
@@ -103,157 +107,4 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     void ITOLoader.Load() => _identifierAllocator = 0;
 
     void ITOLoader.Unload() => _identifierAllocator = 0;
-    #endregion Data
-
-    #region 额外数据
-    public bool AlwaysRotating
-    {
-        get => OceanAI32[0].bits[0];
-        set
-        {
-            if (OceanAI32[0].bits[0] != value)
-            {
-                OceanAI32[0].bits[0] = value;
-                AIChanged32[0] = true;
-            }
-        }
-    }
-
-    public int ActiveTime
-    {
-        get => OceanAI32[1].i;
-        set
-        {
-            if (OceanAI32[1].i != value)
-            {
-                OceanAI32[1].i = value;
-                AIChanged32[1] = true;
-            }
-        }
-    }
-
-    public float RotationOffset
-    {
-        get => OceanAI32[2].f;
-        set
-        {
-            if (OceanAI32[2].f != value)
-            {
-                OceanAI32[2].f = value;
-                AIChanged32[2] = true;
-            }
-        }
-    }
-
-    public NPC Master
-    {
-        get
-        {
-            int masterIndex = OceanAI32[3].i;
-            return masterIndex >= 0 && masterIndex < Main.maxNPCs ? Main.npc[masterIndex] : null;
-        }
-        set
-        {
-            int temp = value?.whoAmI ?? Main.maxNPCs;
-            if (OceanAI32[3].i != temp)
-            {
-                OceanAI32[3].i = temp;
-                AIChanged32[3] = true;
-            }
-        }
-    }
-
-    public bool TryGetMaster(int masterType, out NPC master)
-    {
-        NPC temp = Master;
-        if (temp is not null && temp.active && temp.type == masterType)
-        {
-            master = temp;
-            return true;
-        }
-        master = null;
-        return false;
-    }
-
-    public bool TryGetMaster<T>(out NPC master) where T : ModNPC => TryGetMaster(ModContent.NPCType<T>(), out master);
-
-    public bool TryGetMaster<T>(out NPC master, out T modNPC) where T : ModNPC
-    {
-        if (TryGetMaster(ModContent.NPCType<T>(), out master))
-        {
-            modNPC = master.GetModNPC<T>();
-            return true;
-        }
-        modNPC = null;
-        return false;
-    }
-
-    public int Timer1
-    {
-        get => OceanAI32[27].i;
-        set
-        {
-            int temp = Math.Max(0, value);
-            if (OceanAI32[27].i != temp)
-            {
-                OceanAI32[27].i = temp;
-                AIChanged32[27] = true;
-            }
-        }
-    }
-
-    public int Timer2
-    {
-        get => OceanAI32[28].i;
-        set
-        {
-            int temp = Math.Max(0, value);
-            if (OceanAI32[28].i != temp)
-            {
-                OceanAI32[28].i = temp;
-                AIChanged32[28] = true;
-            }
-        }
-    }
-
-    public int Timer3
-    {
-        get => OceanAI32[29].i;
-        set
-        {
-            int temp = Math.Max(0, value);
-            if (OceanAI32[29].i != temp)
-            {
-                OceanAI32[29].i = temp;
-                AIChanged32[29] = true;
-            }
-        }
-    }
-
-    public float Timer4
-    {
-        get => OceanAI32[30].f;
-        set
-        {
-            if (OceanAI32[30].f != value)
-            {
-                OceanAI32[30].f = value;
-                AIChanged32[30] = true;
-            }
-        }
-    }
-
-    public float Timer5
-    {
-        get => OceanAI32[31].f;
-        set
-        {
-            if (OceanAI32[21].f != value)
-            {
-                OceanAI32[31].f = value;
-                AIChanged32[31] = true;
-            }
-        }
-    }
-    #endregion 额外数据
 }

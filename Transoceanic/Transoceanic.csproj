@@ -11,16 +11,23 @@
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-	  <DebugType>embedded</DebugType>
+		<DebugType>embedded</DebugType>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	  <DebugType>embedded</DebugType>
+		<DebugType>embedded</DebugType>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<NoWarn>1701;1702;649</NoWarn>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<NoWarn>1701;1702;649</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
-	  <None Remove="Utilities\xmdhclh2.i1j~" />
+		<None Remove="Framework\Abstractions\uipqswwn.2fg~" />
+		<None Remove="Framework\Helpers\Utilities\xmdhclh2.i1j~" />
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="ZLinq" Version="1.4.9" />
+		<PackageReference Include="ZLinq" Version="1.5.5" />
 	</ItemGroup>
 
 	<!-- References -->

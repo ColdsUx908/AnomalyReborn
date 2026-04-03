@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies.Tweaks;
-using CalamityMod.NPCs.Abyss;
+﻿using CalamityMod.NPCs.Abyss;
 using CalamityMod.NPCs.AcidRain;
 using CalamityMod.NPCs.AquaticScourge;
 using CalamityMod.NPCs.AstrumAureus;
@@ -41,8 +40,8 @@ public sealed class CAPlayer : ModPlayer
     public PlayerDownedBossCalamity DownedBossAnomaly = new();
 
     public GuaranteedBoolean YharimsGift;
-    public YharimsGift_CurrentBlessing YharimsGift_Blessing = YharimsGift_CurrentBlessing.None;
-    public readonly SmoothInt[] YharimsGift_Change = new SmoothInt[YharimsGift_Handler._totalBlessings];
+    //public YharimsGift_CurrentBlessing YharimsGift_Blessing = YharimsGift_CurrentBlessing.None;
+    //public readonly SmoothInt[] YharimsGift_Change = new SmoothInt[YharimsGift_Handler._totalBlessings];
     public Item YharimsGift_Last;
 
     public override ModPlayer Clone(Player newEntity)
@@ -57,8 +56,8 @@ public sealed class CAPlayer : ModPlayer
         clone.DownedBossAnomaly = DownedBossAnomaly;
 
         clone.YharimsGift = YharimsGift;
-        clone.YharimsGift_Blessing = YharimsGift_Blessing;
-        Array.Copy(YharimsGift_Change, clone.YharimsGift_Change, YharimsGift_Change.Length);
+        //clone.YharimsGift_Blessing = YharimsGift_Blessing;
+        //Array.Copy(YharimsGift_Change, clone.YharimsGift_Change, YharimsGift_Change.Length);
         clone.YharimsGift_Last = YharimsGift_Last;
 
         return clone;
@@ -67,8 +66,6 @@ public sealed class CAPlayer : ModPlayer
     public override void ResetEffects()
     {
         Debuff_DimensionalRend = false;
-
-        base.ResetEffects();
     }
 }
 
@@ -169,94 +166,94 @@ public class PlayerDownedBossCalamity : PlayerDownedBoss
         base.WorldPolluted();
 
         //灾厄添加的原版Boss跟踪
-        if (DownedBossSystem.downedDreadnautilus)
+        if (DownedBossSystem_Bridge.downedDreadnautilus)
             Dreadnautilus = true;
-        if (DownedBossSystem.downedBetsy)
+        if (DownedBossSystem_Bridge.downedBetsy)
             Betsy = true;
 
         //灾厄Boss
-        if (DownedBossSystem.downedDesertScourge)
+        if (DownedBossSystem_Bridge.downedDesertScourge)
             DesertScourge = true;
-        if (DownedBossSystem.downedCrabulon)
+        if (DownedBossSystem_Bridge.downedCrabulon)
             Crabulon = true;
-        if (DownedBossSystem.downedHiveMind)
+        if (DownedBossSystem_Bridge.downedHiveMind)
             HiveMind = true;
-        if (DownedBossSystem.downedPerforator)
+        if (DownedBossSystem_Bridge.downedPerforator)
             Perforator = true;
         EvilBoss2 = HiveMind || Perforator;
-        if (DownedBossSystem.downedSlimeGod)
+        if (DownedBossSystem_Bridge.downedSlimeGod)
             SlimeGod = true;
-        if (DownedBossSystem.downedCryogen)
+        if (DownedBossSystem_Bridge.downedCryogen)
             Cryogen = true;
-        if (DownedBossSystem.downedAquaticScourge)
+        if (DownedBossSystem_Bridge.downedAquaticScourge)
             AquaticScourge = true;
-        if (DownedBossSystem.downedBrimstoneElemental)
+        if (DownedBossSystem_Bridge.downedBrimstoneElemental)
             BrimstoneElemental = true;
-        if (DownedBossSystem.downedCalamitasClone)
+        if (DownedBossSystem_Bridge.downedCalamitasClone)
             CalamitasClone = true;
-        if (DownedBossSystem.downedLeviathan)
+        if (DownedBossSystem_Bridge.downedLeviathan)
             Leviathan = true;
-        if (DownedBossSystem.downedAstrumAureus)
+        if (DownedBossSystem_Bridge.downedAstrumAureus)
             AstrumAureus = true;
-        if (DownedBossSystem.downedPlaguebringer)
+        if (DownedBossSystem_Bridge.downedPlaguebringer)
             Goliath = true;
-        if (DownedBossSystem.downedRavager)
+        if (DownedBossSystem_Bridge.downedRavager)
             Ravager = true;
-        if (DownedBossSystem.downedAstrumDeus)
+        if (DownedBossSystem_Bridge.downedAstrumDeus)
             AstrumDeus = true;
-        if (DownedBossSystem.downedGuardians)
+        if (DownedBossSystem_Bridge.downedGuardians)
             Guardians = true;
-        if (DownedBossSystem.downedDragonfolly)
+        if (DownedBossSystem_Bridge.downedDragonfolly)
             Dragonfolly = true;
-        if (DownedBossSystem.downedProvidence)
+        if (DownedBossSystem_Bridge.downedProvidence)
             Providence = true;
-        if (DownedBossSystem.downedCeaselessVoid)
+        if (DownedBossSystem_Bridge.downedCeaselessVoid)
             CeaselessVoid = true;
-        if (DownedBossSystem.downedStormWeaver)
+        if (DownedBossSystem_Bridge.downedStormWeaver)
             StormWeaver = true;
-        if (DownedBossSystem.downedSignus)
+        if (DownedBossSystem_Bridge.downedSignus)
             Signus = true;
-        if (DownedBossSystem.downedPolterghast)
+        if (DownedBossSystem_Bridge.downedPolterghast)
             Polterghast = true;
-        if (DownedBossSystem.downedBoomerDuke)
+        if (DownedBossSystem_Bridge.downedBoomerDuke)
             BommerDuke = true;
-        if (DownedBossSystem.downedDoG)
+        if (DownedBossSystem_Bridge.downedDoG)
             DoG = true;
-        if (DownedBossSystem.downedYharon)
+        if (DownedBossSystem_Bridge.downedYharon)
             Yharon = true;
-        if (DownedBossSystem.downedAres)
+        if (DownedBossSystem_Bridge.downedAres)
             Ares = true;
-        if (DownedBossSystem.downedThanatos)
+        if (DownedBossSystem_Bridge.downedThanatos)
             Thanatos = true;
-        if (DownedBossSystem.downedArtemisAndApollo)
+        if (DownedBossSystem_Bridge.downedArtemisAndApollo)
             ArtemisAndApollo = true;
-        if (DownedBossSystem.downedExoMechs)
+        if (DownedBossSystem_Bridge.downedExoMechs)
             ExoMechs = true;
-        if (DownedBossSystem.downedCalamitas)
+        if (DownedBossSystem_Bridge.downedCalamitas)
             Calamitas = true;
-        if (DownedBossSystem.downedPrimordialWyrm)
+        if (DownedBossSystem_Bridge.downedPrimordialWyrm)
             PrimordialWyrm = true;
 
         //灾厄迷你Boss
-        if (DownedBossSystem.downedGSS)
+        if (DownedBossSystem_Bridge.downedGSS)
             GreatSandShark = true;
-        if (DownedBossSystem.downedCLAM)
+        if (DownedBossSystem_Bridge.downedCLAM)
             GiantClam = true;
-        if (DownedBossSystem.downedCLAMHardMode)
+        if (DownedBossSystem_Bridge.downedCLAMHardMode)
             GiantClamHardmode = true;
-        if (DownedBossSystem.downedCragmawMire)
+        if (DownedBossSystem_Bridge.downedCragmawMire)
             CragmawMire = true;
-        if (DownedBossSystem.downedMauler)
+        if (DownedBossSystem_Bridge.downedMauler)
             Mauler = true;
-        if (DownedBossSystem.downedNuclearTerror)
+        if (DownedBossSystem_Bridge.downedNuclearTerror)
             NuclearTerror = true;
 
         //灾厄事件
-        if (DownedBossSystem.downedEoCAcidRain)
+        if (DownedBossSystem_Bridge.downedEoCAcidRain)
             EoCAcidRain = true;
-        if (DownedBossSystem.downedAquaticScourgeAcidRain)
+        if (DownedBossSystem_Bridge.downedAquaticScourgeAcidRain)
             AquaticScourgeAcidRain = true;
-        if (DownedBossSystem.downedBossRush)
+        if (DownedBossSystem_Bridge.downedBossRush)
             BossRush = true;
     }
 
@@ -585,7 +582,7 @@ public class PlayerDownedBossCalamity : PlayerDownedBoss
             case var _ when CAUtils.IsDefeatingProfanedGuardians(npc):
                 Guardians = true;
                 break;
-            case Bumblefuck:
+            case Dragonfolly _:
                 Dragonfolly = true;
                 break;
             case Providence _:

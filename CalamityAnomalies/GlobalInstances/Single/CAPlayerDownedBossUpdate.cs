@@ -21,11 +21,11 @@ public sealed class CAPlayerDownedBossUpdate_GlobalNPC : CAGlobalNPCBehavior
 {
     public override void OnKill(NPC npc)
     {
-        if (npc.ModNPC is EidolonWyrmHead && !DownedBossSystem.downedPrimordialWyrm)
-            DownedBossSystem.downedPrimordialWyrm = true;
+        if (npc.ModNPC is EidolonWyrmHead && !DownedBossSystem_Bridge.downedPrimordialWyrm)
+            DownedBossSystem_Bridge.downedPrimordialWyrm = true;
 
         foreach (Player player in Player.ActivePlayers)
-            player.Anomaly().DownedBossCalamity.BossesOnKill(npc);
+            player.Anomaly.DownedBossCalamity.BossesOnKill(npc);
     }
 }
 
@@ -34,6 +34,6 @@ public sealed class CAPlayerDownedBossUpdate_System : ModSystem
     public override void PostUpdateNPCs()
     {
         foreach (Player player in Player.ActivePlayers)
-            player.Anomaly().DownedBossCalamity.WorldPolluted();
+            player.Anomaly.DownedBossCalamity.WorldPolluted();
     }
 }

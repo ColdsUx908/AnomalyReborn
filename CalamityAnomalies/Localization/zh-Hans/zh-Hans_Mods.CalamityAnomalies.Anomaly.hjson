@@ -1,23 +1,26 @@
 AnomalyMode: {
-	Anomaly: 异象
-	AnomalyShortInfo: “[c/FFCFFF:跨越深渊后的真正挑战]”
-	AnomalyExpandedInfo:
+	Name: 异象
+	Name_GFB: 香溢
+	ShortInfo: "[c/FFCFFF:“跨越深渊后的真正挑战”]"
+	ExpandedInfo:
 		'''
 		[c/AFFFFF:你认为你足以超越神明？]
-		[c/AFFFFF:如果你渴望挑战比传奇+死亡模式更加疯狂的难度……]
+		[c/AFFFFF:如果你渴望挑战比死亡或恶意模式更加疯狂的难度……]
 		[c/FF0000:那么……]
 		'''
-	AnomalyActivate: 异象模式已开启……你还好吗？
-	AnomalyDeactivate: 异象模式已关闭，明智之选。
-	AnomalyInvalid: 异象模式只能在真正的大师难度下开启。
-	AnomalyUltraInvalidNotLegendary: 异象超凡只能在真正的传奇难度下开启。
-	AnomalyUltraInvalidZenith: 异象超凡不支持 Get fixed boi 世界。
-	AnomalyUltramundaneActivate:
+	Activate: 异象模式已开启……你还好吗？
+	Activate_GFB: 香溢模式已开启！你的世界将变得十足美味～
+	Deactivate: 异象模式已关闭，明智之选。
+	Deactivate_GFB: 香溢模式已关闭。难道你不想来点好吃的吗？
+	Invalid: 异象模式只能在真正的大师难度下开启。
+	UltraInvalid_NotLegendary: 异象超凡只能在真正的传奇难度下开启。
+	UltraInvalid_Zenith: 异象超凡不支持 Get fixed boi 世界。
+	UltraActivate:
 		'''
 		异象超凡的力量完全激发，请确定你理解自己在做什么！
 		注意：此难度极为困难，仅适合超人类游玩！
 		'''
-	AnomalyUltramundaneDeactivate:
+	UltraDeactivate:
 		'''
 		异象超凡的力量回归正常……
 		你已经尝试过了，对吧？
@@ -26,7 +29,17 @@ AnomalyMode: {
 
 KingSlime: {
 	GFBSummon: 史莱姆王克隆了自己！
+	KingSlimeJewelEmerald.DisplayName: 王冠绿宝石
+	KingSlimeJewelSapphire.DisplayName: 王冠蓝宝石
 	KingSlimeJewelRainbow.DisplayName: 王冠彩虹宝石
-	RainbowShield.DisplayName: 彩虹护盾
+	KingSlimeJewelEmeraldShadow.DisplayName: 王冠绿宝石幻影
+	RainbowShockwave.DisplayName: 彩虹冲击波
 	JewelProjectileRainbow.DisplayName: 彩虹弹幕
+}
+
+EyeofCthulhu: {
+	BloodlettingServant.DisplayName: 流血仆从
+	BloodFlame.DisplayName: 血化火焰
+	EyeofCthulhuArena.DisplayName: 克苏鲁之眼竞技场
+	BloodShockwave.DisplayName: 血化冲击波
 }

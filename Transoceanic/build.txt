@@ -1,6 +1,6 @@
 displayName = Transoceanic
 author = ColdsUx
-version = 1.0.2
+version = 1.0.3
 dllReferences = ZLinq
 includeSource = true
 side = NoSync

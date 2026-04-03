@@ -1,16 +1,12 @@
 ﻿namespace CalamityAnomalies.Core;
 
-public sealed class CAKeybinds : ModSystem
+public sealed class CAKeybinds : ModSystem, ICALoader
 {
-    public static ModKeybind ChangeYharimsGiftBuff { get; private set; }
-
-    public override void Load()
+    void ICALoader.Load()
     {
-        ChangeYharimsGiftBuff = KeybindLoader.RegisterKeybind(Mod, nameof(ChangeYharimsGiftBuff), "NumPad0");
     }
 
-    public override void Unload()
+    void ICALoader.Unload()
     {
-        ChangeYharimsGiftBuff = null;
     }
 }

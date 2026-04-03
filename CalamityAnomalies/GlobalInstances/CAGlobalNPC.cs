@@ -1,6 +1,6 @@
 ﻿namespace CalamityAnomalies.GlobalInstances;
 
-public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
+public sealed class CAGlobalNPC : GlobalNPC, IContentLoader
 {
     public override bool InstancePerEntity => true;
 
@@ -20,17 +20,17 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
     public readonly Union32[] AnomalyAI32 = new Union32[AISlot];
     public readonly Union64[] AnomalyAI64 = new Union64[AISlot2];
 
-    public ref Bits32 AIChanged32 => ref AnomalyAI32[^1].bits;
-    public ref Bits64 AIChanged64 => ref AnomalyAI64[^1].bits;
+    public ref BitArray32 AIChanged32 => ref AnomalyAI32[^1].bits;
+    public ref BitArray64 AIChanged64 => ref AnomalyAI64[^1].bits;
 
     private readonly Union32[] InternalAnomalyAI32 = new Union32[AISlot3];
     private readonly Union64[] InternalAnomalyAI64 = new Union64[AISlot4];
 
-    private ref Bits32 InternalAIChanged32 => ref InternalAnomalyAI32[^4].bits;
-    private ref Bits32 InternalAIChanged32_2 => ref InternalAnomalyAI32[^3].bits;
-    private ref Bits32 InternalAIChanged32_3 => ref InternalAnomalyAI32[^2].bits;
-    private ref Bits32 InternalAIChanged32_4 => ref InternalAnomalyAI32[^1].bits;
-    private ref Bits64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;
+    private ref BitArray32 InternalAIChanged32 => ref InternalAnomalyAI32[^4].bits;
+    private ref BitArray32 InternalAIChanged32_2 => ref InternalAnomalyAI32[^3].bits;
+    private ref BitArray32 InternalAIChanged32_3 => ref InternalAnomalyAI32[^2].bits;
+    private ref BitArray32 InternalAIChanged32_4 => ref InternalAnomalyAI32[^1].bits;
+    private ref BitArray64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;
 
     public override GlobalNPC Clone(NPC from, NPC to)
     {
@@ -162,59 +162,27 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
         }
     }
 
-    public int AnomalyKilltime
+    public bool Debuff_DimensionalRend
     {
-        get => InternalAnomalyAI32[1].i;
-        internal set
+        get => InternalAnomalyAI32[0].bits[1];
+        set
         {
-            if (InternalAnomalyAI32[1].i != value)
+            if (InternalAnomalyAI32[0].bits[1] != value)
             {
-                InternalAnomalyAI32[1].i = value;
-                InternalAIChanged32[1] = true;
+                InternalAnomalyAI32[0].bits[1] = value;
+                InternalAIChanged32[0] = true;
             }
         }
     }
 
-    public int AnomalyAITimer
-    {
-        get => InternalAnomalyAI32[2].i;
-        internal set
-        {
-            if (InternalAnomalyAI32[2].i != value)
-            {
-                InternalAnomalyAI32[2].i = value;
-                InternalAIChanged32[2] = true;
-            }
-        }
-    }
+    public int AnomalyKilltime;
+
+    public int AnomalyAITimer;
 
     public bool IsRunningAnomalyAI => AnomalyAITimer > 0;
 
-    public int AnomalyUltraAITimer
-    {
-        get => InternalAnomalyAI32[3].i;
-        internal set
-        {
-            if (InternalAnomalyAI32[3].i != value)
-            {
-                InternalAnomalyAI32[3].i = value;
-                InternalAIChanged32[3] = true;
-            }
-        }
-    }
-
-    public int AnomalyUltraBarTimer
-    {
-        get => InternalAnomalyAI32[4].i;
-        internal set
-        {
-            if (InternalAnomalyAI32[4].i != value)
-            {
-                InternalAnomalyAI32[4].i = value;
-                InternalAIChanged32[4] = true;
-            }
-        }
-    }
+    public int AnomalyUltraAITimer;
+    public int AnomalyUltraBarTimer;
 
     /// <summary>
     /// 额外DR，不受任何修改DR的机制影响。
@@ -229,20 +197,6 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
             {
                 InternalAnomalyAI32[5].f = value;
                 InternalAIChanged32[5] = true;
-            }
-        }
-    }
-
-    public int Debuff_DimensionalRend
-    {
-        get => InternalAnomalyAI32[6].i;
-        set
-        {
-            int temp = Math.Max(value, 0);
-            if (InternalAnomalyAI32[6].i != temp)
-            {
-                InternalAnomalyAI32[6].i = temp;
-                InternalAIChanged32[6] = true;
             }
         }
     }

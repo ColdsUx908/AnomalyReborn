@@ -312,5 +312,8 @@ dotnet_diagnostic.CA1036.severity = suggestion
 dotnet_diagnostic.CA1050.severity = warning
 dotnet_diagnostic.CA2211.severity = silent
 
+# IDE0044: 添加只读修饰符
+dotnet_diagnostic.IDE0044.severity = silent
+
 [*.vb]
 dotnet_diagnostic.CA1047.severity = warning

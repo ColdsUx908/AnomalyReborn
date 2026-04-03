@@ -1,4 +1,8 @@
-﻿using CalamityMod.NPCs.AquaticScourge;
+﻿using CalamityMod;
+using CalamityMod.CalPlayer;
+using CalamityMod.Items;
+using CalamityMod.NPCs;
+using CalamityMod.NPCs.AquaticScourge;
 using CalamityMod.NPCs.DesertScourge;
 using CalamityMod.NPCs.DevourerofGods;
 using CalamityMod.NPCs.ExoMechs.Apollo;
@@ -10,6 +14,7 @@ using CalamityMod.NPCs.ProfanedGuardians;
 using CalamityMod.NPCs.Providence;
 using CalamityMod.NPCs.Ravager;
 using CalamityMod.NPCs.StormWeaver;
+using CalamityMod.Projectiles;
 
 namespace CalamityAnomalies.Core;
 
@@ -17,8 +22,8 @@ public static class CAExtensions
 {
     extension(Item item)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CAGlobalItem Anomaly() => item.GetGlobalItem<CAGlobalItem>();
+        public CAGlobalItem Anomaly { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => item?.GetGlobalItem<CAGlobalItem>(); }
+        public CalamityGlobalItem Calamity { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => item?.GetGlobalItem<CalamityGlobalItem>(); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetBehavior(out CASingleItemBehavior itemBehavior, [CallerMemberName] string methodName = null!) => CAEntityChangeHelper.ItemBehaviors.TryGetBehavior(item, methodName, out itemBehavior);
@@ -26,13 +31,13 @@ public static class CAExtensions
 
     extension(CAItemTooltipModifier modifier)
     {
-        public void ApplyCATweakColorToDamage() => modifier.Modify(null, "Damage", l => l.OverrideColor = CAMain.GetGradientColor(0.25f));
+        public void ApplyCATweakColorToDamage() => modifier.Modify(null, "Damage", l => l.OverrideColor = CASharedData.GetGradientColor(0.25f));
     }
 
     extension(NPC npc)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CAGlobalNPC Anomaly() => npc.GetGlobalNPC<CAGlobalNPC>();
+        public CAGlobalNPC Anomaly { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => npc?.GetGlobalNPC<CAGlobalNPC>(); }
+        public CalamityGlobalNPC Calamity { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => npc?.GetGlobalNPC<CalamityGlobalNPC>(); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetBehavior(out CASingleNPCBehavior npcBehavior, [CallerMemberName] string methodName = null!) => CAEntityChangeHelper.NPCBehaviors.TryGetBehavior(npc, methodName, out npcBehavior);
@@ -57,8 +62,6 @@ public static class CAExtensions
 
         public bool DoG => npc.ModNPC is DevourerofGodsHead or DevourerofGodsBody or DevourerofGodsTail;
 
-        public bool CosmicGuardian => npc.ModNPC is CosmicGuardianHead or CosmicGuardianBody or CosmicGuardianTail;
-
         public bool Thanatos => npc.active && npc.ModNPC is ThanatosHead or ThanatosBody1 or ThanatosBody2 or ThanatosTail;
 
         public bool ThanatosHead => npc.ModNPC is ThanatosHead;
@@ -70,20 +73,25 @@ public static class CAExtensions
         public bool ExoMechs => npc.Thanatos || npc.ExoTwins || npc.Ares;
 
         public void ApplyCalamityBossHealthBoost() => npc.lifeMax += (int)(npc.lifeMax * CalamityServerConfig.Instance.BossHealthBoost * 0.01f);
+    }
 
-        public int GetProjectileDamage<T>() where T : ModProjectile => npc.GetProjectileDamage(ModContent.ProjectileType<T>());
+    extension(NPC)
+    {
+        public static bool DownedEvilBossT2 => DownedBossSystem_Bridge.downedHiveMind || DownedBossSystem_Bridge.downedPerforator;
+
+        public static bool Focus => DownedBossSystem_Bridge.downedExoMechs && DownedBossSystem_Bridge.downedCalamitas;
     }
 
     extension(Player player)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CAPlayer Anomaly() => player.GetModPlayer<CAPlayer>();
+        public CAPlayer Anomaly { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => player?.GetModPlayer<CAPlayer>(); }
+        public CalamityPlayer Calamity { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => player?.GetModPlayer<CalamityPlayer>(); }
     }
 
     extension(Projectile projectile)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CAGlobalProjectile Anomaly() => projectile.GetGlobalProjectile<CAGlobalProjectile>();
+        public CAGlobalProjectile Anomaly { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => projectile?.GetGlobalProjectile<CAGlobalProjectile>(); }
+        public CalamityGlobalProjectile Calamity { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => projectile?.GetGlobalProjectile<CalamityGlobalProjectile>(); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null!) => CAEntityChangeHelper.ProjectileBehaviors.TryGetBehavior(projectile, methodName, out projectileBehavior);
