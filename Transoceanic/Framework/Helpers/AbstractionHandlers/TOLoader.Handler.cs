@@ -5,7 +5,7 @@ public sealed class TOLoaderHandler : ModSystem
     public override void PostAddRecipes()
     {
         foreach (IContentLoader loader in
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>().AsValueEnumerable()
+            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>()
             orderby pair.type.GetMethod(nameof(IContentLoader.PostAddRecipes), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0
             select pair.instance)
         {
@@ -16,7 +16,7 @@ public sealed class TOLoaderHandler : ModSystem
     public override void OnModUnload()
     {
         foreach (IContentLoader loader in (
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>().AsValueEnumerable()
+            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>()
             orderby pair.type.GetMethod(nameof(IContentLoader.PostSetupContent), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
             select pair.instance).Reverse())
         {
@@ -27,7 +27,7 @@ public sealed class TOLoaderHandler : ModSystem
     public override void OnWorldLoad()
     {
         foreach (IContentLoader loader in
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>().AsValueEnumerable()
+            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>()
             orderby pair.type.GetMethod(nameof(IContentLoader.OnWorldLoad), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
             select pair.instance)
         {
@@ -40,7 +40,7 @@ public sealed class TOLoaderHandler : ModSystem
         if (TOMain.Loaded)
         {
             foreach (IContentLoader loader in (
-                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>().AsValueEnumerable()
+                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>()
                 orderby pair.type.GetMethod(nameof(IContentLoader.OnWorldLoad), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                 select pair.instance).Reverse())
             {

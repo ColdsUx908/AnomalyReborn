@@ -6,7 +6,7 @@ public class OrbParticle : Particle
 
     public Color InitialColor;
     public bool UseAdditiveBlend = true;
-    public float FadeOut = 1;
+    public float FadeOut = 1f;
     public bool GlowCenter;
     public float InitialScale;
     public float GravityMultiplier;

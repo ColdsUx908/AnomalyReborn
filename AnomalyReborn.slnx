@@ -6,4 +6,5 @@
   <Project Path="CelessTest/CelessTest.csproj" />
   <Project Path="Stillness/Stillness.csproj" />
   <Project Path="Transoceanic/Transoceanic.csproj" />
+  <Project Path="TransoceanicCodeAssist/TransoceanicCodeAssist.csproj" />
 </Solution>

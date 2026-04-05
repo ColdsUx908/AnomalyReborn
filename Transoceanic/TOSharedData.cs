@@ -1,6 +1,5 @@
 ﻿using Terraria.GameContent.Creative;
 using Transoceanic.DataStructures;
-using Transoceanic.Framework.Publicizers.Terraria;
 
 namespace Transoceanic;
 

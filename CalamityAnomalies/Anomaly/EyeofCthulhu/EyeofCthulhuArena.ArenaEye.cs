@@ -47,16 +47,17 @@ public sealed partial class EyeofCthulhuArena
             Highlights.RemoveAll(hightlight => hightlight is null || hightlight.ShouldBeRemoved);
 
             //执行命令
+            /*
             switch (MasterCommandReceiver)
             {
-                case BehaviorCommand_ArenaEye.ShootBlood_Charge:
-                    ShootBlood_Charge();
-                    break;
                 case BehaviorCommand_ArenaEye.ShootBlood_EyeSpin:
                     ShootBlood_EyeSpin();
                     break;
                 default:
                     Timer2 = 0;
+                    ShouldUseCustomRotation = false;
+                    CustomFindRotationFunction = null;
+                    ShouldFaceTarget = false;
                     break;
             }
 
@@ -128,6 +129,7 @@ public sealed partial class EyeofCthulhuArena
                 if (shouldIncreaseTimer)
                     Timer2++;
             }
+            */
         }
 
         public void Draw(SpriteBatch spriteBatch, Texture2D texture, Rectangle frame, Color color)

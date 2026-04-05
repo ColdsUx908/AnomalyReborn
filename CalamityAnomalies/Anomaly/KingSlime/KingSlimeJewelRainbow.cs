@@ -13,7 +13,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
     }
 
     public const float DespawnDistance = 5000f;
-    public static int ShootCooldownTime => 120;
+    public static int ShootCooldownTime => 180;
 
     private static readonly ProjectileDamageContainer _jewelProjectileRainbowDamage = new(40, 65, 90, 110, 105, 125);
     public static int JewelProjectileRainbowDamage => _jewelProjectileRainbowDamage.Value;
@@ -285,7 +285,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
 
                     Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity, JewelProjectileRainbowDamage, 0f);
                     if (ShouldUseBuffedAttack)
-                        Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity * -1f, JewelProjectileRainbowDamage, 0f);
+                        Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity * -0.75f, JewelProjectileRainbowDamage, 0f);
                 }
             }
 
@@ -303,6 +303,12 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 else if (Timer1 == 11)
                 {
                     NormalAttack3Core(MathHelper.PiOver4);
+                    if (!ShouldUseBuffedAttack)
+                        IsAttacking = false;
+                }
+                else if (ShouldUseBuffedAttack && Timer1 == 21)
+                {
+                    NormalAttack3Core(MathHelper.PiOver4 + Main.rand.NextFloat(-0.2f, 0.2f));
                     IsAttacking = false;
                 }
             }
@@ -327,10 +333,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 for (int i = 0; i < amount; i++)
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
-
                     Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity, JewelProjectileRainbowDamage, 0f);
-                    if (ShouldUseBuffedAttack)
-                        Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity * -1f, JewelProjectileRainbowDamage, 0f);
                 }
             }
         }
@@ -351,7 +354,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                     4 => 15,
                     5 => ShouldUseBuffedAttack ? 20 : 30,
                     6 => 15,
-                    7 => 40,
+                    7 => 60,
                     _ => 0
                 };
                 int pointingParticleAmount = attackNum switch
@@ -395,7 +398,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                             Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(20f - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f);
                             break;
                         case 6 or 7:
-                            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(7f - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f);
+                            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(6.5f - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f, action: p => p.timeLeft = 300);
                             break;
                     }
                 }

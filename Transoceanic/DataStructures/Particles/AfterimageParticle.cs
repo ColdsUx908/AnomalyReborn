@@ -30,7 +30,7 @@ public class AfterimageParticle : Particle, IContentLoader
 
     public override void Update()
     {
-        Opacity = OriginalOpacity * 0.6f * TOMathUtils.Interpolation.QuadraticEaseIn(1f - LifetimeCompletion);
+        Opacity = OriginalOpacity * 0.65f * TOMathUtils.Interpolation.QuadraticEaseOut(1f - LifetimeCompletion);
     }
 
     public override bool PreDraw(SpriteBatch spriteBatch) => false;

@@ -47,7 +47,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
         int activeCount = 0;
 
         foreach (BetterBossHPUI newBar in
-            from pair in CurrentBars.AsValueEnumerable()
+            from pair in CurrentBars
             let newBar = pair.Value
             orderby newBar.Valid descending, pair.Key ascending
             select newBar)
@@ -214,9 +214,9 @@ public class BetterBossHPUI : BossHPUI
         }
     }
 
-    public new bool NPCIsEnraged => Valid && NPC.active && (CalamityNPC.CurrentlyEnraged || (HasOneToMany && CustomOneToMany.Values.AsValueEnumerable().Any(n => n.Calamity.CurrentlyEnraged)));
+    public new bool NPCIsEnraged => Valid && NPC.active && (CalamityNPC.CurrentlyEnraged || (HasOneToMany && CustomOneToMany.Values.Any(n => n.Calamity.CurrentlyEnraged)));
 
-    public new bool NPCIsIncreasingDefenseOrDR => Valid && NPC.active && (CalamityNPC.CurrentlyIncreasingDefenseOrDR || (HasOneToMany && CustomOneToMany.Values.AsValueEnumerable().Any(n => n.Calamity.CurrentlyIncreasingDefenseOrDR)));
+    public new bool NPCIsIncreasingDefenseOrDR => Valid && NPC.active && (CalamityNPC.CurrentlyIncreasingDefenseOrDR || (HasOneToMany && CustomOneToMany.Values.Any(n => n.Calamity.CurrentlyIncreasingDefenseOrDR)));
 
     public int Height { get; private set; } = 70;
 

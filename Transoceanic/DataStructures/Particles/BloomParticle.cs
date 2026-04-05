@@ -11,7 +11,7 @@ public class BloomParticle : Particle
 
     public float OriginalScale;
     public float FinalScale;
-    public float Opacity;
+    public float Opacity = 1f;
     public Color BaseColor;
     public float LifeEndRatio;
     public bool UseLargeTexture;

@@ -42,4 +42,5 @@ EyeofCthulhu: {
 	BloodFlame.DisplayName: 血化火焰
 	EyeofCthulhuArena.DisplayName: 克苏鲁之眼竞技场
 	BloodShockwave.DisplayName: 血化冲击波
+	BloodOrbProjectile.DisplayName: 血珠
 }

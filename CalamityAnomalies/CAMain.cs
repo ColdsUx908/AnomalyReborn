@@ -33,8 +33,8 @@ global using Transoceanic.DataStructures.Geometry;
 global using Transoceanic.DataStructures.Particles;
 global using Transoceanic.Framework;
 global using Transoceanic.Framework.Abstractions;
+global using Transoceanic.Framework.ExternalAttributes;
 global using Transoceanic.Framework.Helpers;
-global using ZLinq;
 
 namespace CalamityAnomalies;
 
@@ -60,7 +60,7 @@ public sealed class CAMain : Mod, IContentLoader
             Instance = this;
 
             foreach (ICALoader loader in
-                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(CASharedData.Assembly).AsValueEnumerable()
+                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(CASharedData.Assembly)
                 orderby pair.Type.GetMethod(nameof(ICALoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                 select pair.Instance)
             {
@@ -82,7 +82,7 @@ public sealed class CAMain : Mod, IContentLoader
             if (Loaded)
             {
                 foreach (ICALoader loader in (
-                    from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(CASharedData.Assembly).AsValueEnumerable()
+                    from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(CASharedData.Assembly)
                     orderby pair.Type.GetMethod(nameof(ICALoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                     select pair.Instance).Reverse())
                 {

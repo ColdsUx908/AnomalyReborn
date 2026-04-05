@@ -42,4 +42,5 @@ EyeofCthulhu: {
 	BloodFlame.DisplayName: Blood Flame
 	EyeofCthulhuArena.DisplayName: Eye of Cthulhu Arena
 	BloodShockwave.DisplayName: Blood Shockwave
+	BloodOrbProjectile.DisplayName: Blood Orb
 }

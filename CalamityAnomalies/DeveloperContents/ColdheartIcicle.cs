@@ -579,6 +579,7 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IContentLoader
 
     public override bool PreDraw(ref Color lightColor)
     {
+        SpriteBatch spriteBatch = Main.spriteBatch;
 #if CELESS_DEV
         switch (Behavior)
         {
@@ -586,9 +587,7 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IContentLoader
                 NormalPreDraw();
                 return false;
             case BehaviorType.Dream:
-                Main.Rasterizer.ScissorTestEnable = true;
-                Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
-                Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
+                ParticleHandler.EnterDrawRegion_Additive(spriteBatch);
                 if (Timer1 < 2200)
                 {
                     Texture2D texture = ParticleHandler.GetTexture<OrbParticle>();
@@ -611,10 +610,11 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IContentLoader
                             Vector2 circleCenter = Projectile.Center + new PolarVector2(radius, angle);
                             (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
                             Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
-                            Main.spriteBatch.DrawFromCenter(texture, position - Main.screenPosition, null, Color.White, 0f, 0.5f * Utils.Remap(amount, 0f, 1.83f, 0.4f, 1.2f));
+                            spriteBatch.DrawFromCenter(texture, position - Main.screenPosition, null, Color.White, 0f, 0.5f * Utils.Remap(amount, 0f, 1.83f, 0.4f, 1.2f));
                         }
                     }
                 }
+                ParticleHandler.ExitParticleDrawRegion(spriteBatch);
                 ColdheartIcicleSnowflake.DrawSnowflake(SnowflakeCenter, SnowflakeScale, SnowflakeRotation);
                 return false;
             case BehaviorType.SetOut:
@@ -629,6 +629,7 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IContentLoader
 #endif
         void NormalPreDraw()
         {
+            ParticleHandler.EnterDrawRegion_Additive(spriteBatch);
             Main.Rasterizer.ScissorTestEnable = true;
             Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
             Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
@@ -652,9 +653,10 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IContentLoader
                     Vector2 circleCenter = Projectile.Center + new PolarVector2(radius, angle);
                     (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
                     Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
-                    Main.spriteBatch.DrawFromCenter(texture, position - Main.screenPosition, null, Color.White with { A = 0 }, 0f, 0.3f * Utils.Remap(amount, 0f, 1.83f, 0.4f, 1.2f));
+                    spriteBatch.DrawFromCenter(texture, position - Main.screenPosition, null, Color.White, 0f, 0.3f * Utils.Remap(amount, 0f, 1.83f, 0.4f, 1.2f));
                 }
             }
+            ParticleHandler.ExitParticleDrawRegion(spriteBatch);
         }
     }
 

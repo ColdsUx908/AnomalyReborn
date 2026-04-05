@@ -4,7 +4,7 @@ public static partial class TOExtensions
 {
     extension(MemberInfo member)
     {
-        public T Attribute<T>(bool inherit = true) where T : Attribute => member.GetCustomAttributes(typeof(T), inherit).AsValueEnumerable().OfType<T>().FirstOrDefault();
+        public T Attribute<T>(bool inherit = true) where T : Attribute => member.GetCustomAttributes(typeof(T), inherit).OfType<T>().FirstOrDefault();
 
         public bool HasAttribute<T>(bool inherit = true) where T : Attribute => member.IsDefined(typeof(T), inherit);
 

@@ -72,10 +72,8 @@ public class WeightedBag<T>
             if (_isDirty)
             {
                 _totalWeight = 0f;
-                foreach (var item in _items)
-                {
+                foreach (WeightedItem<T> item in _items)
                     _totalWeight += item.Weight;
-                }
                 _isDirty = false;
             }
 
@@ -134,7 +132,7 @@ public class WeightedBag<T>
 
         //遍历元素，找到随机数落入的区间
         float cumulativeWeight = 0f;
-        foreach (var weightedItem in _items)
+        foreach (WeightedItem<T> weightedItem in _items)
         {
             cumulativeWeight += weightedItem.Weight;
             if (randomValue < cumulativeWeight)

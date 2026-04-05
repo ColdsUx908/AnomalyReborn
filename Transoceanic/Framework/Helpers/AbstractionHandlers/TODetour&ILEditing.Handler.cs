@@ -340,7 +340,7 @@ public sealed partial class TODetourHandler : IContentLoader
             return Modify(attribute.Source, detour);
         if (EvaluateTypedDetourName(detour, out string sourceTypeName, out string sourceMethodName))
         {
-            Type sourceType = sourceTypes.AsValueEnumerable().FirstOrDefault(t => t.Name == sourceTypeName);
+            Type sourceType = sourceTypes.FirstOrDefault(t => t.Name == sourceTypeName);
             if (sourceType is not null)
                 return Modify(sourceType.GetMethod(sourceMethodName, TOReflectionUtils.UniversalBindingFlags), detour);
         }

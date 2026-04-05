@@ -27,10 +27,10 @@ global using Terraria.ModLoader.IO;
 global using Terraria.Utilities;
 global using Transoceanic.Commands;
 global using Transoceanic.Framework.Abstractions;
+global using Transoceanic.Framework.ExternalAttributes;
 global using Transoceanic.Framework.Helpers;
 global using Transoceanic.Framework.Helpers.AbstractionHandlers;
 global using Transoceanic.GlobalInstances;
-global using ZLinq;
 
 namespace Transoceanic;
 
@@ -56,7 +56,7 @@ public sealed class TOMain : Mod
             Instance = this;
 
             foreach (ITOLoader loader in
-                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOReflectionUtils.Assembly).AsValueEnumerable()
+                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOReflectionUtils.Assembly)
                 orderby pair.Type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                 select pair.Instance)
             {
@@ -73,7 +73,7 @@ public sealed class TOMain : Mod
     public override void PostSetupContent()
     {
         foreach (IContentLoader loader in
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>().AsValueEnumerable()
+            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>()
             orderby pair.type.GetMethod(nameof(IContentLoader.PostSetupContent), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
             select pair.instance)
         {
@@ -89,7 +89,7 @@ public sealed class TOMain : Mod
             if (Loaded)
             {
                 foreach (ITOLoader loader in (
-                    from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>().AsValueEnumerable()
+                    from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>()
                     orderby pair.type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                     select pair.instance).Reverse())
                 {

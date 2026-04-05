@@ -1,4 +1,4 @@
-﻿using Transoceanic.Framework.Publicizers.Terraria;
+﻿using Transoceanic.DataStructures;
 
 namespace Transoceanic.Framework.Helpers;
 

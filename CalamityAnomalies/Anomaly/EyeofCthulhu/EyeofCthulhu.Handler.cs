@@ -44,9 +44,9 @@ public static class EyeofCthulhu_Handler
         public static float CalculateOffsetAngle(float verticalHeightMultiplier) => MathF.Atan(verticalHeightMultiplier);
         public static float CalculateCentralAngle(float verticalHeightMultiplier) => MathHelper.Pi - 2 * CalculateOffsetAngle(verticalHeightMultiplier);
 
-        public static readonly float InnerVelocityMultiplier = ArchHeightMultiplier * 0.65f;
+        public static float InnerVelocityMultiplier => ArchHeightMultiplier * 0.75f;
 
-        public static readonly float VerticalHeightMultiplier2 = 0.520f;
+        public static float VerticalHeightMultiplier2 => 0.6f;
 
         public static float CalculateVerticalHeightMultiplier(float archHeightMultiplier) => TOMathUtils.PolarEquation.Arc_CalculateVerticalDistance(archHeightMultiplier);
 
@@ -109,12 +109,27 @@ public static class EyeofCthulhu_Handler
         public static float InnerParticleScaleMultiplier => 0.85f;
     }
 
+    public const string AnomalyEyeofCthulhuPath = "CalamityAnomalies/Anomaly/EyeofCthulhu/";
+
+    [LoadTexture(AnomalyEyeofCthulhuPath + "BloodOrb")]
+
+    private static Asset<Texture2D> _bloodOrbTexture;
+    public static Texture2D BloodOrbTexture => _bloodOrbTexture.Value;
+
+    [LoadTexture(AnomalyEyeofCthulhuPath + "BloodOrb_Border")]
+    private static Asset<Texture2D> _bloodOrbBorderTexture;
+    public static Texture2D BloodOrbBorderTexture => _bloodOrbBorderTexture.Value;
+
+    [LoadTexture(AnomalyEyeofCthulhuPath + "BloodOrb_BorderBig")]
+    private static Asset<Texture2D> _bloodOrbBorderBigTexture;
+    public static Texture2D BloodOrbBorderBigTexture => _bloodOrbBorderBigTexture.Value;
+
     public static float MaxArenaRadius1 => 480f; //30格
     public static float MaxArenaRadius2 => 400f; //25格
 
     public static int NormalTeleportDuration => 90;
     public static int EyeSpinPhase1Time => 120;
-    public static int EyeSpinPhase2Time => 15;
+    public static int EyeSpinPhase2Time => 20;
 
     public static readonly Color ChargeColor = Color.Lerp(Color.Red, Color.White, 0.75f);
 
@@ -175,7 +190,7 @@ public static class EyeofCthulhu_Handler
 
     public static void SpawnEyeParticle(NPC npc, Vector2 originalVelocity)
     {
-        const int particleAmount = 500;
+        int particleAmount = 4 * (int)Utils.Remap(originalVelocity.Length(), 20f, 40f, 120, 180);
 
         float singleRadian = MathHelper.TwoPi / particleAmount;
 
