@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies.Visuals;
-using CalamityMod.Items;
+﻿using CalamityMod.Items;
 using CalamityMod.NPCs;
 using CalamityMod.Projectiles;
 

@@ -1,7 +1,6 @@
 ﻿using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
-using Transoceanic.DataStructures;
 
 namespace Transoceanic.Framework.Abstractions;
 
@@ -13,8 +12,14 @@ namespace Transoceanic.Framework.Abstractions;
 [AttributeUsage(AttributeTargets.Class, Inherited = true)]
 public sealed class CriticalBehaviorAttribute : Attribute;
 
+/// <summary>
+/// 定义实体行为必须实现的核心功能，包括所属 Mod、优先级、处理条件以及生命周期管理。
+/// </summary>
 public interface IEntityBehavior : ILoadable, IContentLoader
 {
+    /// <summary>
+    /// 获取行为所属的 Mod 实例。
+    /// </summary>
     public abstract Mod Mod { get; }
 
     /// <summary>
@@ -23,14 +28,23 @@ public interface IEntityBehavior : ILoadable, IContentLoader
     /// </summary>
     public abstract decimal Priority { get; }
 
+    /// <summary>
+    /// 获取一个值，指示当前行为是否应该执行处理逻辑。
+    /// <br/>当通过 <see cref="SimpleEntityBehaviorSet{TEntity, TBehavior}"/> 遍历行为时，仅返回此属性为 <see langword="true"/> 的实例。
+    /// </summary>
     public abstract bool ShouldProcess { get; }
 
     /// <summary>
-    /// <inheritdoc cref="ModType.SetStaticDefaults"/>
+    /// 在 Mod 加载的静态初始化阶段调用，用于设置静态默认值。
+    /// <br/>等效于 <see cref="ModType.SetStaticDefaults"/>。
     /// </summary>
     public abstract void SetStaticDefaults();
 }
 
+/// <summary>
+/// 实体行为的抽象基类，为所有行为提供默认实现，并维护对当前关联实体实例的引用。
+/// </summary>
+/// <typeparam name="TEntity">行为所附加的实体类型，必须派生自 <see cref="Entity"/>。</typeparam>
 public abstract class EntityBehavior<TEntity> : IEntityBehavior where TEntity : Entity
 {
     /// <summary>
@@ -43,42 +57,104 @@ public abstract class EntityBehavior<TEntity> : IEntityBehavior where TEntity : 
     /// </remarks>
     public TEntity _entity;
 
+    /// <summary>
+    /// 获取行为所属的 Mod 实例。
+    /// </summary>
     public abstract Mod Mod { get; }
 
+    /// <summary>
+    /// 获取行为的优先级。默认值为 0。数值越大，处理顺序越靠前。
+    /// </summary>
     public virtual decimal Priority => 0m;
 
+    /// <summary>
+    /// 获取一个值，指示当前行为是否应该执行处理逻辑。默认返回 <see langword="true"/>。
+    /// </summary>
     public virtual bool ShouldProcess => true;
 
+    /// <inheritdoc cref="IEntityBehavior.SetStaticDefaults"/>
     public virtual void SetStaticDefaults() { }
 
+    /// <summary>
+    /// 显式实现 <see cref="ILoadable.Load(Mod)"/>，将调用转至虚方法 <see cref="Load(Mod)"/>。
+    /// </summary>
     void ILoadable.Load(Mod mod) => Load(mod);
+
+    /// <summary>
+    /// 在 Mod 加载时调用，可重写以执行行为的初始化逻辑。
+    /// </summary>
+    /// <param name="mod">当前行为所属的 Mod 实例。</param>
     public virtual void Load(Mod mod) { }
 
+    /// <summary>
+    /// 显式实现 <see cref="ILoadable.Unload"/>，将调用转至虚方法 <see cref="Unload"/>。
+    /// </summary>
     void ILoadable.Unload() => Unload();
+
+    /// <summary>
+    /// 在 Mod 卸载时调用，可重写以释放资源或执行清理逻辑。
+    /// </summary>
     public virtual void Unload() { }
 
+    /// <summary>
+    /// 显式实现 <see cref="IContentLoader.PostSetupContent"/>，将调用转至虚方法 <see cref="PostSetupContent"/>。
+    /// </summary>
     void IContentLoader.PostSetupContent() => PostSetupContent();
+
+    /// <summary>
+    /// 在所有内容加载完成后调用，可重写以执行跨内容的初始化或调整。
+    /// </summary>
     public virtual void PostSetupContent() { }
 
+    /// <summary>
+    /// 显式实现 <see cref="IContentLoader.OnModUnload"/>，将调用转至虚方法 <see cref="UnModUnload"/>。
+    /// </summary>
     void IContentLoader.OnModUnload() => UnModUnload();
+
+    /// <summary>
+    /// 在当前 Mod 卸载时调用，可重写以清理与其他 Mod 相关的持久化数据。
+    /// </summary>
     public virtual void UnModUnload() { }
 }
 
+/// <summary>
+/// 通用实体行为的基类，不附加特定于全局或单一实体的功能。
+/// 用于标识可应用于任意实体的普通行为类型。
+/// </summary>
+/// <typeparam name="TEntity">行为所附加的实体类型。</typeparam>
 public abstract class GeneralEntityBehavior<TEntity> : EntityBehavior<TEntity> where TEntity : Entity;
 
+/// <summary>
+/// 全局实体行为的基类，为所有使用该行为的实体提供统一的 <see cref="SetDefaults(TEntity)"/> 默认值设置点。
+/// 通常与全局行为集合 <see cref="GlobalEntityBehaviorSet{TEntity, TBehavior}"/> 配合使用。
+/// </summary>
+/// <typeparam name="TEntity">行为所附加的实体类型。</typeparam>
 public abstract class GlobalEntityBehavior<TEntity> : GeneralEntityBehavior<TEntity> where TEntity : Entity
 {
     /// <summary>
-    /// <inheritdoc cref="GlobalType{TEntity, TGlobal}.SetDefaults(TEntity)"/>
+    /// 用于设置实体的默认值。当实体初次创建或重置时，该行为会调用此方法。
     /// </summary>
+    /// <param name="entity">要设置默认值的实体实例。</param>
+    /// <remarks>等效于 <see cref="GlobalType{TEntity, TGlobal}.SetDefaults(TEntity)"/> 的行为。</remarks>
     public virtual void SetDefaults(TEntity entity) { }
 }
 
+/// <summary>
+/// 单一实体行为的基类，通过 <see cref="ApplyingType"/> 指定该行为所作用的特定实体类型。
+/// 在 <see cref="SingleEntityBehaviorSet{TEntity, TBehavior}"/> 中按实体类型进行分组和检索。
+/// </summary>
+/// <typeparam name="TEntity">行为所附加的实体类型。</typeparam>
 public abstract class SingleEntityBehavior<TEntity> : EntityBehavior<TEntity> where TEntity : Entity
 {
+    /// <summary>
+    /// 获取此行为所应用的实体类型标识（通常为实体类型的唯一 ID）。
+    /// </summary>
     public abstract int ApplyingType { get; }
 
-    /// <inheritdoc cref="GlobalType{TEntity, TGlobal}.SetDefaults(TEntity)"/>
+    /// <summary>
+    /// 为此行为设定的实体设置默认值。该方法仅在实体匹配 <see cref="ApplyingType"/> 时被调用。
+    /// </summary>
+    /// <remarks>等效于 <see cref="GlobalType{TEntity, TGlobal}.SetDefaults(TEntity)"/> 的作用，但只针对特定实体类型。</remarks>
     public virtual void SetDefaults() { }
 }
 #endregion Base

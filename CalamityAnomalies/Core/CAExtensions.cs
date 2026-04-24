@@ -26,7 +26,7 @@ public static class CAExtensions
         public CalamityGlobalItem Calamity { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => item?.GetGlobalItem<CalamityGlobalItem>(); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetBehavior(out CASingleItemBehavior itemBehavior, [CallerMemberName] string methodName = null!) => CAEntityChangeHelper.ItemBehaviors.TryGetBehavior(item, methodName, out itemBehavior);
+        public bool TryGetBehavior(out CASingleItemBehavior itemBehavior, [CallerMemberName] string methodName = null) => CAEntityChangeHelper.ItemBehaviors.TryGetBehavior(item, methodName, out itemBehavior);
     }
 
     extension(CAItemTooltipModifier modifier)
@@ -40,7 +40,7 @@ public static class CAExtensions
         public CalamityGlobalNPC Calamity { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => npc?.GetGlobalNPC<CalamityGlobalNPC>(); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetBehavior(out CASingleNPCBehavior npcBehavior, [CallerMemberName] string methodName = null!) => CAEntityChangeHelper.NPCBehaviors.TryGetBehavior(npc, methodName, out npcBehavior);
+        public bool TryGetBehavior(out CASingleNPCBehavior npcBehavior, [CallerMemberName] string methodName = null) => CAEntityChangeHelper.NPCBehaviors.TryGetBehavior(npc, methodName, out npcBehavior);
 
         public bool DesertScourge => npc.ModNPC is DesertScourgeHead or DesertScourgeBody or DesertScourgeTail;
 
@@ -94,6 +94,6 @@ public static class CAExtensions
         public CalamityGlobalProjectile Calamity { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => projectile?.GetGlobalProjectile<CalamityGlobalProjectile>(); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null!) => CAEntityChangeHelper.ProjectileBehaviors.TryGetBehavior(projectile, methodName, out projectileBehavior);
+        public bool TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null) => CAEntityChangeHelper.ProjectileBehaviors.TryGetBehavior(projectile, methodName, out projectileBehavior);
     }
 }

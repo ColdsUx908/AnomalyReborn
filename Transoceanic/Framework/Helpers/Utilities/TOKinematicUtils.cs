@@ -1,9 +1,7 @@
-﻿using Transoceanic.DataStructures;
-
-namespace Transoceanic.Framework.Helpers;
+﻿namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
-/// NPC优先级设定。
+/// 目标检索时的优先级类型。
 /// </summary>
 public enum PriorityType : byte
 {
@@ -22,20 +20,22 @@ public enum PriorityType : byte
 }
 
 /// <summary>
-/// 运动学工具类。
+/// 提供与运动及目标检索有关的工具方法，常用于 NPC 或投射物的 AI 逻辑。
 /// </summary>
 public static class TOKinematicUtils
 {
     /// <summary>
-    /// 获取NPC目标。
+    /// 根据指定条件检索有效的 NPC 目标。
     /// </summary>
-    /// <param name="origin">追踪检索原点。</param>
-    /// <param name="maxDistanceToCheck">最大检索距离。</param>
-    /// <param name="ignoreTiles">是否忽视实体物块。</param>
-    /// <param name="bossPriority">是否对Boss具有优先级（即若能获取到Boss目标，则不获取非Boss目标）。</param>
-    /// <param name="priorityType">优先级类型。<para/>可选择获取距离最近目标、生命值最低目标、最大生命值最高目标。</param>
-    /// <returns>获取到的NPC目标。如未获取成功，返回 <see langword="null"/>。</returns>
-    /// <remarks><strong>警告</strong> 遍历NPC对性能有较大影响，应只在需要时调用该方法。</remarks>
+    /// <param name="origin">检索的中心点（世界坐标）。</param>
+    /// <param name="maxDistanceToCheck">最大检索距离（像素）。</param>
+    /// <param name="ignoreTiles">是否忽略实体物块阻挡。若为 <see langword="true"/>，则只进行距离判断；若为 <see langword="false"/>，则需要视线通畅（<see cref="Collision.CanHit(Vector2, int, int, Vector2, int, int)"/>）。</param>
+    /// <param name="bossPriority">是否优先锁定Boss单位。若为 <see langword="true"/>，则当范围内存在Boss时，只返回符合条件的Boss，否则再考虑普通敌怪。</param>
+    /// <param name="priorityType">目标排序优先级类型，可选最近距离、最高最大生命值、最高当前生命值。</param>
+    /// <returns>符合条件的 NPC 实例；若未检索到则返回 <see langword="null"/>。</returns>
+    /// <remarks>
+    /// <strong>警告：</strong>遍历 NPC 集合对性能有较大影响，应仅在必要的时候（例如弹幕索敌、召唤物 AI 更新）调用此方法，避免在每帧绘制中调用。
+    /// </remarks>
     public static NPC GetNPCTarget(Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, bool bossPriority = false, PriorityType priorityType = PriorityType.Closest)
     {
         float maxDistanceToCheckSquared = maxDistanceToCheck * maxDistanceToCheck;
@@ -173,14 +173,16 @@ public static class TOKinematicUtils
     }
 
     /// <summary>
-    /// 获取玩家目标。
+    /// 根据指定条件检索有效的玩家目标（通常用于敌怪 AI 或 BOSS 行为）。
     /// </summary>
-    /// <param name="origin">追踪检索原点。</param>
-    /// <param name="maxDistanceToCheck">最大检索距离。</param>
-    /// <param name="ignoreTiles">是否忽视实体物块。</param>
-    /// <param name="priorityType">优先级类型。<para/>可选择获取距离最近目标、生命值最低目标、最大生命值最高目标。</param>
-    /// <returns>获取到的玩家目标。如未获取成功，返回 <see langword="null"/>。</returns>
-    /// <remarks><strong>警告</strong> 遍历玩家对性能有较大影响，应只在需要时调用该方法。该方法应由NPC调用。</remarks>
+    /// <param name="origin">检索的中心点（世界坐标）。</param>
+    /// <param name="maxDistanceToCheck">最大检索距离（像素）。</param>
+    /// <param name="ignoreTiles">是否忽略实体物块阻挡。若为 <see langword="true"/>，则只进行距离判断；若为 <see langword="false"/>，则需要视线通畅。</param>
+    /// <param name="priorityType">目标排序优先级类型，可选最近距离、最高最大生命值、最高当前生命值。</param>
+    /// <returns>符合条件的 <see cref="Player"/> 实例；若未检索到则返回 <see langword="null"/>。在单人模式下直接返回本地玩家（如果在范围内）。</returns>
+    /// <remarks>
+    /// <strong>警告：</strong>遍历玩家集合对性能有较大影响，应仅在必要的时候（例如 NPC AI 更新）调用此方法。
+    /// </remarks>
     public static Player GetPlayerTarget(Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, PriorityType priorityType = PriorityType.Closest)
     {
         float maxDistanceToCheckSquared = maxDistanceToCheck * maxDistanceToCheck;
@@ -231,15 +233,17 @@ public static class TOKinematicUtils
     }
 
     /// <summary>
-    /// 获取PvP状态的玩家目标。
+    /// 获取处于 PvP 状态的有效玩家目标（用于玩家间对抗的武器或弹幕）。
     /// </summary>
-    /// <param name="owner">发起检索调用的玩家。不会将该玩家作为目标。</param>
-    /// <param name="origin">追踪检索原点。</param>
-    /// <param name="maxDistanceToCheck">最大检索距离。</param>
-    /// <param name="ignoreTiles">是否忽视实体物块。</param>
-    /// <param name="priorityType">优先级类型。<para/>可选择获取距离最近目标、生命值最低目标、最大生命值最高目标。</param>
-    /// <returns>获取到的玩家目标。如未获取成功，返回 <see langword="null"/>。</returns>
-    /// <remarks><strong>警告</strong> 遍历玩家对性能有较大影响，应只在需要时调用该方法。该方法应由玩家调用。</remarks>
+    /// <param name="owner">发起检索的玩家，该玩家自身不会被选为目标。</param>
+    /// <param name="origin">检索的中心点（世界坐标）。</param>
+    /// <param name="maxDistanceToCheck">最大检索距离（像素）。</param>
+    /// <param name="ignoreTiles">是否忽略实体物块阻挡。若为 <see langword="true"/>，则只进行距离判断；若为 <see langword="false"/>，则需要视线通畅。</param>
+    /// <param name="priorityType">目标排序优先级类型，可选最近距离、最高最大生命值、最高当前生命值。</param>
+    /// <returns>符合条件的 PvP 玩家实例；若未检索到或当前不处于多人模式/PvP 状态，则返回 <see langword="null"/>。</returns>
+    /// <remarks>
+    /// <strong>警告：</strong>遍历玩家集合对性能有较大影响，应仅在必要的时候调用此方法。此方法仅应由玩家主动发起的逻辑调用（例如武器使用、弹幕更新）。
+    /// </remarks>
     public static Player GetPvPPlayerTarget(Player owner, Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, PriorityType priorityType = PriorityType.Closest)
     {
         if (Main.netMode == NetmodeID.SinglePlayer || !owner.active || !owner.hostile)

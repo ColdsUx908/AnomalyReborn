@@ -2,9 +2,9 @@
 
 internal static class SourceGeneratorHelper
 {
-    public const string NeverBrowsableIdentifier = "[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]";
+    public const string NeverBrowsableIdentifier = "[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]";
 
-    public const string ExternalAttributePrefix = "Transoceanic.Framework.ExternalAttributes.";
+    public const string ExternalAttributePrefix = "global::Transoceanic.Framework.ExternalAttributes.";
 
     public static IncrementalValuesProvider<TypeDeclarationSyntax> GetTypeDeclarations(IncrementalGeneratorInitializationContext context) =>
         context.SyntaxProvider.CreateSyntaxProvider(
@@ -152,9 +152,7 @@ internal static class SourceGeneratorHelper
 
             // 获取特性类的完全限定名（如 "global::Namespace.Outer.InnerAttribute"）
             string attributeFullName = a.AttributeClass.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-            // 移除开头的 "global::" 前缀，然后与目标完全限定名比较
-            return (attributeFullName.StartsWith("global::") ? attributeFullName["global::".Length..] : attributeFullName) == targetFullName;
+            return attributeFullName == targetFullName;
         });
 
         return data is not null;

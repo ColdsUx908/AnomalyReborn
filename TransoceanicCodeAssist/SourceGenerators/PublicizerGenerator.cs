@@ -108,13 +108,14 @@ public class PublicizerGenerator : IIncrementalGenerator
         }
     }
 
-    private const string HelperMethodClass = "Transoceanic.Framework.Helpers.AbstractionHandlers.PublicizerHandler.";
-    private const string ReflectionNamespace = "System.Reflection.";
+    private const string HelperMethodClass = "global::Transoceanic.Framework.Helpers.AbstractionHandlers.PublicizerHandler.";
+    private const string ReflectionNamespace = "global::System.Reflection.";
+
+    private const string TargetTypeFieldName = "c_TargetType";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         IncrementalValueProvider<ImmutableArray<PublicizerTypeSymbolInfo>> c = SourceGeneratorHelper.GetCollectedTypeInfos(context, (s, complition) => new PublicizerTypeSymbolInfo(s, complition));
-
         context.RegisterSourceOutput(c, RegisterAction);
     }
 
@@ -132,22 +133,16 @@ public class PublicizerGenerator : IIncrementalGenerator
 
             #pragma warning disable CS0106
             #pragma warning disable CS0109
+            #pragma warning disable CS1591
 
             """);
 
-        if (source.Length == 0)
+        for (int i = 0; i < source.Length; i++)
         {
-            builder.AppendLine("// NO types to publicize");
-        }
-        else
-        {
-            for (int i = 0; i < source.Length; i++)
-            {
-                PublicizerTypeSymbolInfo typeInfo = source[i];
-                if (i > 0)
-                    builder.AppendLine();
-                builder.AppendLine(RegisterType(typeInfo));
-            }
+            PublicizerTypeSymbolInfo typeInfo = source[i];
+            if (i > 0)
+                builder.AppendLine();
+            builder.AppendLine(RegisterType(typeInfo));
         }
 
         spc.AddSource(fileName, builder.ToString());
@@ -155,24 +150,22 @@ public class PublicizerGenerator : IIncrementalGenerator
 
     private static string RegisterType(PublicizerTypeSymbolInfo typeInfo)
     {
-        StringBuilder typeTextBuilder = new();
+        StringBuilder builder = new();
 
-        #region TargetType
         string targetTypeName = typeInfo.TargetTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        typeTextBuilder.AppendLine($$"""
+        builder.AppendLine($$"""
             {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-            public static new readonly System.Type TargetType = typeof({{targetTypeName}});
+            public static new readonly global::System.Type {{TargetTypeFieldName}} = typeof({{targetTypeName}});
             """);
-        #endregion
 
-        typeTextBuilder.AppendLine(HandleInstanceFields(typeInfo));
-        typeTextBuilder.AppendLine(HandleInstanceProperties(typeInfo));
-        typeTextBuilder.AppendLine(HandleInstanceMethods(typeInfo));
-        typeTextBuilder.AppendLine(HandleStaticFields(typeInfo));
-        typeTextBuilder.AppendLine(HandleStaticProperties(typeInfo));
-        typeTextBuilder.AppendLine(HandleStaticMethods(typeInfo));
+        builder.AppendLine(HandleInstanceFields(typeInfo));
+        builder.AppendLine(HandleInstanceProperties(typeInfo));
+        builder.AppendLine(HandleInstanceMethods(typeInfo));
+        builder.AppendLine(HandleStaticFields(typeInfo));
+        builder.AppendLine(HandleStaticProperties(typeInfo));
+        builder.AppendLine(HandleStaticMethods(typeInfo));
 
-        return typeInfo.GenerateDeclarationText(typeTextBuilder.ToString(), 0, true);
+        return typeInfo.GenerateDeclarationText(builder.ToString(), 0, true);
     }
 
     private static string HandleInstanceFields(PublicizerTypeSymbolInfo typeInfo)
@@ -209,7 +202,7 @@ public class PublicizerGenerator : IIncrementalGenerator
             localBuilder.Append($$"""
                 // {{name}}{{nonPublicIndicator}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                public static readonly {{ReflectionNamespace}}FieldInfo {{fieldInfoName}} = {{HelperMethodClass}}GetInstanceField(TargetType, "{{name}}");
+                public static readonly {{ReflectionNamespace}}FieldInfo {{fieldInfoName}} = {{HelperMethodClass}}GetInstanceField({{TargetTypeFieldName}}, "{{name}}");
                 public {{typeName}} {{name}}
                 {
                     get => ({{typeName}}){{fieldInfoName}}.GetValue(base.Source);
@@ -268,7 +261,7 @@ public class PublicizerGenerator : IIncrementalGenerator
             localBuilder.Append($$"""
                 // {{name}}{{nonPublicIndicator}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                public static readonly {{ReflectionNamespace}}PropertyInfo {{propertyInfoName}} = {{HelperMethodClass}}GetInstanceProperty(TargetType, {{"\"" + name + "\""}});
+                public static readonly {{ReflectionNamespace}}PropertyInfo {{propertyInfoName}} = {{HelperMethodClass}}GetInstanceProperty({{TargetTypeFieldName}}, {{"\"" + name + "\""}});
                 public {{typeName}} {{name}}
                 {
                     {{getter}}
@@ -316,6 +309,13 @@ public class PublicizerGenerator : IIncrementalGenerator
                     // Not supported due to having non-public parameter types
                     """);
             }
+            else if (methodSymbol.IsGenericMethod)
+            {
+                localBuilder.Append($$"""
+                    // {{name}}
+                    // Not supported due to having generic type parameters
+                    """);
+            }
             else
             {
                 List<string> paramTypeNames = [..
@@ -326,6 +326,7 @@ public class PublicizerGenerator : IIncrementalGenerator
                     .Replace(">", "_")
                     .Replace(",", "_")
                     .Replace(" ", "")
+                    + (param.RefKind != RefKind.None ? "ByRef" : "")
                 select typeName];
                 string suffix = name + (paramTypeNames.Count > 0 ? "_" + string.Join("_", paramTypeNames) : "");
 
@@ -340,7 +341,7 @@ public class PublicizerGenerator : IIncrementalGenerator
                 localBuilder.Append($$"""
                     // {{name}}
                     {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                    public static readonly {{ReflectionNamespace}}MethodInfo {{methodInfoFieldName}} = {{HelperMethodClass}}GetInstanceMethod(TargetType, "{{name}}", new global::System.Type[] {{{(string.IsNullOrEmpty(paramTypesArray) ? " " : $" {paramTypesArray} ")}}});
+                    public static readonly {{ReflectionNamespace}}MethodInfo {{methodInfoFieldName}} = {{HelperMethodClass}}GetInstanceMethod({{TargetTypeFieldName}}, "{{name}}", new global::System.Type[] {{{(string.IsNullOrEmpty(paramTypesArray) ? " " : $" {paramTypesArray} ")}}});
                     {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
                     {{methodSymbolInfo.GenerateDelegateDeclaration(delegateTypeName)}}
                     {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
@@ -391,7 +392,7 @@ public class PublicizerGenerator : IIncrementalGenerator
             localBuilder.Append($$"""
                 // {{name}}{{nonPublicIndicator}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                public static readonly {{ReflectionNamespace}}FieldInfo {{fieldInfoName}} = {{HelperMethodClass}}GetStaticField(TargetType, {{"\"" + name + "\""}});
+                public static readonly {{ReflectionNamespace}}FieldInfo {{fieldInfoName}} = {{HelperMethodClass}}GetStaticField({{TargetTypeFieldName}}, {{"\"" + name + "\""}});
                 public static {{typeName}} {{name}}
                 {
                     get => ({{typeName}}){{fieldInfoName}}.GetValue(null);
@@ -450,7 +451,7 @@ public class PublicizerGenerator : IIncrementalGenerator
             localBuilder.Append($$"""
                 // {{name}}{{nonPublicIndicator}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                public static readonly {{ReflectionNamespace}}PropertyInfo {{propertyInfoName}} = {{HelperMethodClass}}GetStaticProperty(TargetType, {{"\"" + name + "\""}});
+                public static readonly {{ReflectionNamespace}}PropertyInfo {{propertyInfoName}} = {{HelperMethodClass}}GetStaticProperty({{TargetTypeFieldName}}, {{"\"" + name + "\""}});
                 public static {{typeName}} {{name}}
                 {
                     {{getter}}
@@ -498,6 +499,13 @@ public class PublicizerGenerator : IIncrementalGenerator
                     // Not supported due to having non-public parameter types
                     """);
             }
+            else if (methodSymbol.IsGenericMethod)
+            {
+                localBuilder.Append($$"""
+                    // {{name}}
+                    // Not supported due to having generic type parameters
+                    """);
+            }
             else
             {
                 List<string> paramTypeNames = [..
@@ -508,6 +516,7 @@ public class PublicizerGenerator : IIncrementalGenerator
                     .Replace(">", "_")
                     .Replace(",", "_")
                     .Replace(" ", "")
+                    + (param.RefKind != RefKind.None ? "ByRef" : "")
                 select typeName];
                 string suffix = name + (paramTypeNames.Count > 0 ? "_" + string.Join("_", paramTypeNames) : "");
 
@@ -521,7 +530,7 @@ public class PublicizerGenerator : IIncrementalGenerator
                 localBuilder.Append($$"""
                     // {{name}}
                     {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                    public static readonly {{ReflectionNamespace}}MethodInfo {{methodInfoFieldName}} = {{HelperMethodClass}}GetStaticMethod(TargetType, "{{name}}", new global::System.Type[] {{{(string.IsNullOrEmpty(paramTypesArray) ? " " : $" {paramTypesArray} ")}}});
+                    public static readonly {{ReflectionNamespace}}MethodInfo {{methodInfoFieldName}} = {{HelperMethodClass}}GetStaticMethod({{TargetTypeFieldName}}, "{{name}}", new global::System.Type[] {{{(string.IsNullOrEmpty(paramTypesArray) ? " " : $" {paramTypesArray} ")}}});
                     {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
                     {{methodSymbolInfo.GenerateDelegateDeclaration(delegateTypeName)}}
                     {{SourceGeneratorHelper.NeverBrowsableIdentifier}}

@@ -23,7 +23,7 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Transoceanic\Transoceanic.csproj" />
-		<ProjectReference Include="..\TransoceanicSourceGenerator\TransoceanicCodeAssist.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\TransoceanicCodeAssist\TransoceanicCodeAssist.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 	<ItemGroup>
 		<Reference Include="CalamityMod">

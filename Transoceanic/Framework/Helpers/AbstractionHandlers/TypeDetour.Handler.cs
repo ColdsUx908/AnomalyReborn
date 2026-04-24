@@ -3,14 +3,30 @@ using Transoceanic.Framework.RuntimeEditing;
 
 namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
+/// <summary>
+/// 用于检测类型 Detour 覆盖完整性的更新提醒器。
+/// <para>在游戏开始时检查所有 Mod 类型与对应 Detour 类型之间的虚方法匹配情况，若缺失则输出警告。</para>
+/// </summary>
 internal sealed class TypeDetourUpdateReminder : IUpdateReminder
 {
     private static bool DefaultDetourMatch(MethodInfo source, MethodInfo detour) => source.Name == detour.Name;
     private static bool DetourMatch(MethodInfo source, MethodInfo detour) => TODetourHandler.EvaluateDetourName(detour, out string sourceNameGot) && sourceNameGot == source.Name;
     private static bool ShouldMethodBeChecked(MethodInfo method) => method.IsRealVirtualOrAbstract && !method.IsGenericMethod && !method.HasAttribute<ObsoleteAttribute>() && method.CanBeAccessedOutsideAssembly;
 
+    /// <summary>
+    /// 表示一个需要检查的 Detour 类型配对。
+    /// </summary>
+    /// <param name="Source">原始 Mod 类型。</param>
+    /// <param name="Detour">对应的 Detour 类型。</param>
+    /// <param name="SourceIgnore">可选的源方法忽略过滤器。</param>
+    /// <param name="DetourIgnore">可选的 Detour 方法忽略过滤器。</param>
     private readonly record struct DetourTypeContainer(Type Source, Type Detour, Func<MethodInfo, bool> SourceIgnore = null, Func<MethodInfo, bool> DetourIgnore = null)
     {
+        /// <summary>
+        /// 比较源类型与 Detour 类型的虚方法列表，返回缺失的方法名称集合。
+        /// </summary>
+        /// <param name="match">用于判断两个方法是否对应的匹配逻辑。</param>
+        /// <returns>包含源缺失方法和 Detour 缺失方法的元组。</returns>
         public (List<string> sourceMissing, List<string> targetMissing) CompareVirtualMethods(Func<MethodInfo, MethodInfo, bool> match)
         {
             match ??= DefaultDetourMatch;
@@ -36,6 +52,9 @@ internal sealed class TypeDetourUpdateReminder : IUpdateReminder
         }
     }
 
+    /// <summary>
+    /// 注册更新提醒回调：检查所有关键类型对的 Detour 完整性，若有缺失则记录警告并在聊天中提示。
+    /// </summary>
     Action IUpdateReminder.RegisterUpdateReminder()
     {
         bool hasWarn = false;
@@ -100,6 +119,7 @@ internal sealed class TypeDetourUpdateReminder : IUpdateReminder
             new(typeof(GameEffect), typeof(GameEffectDetour<>)),
             new(typeof(CustomSky), typeof(CustomSkyDetour<>))
         ];
+
         foreach (DetourTypeContainer container in typesToCheck)
         {
             (List<string> sourceMissing, List<string> detourMissing) = container.CompareVirtualMethods(DetourMatch);

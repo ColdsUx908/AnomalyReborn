@@ -25,29 +25,53 @@ global using Terraria.ModLoader;
 global using Terraria.ModLoader.Core;
 global using Terraria.ModLoader.IO;
 global using Terraria.Utilities;
-global using Transoceanic.Commands;
+global using Transoceanic.Common;
+global using Transoceanic.DataStructures;
 global using Transoceanic.Framework.Abstractions;
 global using Transoceanic.Framework.ExternalAttributes;
 global using Transoceanic.Framework.Helpers;
 global using Transoceanic.Framework.Helpers.AbstractionHandlers;
-global using Transoceanic.GlobalInstances;
 
 namespace Transoceanic;
 
 // Designed by ColdsUx
 
+/// <summary>
+/// Transoceanic 模组的主入口类。负责模组的加载、卸载生命周期管理，
+/// 并通过反射自动发现并调用所有实现 <see cref="ITOLoader"/> 接口的加载器。
+/// </summary>
 public sealed class TOMain : Mod
 {
+    /// <summary>
+    /// 获取当前 <see cref="TOMain"/> 模组的唯一实例。
+    /// </summary>
     internal static TOMain Instance { get; private set; }
 
+    /// <summary>
+    /// 获取一个值，指示模组是否正在执行加载过程。
+    /// </summary>
     internal static bool Loading { get; private set; }
 
+    /// <summary>
+    /// 获取一个值，指示模组是否已完成加载。
+    /// </summary>
     internal static bool Loaded { get; private set; }
 
+    /// <summary>
+    /// 获取一个值，指示模组是否正在执行卸载过程。
+    /// </summary>
     internal static bool Unloading { get; private set; }
 
+    /// <summary>
+    /// 获取一个值，指示模组是否已完成卸载。
+    /// </summary>
     internal static bool Unloaded { get; private set; }
 
+    /// <summary>
+    /// 模组加载入口点。在此方法中，通过反射发现所有实现 <see cref="ITOLoader"/> 的类型，
+    /// 并按 <see cref="LoadPriorityAttribute"/> 指定的优先级降序调用其 <c>Load()</c> 方法。
+    /// 加载过程的状态由 <see cref="Loading"/> 和 <see cref="Loaded"/> 标志跟踪。
+    /// </summary>
     public override void Load()
     {
         Loading = true;
@@ -70,6 +94,10 @@ public sealed class TOMain : Mod
         }
     }
 
+    /// <summary>
+    /// 在所有模组的内容加载完成后调用。在此方法中，通过反射发现所有实现 <see cref="IContentLoader"/> 的类型，
+    /// 并按 <see cref="LoadPriorityAttribute"/> 指定的优先级降序调用其 <c>PostSetupContent()</c> 方法。
+    /// </summary>
     public override void PostSetupContent()
     {
         foreach (IContentLoader loader in
@@ -81,6 +109,10 @@ public sealed class TOMain : Mod
         }
     }
 
+    /// <summary>
+    /// 模组卸载入口点。如果模组先前已加载，则按加载时优先级的相反顺序调用所有 <see cref="ITOLoader"/> 的 <c>Unload()</c> 方法。
+    /// 卸载过程的状态由 <see cref="Unloading"/> 和 <see cref="Unloaded"/> 标志跟踪。
+    /// </summary>
     public override void Unload()
     {
         Unloading = true;

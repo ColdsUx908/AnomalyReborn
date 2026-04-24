@@ -3,4 +3,4 @@ author = ColdsUx
 version = 1.0.3
 includeSource = true
 side = NoSync
-buildIgnore = .vs\*, Properties\*, *.sln, obj\*, bin\*
+buildIgnore = .vs\*, Properties\*, obj\*, bin\*

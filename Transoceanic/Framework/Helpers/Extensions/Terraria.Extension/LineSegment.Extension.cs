@@ -4,19 +4,40 @@ public static partial class TOExtensions
 {
     extension(LineSegment line)
     {
+        /// <summary>
+        /// 获取线段的方向向量（从起点指向终点）。
+        /// </summary>
         public Vector2 Value => line.End - line.Start;
 
+        /// <summary>
+        /// 获取线段的长度。
+        /// </summary>
         public float Length => Vector2.Distance(line.Start, line.End);
 
+        /// <summary>
+        /// 获取线段的旋转角度（弧度），即方向向量的角度。
+        /// </summary>
         public float Rotation => line.Value.ToRotation();
 
+        /// <summary>
+        /// 获取线段的单位方向向量。
+        /// </summary>
         public Vector2 Direction => line.Value.SafeNormalize();
 
+        /// <summary>
+        /// 获取线段的中点坐标。
+        /// </summary>
         public Vector2 Midpoint => (line.Start + line.End) / 2;
     }
 
     extension(LineSegment)
     {
+        /// <summary>
+        /// 判断两条线段是否相交（包括端点接触）。
+        /// </summary>
+        /// <param name="a">第一条线段。</param>
+        /// <param name="b">第二条线段。</param>
+        /// <returns>如果两条线段相交（包括端点在另一条线段上），则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
         public static bool Intersects(LineSegment a, LineSegment b)
         {
             Vector2 p = a.Start;

@@ -1,7 +1,13 @@
 ﻿namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
+/// <summary>
+/// 粒子系统全局处理器，负责粒子的更新、绘制以及生命周期管理。
+/// </summary>
 public sealed class ParticleHandler : ModSystem, IContentLoader
 {
+    /// <summary>
+    /// 粒子纹理资源的基础路径。
+    /// </summary>
     public const string BaseParticleTexturePath = "Transoceanic/DataStructures/Particles/";
 
     /// <summary>
@@ -10,6 +16,9 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
     /// </summary>
     public static int ParticleLimit { get; set; } = 5000;
 
+    /// <summary>
+    /// 存储单个粒子类型的元数据缓存，包括类型、模板实例及唯一 ID。
+    /// </summary>
     internal sealed record ParticleDataCache
     {
         public static int _nextID = 0;
@@ -31,6 +40,12 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
             }
         }
 
+        /// <summary>
+        /// 创建或获取粒子类型的缓存数据。
+        /// </summary>
+        /// <param name="type">粒子类型。</param>
+        /// <param name="templateInstance">粒子的模板实例。</param>
+        /// <returns>对应的缓存数据。</returns>
         public static ParticleDataCache Create(Type type, Particle templateInstance)
         {
             if (_particleTypes.TryGetValue(type, out int existingId) && _particleCache.TryGetValue(existingId, out ParticleDataCache existingCache))
@@ -56,6 +71,10 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
     private static List<Particle> _particlesToDraw_Additive;
     private static List<Particle> _particlesToDraw_Opaque;
 
+    /// <summary>
+    /// 绘制所有活跃粒子。根据不同混合状态分组绘制以减少渲染状态切换。
+    /// </summary>
+    /// <param name="spriteBatch">用于绘制的 SpriteBatch 实例。</param>
     public static void Draw(SpriteBatch spriteBatch)
     {
         if (Main.dedServ)
@@ -132,6 +151,9 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         }
     }
 
+    /// <summary>
+    /// 进入 AlphaBlend 混合状态的绘制区域。
+    /// </summary>
     public static void EnterDrawRegion_AlphaBlend(SpriteBatch spriteBatch)
     {
         spriteBatch.End();
@@ -141,6 +163,9 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
     }
 
+    /// <summary>
+    /// 进入 NonPremultiplied 混合状态的绘制区域。
+    /// </summary>
     public static void EnterDrawRegion_NonPremultiplied(SpriteBatch spriteBatch)
     {
         spriteBatch.End();
@@ -150,6 +175,9 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, DepthStencilState.Default, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
     }
 
+    /// <summary>
+    /// 进入 Additive 混合状态的绘制区域。
+    /// </summary>
     public static void EnterDrawRegion_Additive(SpriteBatch spriteBatch)
     {
         spriteBatch.End();
@@ -159,6 +187,9 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.Default, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
     }
 
+    /// <summary>
+    /// 进入 Opaque 混合状态的绘制区域。
+    /// </summary>
     public static void EnterDrawRegion_Opaque(SpriteBatch spriteBatch)
     {
         spriteBatch.End();
@@ -168,12 +199,18 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.Default, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
     }
 
+    /// <summary>
+    /// 退出粒子绘制区域，恢复默认渲染状态。
+    /// </summary>
     public static void ExitParticleDrawRegion(SpriteBatch spriteBatch)
     {
         spriteBatch.End();
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
     }
 
+    /// <summary>
+    /// 在所有实体更新后处理粒子的更新与移除。
+    /// </summary>
     public override void PostUpdateEverything()
     {
         if (Main.dedServ)
@@ -292,6 +329,9 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         return true;
     }
 
+    /// <summary>
+    /// 将指定粒子标记为待移除。
+    /// </summary>
     public static void AddToRemoveList(Particle particle)
     {
         if (Main.dedServ)
@@ -300,6 +340,13 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         _particlesToKill.Add(particle);
     }
 
+    /// <summary>
+    /// 获取指定粒子类型的模板实例。
+    /// </summary>
     public static T GetTemplateInstance<T>() where T : Particle => (T)_particleCache[_particleTypes[typeof(T)]].TemplateInstance;
+
+    /// <summary>
+    /// 获取指定粒子类型的纹理。
+    /// </summary>
     public static Texture2D GetTexture<T>() where T : Particle => _particleCache[_particleTypes[typeof(T)]].TemplateInstance.Texture;
 }

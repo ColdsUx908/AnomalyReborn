@@ -4,4 +4,4 @@ version = 0.1.3.3
 hideResources = true
 modReferences = CalamityMod, Transoceanic
 sortAfter = CalamityMod, Transoceanic, Luminance
-buildIgnore = .vs\*, Properties\*, *.sln, obj\*, bin\*
+buildIgnore = .vs\*, Properties\*, obj\*, bin\*

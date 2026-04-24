@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using CalamityAnomalies.Visuals;
 using CalamityMod.CalPlayer;
 using CalamityMod.Items;
 using CalamityMod.NPCs;
