@@ -46,7 +46,7 @@ public static class EyeofCthulhu_Handler
 
         public static float InnerVelocityMultiplier => ArchHeightMultiplier * 0.75f;
 
-        public static float VerticalHeightMultiplier2 => 0.6f;
+        public static float VerticalHeightMultiplier2 => 0.585f;
 
         public static float CalculateVerticalHeightMultiplier(float archHeightMultiplier) => TOMathUtils.PolarEquation.Arc_CalculateVerticalDistance(archHeightMultiplier);
 

@@ -129,7 +129,9 @@ public abstract class TOShockwaveProjectile : TOModProjectile
     {
         SpriteBatch spriteBatch = Main.spriteBatch;
         ParticleHandler.EnterDrawRegion_Additive(spriteBatch);
-        spriteBatch.DrawFromCenter(Projectile.Texture, Projectile.Center - Main.screenPosition, null, Projectile.GetAlpha(lightColor) * Projectile.Opacity, 0f, Projectile.scale);
+        Texture2D texture = UseHDTexture ? PulseRing.TextureHD : ParticleHandler.GetTexture<PulseRing>();
+        Color color = GetAlpha(lightColor) ?? Color.White;
+        spriteBatch.DrawFromCenter(texture, Projectile.Center - Main.screenPosition, null, color * Projectile.Opacity, Projectile.rotation, Projectile.scale);
         ParticleHandler.ExitParticleDrawRegion(spriteBatch);
         return false;
     }

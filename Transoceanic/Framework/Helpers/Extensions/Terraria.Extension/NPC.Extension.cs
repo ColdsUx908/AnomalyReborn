@@ -529,8 +529,9 @@ public static partial class TOExtensions
         /// <param name="lifetime">残影存活时间（帧数）。</param>
         /// <param name="color">残影颜色。</param>
         /// <param name="drawOffset">绘制偏移量（可选）。</param>
-        public void SpawnAfterimage(int lifetime, Color color, Vector2? drawOffsaet = null) =>
-            npc.Ocean.Afterimages.Add(new AfterimageParticle(npc.Texture, npc.frame, npc.Center, lifetime, npc.rotation, npc.scale, color, npc.Opacity, drawOffsaet));
+        /// <param name="affectedByLight">残影是否受光照影响（可选），默认为 <see langword="true"/>，即受光照影响。</param>
+        public void SpawnAfterimage(int lifetime, Color color, Vector2? drawOffset = null, bool affectedByLight = true) =>
+            npc.Ocean.Afterimages.Add(new AfterimageParticle(npc.Texture, npc.frame, npc.Center, lifetime, npc.rotation, npc.scale, color, npc.Opacity, drawOffset, affectedByLight));
 
         /// <summary>
         /// 添加一个自定义的残影粒子到 NPC 的全局数据中。

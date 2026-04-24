@@ -29,8 +29,9 @@ public sealed class CANPCDR : CAGlobalNPCBehavior, IContentLoader
         int aiTimer = calamityNPC.killTimeTimer;
 
         bool isNightProvidence = npc.ModNPC is Providence providence && providence.hasBeenGivenFullPower;
+        bool isGFBDayEmpressofLight = CASharedData.Anomaly && Main.zenithWorld && npc.type == NPCID.HallowBoss && npc.Anomaly.IsRunningAnomalyAI;
 
-        if (killTime > 0 && aiTimer < killTime && !BossRushEvent.BossRushActive && isNightProvidence)
+        if (killTime > 0 && aiTimer < killTime && !BossRushEvent.BossRushActive && (isNightProvidence || isGFBDayEmpressofLight))
         {
             const float tdrFactor = 10f;
             float extraDRLimit = (1f - baseDR) * tdrFactor / 2f;

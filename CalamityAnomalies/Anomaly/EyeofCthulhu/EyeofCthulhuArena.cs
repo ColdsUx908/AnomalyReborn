@@ -106,12 +106,6 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
             action?.Invoke(eye);
     }
 
-    public void SendCommandToArenaEye(int index, BehaviorCommand_ArenaEye command) => ExecuteActionToArenaEye(index, e =>
-    {
-        e.MasterCommandReceiver = command;
-        e.MasterPhase3_2 = MasterPhase3_2;
-    });
-
     public void AddHighlightTo(int index, int lifetime)
     {
         index = (int)TOMathUtils.NormalizeWithPeriod(index, 32);
@@ -359,6 +353,16 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                 case 1 when Timer1 == 11:
                     SoundEngine.PlaySound(SoundID.Item8, Projectile.Center);
                     break;
+                case 1 when timer1 == 12:
+                    (float targetRotationSpeed, int duration) = masterBehavior.AttackCounter switch
+                    {
+                        0 => (0.01f, 20),
+                        1 => (0.02f, 20),
+                        2 => (0.005f, 30),
+                        _ => (0f, 1)
+                    };
+                    ChangeRotationSpeedTo(targetRotationSpeed, duration);
+                    break;
                 case 1 when timer1 == EyeofCthulhu_Handler.EyeSpinPhase1Time - 1:
                     //生成弹幕
 
@@ -442,16 +446,6 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                         }
                     }
 
-                    break;
-                case 2 when timer1 == 30:
-                    (float targetRotationSpeed, int duration) = masterBehavior.AttackCounter switch
-                    {
-                        0 => (0.008f, 20),
-                        1 => (0.01f, 20),
-                        2 => (0.0175f, 50),
-                        _ => (0f, 1)
-                    };
-                    ChangeRotationSpeedTo(targetRotationSpeed, duration);
                     break;
             }
         }

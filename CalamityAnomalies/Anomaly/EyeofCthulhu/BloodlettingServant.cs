@@ -121,7 +121,7 @@ public partial class BloodlettingServant : CAModNPC
         }
 
         if (ShouldUsePhase2Frame)
-            NPC.SpawnAfterimage(5, NPC.GetAlpha(Color.White));
+            NPC.SpawnAfterimage(5, NPC.GetAlpha(Color.White), affectedByLight: false);
 
         void MiscAI_Phase2()
         {

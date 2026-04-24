@@ -16,7 +16,6 @@ public sealed partial class EyeofCthulhuArena
         public bool ShouldFaceTarget;
         public int Timer;
         public int Timer2;
-        public BehaviorCommand_ArenaEye MasterCommandReceiver;
         public bool MasterPhase3_2;
         public List<EyeHighlight> Highlights = [];
 
@@ -45,91 +44,6 @@ public sealed partial class EyeofCthulhuArena
                 highlight?.Update();
 
             Highlights.RemoveAll(hightlight => hightlight is null || hightlight.ShouldBeRemoved);
-
-            //执行命令
-            /*
-            switch (MasterCommandReceiver)
-            {
-                case BehaviorCommand_ArenaEye.ShootBlood_EyeSpin:
-                    ShootBlood_EyeSpin();
-                    break;
-                default:
-                    Timer2 = 0;
-                    ShouldUseCustomRotation = false;
-                    CustomFindRotationFunction = null;
-                    ShouldFaceTarget = false;
-                    break;
-            }
-
-            void ShootBlood_Charge()
-            {
-                bool shouldIncreaseTimer = true;
-
-                ShouldFaceTarget = true;
-                if (Timer2 == 0)
-                    Highlights.Add(new EyeHighlight(EyeofCthulhu_Handler.NormalTeleportDuration + 10, 20, 10f));
-                else if (Timer2 == EyeofCthulhu_Handler.NormalTeleportDuration)
-                {
-                    int particleAmount = 20;
-                    for (int i = 0; i < particleAmount; i++)
-                        EyeofCthulhu_Handler.SpawnOrbParticle(Center, Main.rand.NextFloat(3f, 4f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.5f, 0.8f));
-
-                    Vector2 offsetCenter = OffsetCenter;
-                    Vector2 velocity = (Target.Center - offsetCenter).ToCustomLength(15f);
-                    Projectile.NewProjectileAction(MasterProjectile.GetSource_FromAI(), offsetCenter, velocity, ProjectileID.BloodShot, EyeofCthulhu_Anomaly.BloodDamage, 0f, action: p => p.timeLeft = 120);
-                    if (MasterPhase3_2)
-                    {
-                        Projectile.NewProjectileAction(MasterProjectile.GetSource_FromAI(), offsetCenter, velocity * 0.5f, ProjectileID.BloodShot, EyeofCthulhu_Anomaly.BloodDamage, 0f, action: p => p.timeLeft = 120);
-                        Projectile.NewProjectileAction(MasterProjectile.GetSource_FromAI(), offsetCenter, velocity * 1.35f, ProjectileID.BloodShot, EyeofCthulhu_Anomaly.BloodDamage, 0f, action: p => p.timeLeft = 120);
-                    }
-
-                    shouldIncreaseTimer = false;
-                    ShouldFaceTarget = false;
-
-                    Timer2 = 0;
-                    MasterCommandReceiver = BehaviorCommand_ArenaEye.None;
-                }
-
-                if (shouldIncreaseTimer)
-                    Timer2++;
-            }
-
-            void ShootBlood_EyeSpin()
-            {
-                bool shouldIncreaseTimer = true;
-
-                ShouldFaceTarget = true;
-
-                int shootBloodGateValue = 25;
-                if (Timer2 % shootBloodGateValue == 0)
-                {
-                    int num = Timer2 / shootBloodGateValue;
-
-                    if (num > 0)
-                    {
-                        int particleAmount = 15;
-                        for (int i = 0; i < particleAmount; i++)
-                            EyeofCthulhu_Handler.SpawnOrbParticle(Center, Main.rand.NextFloat(3f, 4f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.5f, 0.8f));
-
-                        Vector2 offsetCenter = OffsetCenter;
-                        Vector2 velocity = (Target.Center - offsetCenter).ToCustomLength(20f);
-                        Projectile.NewProjectileAction(MasterProjectile.GetSource_FromAI(), offsetCenter, velocity, ProjectileID.BloodNautilusShot, EyeofCthulhu_Anomaly.BloodDamage, 0f, action: p => p.timeLeft = 120);
-
-                        if (num >= 2)
-                        {
-                            shouldIncreaseTimer = false;
-                            ShouldFaceTarget = false;
-
-                            Timer2 = 0;
-                            MasterCommandReceiver = BehaviorCommand_ArenaEye.None;
-                        }
-                    }
-                }
-
-                if (shouldIncreaseTimer)
-                    Timer2++;
-            }
-            */
         }
 
         public void Draw(SpriteBatch spriteBatch, Texture2D texture, Rectangle frame, Color color)

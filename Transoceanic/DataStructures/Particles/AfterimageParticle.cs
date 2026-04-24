@@ -13,7 +13,7 @@ public class AfterimageParticle : Particle, IContentLoader
     public override bool AutoLoadTexture => false;
     public override string TexturePath => TOTextures.InvisibleTexturePath;
 
-    public AfterimageParticle(Texture2D texture, Rectangle? frame, Vector2 center, int lifetime, float rotation, float scale, Color color, float originalOpacity = 1f, Vector2? drawOffset = null)
+    public AfterimageParticle(Texture2D texture, Rectangle? frame, Vector2 center, int lifetime, float rotation, float scale, Color color, float originalOpacity = 1f, Vector2? drawOffset = null, bool affectedByLight = true)
     {
         Texture = texture;
         Frame = frame;
@@ -24,6 +24,7 @@ public class AfterimageParticle : Particle, IContentLoader
         Color = color;
         OriginalOpacity = originalOpacity;
         DrawOffset = drawOffset ?? Vector2.Zero;
+        AffectedByLight = affectedByLight;
     }
 
     public override bool PreSpawn() => false;
@@ -35,5 +36,11 @@ public class AfterimageParticle : Particle, IContentLoader
 
     public override bool PreDraw(SpriteBatch spriteBatch) => false;
 
-    public void Draw(SpriteBatch spriteBatch) => spriteBatch.DrawFromCenter(Texture, Center + DrawOffset - Main.screenPosition, Frame, Color * Opacity, Rotation, Scale, SpriteEffects.None);
+    public void Draw(SpriteBatch spriteBatch)
+    {
+        Color color = Color * Opacity;
+        if (AffectedByLight)
+            color = Lighting.GetColor(Center.ToTileCoordinates()).MultiplyRGBA(color);
+        spriteBatch.DrawFromCenter(Texture, Center + DrawOffset - Main.screenPosition, Frame, color, Rotation, Scale, SpriteEffects.None);
+    }
 }

@@ -1644,27 +1644,6 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             int usedIndex1 = Main.rand.Next(0, 32);
                             UsedEyeIndex1 = usedIndex1;
 
-                            /*
-                            if (shouldUseIndex2)
-                            {
-                                int usedIndex2 = (int)TOMathUtils.NormalizeWithPeriod(usedIndex1 + Main.rand.Next(5, 17) * Main.rand.NextBool(2).ToDirectionInt(), 32);
-                                UsedEyeIndex2 = usedIndex2;
-                                if (shouldUseIndex3)
-                                {
-                                    int usedIndex3;
-                                    do usedIndex3 = Main.rand.Next(0, 32);
-                                    while (CalculateDistance(usedIndex1, usedIndex3) < 4 || CalculateDistance(usedIndex2, usedIndex3) < 4);
-                                    UsedEyeIndex3 = usedIndex3;
-                                    if (shouldUseIndex4)
-                                    {
-                                        int usedIndex4;
-                                        do usedIndex4 = Main.rand.Next(0, 32);
-                                        while (CalculateDistance(usedIndex1, usedIndex4) < 3 || CalculateDistance(usedIndex2, usedIndex4) < 3 || CalculateDistance(usedIndex3, usedIndex4) < 3);
-                                        UsedEyeIndex4 = usedIndex4;
-                                    }
-                                }
-                            }
-                            */
                             goto case 1;
                         case 1: //传送
                             Timer1++;
@@ -1982,17 +1961,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             else if (Timer1 == EyeofCthulhu_Handler.EyeSpinPhase1Time)
                             {
                                 SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
-
                                 ShootCircleProjectile(64);
-
-                                if (Phase3_2)
-                                {
-                                    PolarVector2 originalvelocity = ArenaModProjectile.GetEyeCenterDirection(UsedEyeIndex1) * (ArenaModProjectile.RealArenaRadius - 15f) / 90f * 0.5f;
-                                    int projectileAmount2 = 64;
-                                    float singleRadian2 = MathHelper.TwoPi / projectileAmount2;
-                                    Projectile.RotatedProj(projectileAmount2, singleRadian2, SourceAI, NPC.Center, originalvelocity, ProjectileID.BloodShot, BloodDamage, 0f, action: p => p.timeLeft = 90);
-                                }
-
                                 CheckPhaseChange();
                                 SelectNextAttack();
                             }
