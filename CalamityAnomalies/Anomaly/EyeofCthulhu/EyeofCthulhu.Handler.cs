@@ -120,16 +120,14 @@ public static class EyeofCthulhu_Handler
     private static Asset<Texture2D> _bloodOrbBorderTexture;
     public static Texture2D BloodOrbBorderTexture => _bloodOrbBorderTexture.Value;
 
-    [LoadTexture(AnomalyEyeofCthulhuPath + "BloodOrb_BorderBig")]
-    private static Asset<Texture2D> _bloodOrbBorderBigTexture;
-    public static Texture2D BloodOrbBorderBigTexture => _bloodOrbBorderBigTexture.Value;
+    [LoadTexture(AnomalyEyeofCthulhuPath + "BloodOrb_BigBorder")]
+    private static Asset<Texture2D> _bloodOrbBigBorderTexture;
+    public static Texture2D BloodOrbBigBorderTexture => _bloodOrbBigBorderTexture.Value;
 
-    public static float MaxArenaRadius1 => 480f; //30格
-    public static float MaxArenaRadius2 => 400f; //25格
+    public static float MaxArenaRadius => 480f; //30格
 
     public static int NormalTeleportDuration => 90;
-    public static int EyeSpinPhase1Time => 120;
-    public static int EyeSpinPhase2Time => 20;
+    public static int EyeSpinTime => 135;
 
     public static readonly Color ChargeColor = Color.Lerp(Color.Red, Color.White, 0.75f);
 

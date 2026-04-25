@@ -30,8 +30,6 @@ public sealed class CASharedData : ModSystem
 
     public static Color GetGradientColor(float maxRatio = 0.5f) => Color.LerpMany(ColorList, TOMathUtils.TimeWrappingFunction.GetTimeSin(maxRatio / 2f, unsigned: true));
 
-    public static readonly SoundStyle MetalPipeFalling = new("CalamityMod/Sounds/Custom/MetalPipeFalling");
-
     #region Sets
     public static bool[] TweakedNPCs { get; private set; }
     public static bool[] TweakedProjectiles { get; private set; }

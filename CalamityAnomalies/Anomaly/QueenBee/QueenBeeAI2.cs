@@ -400,7 +400,7 @@ public sealed partial class QueenBee_Anomaly
                         NPC.SyncExtraAI();
                         float velocityXLimit = velocity * 2f;
                         if (Math.Abs(NPC.velocity.X) < velocityXLimit)
-                            NPC.velocity.X *= (death ? 1.02f : 1.01f);
+                            NPC.velocity.X *= death ? 1.02f : 1.01f;
                     }
 
                     // Spawn bees
@@ -481,7 +481,7 @@ public sealed partial class QueenBee_Anomaly
 
                 // Slow down
                 NPC.localAI[0] = 0f;
-                NPC.velocity *= (death ? 0.8f : 0.9f);
+                NPC.velocity *= death ? 0.8f : 0.9f;
 
                 float chargeDeceleration = death ? 0.2f : 0.1f;
                 if (phase2)
@@ -655,7 +655,7 @@ public sealed partial class QueenBee_Anomaly
             if (Vector2.Distance(beeSpawnLocation, hoverDestination) > 400f || !canHitTarget)
                 NPC.SimpleFlyMovement(idealVelocity, beeAttackHoverAccel);
             else
-                NPC.velocity *= (death ? 0.8f : 0.85f);
+                NPC.velocity *= death ? 0.8f : 0.85f;
 
             // Face the correct direction
             float playerLocation = NPC.Center.X - Main.player[NPC.target].Center.X;
@@ -847,8 +847,8 @@ public sealed partial class QueenBee_Anomaly
 
                         if (death)
                         {
-                            numProj += (phase6 ? 2 : phase5 ? 4 : 6);
-                            spread += (phase6 ? 10 : phase5 ? 15 : 20);
+                            numProj += phase6 ? 2 : phase5 ? 4 : 6;
+                            spread += phase6 ? 10 : phase5 ? 15 : 20;
                         }
 
                         float rotation = MathHelper.ToRadians(spread);

@@ -151,7 +151,7 @@ public partial class BloodlettingServant : CAModNPC
 
         void ShootBlood()
         {
-            float projectileSpeed = Ultra ? 17.5f : 15f;
+            float projectileSpeed = 12.5f;
             int amount = Ultra ? 3 : 1;
             EyeofCthulhu_Handler.ShootProjectile(NPC, ProjectileID.BloodShot, EyeofCthulhu_Anomaly.BloodDamage, projectileSpeed, amount, MathHelper.ToRadians(15f), p => p.timeLeft = 300);
 
@@ -183,7 +183,7 @@ public partial class BloodlettingServant : CAModNPC
             }
 
             float timer = masterBehavior.Timer1;
-            ArenaRadius = MathHelper.Lerp(MaxFollowDistance, EyeofCthulhu_Handler.MaxArenaRadius1, TOMathUtils.Interpolation.ExponentialEaseInOut(timer / EyeofCthulhu_Anomaly.PhaseChangeGateValue_2To3_1, 4f));
+            ArenaRadius = MathHelper.Lerp(MaxFollowDistance, EyeofCthulhu_Handler.MaxArenaRadius, TOMathUtils.Interpolation.ExponentialEaseInOut(timer / EyeofCthulhu_Anomaly.PhaseChangeGateValue_2To3_1, 4f));
 
             float newPositionRotation = PositionRotation;
             float targetPositionRotation = Place == ServantPlace.Left ? MathHelper.Pi : 0f;
@@ -308,7 +308,7 @@ public partial class BloodlettingServant : CAModNPC
         bool closeEnoughForCharge = NPC.Distance(target.Center) < 480f;
         bool charging = (attemptingToCharge && farEnoughForCharge && closeEnoughForCharge) || NPC.ai[1] > 0f;
 
-        float projectileShootGateValue = 90f;
+        float projectileShootGateValue = 120f;
 
         Vector2 lookAt = target.Center - NPC.Center;
         float rateOfRotation = charging ? 0f : 0.1f;

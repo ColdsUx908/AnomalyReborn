@@ -9,16 +9,16 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
     public static float NormalRotationSpeed => 0.005f;
 
     public static readonly UnaryFunctionWithDomain EyeSpinEffectIntensityFunction = UnaryFunctionWithDomain.Piecewise(
-        (new MathInterval(float.NegativeInfinity, EyeofCthulhu_Handler.EyeSpinPhase1Time - 25f, false, false), x => TOMathUtils.Interpolation.QuadraticEaseInOut(x / 10f)),
-        (new MathInterval(EyeofCthulhu_Handler.EyeSpinPhase1Time - 25f, float.PositiveInfinity, true, false), x => TOMathUtils.Interpolation.QuadraticEaseInOut((EyeofCthulhu_Handler.EyeSpinPhase1Time - x) / 25f))
+        (new MathInterval(float.NegativeInfinity, EyeofCthulhu_Handler.EyeSpinTime - 30f, false, false), x => TOMathUtils.Interpolation.QuadraticEaseInOut(x / 10f)),
+        (new MathInterval(EyeofCthulhu_Handler.EyeSpinTime - 30f, float.PositiveInfinity, true, false), x => TOMathUtils.Interpolation.QuadraticEaseInOut((EyeofCthulhu_Handler.EyeSpinTime - x) / 30f))
         );
 
     public bool IsActivated;
     public BehaviorCommand_Arena MasterCommandReceiver;
     public bool MasterPhase3_2;
 
-    public float RealArenaRadius = EyeofCthulhu_Handler.MaxArenaRadius1;
-    public float ArenaRadius = EyeofCthulhu_Handler.MaxArenaRadius1;
+    public float RealArenaRadius = EyeofCthulhu_Handler.MaxArenaRadius;
+    public float ArenaRadius = EyeofCthulhu_Handler.MaxArenaRadius;
     public float RealRotationSpeed;
     public float RotationSpeed;
 
@@ -260,7 +260,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
 
             if (masterBehavior.CurrentBehavior != EyeofCthulhu_Anomaly.Behavior.Phase3_Charge)
             {
-                ChangeArenaRadiusTo(EyeofCthulhu_Handler.MaxArenaRadius1, 15);
+                ChangeArenaRadiusTo(EyeofCthulhu_Handler.MaxArenaRadius, 15);
                 MasterCommandReceiver = BehaviorCommand_Arena.None;
             }
 
@@ -329,7 +329,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                     {
                         bool shouldIncreaseHighlightTime = i % (32 / (buff ? 4 : 2)) == 0;
                         int actualIndex = (int)TOMathUtils.NormalizeWithPeriod(index1 + i, 32);
-                        int hightliteTime = shouldIncreaseHighlightTime ? EyeofCthulhu_Handler.EyeSpinPhase1Time + 15 : EyeofCthulhu_Handler.EyeSpinPhase1Time;
+                        int hightliteTime = shouldIncreaseHighlightTime ? EyeofCthulhu_Handler.EyeSpinTime + 15 : EyeofCthulhu_Handler.EyeSpinTime;
                         AddHighlightTo(actualIndex, hightliteTime);
 
                         if (!buff)
@@ -354,16 +354,16 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                     SoundEngine.PlaySound(SoundID.Item8, Projectile.Center);
                     break;
                 case 1 when timer1 == 12:
-                    (float targetRotationSpeed, int duration) = masterBehavior.AttackCounter switch
+                    (float targetRotationSpeed, int duration) = buff ? masterBehavior.AttackCounter switch
                     {
                         0 => (0.01f, 20),
-                        1 => (0.02f, 20),
-                        2 => (0.005f, 30),
+                        1 => (0.016f, 20),
+                        2 => (NormalRotationSpeed, 20),
                         _ => (0f, 1)
-                    };
+                    } : (NormalRotationSpeed, 20);
                     ChangeRotationSpeedTo(targetRotationSpeed, duration);
                     break;
-                case 1 when timer1 == EyeofCthulhu_Handler.EyeSpinPhase1Time - 1:
+                case 1 when timer1 == EyeofCthulhu_Handler.EyeSpinTime - 1:
                     //生成弹幕
 
                     Vector2 originalVector = GetEyeCenterDirection(index1) * (RealArenaRadius - 15f);
@@ -397,7 +397,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                             float rotationOffset = singleRadian * projectileIndex;
                             Vector2 destination = Projectile.Center + EyeofCthulhu_Handler.EyeShapeHelper.GetVector(originalVector, rotationOffset, verticalHeightMultiplierOverride);
 
-                            Vector2 velocity = (destination - offsetCenter) / EyeofCthulhu_Handler.EyeSpinPhase2Time;
+                            Vector2 velocity = (destination - offsetCenter) / BloodOrbProjectile.StillTime;
 
                             Projectile.NewProjectileAction<BloodOrbProjectile>(SourceAI, offsetCenter, velocity, EyeofCthulhu_Anomaly.BloodDamage, 0f, action: p =>
                             {
@@ -421,7 +421,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                                 float rotationOffset2 = singleRadian * projectileIndex2;
                                 Vector2 destination2 = Projectile.Center + EyeofCthulhu_Handler.EyeShapeHelper.GetVector(originalVector2, rotationOffset2, verticalHeightMultiplierOverride);
 
-                                Vector2 velocity2 = (destination2 - offsetCenter) / EyeofCthulhu_Handler.EyeSpinPhase2Time;
+                                Vector2 velocity2 = (destination2 - offsetCenter) / BloodOrbProjectile.StillTime;
 
                                 Projectile.NewProjectileAction<BloodOrbProjectile>(SourceAI, offsetCenter, velocity2, EyeofCthulhu_Anomaly.BloodDamage, 0f, action: p =>
                                 {
@@ -488,7 +488,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
             Vector2 originalVector = new(originalVectorLength, 0f);
             Vector2 innerVector = EyeofCthulhu_Handler.EyeShapeHelper.GetInnerVector(originalVector);
             float innerVectorLength = innerVector.Length();
-            float distanceMultiplier = TOMathUtils.Interpolation.ExponentialEaseInOut((timer1 - 15f) / 30f, 1.5f);
+            float distanceMultiplier = TOMathUtils.Interpolation.ExponentialEaseInOut((timer1 - 20f) / 30f, 1.5f);
             float archHeightMultiplier = (buff ? EyeofCthulhu_Handler.EyeShapeHelper.CalculateArchHeightMultiplier(EyeofCthulhu_Handler.EyeShapeHelper.VerticalHeightMultiplier2) : EyeofCthulhu_Handler.EyeShapeHelper.ArchHeightMultiplier) * distanceMultiplier;
 
             for (int i = 0; i < iterationAmount; i++)
@@ -532,7 +532,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
         #region 绘制血珠弹幕
         Texture2D orbTexture = EyeofCthulhu_Handler.BloodOrbTexture;
         Texture2D orbBorderTexture = EyeofCthulhu_Handler.BloodOrbBorderTexture;
-        Texture2D orbBorderBigTexture = EyeofCthulhu_Handler.BloodOrbBorderBigTexture;
+        Texture2D orbBorderBigTexture = EyeofCthulhu_Handler.BloodOrbBigBorderTexture;
 
         List<Projectile> bloodOrbs = TOIteratorFactory.NewActiveProjectileIterator(p => p.ModProjectile is BloodOrbProjectile orb && orb.ArenaProjectile == Projectile).ToList();
 
@@ -543,7 +543,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
             foreach (Projectile p in bloodOrbs)
             {
                 float intensity = TOMathUtils.Interpolation.QuadraticEaseOut((p.Timer1 - 10) / 10f);
-                spriteBatch.DrawFromCenter(orbBorderBigTexture, p.Center - Main.screenPosition, null, Color.DarkRed * intensity, p.rotation, p.scale * 1.2f);
+                spriteBatch.DrawFromCenter(orbBorderBigTexture, p.Center - Main.screenPosition, null, Color.DarkRed * intensity, p.rotation, p.scale);
             }
 
             spriteBatch.ChangeBlendState(BlendState.AlphaBlend);
@@ -555,7 +555,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
 
             foreach (Projectile p in bloodOrbs)
             {
-                float intensity = p.Timer2 > BloodOrbProjectile.StillTime ? TOMathUtils.Interpolation.QuadraticEaseOut((BloodOrbProjectile.StillTime + 5 - p.Timer2) / 5f) : TOMathUtils.Interpolation.QuadraticEaseOut((p.Timer1 - 12) / 10f);
+                float intensity = p.Timer2 > BloodOrbProjectile.StillTime ? TOMathUtils.Interpolation.QuadraticEaseOut((BloodOrbProjectile.StillTime + 10 - p.Timer2) / 10f) : TOMathUtils.Interpolation.QuadraticEaseOut((p.Timer1 - 12) / 10f);
                 spriteBatch.DrawFromCenter(orbBorderTexture, p.Center - Main.screenPosition, null, Color.Red * intensity, p.rotation, p.scale);
             }
 

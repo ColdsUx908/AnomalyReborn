@@ -705,8 +705,8 @@ public sealed partial class QueenBee_Anomaly
                         int type = Main.zenithWorld ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.QueenBeeStinger;
                         int numProj = Phase2_3 ? 7 : Phase2_2 ? 11 : 15;
                         int spread = Phase2_3 ? 30 : Phase2_2 ? 50 : 60;
-                        numProj += (Phase2_3 ? 2 : Phase2_2 ? 4 : 6);
-                        spread += (Phase2_3 ? 10 : Phase2_2 ? 15 : 20);
+                        numProj += Phase2_3 ? 2 : Phase2_2 ? 4 : 6;
+                        spread += Phase2_3 ? 10 : Phase2_2 ? 15 : 20;
 
                         float rotation = MathHelper.ToRadians(spread);
                         for (int i = 0; i < numProj; i++)

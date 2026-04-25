@@ -7,7 +7,7 @@ public sealed class GFBMetalPipeFalling : CAPlayerBehavior
         if (Main.zenithWorld && CASharedData.Anomaly)
         {
             playSound = false;
-            SoundEngine.PlaySound(CASharedData.MetalPipeFalling);
+            SoundEngine.PlaySound(CASounds.MetalPipeFalling);
         }
 
         return true;

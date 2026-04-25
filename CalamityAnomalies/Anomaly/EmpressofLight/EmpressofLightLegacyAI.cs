@@ -1,7 +1,5 @@
 ﻿using CalamityAnomalies.DataStructures;
 using CalamityMod;
-using CalamityMod.Events;
-using CalamityMod.NPCs;
 using CalamityMod.World;
 
 namespace CalamityAnomalies.Anomaly.EmpressofLight;
@@ -769,7 +767,7 @@ public sealed partial class EmpressofLight_Anomaly : AnomalyNPCBehavior
                         float lanceWallSizeMult = 1.4f;
                         totalProjectiles += 5f;
                         lanceSpacing += 50f;
-                        lanceWallSize *= (masterMode ? 0.75f : 0.5f);
+                        lanceWallSize *= masterMode ? 0.75f : 0.5f;
                         float direction = 1f;
 
                         int randomLanceWallType;

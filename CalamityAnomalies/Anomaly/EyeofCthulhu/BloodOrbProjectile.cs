@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
 
 public class BloodOrbProjectile : CAModProjectile
 {
-    public const int StillTime = 20;
+    public const int StillTime = 25;
 
     public NPC Master
     {

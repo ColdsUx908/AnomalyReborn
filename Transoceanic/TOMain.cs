@@ -31,6 +31,7 @@ global using Transoceanic.Framework.Abstractions;
 global using Transoceanic.Framework.ExternalAttributes;
 global using Transoceanic.Framework.Helpers;
 global using Transoceanic.Framework.Helpers.AbstractionHandlers;
+using System.ComponentModel;
 
 namespace Transoceanic;
 
@@ -40,6 +41,8 @@ namespace Transoceanic;
 /// Transoceanic 模组的主入口类。负责模组的加载、卸载生命周期管理，
 /// 并通过反射自动发现并调用所有实现 <see cref="ITOLoader"/> 接口的加载器。
 /// </summary>
+/// <remarks>此类不应由外部代码使用。</remarks>
+[EditorBrowsable(EditorBrowsableState.Never)]
 public sealed class TOMain : Mod
 {
     /// <summary>
