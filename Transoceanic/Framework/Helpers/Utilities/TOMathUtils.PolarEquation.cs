@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿// Designed by ColdsUx
+
+using System.ComponentModel;
 
 namespace Transoceanic.Framework.Helpers;
 

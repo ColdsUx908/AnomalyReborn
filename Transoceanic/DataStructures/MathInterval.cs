@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.DataStructures;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.DataStructures;
 
 /// <summary>
 /// 表示一个数学区间，用于描述实数轴上的一段连续范围。

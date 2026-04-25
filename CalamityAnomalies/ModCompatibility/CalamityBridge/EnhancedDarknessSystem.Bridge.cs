@@ -1,4 +1,6 @@
-﻿using CalamityMod.CalPlayer;
+﻿// Designed by ColdsUx
+
+using CalamityMod.CalPlayer;
 using CalamityMod.Graphics;
 
 namespace CalamityAnomalies.ModCompatibility.CalamityBridge;

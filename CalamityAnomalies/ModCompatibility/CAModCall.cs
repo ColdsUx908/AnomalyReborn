@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.ModCompatibility;
+﻿// Designed by ColdsUx
+
+namespace CalamityAnomalies.ModCompatibility;
 
 public static class CAModCall
 {

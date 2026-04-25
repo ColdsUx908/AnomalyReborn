@@ -1,4 +1,6 @@
-﻿using CalamityMod;
+﻿// Designed by ColdsUx
+
+using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatDebuffs;
 using CalamityMod.Events;

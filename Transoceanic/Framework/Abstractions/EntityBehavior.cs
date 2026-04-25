@@ -1,4 +1,6 @@
-﻿using Terraria.GameContent.Bestiary;
+﻿// Designed by ColdsUx
+
+using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
 
@@ -58,7 +60,7 @@ public abstract class EntityBehavior<TEntity> : IEntityBehavior where TEntity : 
     public TEntity _entity;
 
     /// <summary>
-    /// 获取行为所属的 Mod 实例。
+    /// 获取行为所属的 <see cref="Terraria.ModLoader.Mod"/> 实例。
     /// </summary>
     public abstract Mod Mod { get; }
 
@@ -162,7 +164,7 @@ public abstract class SingleEntityBehavior<TEntity> : EntityBehavior<TEntity> wh
 #region General Behavior
 public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
 {
-    public Player Player => _entity;
+    public Player Player { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity; }
 
     public TOPlayer OceanPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Ocean; }
 
@@ -1358,7 +1360,7 @@ public abstract class TOGlobalItemBehavior : GlobalItemBehavior
 #region Single Behavior
 public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
 {
-    public NPC NPC => _entity;
+    public NPC NPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity; }
 
     public TOGlobalNPC OceanNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Ocean; }
 
@@ -1687,7 +1689,7 @@ public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
 
 public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile>
 {
-    public Projectile Projectile => _entity;
+    public Projectile Projectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity; }
 
     public TOGlobalProjectile OceanProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Ocean; }
 
@@ -1869,7 +1871,7 @@ public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile
 
 public abstract class SingleItemBehavior : SingleEntityBehavior<Item>
 {
-    public Item Item => _entity;
+    public Item Item { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity; }
 
     public TOGlobalItem OceanItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Ocean; }
 

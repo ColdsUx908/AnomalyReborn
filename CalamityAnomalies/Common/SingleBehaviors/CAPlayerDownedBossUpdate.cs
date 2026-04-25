@@ -1,4 +1,6 @@
-﻿using CalamityMod.NPCs.Abyss;
+﻿// Designed by ColdsUx
+
+using CalamityMod.NPCs.Abyss;
 
 namespace CalamityAnomalies.Common.SingleBehaviors;
 

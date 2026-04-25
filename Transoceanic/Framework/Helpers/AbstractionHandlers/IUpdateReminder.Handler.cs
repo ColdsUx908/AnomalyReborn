@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
 /// <summary>
 /// 处理更新提醒的 <see cref="ModSystem"/>。

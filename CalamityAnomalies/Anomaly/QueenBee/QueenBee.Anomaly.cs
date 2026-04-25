@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Anomaly.QueenBee;
+﻿// Designed by ColdsUx
+
+namespace CalamityAnomalies.Anomaly.QueenBee;
 
 public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
 {

@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Abstractions;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Abstractions;
 
 /// <summary>
 /// 为 IL 编辑方法指定自定义名称前缀，用于自动解析目标方法名称。

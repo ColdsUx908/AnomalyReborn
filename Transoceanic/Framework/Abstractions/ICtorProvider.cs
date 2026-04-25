@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Abstractions;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Abstractions;
 
 /// <summary>
 /// 定义一个静态工厂方法，通过一个参数创建指定类型的实例。

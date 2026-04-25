@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿// Designed by ColdsUx
+
+using System.Collections;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 

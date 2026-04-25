@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.DataStructures;
+﻿// Designed by ColdsUx
+
+namespace CalamityAnomalies.DataStructures;
 
 /// <summary>
 /// 用于存储弹幕在不同游戏难度与特殊模式下的预设伤害值的容器结构。

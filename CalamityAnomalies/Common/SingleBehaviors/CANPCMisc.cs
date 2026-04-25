@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Common.SingleBehaviors;
+﻿// Designed by ColdsUx
+
+namespace CalamityAnomalies.Common.SingleBehaviors;
 
 public sealed class CANPCMisc : CAGlobalNPCBehavior
 {

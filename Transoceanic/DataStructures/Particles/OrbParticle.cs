@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.DataStructures.Particles;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.DataStructures.Particles;
 
 public class OrbParticle : Particle
 {

@@ -1,4 +1,6 @@
-﻿using CalamityMod;
+﻿// Designed by ColdsUx
+
+using CalamityMod;
 using CalamityMod.CalPlayer;
 using CalamityMod.Items;
 using CalamityMod.NPCs;

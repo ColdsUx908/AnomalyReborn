@@ -1,4 +1,6 @@
-﻿namespace TransoceanicCodeAssist;
+﻿// Designed by ColdsUx
+
+namespace TransoceanicCodeAssist;
 
 internal abstract class SymbolInfoBase<TSymbol> where TSymbol : ISymbol
 {

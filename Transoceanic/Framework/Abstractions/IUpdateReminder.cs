@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Abstractions;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Abstractions;
 
 /// <summary>
 /// 内部使用的更新提醒接口，用于在游戏更新循环中注册一个提示动作。

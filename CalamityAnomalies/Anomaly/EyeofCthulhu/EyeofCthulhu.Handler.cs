@@ -1,4 +1,6 @@
-﻿using Transoceanic.Framework.Helpers.AbstractionHandlers;
+﻿// Designed by ColdsUx
+
+using Transoceanic.Framework.Helpers.AbstractionHandlers;
 
 namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
 

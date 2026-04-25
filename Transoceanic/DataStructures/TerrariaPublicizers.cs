@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.DataStructures;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.DataStructures;
 
 //按字母顺序排列
 

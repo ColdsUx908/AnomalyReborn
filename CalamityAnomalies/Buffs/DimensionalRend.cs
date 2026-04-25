@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Buffs;
+﻿// Designed by ColdsUx
+
+namespace CalamityAnomalies.Buffs;
 
 public sealed class DimensionalRend : CalamityModDOT
 {

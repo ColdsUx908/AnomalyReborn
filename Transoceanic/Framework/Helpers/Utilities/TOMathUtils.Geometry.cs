@@ -1,4 +1,6 @@
-﻿using Transoceanic.DataStructures.Geometry;
+﻿// Designed by ColdsUx
+
+using Transoceanic.DataStructures.Geometry;
 
 namespace Transoceanic.Framework.Helpers;
 

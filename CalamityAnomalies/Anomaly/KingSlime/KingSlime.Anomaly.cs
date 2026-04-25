@@ -1,4 +1,6 @@
-﻿using CalamityMod.NPCs.NormalNPCs;
+﻿// Designed by ColdsUx
+
+using CalamityMod.NPCs.NormalNPCs;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 

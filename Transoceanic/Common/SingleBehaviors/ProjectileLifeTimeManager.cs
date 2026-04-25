@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Common.SingleBehaviors;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Common.SingleBehaviors;
 
 public sealed class ProjectileLifeTimeManager : TOGlobalProjectileBehavior
 {

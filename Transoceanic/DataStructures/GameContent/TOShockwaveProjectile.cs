@@ -1,4 +1,6 @@
-﻿using Transoceanic.DataStructures.Geometry;
+﻿// Designed by ColdsUx
+
+using Transoceanic.DataStructures.Geometry;
 using Transoceanic.DataStructures.Particles;
 
 namespace Transoceanic.DataStructures.GameContent;

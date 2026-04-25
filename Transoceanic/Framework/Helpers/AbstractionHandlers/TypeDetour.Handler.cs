@@ -1,4 +1,6 @@
-﻿using Terraria.Graphics.Effects;
+﻿// Designed by ColdsUx
+
+using Terraria.Graphics.Effects;
 using Transoceanic.Framework.RuntimeEditing;
 
 namespace Transoceanic.Framework.Helpers.AbstractionHandlers;

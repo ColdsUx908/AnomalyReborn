@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Visuals;
+﻿// Designed by ColdsUx
+
+namespace CalamityAnomalies.Visuals;
 
 /// <summary>
 /// 针对 Calamity Anomalies 模组扩展的 <see cref="ItemTooltipModifier"/> 实现，

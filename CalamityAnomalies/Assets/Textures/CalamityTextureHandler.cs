@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Assets.Textures;
+﻿// Designed by ColdsUx
+
+namespace CalamityAnomalies.Assets.Textures;
 
 public sealed class CalamityTextureHandler : IContentLoader
 {

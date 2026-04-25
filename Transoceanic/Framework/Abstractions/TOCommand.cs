@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Abstractions;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Abstractions;
 
 /// <summary>
 /// 表示一个自定义游戏命令的抽象基类。

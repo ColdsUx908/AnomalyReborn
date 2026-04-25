@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.ExternalAttributes;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.ExternalAttributes;
 
 /// <summary>
 /// 指示源生成器为指定的非公开类型生成公共访问包装器，通过反射暴露其非公共成员（字段、属性、方法）。

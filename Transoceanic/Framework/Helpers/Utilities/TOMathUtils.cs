@@ -1,4 +1,6 @@
-﻿using System.Numerics;
+﻿// Designed by ColdsUx
+
+using System.Numerics;
 
 namespace Transoceanic.Framework.Helpers;
 

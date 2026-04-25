@@ -1,4 +1,6 @@
-﻿using CalamityMod;
+﻿// Designed by ColdsUx
+
+using CalamityMod;
 using CalamityMod.NPCs;
 using CalamityMod.NPCs.HiveMind;
 

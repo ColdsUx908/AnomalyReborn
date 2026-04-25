@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Helpers;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
 /// 追踪算法类型。

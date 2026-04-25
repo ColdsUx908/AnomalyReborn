@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Abstractions;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Abstractions;
 
 //含扩展
 

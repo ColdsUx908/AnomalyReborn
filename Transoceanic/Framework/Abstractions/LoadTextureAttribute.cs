@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Abstractions;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Abstractions;
 
 /// <summary>
 /// 标记一个静态 <see cref="Asset{T}"/> 字段（T 为 <see cref="Texture2D"/>），使其在模组加载时自动从指定路径加载纹理资源，

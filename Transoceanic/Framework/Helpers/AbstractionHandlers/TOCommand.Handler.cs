@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
 /// <summary>
 /// 处理聊天命令 "/chat"（需要输入 "//chat"）的入口命令类。

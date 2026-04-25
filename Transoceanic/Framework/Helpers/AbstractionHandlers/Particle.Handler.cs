@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
 /// <summary>
 /// 粒子系统全局处理器，负责粒子的更新、绘制以及生命周期管理。

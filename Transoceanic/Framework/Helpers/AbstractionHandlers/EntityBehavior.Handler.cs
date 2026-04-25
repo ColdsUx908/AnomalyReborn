@@ -1,4 +1,6 @@
-﻿using MonoMod.Utils;
+﻿// Designed by ColdsUx
+
+using MonoMod.Utils;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;

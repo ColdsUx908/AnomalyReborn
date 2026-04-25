@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.DataStructures;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.DataStructures;
 
 /// <summary>
 /// 二维极坐标向量 (ρ, θ)。

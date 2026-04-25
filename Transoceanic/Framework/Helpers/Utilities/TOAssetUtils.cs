@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Helpers;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
 /// 提供获取原版游戏中各种纹理资源的工具方法，以及格式化对应纹理路径的静态方法。

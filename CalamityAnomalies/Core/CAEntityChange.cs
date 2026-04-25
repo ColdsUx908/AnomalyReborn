@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿// Designed by ColdsUx
+
+using System.Collections.ObjectModel;
 using CalamityMod.CalPlayer;
 using CalamityMod.Items;
 using CalamityMod.NPCs;

@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.DataStructures;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.DataStructures;
 
 /// <summary>
 /// 表示泰拉瑞亚世界中的时间，包含一天中的具体时刻（小时、分钟、秒）以及可选的月相信息。

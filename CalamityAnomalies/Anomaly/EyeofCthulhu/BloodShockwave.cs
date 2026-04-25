@@ -1,4 +1,6 @@
-﻿using Transoceanic.DataStructures.GameContent;
+﻿// Designed by ColdsUx
+
+using Transoceanic.DataStructures.GameContent;
 
 namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
 

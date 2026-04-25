@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿// Designed by ColdsUx
+
+using System.Diagnostics.CodeAnalysis;
 using CalamityMod.Events;
 using CalamityMod.NPCs;
 using CalamityMod.NPCs.CeaselessVoid;

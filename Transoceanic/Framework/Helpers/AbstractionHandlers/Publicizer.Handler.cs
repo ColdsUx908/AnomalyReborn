@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
 /// <summary>
 /// 提供一系列强类型的反射获取方法，若成员不存在则抛出异常。

@@ -1,4 +1,6 @@
-﻿using Transoceanic.DataStructures.Particles;
+﻿// Designed by ColdsUx
+
+using Transoceanic.DataStructures.Particles;
 
 namespace Transoceanic.Common.SingleBehaviors;
 

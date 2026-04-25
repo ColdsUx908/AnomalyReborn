@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿// Designed by ColdsUx
+
+using System.Diagnostics.CodeAnalysis;
 
 namespace CalamityAnomalies.Core;
 

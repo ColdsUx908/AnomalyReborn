@@ -1,4 +1,6 @@
-﻿using CalamityMod.Buffs.DamageOverTime;
+﻿// Designed by ColdsUx
+
+using CalamityMod.Buffs.DamageOverTime;
 
 namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
 

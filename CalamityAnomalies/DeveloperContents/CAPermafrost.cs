@@ -1,4 +1,6 @@
-﻿/*
+﻿// Designed by ColdsUx
+
+/*
 using CalamityAnomalies.Publicizers.CalamityMod;
 using CalamityAnomalies.Visuals;
 using CalamityMod.NPCs.Cryogen;

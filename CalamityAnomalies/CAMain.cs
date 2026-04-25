@@ -1,3 +1,5 @@
+// Designed by ColdsUx
+
 //不全局引用任何灾厄命名空间
 
 global using System;
@@ -36,8 +38,6 @@ global using Transoceanic.Framework.ExternalAttributes;
 global using Transoceanic.Framework.Helpers;
 
 namespace CalamityAnomalies;
-
-// Designed by ColdsUx
 
 public sealed class CAMain : Mod, IContentLoader
 {

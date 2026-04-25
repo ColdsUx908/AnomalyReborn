@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Anomaly.EmpressofLight;
+﻿// Designed by ColdsUx
+
+namespace CalamityAnomalies.Anomaly.EmpressofLight;
 
 public sealed partial class EmpressofLight_Anomaly : AnomalyNPCBehavior
 {

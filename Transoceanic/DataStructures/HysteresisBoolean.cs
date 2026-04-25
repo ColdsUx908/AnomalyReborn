@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.DataStructures;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.DataStructures;
 
 /// <summary>
 /// 表示一个具有滞后（防抖）特性的布尔值。

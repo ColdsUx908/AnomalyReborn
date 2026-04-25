@@ -1,4 +1,6 @@
-﻿using CalamityMod.NPCs.Abyss;
+﻿// Designed by ColdsUx
+
+using CalamityMod.NPCs.Abyss;
 using CalamityMod.NPCs.AcidRain;
 using CalamityMod.NPCs.AquaticScourge;
 using CalamityMod.NPCs.AstrumAureus;
@@ -25,6 +27,7 @@ using CalamityMod.NPCs.StormWeaver;
 using CalamityMod.NPCs.SunkenSea;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.Yharon;
+using Transoceanic.Framework.Helpers.Utilities;
 
 namespace CalamityAnomalies.Common;
 
@@ -637,5 +640,233 @@ public class PlayerDownedBossCalamity : PlayerDownedBoss
                 NuclearTerror = true;
                 break;
         }
+    }
+}
+
+public sealed class CAGlobalNPC : GlobalNPC, IContentLoader
+{
+    public override bool InstancePerEntity => true;
+
+#if DEBUG
+    /// <summary>
+    /// 调试用数据。
+    /// <br/>不同实体可能会有不同的用途。
+    /// </summary>
+    public readonly Union64[] DebugData = new Union64[4];
+#endif
+
+    private const int AISlot = 33;
+    private const int AISlot2 = 17;
+    private const int AISlot3 = 132;
+    private const int AISlot4 = 33;
+
+    public readonly Union32[] AnomalyAI32 = new Union32[AISlot];
+    public readonly Union64[] AnomalyAI64 = new Union64[AISlot2];
+
+    public ref BitArray32 AIChanged32 => ref AnomalyAI32[^1].bits;
+    public ref BitArray64 AIChanged64 => ref AnomalyAI64[^1].bits;
+
+    private readonly Union32[] InternalAnomalyAI32 = new Union32[AISlot3];
+    private readonly Union64[] InternalAnomalyAI64 = new Union64[AISlot4];
+
+    private ref BitArray32 InternalAIChanged32 => ref InternalAnomalyAI32[^4].bits;
+    private ref BitArray32 InternalAIChanged32_2 => ref InternalAnomalyAI32[^3].bits;
+    private ref BitArray32 InternalAIChanged32_3 => ref InternalAnomalyAI32[^2].bits;
+    private ref BitArray32 InternalAIChanged32_4 => ref InternalAnomalyAI32[^1].bits;
+    private ref BitArray64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;
+
+    public override GlobalNPC Clone(NPC from, NPC to)
+    {
+        CAGlobalNPC clone = (CAGlobalNPC)base.Clone(from, to);
+
+        Array.Copy(AnomalyAI32, clone.AnomalyAI32, AISlot);
+        Array.Copy(AnomalyAI64, clone.AnomalyAI64, AISlot2);
+        Array.Copy(InternalAnomalyAI32, clone.InternalAnomalyAI32, AISlot3);
+        Array.Copy(InternalAnomalyAI32, clone.InternalAnomalyAI32, AISlot4);
+
+        return clone;
+    }
+
+    public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
+    {
+        TONetUtils.WriteChangedAI32(binaryWriter, AnomalyAI32, 1);
+        TONetUtils.WriteChangedAI64(binaryWriter, AnomalyAI64, 1);
+        TONetUtils.WriteChangedAI32(binaryWriter, InternalAnomalyAI32, 4);
+        TONetUtils.WriteChangedAI64(binaryWriter, InternalAnomalyAI64, 1);
+    }
+
+    public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
+    {
+        TONetUtils.ReadChangedAI32(binaryReader, AnomalyAI32);
+        TONetUtils.ReadChangedAI64(binaryReader, AnomalyAI64);
+        TONetUtils.ReadChangedAI32(binaryReader, InternalAnomalyAI32);
+        TONetUtils.ReadChangedAI64(binaryReader, InternalAnomalyAI64);
+    }
+
+    #region 额外数据
+    public bool ShouldRunAnomalyAI
+    {
+        get => InternalAnomalyAI32[0].bits[0];
+        set
+        {
+            if (InternalAnomalyAI32[0].bits[0] != value)
+            {
+                InternalAnomalyAI32[0].bits[0] = value;
+                InternalAIChanged32[0] = true;
+            }
+        }
+    }
+
+    public bool Debuff_DimensionalRend
+    {
+        get => InternalAnomalyAI32[0].bits[1];
+        set
+        {
+            if (InternalAnomalyAI32[0].bits[1] != value)
+            {
+                InternalAnomalyAI32[0].bits[1] = value;
+                InternalAIChanged32[0] = true;
+            }
+        }
+    }
+
+    public int AnomalyKilltime;
+
+    public int AnomalyAITimer;
+
+    public bool IsRunningAnomalyAI => AnomalyAITimer > 0;
+
+    public int AnomalyUltraAITimer;
+    public int AnomalyUltraBarTimer;
+
+    /// <summary>
+    /// 额外DR，不受任何修改DR的机制影响。
+    /// </summary>
+    /// <remarks>谨慎使用。</remarks>
+    public float ExtraDR
+    {
+        get => InternalAnomalyAI32[5].f;
+        set
+        {
+            if (InternalAnomalyAI32[5].f != value)
+            {
+                InternalAnomalyAI32[5].f = value;
+                InternalAIChanged32[5] = true;
+            }
+        }
+    }
+    #endregion 额外数据
+}
+
+public sealed class CAGlobalProjectile : GlobalProjectile
+{
+    public override bool InstancePerEntity => true;
+
+#if DEBUG
+    /// <summary>
+    /// 调试用数据。
+    /// <br/>不同实体可能会有不同的用途。
+    /// </summary>
+    public readonly Union64[] DebugData = new Union64[4];
+#endif
+
+    private const int AISlot = 33;
+    private const int AISlot2 = 17;
+
+    public readonly Union32[] AnomalyAI32 = new Union32[AISlot];
+    public readonly Union64[] AnomalyAI64 = new Union64[AISlot2];
+
+    public ref BitArray32 AIChanged32 => ref AnomalyAI32[^1].bits;
+    public ref BitArray64 AIChanged64 => ref AnomalyAI64[^1].bits;
+
+    private readonly Union32[] InternalAnomalyAI32 = new Union32[AISlot];
+    private readonly Union64[] InternalAnomalyAI64 = new Union64[AISlot2];
+
+    private ref BitArray32 InternalAIChanged32 => ref InternalAnomalyAI32[^1].bits;
+    private ref BitArray64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;
+
+    public override GlobalProjectile Clone(Projectile from, Projectile to)
+    {
+        CAGlobalProjectile clone = (CAGlobalProjectile)base.Clone(from, to);
+
+        Array.Copy(AnomalyAI32, clone.AnomalyAI32, AISlot);
+        Array.Copy(AnomalyAI64, clone.AnomalyAI64, AISlot2);
+        Array.Copy(InternalAnomalyAI32, clone.InternalAnomalyAI32, AISlot);
+        Array.Copy(InternalAnomalyAI32, clone.InternalAnomalyAI32, AISlot2);
+
+        return clone;
+    }
+
+    public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
+    {
+        TONetUtils.WriteChangedAI32(binaryWriter, AnomalyAI32, 1);
+        TONetUtils.WriteChangedAI64(binaryWriter, AnomalyAI64, 1);
+        TONetUtils.WriteChangedAI32(binaryWriter, InternalAnomalyAI32, 1);
+        TONetUtils.WriteChangedAI64(binaryWriter, InternalAnomalyAI64, 1);
+    }
+
+    public override void ReceiveExtraAI(Projectile projectile, BitReader bitReader, BinaryReader binaryReader)
+    {
+        TONetUtils.ReadChangedAI32(binaryReader, AnomalyAI32);
+        TONetUtils.ReadChangedAI64(binaryReader, AnomalyAI64);
+        TONetUtils.ReadChangedAI32(binaryReader, InternalAnomalyAI32);
+        TONetUtils.ReadChangedAI64(binaryReader, InternalAnomalyAI64);
+    }
+
+    #region 额外数据
+    public bool ShouldRunAnomalyAI
+    {
+        get => InternalAnomalyAI32[0].bits[0];
+        set
+        {
+            if (InternalAnomalyAI32[0].bits[0] != value)
+            {
+                InternalAnomalyAI32[0].bits[0] = value;
+                InternalAIChanged32[0] = true;
+            }
+        }
+    }
+
+    public int OverrideType
+    {
+        get => InternalAnomalyAI32[1].i;
+        set
+        {
+            if (InternalAnomalyAI32[1].i != value)
+            {
+                InternalAnomalyAI32[1].i = value;
+                InternalAIChanged32[1] = true;
+            }
+        }
+    }
+    #endregion 额外数据
+}
+
+public sealed class CAGlobalItem : GlobalItem
+{
+    public override bool InstancePerEntity => true;
+
+#if DEBUG
+    /// <summary>
+    /// 调试用数据。
+    /// <br/>不同实体可能会有不同的用途。
+    /// </summary>
+    public readonly Union64[] DebugData = new Union64[4];
+#endif
+
+    private const int dataSlot = 64;
+    private const int dataSlot2 = 32;
+
+    public readonly Union32[] Data = new Union32[dataSlot];
+    public readonly Union64[] Data2 = new Union64[dataSlot2];
+
+    public override GlobalItem Clone(Item from, Item to)
+    {
+        CAGlobalItem clone = (CAGlobalItem)base.Clone(from, to);
+
+        Array.Copy(Data, clone.Data, dataSlot);
+        Array.Copy(Data2, clone.Data2, dataSlot2);
+
+        return clone;
     }
 }

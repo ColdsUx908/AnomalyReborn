@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.DataStructures;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.DataStructures;
 
 /// <summary>
 /// 表示一个固定长度为 32 位的位数组，以 <see cref="int"/> 作为底层存储。

@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.DataStructures;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.DataStructures;
 
 /// <summary>
 /// 表示一个基于开/关时间戳的整数计时器，用于计算并限制在指定范围内的经过时间或剩余时间。

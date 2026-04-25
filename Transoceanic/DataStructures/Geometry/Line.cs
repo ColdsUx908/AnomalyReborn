@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.DataStructures.Geometry;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.DataStructures.Geometry;
 
 /// <summary>
 /// 表示二维平面中的一条无限直线，使用一般式 Ax + By + C = 0 表示。

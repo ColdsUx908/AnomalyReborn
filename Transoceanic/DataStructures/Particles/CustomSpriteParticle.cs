@@ -1,4 +1,6 @@
-﻿using Transoceanic.DataStructures.Assets;
+﻿// Designed by ColdsUx
+
+using Transoceanic.DataStructures.Assets;
 
 namespace Transoceanic.DataStructures.Particles;
 

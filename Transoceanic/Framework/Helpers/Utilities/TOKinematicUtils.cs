@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Helpers;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
 /// 目标检索时的优先级类型。

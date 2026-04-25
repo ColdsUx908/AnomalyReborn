@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Anomaly.KingSlime;
+﻿// Designed by ColdsUx
+
+namespace CalamityAnomalies.Anomaly.KingSlime;
 
 public class KingSlimeJewelSapphire : CAModNPC, IKingSlimeJewel
 {

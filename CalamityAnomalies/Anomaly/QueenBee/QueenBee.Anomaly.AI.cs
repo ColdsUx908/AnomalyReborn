@@ -1,4 +1,6 @@
-﻿using CalamityMod;
+﻿// Designed by ColdsUx
+
+using CalamityMod;
 using CalamityMod.NPCs.PlagueEnemies;
 using CalamityMod.Projectiles.Boss;
 

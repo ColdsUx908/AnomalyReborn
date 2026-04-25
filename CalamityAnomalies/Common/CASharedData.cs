@@ -1,4 +1,6 @@
-﻿using CalamityAnomalies.Anomaly;
+﻿// Designed by ColdsUx
+
+using CalamityAnomalies.Anomaly;
 
 namespace CalamityAnomalies.Common;
 

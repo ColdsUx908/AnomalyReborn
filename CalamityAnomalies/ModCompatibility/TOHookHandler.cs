@@ -1,4 +1,6 @@
-﻿using CalamityMod.NPCs.SlimeGod;
+﻿// Designed by ColdsUx
+
+using CalamityMod.NPCs.SlimeGod;
 using Transoceanic.Hooks.Framework.Helpers;
 
 namespace CalamityAnomalies.ModCompatibility;

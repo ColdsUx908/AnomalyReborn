@@ -1,4 +1,6 @@
-﻿using Terraria.GameContent.Creative;
+﻿// Designed by ColdsUx
+
+using Terraria.GameContent.Creative;
 
 namespace Transoceanic.Common;
 

@@ -1,1 +1,3 @@
-﻿global using CalamityMod_ = CalamityMod.CalamityMod;
+﻿// Designed by ColdsUx
+
+global using CalamityMod_ = CalamityMod.CalamityMod;

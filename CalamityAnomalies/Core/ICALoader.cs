@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Core;
+﻿// Designed by ColdsUx
+
+namespace CalamityAnomalies.Core;
 
 internal interface ICALoader
 {

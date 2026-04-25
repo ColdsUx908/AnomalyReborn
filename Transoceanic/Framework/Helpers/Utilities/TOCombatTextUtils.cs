@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Helpers;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
 /// 提供操作 <see cref="CombatText"/> 对象和游戏内战斗文本的工具方法。

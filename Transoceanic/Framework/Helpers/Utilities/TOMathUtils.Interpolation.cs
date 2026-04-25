@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Helpers;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Helpers;
 
 public static partial class TOMathUtils
 {

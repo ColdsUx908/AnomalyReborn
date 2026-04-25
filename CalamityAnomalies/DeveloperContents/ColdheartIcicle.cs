@@ -1,4 +1,6 @@
-﻿#define CELESS_DEV
+﻿// Designed by ColdsUx
+
+#define CELESS_DEV
 
 using CalamityAnomalies.GameContents;
 using CalamityMod.NPCs.DevourerofGods;

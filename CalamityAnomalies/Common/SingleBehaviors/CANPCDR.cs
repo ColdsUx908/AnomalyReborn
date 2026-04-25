@@ -1,4 +1,6 @@
-﻿using CalamityMod.Events;
+﻿// Designed by ColdsUx
+
+using CalamityMod.Events;
 using CalamityMod.NPCs;
 using CalamityMod.NPCs.Providence;
 using Transoceanic.Framework.Helpers.AbstractionHandlers;

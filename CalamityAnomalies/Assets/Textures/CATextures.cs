@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Assets;
+﻿// Designed by ColdsUx
+
+namespace CalamityAnomalies.Assets;
 
 public sealed class CATextures
 {

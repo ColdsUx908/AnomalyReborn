@@ -1,4 +1,6 @@
-﻿#define TEST_DEV
+﻿// Designed by ColdsUx
+
+#define TEST_DEV
 
 #if TEST_DEV
 using CalamityAnomalies.GameContents;

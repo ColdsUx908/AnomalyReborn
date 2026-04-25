@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.GameContents;
+﻿// Designed by ColdsUx
+
+namespace CalamityAnomalies.GameContents;
 
 public sealed class Celestial : ModRarity
 {

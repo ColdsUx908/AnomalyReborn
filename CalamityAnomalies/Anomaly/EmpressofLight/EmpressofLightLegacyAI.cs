@@ -1,4 +1,6 @@
-﻿using CalamityAnomalies.DataStructures;
+﻿// Designed by ColdsUx
+
+using CalamityAnomalies.DataStructures;
 using CalamityMod;
 using CalamityMod.World;
 

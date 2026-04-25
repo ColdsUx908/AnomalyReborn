@@ -1,4 +1,6 @@
-﻿namespace TransoceanicCodeAssist.SourceGenerators;
+﻿// Designed by ColdsUx
+
+namespace TransoceanicCodeAssist.SourceGenerators;
 
 [Generator]
 public class PublicizerGenerator : IIncrementalGenerator

@@ -1,4 +1,6 @@
-﻿using CalamityMod;
+﻿// Designed by ColdsUx
+
+using CalamityMod;
 
 #pragma warning disable IDE1006 // 命名样式
 

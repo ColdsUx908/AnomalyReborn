@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.DataStructures.Assets;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.DataStructures.Assets;
 
 public static class TOTextures
 {

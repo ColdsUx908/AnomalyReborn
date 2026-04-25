@@ -1,4 +1,6 @@
-﻿using CalamityMod.World;
+﻿// Designed by ColdsUx
+
+using CalamityMod.World;
 
 namespace CalamityAnomalies.Buffs;
 

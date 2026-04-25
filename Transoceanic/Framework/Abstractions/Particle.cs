@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Framework.Abstractions;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.Framework.Abstractions;
 
 /// <summary>
 /// 粒子系统的抽象基类，定义了粒子的基本属性、生命周期行为以及与 <see cref="ParticleHandler"/> 的交互接口。

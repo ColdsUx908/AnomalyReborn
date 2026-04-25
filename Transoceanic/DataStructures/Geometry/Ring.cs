@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.DataStructures.Geometry;
+﻿// Designed by ColdsUx
+
+namespace Transoceanic.DataStructures.Geometry;
 
 /// <summary>
 /// 表示一个二维圆环（环形区域）。

@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
+﻿// Designed by ColdsUx
+
+namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
 
 public sealed partial class EyeofCthulhuArena
 {

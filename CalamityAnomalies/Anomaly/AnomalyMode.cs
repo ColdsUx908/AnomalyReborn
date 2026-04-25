@@ -1,4 +1,6 @@
-﻿using CalamityMod.NPCs.SupremeCalamitas;
+﻿// Designed by ColdsUx
+
+using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.Systems;
 using CalamityMod.World;
 using Terraria.GameContent.UI.Elements;

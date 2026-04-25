@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿// Designed by ColdsUx
+
+using System.ComponentModel;
 using Terraria.ModLoader.Config;
 
 namespace CalamityAnomalies.Core;

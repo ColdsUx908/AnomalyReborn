@@ -1,4 +1,6 @@
-﻿using CalamityMod.Items;
+﻿// Designed by ColdsUx
+
+using CalamityMod.Items;
 using CalamityMod.NPCs;
 using CalamityMod.Projectiles;
 
