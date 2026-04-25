@@ -1,5 +1,6 @@
 ﻿// Designed by ColdsUx
 
+using CalamityAnomalies.Anomaly.EyeofCthulhu;
 using CalamityMod.NPCs.NormalNPCs;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
@@ -35,12 +36,23 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
     public static float MinScale => Main.zenithWorld ? 0.5f : 1f;
     public static float SpawnSlimeDistance => TOSharedData.LegendaryMode && Main.zenithWorld ? 0.01f : 0.05f;
     public static float SpawnSlimePow => Main.zenithWorld ? 0.5f : Ultra ? 0.3f : 0.2f;
-    public static float JewelRubyLifeRatio => Ultra ? 0.75f : 0.7f;
-    public static float JewelEmeraldLifeRatio => Ultra ? 0.75f : 0.5f;
-    public static float JewelSapphireLifeRatio => Ultra ? 0.5f : 0.3f;
 
-    public static float Phase2LifeRatio => Ultra ? 0.1f : 0f;
-    public static float Phase2_2LifeRatio => Ultra ? 0.25f : 0f;
+    public const float JewelRubyLifeRatio_Anomaly = 0.7f;
+    public const float JewelRubyLifeRatio_Ultra = 0.75f;
+    public const float JewelEmeraldLifeRatio_Anomaly = 0.5f;
+    public const float JewelEmeraldLifeRatio_Ultra = 0.75f;
+    public const float JewelSapphireLifeRatio_Anomaly = 0.3f;
+    public const float JewelSapphireLifeRatio_Ultra = 0.5f;
+    public const float Phase2LifeRatio_Anomaly = 0f;
+    public const float Phase2LifeRatio_Ultra = 0.1f;
+    public const float Phase2_2LifeRatio_Anomaly = 0f;
+    public const float Phase2_2LifeRatio_Ultra = 0.25f;
+
+    public static float JewelRubyLifeRatio => Ultra ? JewelRubyLifeRatio_Ultra : JewelRubyLifeRatio_Anomaly;
+    public static float JewelEmeraldLifeRatio => Ultra ? JewelEmeraldLifeRatio_Ultra : JewelEmeraldLifeRatio_Anomaly;
+    public static float JewelSapphireLifeRatio => Ultra ? JewelSapphireLifeRatio_Ultra : JewelSapphireLifeRatio_Anomaly;
+    public static float Phase2LifeRatio => Ultra ? Phase2LifeRatio_Ultra : Phase2LifeRatio_Anomaly;
+    public static float Phase2_2LifeRatio => Ultra ? Phase2_2LifeRatio_Ultra : Phase2_2LifeRatio_Anomaly;
 
     public Phase CurrentPhase
     {
@@ -425,8 +437,13 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
         switch (CurrentPhase)
         {
             case Phase.Initialize: //初始化
-                if (Timer1 == 0)
+                if (Timer1 == 0) //注册血量阈值
                 {
+                    NPC.AddAnomalyHPIndicator(JewelRubyLifeRatio_Anomaly, JewelRubyLifeRatio_Ultra, true);
+                    NPC.AddAnomalyHPIndicator(JewelEmeraldLifeRatio_Anomaly, JewelEmeraldLifeRatio_Ultra, true, _ => !CASharedData.AnomalyUltramundane);
+                    NPC.AddAnomalyHPIndicator(JewelSapphireLifeRatio_Anomaly, JewelSapphireLifeRatio_Ultra, true);
+                    NPC.AddAnomalyHPIndicator(Phase2LifeRatio_Anomaly, Phase2LifeRatio_Ultra);
+                    NPC.AddAnomalyHPIndicator(Phase2_2LifeRatio_Anomaly, Phase2_2LifeRatio_Ultra, true, n => new KingSlime_Anomaly { _entity = n }.Phase2);
                 }
 
                 Timer1++;

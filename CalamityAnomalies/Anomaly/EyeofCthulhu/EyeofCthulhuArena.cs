@@ -356,7 +356,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                     SoundEngine.PlaySound(SoundID.Item8, Projectile.Center);
                     break;
                 case 1 when timer1 == 12:
-                    (float targetRotationSpeed, int duration) = buff ? masterBehavior.AttackCounter switch
+                    (float targetRotationSpeed, int duration) = MasterPhase3_2 ? masterBehavior.AttackCounter switch
                     {
                         0 => (0.01f, 20),
                         1 => (0.016f, 20),

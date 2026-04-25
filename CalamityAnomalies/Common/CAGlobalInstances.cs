@@ -730,15 +730,6 @@ public sealed class CAGlobalNPC : GlobalNPC, IContentLoader
         }
     }
 
-    public int AnomalyKilltime;
-
-    public int AnomalyAITimer;
-
-    public bool IsRunningAnomalyAI => AnomalyAITimer > 0;
-
-    public int AnomalyUltraAITimer;
-    public int AnomalyUltraBarTimer;
-
     /// <summary>
     /// 额外DR，不受任何修改DR的机制影响。
     /// </summary>
@@ -755,6 +746,17 @@ public sealed class CAGlobalNPC : GlobalNPC, IContentLoader
             }
         }
     }
+
+    public int AnomalyKilltime;
+
+    public int AnomalyAITimer;
+
+    public bool IsRunningAnomalyAI => AnomalyAITimer > 0;
+
+    public int AnomalyUltraAITimer;
+    public int AnomalyUltraBarTimer;
+
+    public List<HPThresholdIndicator> HPThresholdIndicators = [];
     #endregion 额外数据
 }
 

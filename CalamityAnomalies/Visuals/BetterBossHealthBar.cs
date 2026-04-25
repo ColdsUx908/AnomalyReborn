@@ -11,6 +11,7 @@ using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.UI;
 using Terraria.GameContent.Events;
 using Terraria.GameContent.UI.BigProgressBar;
+using Terraria.Graphics;
 using Transoceanic.Framework.Helpers.AbstractionHandlers;
 using static CalamityAnomalies.Visuals.BetterBossHealthBar;
 using static CalamityMod.UI.BossHealthBarManager;
@@ -44,7 +45,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
     {
         int x = Main.screenWidth
             - (Main.playerInventory || Main.invasionType > 0 || Main.pumpkinMoon || Main.snowMoon || DD2Event.Ongoing || AcidRainEvent.AcidRainEventIsOngoing ? 670 : 420);
-        int y = Main.screenHeight - 30;
+        int y = Main.screenHeight - 25;
 
         int activeCount = 0;
 
@@ -166,7 +167,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 /// </summary>
 public class BetterBossHPUI : BossHPUI
 {
-#pragma warning disable CA1822
+#pragma warning disable CA1822 //BossHPUI类中的这几个成员是实例成员，此处保留实例设定
     public new NPC AssociatedNPC => throw new InvalidOperationException("BetterBossHPUI.AssociatedNPC should not be used. Use BetterBossHPUI.NPC instead.");
     public new void Update() => throw new InvalidOperationException($"BetterBossHPUI.Update() should not be used. Use BetterBossHPUI.Update(bool) instead.");
     public new void Draw(SpriteBatch spriteBatch, int x, int y) => throw new InvalidOperationException($"BetterBossHPUI.Draw(SpriteBatch, int, int) should not be used. Use BetterBossHPUI.Draw(SpriteBatch, ref int, ref int) instead.");
@@ -220,7 +221,7 @@ public class BetterBossHPUI : BossHPUI
 
     public new bool NPCIsIncreasingDefenseOrDR => Valid && NPC.active && (CalamityNPC.CurrentlyIncreasingDefenseOrDR || (HasOneToMany && CustomOneToMany.Values.Any(n => n.Calamity.CurrentlyIncreasingDefenseOrDR)));
 
-    public int Height { get; private set; } = 70;
+    public int Height { get; private set; } = 85;
 
     public float AnimationCompletionRatio { get; private set; }
 
@@ -295,6 +296,8 @@ public class BetterBossHPUI : BossHPUI
             AnimationCompletionRatio2 = CloseAnimationTimer > 0
                 ? 1f - MathHelper.Clamp(CloseAnimationTimer / 80f, 0f, 1f)
                 : MathHelper.Clamp(OpenAnimationTimer / 120f, 0f, 1f);
+
+            UpdateIndicators();
         }
 
         PostUpdate();
@@ -360,6 +363,21 @@ public class BetterBossHPUI : BossHPUI
     InitialMaxLife:
         if (CombinedNPCMaxLife != 0L && (InitialMaxLife == 0L || InitialMaxLife < CombinedNPCMaxLife))
             InitialMaxLife = CombinedNPCMaxLife;
+    }
+
+    protected void UpdateIndicators()
+    {
+        foreach (HPThresholdIndicator indicator in AnomalyNPC.HPThresholdIndicators)
+        {
+            if (indicator?.CustomUpdateFunction(indicator, NPC, this) == false)
+                continue;
+
+            indicator.Timer++;
+            if (NPC.LifeRatio <= indicator.GetValue(NPC, this) || indicator.Timer2 > 0)
+                indicator.Timer2++;
+        }
+
+        AnomalyNPC.HPThresholdIndicators.RemoveAll(i => i.Timer2 >= 60);
     }
 
     protected bool PreUpdate()
@@ -460,7 +478,7 @@ public class BetterBossHPUI : BossHPUI
 
             float borderWidth;
             if (AnomalyNPC.IsRunningAnomalyAI)
-                borderWidth = (1.5f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f);
+                borderWidth = (1f + TOMathUtils.TimeWrappingFunction.GetTimeSin(1f, 1f, 0f, true)) * Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f);
             else if (EnrageTimer > 0)
                 borderWidth = (1f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(EnrageTimer / 80f, 0f, 1f);
             else if (IncreasingDefenseOrDRTimer > 0)
@@ -515,7 +533,8 @@ public class BetterBossHPUI : BossHPUI
     public void DrawMainBar(SpriteBatch spriteBatch, int x, int y, Color? newColor = null)
     {
         int mainBarWidth = (int)MathHelper.Min(400f * AnimationCompletionRatio, 400f * NPCLifeRatio);
-        spriteBatch.Draw(BossMainHPBar, new Rectangle(x, y + 28, mainBarWidth, BossMainHPBar.Height), newColor ?? Color.White);
+        Color color = newColor ?? Color.White * AnimationCompletionRatio * AnimationCompletionRatio2;
+        spriteBatch.Draw(BossMainHPBar, new Rectangle(x, y + 43, mainBarWidth, BossMainHPBar.Height), color);
     }
 
     public void DrawComboBar(SpriteBatch spriteBatch, int x, int y, Color? newColor = null)
@@ -527,12 +546,36 @@ public class BetterBossHPUI : BossHPUI
         int comboHPBarWidth = (int)(400 * (float)HealthAtStartOfCombo / InitialMaxLife) - mainBarWidth;
         if (ComboDamageCountdown < 6)
             comboHPBarWidth = comboHPBarWidth * ComboDamageCountdown / 6;
+        Color color = newColor ?? Color.White * AnimationCompletionRatio * AnimationCompletionRatio2;
 
-        spriteBatch.Draw(BossComboHPBar, new Rectangle(x + mainBarWidth, y + 28, comboHPBarWidth, BossComboHPBar.Height), newColor ?? Color.White);
+        spriteBatch.Draw(BossComboHPBar, new Rectangle(x + mainBarWidth, y + 43, comboHPBarWidth, BossComboHPBar.Height), color);
     }
 
-    public void DrawSeperatorBar(SpriteBatch spriteBatch, int x, int y, Color? newColor = null) =>
-        spriteBatch.Draw(BossSeperatorBar, new Rectangle(x, y + 18, 400, 6), newColor ?? BaseColor * AnimationCompletionRatio);
+    public void DrawSeperatorBar(SpriteBatch spriteBatch, int x, int y, Color? newColor = null)
+    {
+        Color color = newColor ?? BaseColor * AnimationCompletionRatio * AnimationCompletionRatio2;
+        spriteBatch.Draw(BossSeperatorBar, new Rectangle(x, y + 33, 400, 6), color);
+
+        //绘制血量阈值
+        if (!AnomalyNPC.IsRunningAnomalyAI)
+            return;
+
+        foreach (HPThresholdIndicator indicator in AnomalyNPC.HPThresholdIndicators)
+        {
+            float value = indicator.GetValue(NPC, this);
+            if (value is <= 0f or >= 1f)
+                continue;
+
+            Vector2 center = new(x + 400 * value, y + 38);
+            float borderIntensity = Utils.Remap(NPC.LifeRatio - value, 0.1f, 0.02f, 0.6f, 1f);
+            float thresholdAnimationCompletion = Math.Clamp(indicator.Timer / 60f, 0f, 1f) * (1f - Math.Clamp(indicator.Timer2 / 60f, 0f, 1f));
+
+            Texture2D borderTexture = indicator.IsSubPhaseIndicator ? CATextures.HPThresholdIndicator_SubBorder : CATextures.HPThresholdIndicator_Border;
+            Texture2D texture = indicator.IsSubPhaseIndicator ? CATextures.HPThresholdIndicator_Sub : CATextures.HPThresholdIndicator;
+            spriteBatch.DrawFromCenter(borderTexture, center, null, color * thresholdAnimationCompletion, scale: borderIntensity);
+            spriteBatch.DrawFromCenter(texture, center, null, Color.White * AnimationCompletionRatio * AnimationCompletionRatio2 * thresholdAnimationCompletion);
+        }
+    }
 
     public void DrawNPCName(SpriteBatch spriteBatch, int x, int y, string overrideText = null, Color? mainColor = null, Color? borderColor = null, float borderWidth = 0f)
     {
@@ -547,7 +590,7 @@ public class BetterBossHPUI : BossHPUI
         }
         name ??= NPC.FullName;
         Vector2 npcNameSize = MouseFont.MeasureString(name);
-        Vector2 baseDrawPosition = new(x + 400 - npcNameSize.X, y + 23 - npcNameSize.Y);
+        Vector2 baseDrawPosition = new(x + 400 - npcNameSize.X, y + 35 - npcNameSize.Y);
         DrawBorderStringEightWay_Loop(spriteBatch, MouseFont, name, baseDrawPosition, mainColor, borderColor, Color.White * AnimationCompletionRatio2, Color.Black * 0.2f * AnimationCompletionRatio2, 8, borderWidth, 1f);
     }
 
@@ -555,7 +598,7 @@ public class BetterBossHPUI : BossHPUI
     {
         string bigLifeText = overrideText ?? (NPCLifeRatio == 0f ? "0%" : (NPCLifeRatio * 100f).ToString("N1") + "%");
         Vector2 bigLifeTextSize = HPBarFont.MeasureString(bigLifeText);
-        TODrawUtils.DrawBorderString(spriteBatch, HPBarFont, bigLifeText, new Vector2(x, y + 22 - bigLifeTextSize.Y), MainColor * AnimationCompletionRatio2, MainBorderColour * 0.25f * AnimationCompletionRatio2);
+        TODrawUtils.DrawBorderString(spriteBatch, HPBarFont, bigLifeText, new Vector2(x, y + 34 - bigLifeTextSize.Y), MainColor * AnimationCompletionRatio2, MainBorderColour * 0.25f * AnimationCompletionRatio2);
     }
 
     public void DrawExtraSmallText(SpriteBatch spriteBatch, int x, int y, string overrideText = null, bool ignoreConfig = false)
@@ -592,13 +635,13 @@ public class BetterBossHPUI : BossHPUI
         {
             string extensionName = extraEntityData.NameOfExtensions.ToString();
             int extraEntities = NPC.ActiveNPCs.Count(n => extraEntityData.TypesToSearchFor.Contains(n.type));
-            smallText = $"({extensionName}: {extraEntities}) ";
+            smallText = $"    {extensionName}: {extraEntities}";
         }
 
     Orig:
-        smallText += $"({CombinedNPCLife} / {InitialMaxLife})";
+        smallText = $"{CombinedNPCLife} / {InitialMaxLife}" + smallText;
     Draw:
-        TODrawUtils.DrawBorderString(spriteBatch, ItemStackFont, smallText, new Vector2(Math.Max(x, x + mainBarWidth - (ItemStackFont.MeasureString(smallText) * 0.75f).X), y + 45), Color.White * whiteColorAlpha, Color.Black * whiteColorAlpha * 0.24f, scale: 0.75f);
+        TODrawUtils.DrawBorderString(spriteBatch, ItemStackFont, smallText, new Vector2(x, y + 60), Color.White * whiteColorAlpha, Color.Black * whiteColorAlpha * 0.24f, scale: 0.8f);
     }
 
     public static void DrawBorderStringEightWay_Loop(SpriteBatch spriteBatch, DynamicSpriteFont font, string text, Vector2 baseDrawPosition,
@@ -613,4 +656,20 @@ public class BetterBossHPUI : BossHPUI
         TODrawUtils.DrawBorderString(spriteBatch, font, text, baseDrawPosition, mainColor2, borderColor2, scale: scale);
     }
     #endregion 公共绘制方法
+}
+
+public class HPThresholdIndicator
+{
+    public delegate float HPThresholdIndicatorValueFunction(HPThresholdIndicator indicator, NPC npc, BetterBossHPUI bar);
+    public delegate bool HPThresholdIndicatorUpdateFunction(HPThresholdIndicator indicator, NPC npc, BetterBossHPUI bar);
+    public delegate bool HPThresholdIndicatorDrawFunction(HPThresholdIndicator indicator, NPC npc, BetterBossHPUI bar, SpriteBatch spriteBatch, Vector2 center);
+
+    public int Timer;
+    public int Timer2;
+    public HPThresholdIndicatorValueFunction ValueFunction;
+    public HPThresholdIndicatorUpdateFunction CustomUpdateFunction;
+    public HPThresholdIndicatorDrawFunction CustomDrawFunction;
+    public bool IsSubPhaseIndicator;
+
+    public float GetValue(NPC npc, BetterBossHPUI bar) => ValueFunction?.Invoke(this, npc, bar) ?? 0f;
 }

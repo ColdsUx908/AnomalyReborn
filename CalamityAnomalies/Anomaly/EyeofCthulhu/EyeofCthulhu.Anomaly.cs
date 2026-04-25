@@ -56,11 +56,22 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
     public const int PhaseChangeGateValue_2To3_1 = 75;
     public const int PhaseChangeGateValue_2To3_2 = 120;
 
-    public static float Phase2LifeRatio => Ultra ? 0.8f : 0.75f;
-    public static float Phase2_2LifeRatio => Ultra ? 0.6f : 0.5f;
-    public static float Phase2_3LifeRatio => Ultra ? 0.35f : 0.25f;
-    public static float Phase3LifeRatio => Ultra ? 0.1f : 0f;
-    public static float Phase3_2LifeRatio => Ultra ? 0.25f : 0f;
+    public const float Phase2LifeRatio_Anomaly = 0.75f;
+    public const float Phase2LifeRatio_Ultra = 0.8f;
+    public const float Phase2_2LifeRatio_Anomaly = 0.5f;
+    public const float Phase2_2LifeRatio_Ultra = 0.6f;
+    public const float Phase2_3LifeRatio_Anomaly = 0.25f;
+    public const float Phase2_3LifeRatio_Ultra = 0.35f;
+    public const float Phase3LifeRatio_Anomaly = 0f;
+    public const float Phase3LifeRatio_Ultra = 0.1f;
+    public const float Phase3_2LifeRatio_Anomaly = 0f;
+    public const float Phase3_2LifeRatio_Ultra = 0.25f;
+
+    public static float Phase2LifeRatio => Ultra ? Phase2LifeRatio_Ultra : Phase2LifeRatio_Anomaly;
+    public static float Phase2_2LifeRatio => Ultra ? Phase2_2LifeRatio_Ultra : Phase2_2LifeRatio_Anomaly;
+    public static float Phase2_3LifeRatio => Ultra ? Phase2_3LifeRatio_Ultra : Phase2_3LifeRatio_Anomaly;
+    public static float Phase3LifeRatio => Ultra ? Phase3LifeRatio_Ultra : Phase3LifeRatio_Anomaly;
+    public static float Phase3_2LifeRatio => Ultra ? Phase3_2LifeRatio_Ultra : Phase3_2LifeRatio_Anomaly;
 
     private static readonly ProjectileDamageContainer _bloodDamage = new(30, 60, 75, 90, 84, 108);
     public static int BloodDamage => _bloodDamage.Value;
@@ -484,8 +495,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
         switch (CurrentPhase)
         {
             case Phase.Initialize:
-                CurrentPhase = Phase.Phase1;
-                CurrentBehavior = Behavior.Phase1_Hover;
+                Initialize();
                 break;
             case Phase.Phase1:
                 Phase1AI();
@@ -510,6 +520,19 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
         return false;
 
         #region 行为函数
+        void Initialize()
+        {
+            CurrentPhase = Phase.Phase1;
+            CurrentBehavior = Behavior.Phase1_Hover;
+
+            //注册血量阈值
+            NPC.AddAnomalyHPIndicator(Phase2LifeRatio_Anomaly, Phase2LifeRatio_Ultra);
+            NPC.AddAnomalyHPIndicator(Phase2_2LifeRatio_Anomaly, Phase2_2LifeRatio_Ultra, true);
+            NPC.AddAnomalyHPIndicator(Phase2_3LifeRatio_Anomaly, Phase2_3LifeRatio_Ultra, true);
+            NPC.AddAnomalyHPIndicator(Phase3LifeRatio_Anomaly, Phase3LifeRatio_Ultra);
+            NPC.AddAnomalyHPIndicator(Phase3_2LifeRatio_Anomaly, Phase3_2LifeRatio_Ultra, true, n => new EyeofCthulhu_Anomaly { _entity = n }.Phase3);
+        }
+
         bool CanShootProjectile() => Vector2.IncludedAngle(new PolarVector2(ActualRotation), Target.Center - NPC.Center) < MathHelper.ToRadians(Ultra ? 30f : 20f)
             && Vector2.Distance(NPC.Center, Target.Center) > 160f;
 
@@ -1985,7 +2008,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         modP.Master = NPC;
                         modP.ArenaProjectile = ArenaProjectile;
                         modP.BehaviorType = 1;
-                        modP.Destination = p.Center + offset;
+                        modP.Destination = p.Center + p.velocity * BloodOrbProjectile.StillTime;
                     });
                 }
             }

@@ -517,7 +517,7 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IContentLoader
                             Projectile.velocity = new PolarVector2(3f, MathHelper.PiOver2 + TOMathUtils.PiOver6);
                         }
                         float distance = Projectile.Distance(depart);
-                        Projectile.Homing(depart, HomingAlgorithm.SmoothStep, distance < 50f ? 1f : 0.075f, velocityOverride: Projectile.velocity.Length() * Utils.Remap(distance, 0f, 1000f, 0.9943f, 1f));
+                        Projectile.HomeInOn(depart, HomingAlgorithm.SmoothStep, distance < 50f ? 1f : 0.075f, velocityOverride: Projectile.velocity.Length() * Utils.Remap(distance, 0f, 1000f, 0.9943f, 1f));
                         if (Projectile.Center == depart && Projectile.Owner.Center.X > DepartX - 88)
                         {
                             Timer1 = 0;
@@ -538,7 +538,7 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IContentLoader
                             Projectile.velocity = new PolarVector2(0.02f, -MathHelper.PiOver2);
                         }
                         float distance2 = Projectile.Distance(destination);
-                        Projectile.Homing(destination, HomingAlgorithm.SmoothStep, distance2 < 50f ? 1f : distance2 < 200f ? 0.1f : 0.045f, velocityOverride: distance2 < 500f ? Projectile.velocity.Length() * Utils.Remap(distance2, 0f, 500f, 0.9947f, 1f) : Math.Min(Projectile.velocity.Length() + 0.01f, 1.5f));
+                        Projectile.HomeInOn(destination, HomingAlgorithm.SmoothStep, distance2 < 50f ? 1f : distance2 < 200f ? 0.1f : 0.045f, velocityOverride: distance2 < 500f ? Projectile.velocity.Length() * Utils.Remap(distance2, 0f, 500f, 0.9947f, 1f) : Math.Min(Projectile.velocity.Length() + 0.01f, 1.5f));
                         if (Projectile.Center == destination && Projectile.Owner.Center.X > DestinationX + 256)
                         {
                             Timer1 = 0;

@@ -67,7 +67,7 @@ public static partial class TOExtensions
         /// <param name="keepVelocity">是否在调整角度时保持速度大小不变。仅在 <paramref name="homingRatio"/> 不为 1 时有效。</param>
         /// <param name="velocityOverride">覆盖的速度大小。若提供，则使用此值作为速度大小进行计算，而非实体当前速度大小。</param>
         /// <returns>追踪是否成功。若距离超限或超出视野则返回 <see langword="false"/>。</returns>
-        public bool Homing(Vector2 destination, HomingAlgorithm algorithm = HomingAlgorithm.SmoothStep, float homingRatio = 1f, float? maxHomingDistance = null, float sightAngle = MathHelper.TwoPi, bool keepVelocity = true, float? velocityOverride = null)
+        public bool HomeInOn(Vector2 destination, HomingAlgorithm algorithm = HomingAlgorithm.SmoothStep, float homingRatio = 1f, float? maxHomingDistance = null, float sightAngle = MathHelper.TwoPi, bool keepVelocity = true, float? velocityOverride = null)
         {
             homingRatio = MathHelper.Clamp(homingRatio, 0f, 1f);
             Vector2 distanceVector = destination - entity.Center;
@@ -110,6 +110,6 @@ public static partial class TOExtensions
         /// <param name="velocityOverride">覆盖的速度大小。</param>
         /// <returns>追踪是否成功。若目标实体无效（<c>null</c> 或未激活）或追踪失败则返回 <see langword="false"/>。</returns>
         public bool Homing<T>(T target, HomingAlgorithm algorithm = HomingAlgorithm.SmoothStep, float homingRatio = 1f, float? maxHomingDistance = null, float sightAngle = MathHelper.TwoPi, bool keepVelocity = true, float? velocityOverride = null) where T : Entity =>
-            target is not null && target.active && entity.Homing(target.Center, algorithm, homingRatio, maxHomingDistance, sightAngle, keepVelocity, velocityOverride);
+            target is not null && target.active && entity.HomeInOn(target.Center, algorithm, homingRatio, maxHomingDistance, sightAngle, keepVelocity, velocityOverride);
     }
 }
