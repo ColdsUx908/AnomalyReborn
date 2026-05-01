@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using CalamityMod.NPCs.SlimeGod;
 using Transoceanic.Hooks.Framework.Helpers;

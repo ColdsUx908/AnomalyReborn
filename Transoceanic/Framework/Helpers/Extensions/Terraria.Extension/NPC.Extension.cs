@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using Transoceanic.DataStructures.Particles;
 using Transoceanic.Hooks.Framework.Helpers;

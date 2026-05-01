@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using Transoceanic.Framework.Helpers.AbstractionHandlers;
 
@@ -111,7 +111,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
     public void AddHighlightTo(int index, int lifetime)
     {
         index = (int)TOMathUtils.NormalizeWithPeriod(index, 32);
-        SoundEngine.PlaySound(SoundID.Item8, GetEyeCenter(index));
+        SoundEngine.PlaySound(EyeofCthulhu_Handler.HighlightActivateSound, GetEyeCenter(index));
         ExecuteActionToArenaEye(index, e => e.Highlights.Add(new EyeHighlight(lifetime, 20, 10f)));
     }
     #endregion 交互方法

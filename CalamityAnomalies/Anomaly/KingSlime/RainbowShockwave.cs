@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using CalamityMod.NPCs.NormalNPCs;
 using Transoceanic.DataStructures.GameContent;

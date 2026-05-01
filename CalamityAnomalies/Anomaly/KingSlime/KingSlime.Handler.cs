@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using CalamityMod.NPCs.NormalNPCs;
 using Transoceanic.Framework.Helpers.AbstractionHandlers;
@@ -17,21 +17,23 @@ public sealed class KingSlime_Handler : IContentLoader
     private static Asset<Texture2D> _rubyShardTexture;
     public static Texture2D RubyShardTexture => _rubyShardTexture.Value;
 
-    [LoadTexture(AnomalyKingSlimePath + "KingSlimeEmeraldShards")]
+    [LoadTexture(AnomalyKingSlimePath + "JewelEmeraldShards")]
     private static Asset<Texture2D> _emeraldShardTexture;
     public static Texture2D EmeraldShardTexture => _emeraldShardTexture.Value;
 
-    [LoadTexture(AnomalyKingSlimePath + "KingSlimeSapphireShards")]
+    [LoadTexture(AnomalyKingSlimePath + "JewelSapphireShards")]
     private static Asset<Texture2D> _sapphireShardTexture;
     public static Texture2D SapphireShardTexture => _sapphireShardTexture.Value;
 
-    [LoadTexture(AnomalyKingSlimePath + "KingSlimeRainbowShards")]
+    [LoadTexture(AnomalyKingSlimePath + "JewelRainbowShards")]
     private static Asset<Texture2D> _rainbowShardTexture;
     public static Texture2D RainbowShardTexture => _rainbowShardTexture.Value;
 
     public static readonly SoundStyle SpawnSound = new("CalamityMod/Sounds/Custom/KingSlimeJewelSpawn") { Volume = 1f };
-    public static readonly SoundStyle ShatterSound = new("CalamityMod/Sounds/NPCKilled/CrownJewelShatter") { Volume = 0.3f };
+    public static readonly SoundStyle ShatterSound = new(AnomalyKingSlimePath + "JewelShatter");
     public static readonly SoundStyle ShootSound = new("CalamityMod/Sounds/Custom/RedJewelFire");
+    public static readonly SoundStyle DashSound = new(AnomalyKingSlimePath + "JewelDash");
+    public static readonly SoundStyle HitSound = new(AnomalyKingSlimePath + "JewelHit", 3);
 
     public static Color RubyColor => Main.zenithWorld ? Color.Cyan : Color.Red;
     public static Color EmeraldColor => Main.zenithWorld ? Color.Purple : Color.Lime with { B = 40 };

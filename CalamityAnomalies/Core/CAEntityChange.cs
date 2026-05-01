@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using System.Collections.ObjectModel;
 using CalamityMod.CalPlayer;
@@ -19,7 +19,7 @@ public abstract class CAPlayerBehavior : PlayerBehavior
     public sealed override CAMain Mod => CAMain.Instance;
 
     public CAPlayer AnomalyPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }
-    public CalamityPlayer CalamityPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Calamity; }
+    public CalamityPlayer CalamityPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.CalamityPlayer; }
 }
 
 public abstract class CAGlobalNPCBehavior : GlobalNPCBehavior
@@ -93,7 +93,7 @@ public abstract class CASingleNPCBehavior : SingleNPCBehavior
     public sealed override CAMain Mod => CAMain.Instance;
 
     public CAGlobalNPC AnomalyNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }
-    public CalamityGlobalNPC CalamityNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Calamity; }
+    public CalamityGlobalNPC CalamityNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.CalamityNPC; }
 
     /// <summary>
     /// 是否允许灾厄的相关逻辑执行。
@@ -165,7 +165,7 @@ public abstract class CASingleProjectileBehavior : SingleProjectileBehavior
     public sealed override CAMain Mod => CAMain.Instance;
 
     public CAGlobalProjectile AnomalyProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }
-    public CalamityGlobalProjectile CalamityProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Calamity; }
+    public CalamityGlobalProjectile CalamityProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.CalamityProjectile; }
 
     /// <summary>
     /// 是否允许灾厄的相关方法执行。
@@ -210,7 +210,7 @@ public abstract class CASingleItemBehavior : SingleItemBehavior
     public sealed override CAMain Mod => CAMain.Instance;
 
     public CAGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }
-    public CalamityGlobalItem CalamityItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Calamity; }
+    public CalamityGlobalItem CalamityItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.CalamityItem; }
 
     /// <summary>
     /// 编辑受击NPC的DR。
@@ -3230,8 +3230,8 @@ public sealed class CAEntityChangeHelper : IContentLoader
         ProjectileBehaviors.FillSet(assembly);
         ItemBehaviors.FillSet(assembly);
 
-        foreach (ICATweak caTweak in TOReflectionUtils.GetTypeInstancesDerivedFrom<ICATweak>(CASharedData.Assembly))
-            caTweak.RegisterTweak();
+        foreach (ICATweak tweak in TOReflectionUtils.GetTypeInstancesDerivedFrom<ICATweak>(CASharedData.Assembly))
+            tweak.RegisterTweak();
     }
 
     void IContentLoader.OnModUnload()
@@ -3244,7 +3244,7 @@ public sealed class CAEntityChangeHelper : IContentLoader
 #endregion Handler
 
 #region Detour
-public sealed class CalamityGlobalNPCBehaviorDetour : CalamityGlobalNPCDetour
+public sealed class CalamityGlobalNPCBehaviorDetour : GlobalNPCDetour<CalamityGlobalNPC>
 {
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalNPC self, NPC npc)
     {
@@ -3286,7 +3286,7 @@ public sealed class CalamityVanillaAIOverrideDetour : GlobalNPCDetour<CalamityVa
     }
 }
 
-public sealed class CalamityGlobalProjectileBehaviorDetour : CalamityGlobalProjectileDetour
+public sealed class CalamityGlobalProjectileBehaviorDetour : GlobalProjectileDetour<CalamityGlobalProjectile>
 {
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalProjectile self, Projectile projectile)
     {

@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using Transoceanic.Framework.Helpers.AbstractionHandlers;
 
@@ -125,6 +125,8 @@ public static class EyeofCthulhu_Handler
     [LoadTexture(AnomalyEyeofCthulhuPath + "BloodOrb_BigBorder")]
     private static Asset<Texture2D> _bloodOrbBigBorderTexture;
     public static Texture2D BloodOrbBigBorderTexture => _bloodOrbBigBorderTexture.Value;
+
+    public static readonly SoundStyle HighlightActivateSound = new(AnomalyEyeofCthulhuPath + "HighlightActivate");
 
     public static float MaxArenaRadius => 480f; //30格
 

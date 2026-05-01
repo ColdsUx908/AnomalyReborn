@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using CalamityAnomalies.DataStructures;
 using CalamityMod.Dusts;
@@ -100,8 +100,8 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
         NPC.knockBackResist = 0.4f;
         NPC.noGravity = true;
         NPC.noTileCollide = true;
-        NPC.HitSound = SoundID.NPCHit5;
-        NPC.DeathSound = SoundID.NPCDeath15;
+        NPC.HitSound = KingSlime_Handler.HitSound;
+        NPC.DeathSound = KingSlime_Handler.ShatterSound;
         CalamityNPC.VulnerableToSickness = false;
     }
 
@@ -240,7 +240,7 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
                 bool validSapphire = !HasEnteredPhase2 && kingSlimeBehavior.HasSapphireBuff;
                 NPC sapphire = validSapphire ? kingSlimeBehavior.JewelSapphire : null;
 
-                SoundEngine.PlaySound(SoundID.Item38, NPC.Center);
+                SoundEngine.PlaySound(KingSlime_Handler.DashSound, NPC.Center);
                 KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
                 int particleAmount = HasEnteredPhase2 ? 10 : 15;
                 if (validSapphire)

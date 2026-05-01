@@ -23,11 +23,6 @@
 		<NoWarn>1701;1702;649</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
-		<None Remove="Common\SingleBehaviors\gtcn4ld1.eox~" />
-		<None Remove="Framework\Abstractions\uipqswwn.2fg~" />
-		<None Remove="Framework\Helpers\Utilities\xmdhclh2.i1j~" />
-	</ItemGroup>
-	<ItemGroup>
 		<ProjectReference Include="..\TransoceanicCodeAssist\TransoceanicCodeAssist.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 

@@ -1,6 +1,5 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
-using CalamityAnomalies.Anomaly.EyeofCthulhu;
 using CalamityMod.NPCs.NormalNPCs;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;

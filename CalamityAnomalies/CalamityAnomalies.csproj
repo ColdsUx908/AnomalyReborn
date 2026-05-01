@@ -30,9 +30,6 @@
 			<HintPath>..\..\CalamityMod\CalamityMod.dll</HintPath>
 		</Reference>
 	</ItemGroup>
-	<ItemGroup>
-		<Folder Include="CalamityEditing\" />
-	</ItemGroup>
 
 	<!-- References -->
 

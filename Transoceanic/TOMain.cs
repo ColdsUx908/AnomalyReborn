@@ -1,4 +1,4 @@
-// Designed by ColdsUx
+// Developed by ColdsUx
 
 global using System;
 global using System.Collections.Generic;
@@ -37,8 +37,7 @@ global using Transoceanic.Framework.Helpers.AbstractionHandlers;
 namespace Transoceanic;
 
 /// <summary>
-/// Transoceanic 模组的主入口类。负责模组的加载、卸载生命周期管理，
-/// 并通过反射自动发现并调用所有实现 <see cref="ITOLoader"/> 接口的加载器。
+/// Transoceanic 模组的主入口类。
 /// </summary>
 public sealed class TOMain : Mod
 {

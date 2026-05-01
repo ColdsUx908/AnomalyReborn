@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 namespace Transoceanic.Framework.Helpers.Utilities;
 

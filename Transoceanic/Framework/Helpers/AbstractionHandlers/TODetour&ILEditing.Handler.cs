@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using System.Collections;
 using MonoMod.Cil;
@@ -54,8 +54,8 @@ public sealed partial class TODetourHandler : IContentLoader
         /// </summary>
         /// <param name="hook">要移除的 <see cref="Hook"/> 实例。</param>
         /// <returns>
-        /// 如果成功找到并移除钩子，则返回 <c>true</c>；
-        /// 如果钩子不在集合中，则返回 <c>false</c>。
+        /// 如果成功找到并移除钩子，则返回 <see langword="true"/>；
+        /// 如果钩子不在集合中，则返回 <see langword="false"/>。
         /// </returns>
         /// <exception cref="ArgumentNullException"><paramref name="hook"/> 为 <c>null</c>。</exception>
         public bool Remove(Hook hook)
@@ -138,7 +138,7 @@ public sealed partial class TODetourHandler : IContentLoader
         /// 当此方法返回时，如果找到了钩子，则包含对应的 <see cref="List{Hook}"/>；
         /// 否则为 <c>null</c>。此参数以未经初始化的形式传递。
         /// </param>
-        /// <returns>如果找到至少一个钩子，则返回 <c>true</c>；否则返回 <c>false</c>。</returns>
+        /// <returns>如果找到至少一个钩子，则返回 <see langword="true"/>；否则返回 <see langword="false"/>。</returns>
         /// <exception cref="ArgumentNullException"><paramref name="targetMethod"/> 为 <c>null</c>。</exception>
         public bool TryGetHooks(MethodBase targetMethod, out List<Hook> hooks)
         {
@@ -185,7 +185,6 @@ public sealed partial class TODetourHandler : IContentLoader
     internal static readonly DetourSet Detours = [];
 
     /// <summary>
-    /// <see cref="IContentLoader.PostSetupContent"/> 的实现。
     /// 在模组内容加载完成后自动扫描并应用所有符合条件的 Detour 方法。
     /// </summary>
     /// <remarks>
@@ -583,7 +582,6 @@ public sealed partial class TOILEditingHandler : IContentLoader
     internal static readonly List<ILHook> Manipulators = [];
 
     /// <summary>
-    /// <see cref="IContentLoader.PostSetupContent"/> 的实现。
     /// 在模组内容加载完成后自动扫描并应用所有符合条件的 IL 编辑方法。
     /// </summary>
     /// <remarks>

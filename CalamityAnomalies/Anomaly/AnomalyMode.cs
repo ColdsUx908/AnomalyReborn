@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.Systems;
@@ -148,7 +148,7 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
         DifficultyModeSystem.Difficulties.Add(AnomalyMode.Instance = new());
         DifficultyModeSystem.CalculateDifficultyData();
 
-        //世界难度
+        //世界难度显示（渐变色）
         On_AWorldListItem.GetDifficulty += On_AWorldListItem_GetDifficulty;
 
         void On_AWorldListItem_GetDifficulty(On_AWorldListItem.orig_GetDifficulty orig, AWorldListItem self, out string expertText, out Color gameModeColor)

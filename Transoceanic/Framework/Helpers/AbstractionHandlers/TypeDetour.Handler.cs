@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using Terraria.Graphics.Effects;
 using Transoceanic.Framework.RuntimeEditing;

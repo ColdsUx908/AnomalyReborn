@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 namespace CalamityAnomalies.Anomaly.EmpressofLight;
 
@@ -17,7 +17,7 @@ public sealed partial class EmpressofLight_Anomaly : AnomalyNPCBehavior
     public override bool PreAI()
     {
         if (Main.zenithWorld)
-            return LegacyCalamityAI();
+            return EmpressOfLightLegacyCalamityAI.AI(NPC, CalamityNPC);
 
         return true;
     }

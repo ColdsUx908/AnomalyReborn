@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using CalamityAnomalies.DataStructures;
 using CalamityMod.NPCs.NormalNPCs;
@@ -66,6 +66,9 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
         NPC.width = 30;
         NPC.height = 30;
         NPC.knockBackResist = 0.4f;
+
+        NPC.HitSound = KingSlime_Handler.HitSound;
+        NPC.DeathSound = KingSlime_Handler.ShatterSound;
     }
 
     public override bool PreAI()

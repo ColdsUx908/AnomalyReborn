@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 namespace Transoceanic.DataStructures;
 
@@ -6,7 +6,7 @@ namespace Transoceanic.DataStructures;
 /// 表示泰拉瑞亚世界中的时间，包含一天中的具体时刻（小时、分钟、秒）以及可选的月相信息。
 /// </summary>
 /// <remarks>
-/// <para/>如需使用泰拉瑞亚游戏内部时间，请使用 <see cref="TOSharedData.TerrariaTime"/>，或用 <see cref="TOSharedData.Time24Hour"/> 手动构造。
+/// <para/>如需使用泰拉瑞亚游戏内部时间，请使用 <see cref="TOSharedData.TerrariaNow"/>，或用 <see cref="TOSharedData.Time24Hour"/> 手动构造。
 /// <para/>此结构为只读值类型，实现了 <see cref="IEquatable{TerrariaTime}"/> 接口以支持高效的相等性比较。
 /// </remarks>
 public readonly struct TerrariaTime : IEquatable<TerrariaTime>

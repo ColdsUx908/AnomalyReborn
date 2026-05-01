@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
@@ -99,7 +99,7 @@ public abstract class EntityBehavior<TEntity> : IEntityBehavior where TEntity : 
     public virtual void Unload() { }
 
     /// <summary>
-    /// 显式实现 <see cref="IContentLoader.PostSetupContent"/>，将调用转至虚方法 <see cref="PostSetupContent"/>。
+    /// 将调用转至虚方法 <see cref="PostSetupContent"/>。
     /// </summary>
     void IContentLoader.PostSetupContent() => PostSetupContent();
 
@@ -109,7 +109,7 @@ public abstract class EntityBehavior<TEntity> : IEntityBehavior where TEntity : 
     public virtual void PostSetupContent() { }
 
     /// <summary>
-    /// 显式实现 <see cref="IContentLoader.OnModUnload"/>，将调用转至虚方法 <see cref="UnModUnload"/>。
+    /// 将调用转至虚方法 <see cref="UnModUnload"/>。
     /// </summary>
     void IContentLoader.OnModUnload() => UnModUnload();
 

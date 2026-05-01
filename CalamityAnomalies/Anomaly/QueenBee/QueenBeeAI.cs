@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
@@ -148,7 +148,7 @@ public sealed partial class QueenBee_Anomaly
             NewAI3 = 1;
             AI0 = 2;
             NPC.netUpdate = true;
-            NPC.SyncExtraAI();
+            CalamityUtils.SyncExtraAI(NPC);
         }
 
         // ---------- 根据当前状态调用对应处理函数 ----------
@@ -204,7 +204,7 @@ public sealed partial class QueenBee_Anomaly
                 // 冲刺距离
                 NewAI1 = charging ? ((Phase2_3 ? 700f : Phase2_2 ? 300f : Phase2 ? 600f : Phase1_2 ? 500f : 400f) - 50f * enrageScale) : 0f;
 
-                NPC.SyncExtraAI();
+                CalamityUtils.SyncExtraAI(NPC);
             }
         }
 
@@ -336,7 +336,7 @@ public sealed partial class QueenBee_Anomaly
                     NewAI0 += 1;
                     if (NewAI0 > accelerateGateValue)
                     {
-                        NPC.SyncExtraAI();
+                        CalamityUtils.SyncExtraAI(NPC);
                         float velocityXLimit = velocity * 2f;
                         if (Math.Abs(NPC.velocity.X) < velocityXLimit)
                             NPC.velocity.X *= 1.02f;
@@ -424,7 +424,7 @@ public sealed partial class QueenBee_Anomaly
                     AI2 = 0;
                     AI1 += 1;
                     NewAI0 = 0;
-                    NPC.SyncExtraAI();
+                    CalamityUtils.SyncExtraAI(NPC);
                 }
 
                 NPC.ForceNetUpdate(false);
@@ -455,7 +455,7 @@ public sealed partial class QueenBee_Anomaly
                 AI1 = 0;
                 NewAI0 = 0;
                 NPC.netUpdate = true;
-                NPC.SyncExtraAI();
+                CalamityUtils.SyncExtraAI(NPC);
                 return;
             }
 

@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using CalamityMod;
 using CalamityMod.NPCs.PlagueEnemies;
@@ -383,7 +383,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                             Timer2++;
                             if (Timer2 > accelerateGateValue) //加速
                             {
-                                NPC.SyncExtraAI();
+                                CalamityUtils.SyncExtraAI(NPC);
                                 float velocityXLimit = speed * 2f;
                                 if (Math.Abs(NPC.velocity.X) < velocityXLimit)
                                     NPC.velocity.X *= 1.02f;

@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
@@ -147,7 +147,7 @@ public sealed partial class QueenBee_Anomaly
             calamityGlobalNPC.newAI[3] = 1f;
             NPC.ai[0] = 2f;
             NPC.netUpdate = true;
-            NPC.SyncExtraAI();
+            CalamityUtils.SyncExtraAI(NPC);
         }
 
         // Despawn phase
@@ -225,7 +225,7 @@ public sealed partial class QueenBee_Anomaly
                 else
                     calamityGlobalNPC.newAI[1] = charging ? ((phase6 ? 750f : phase5 ? 350f : phase4 ? 650f : phase2 ? 550f : 450f) - 50f * enrageScale) : 0f;
 
-                NPC.SyncExtraAI();
+                CalamityUtils.SyncExtraAI(NPC);
             }
         }
 
@@ -399,7 +399,7 @@ public sealed partial class QueenBee_Anomaly
                     calamityGlobalNPC.newAI[0] += 1f;
                     if (calamityGlobalNPC.newAI[0] > accelerateGateValue)
                     {
-                        NPC.SyncExtraAI();
+                        CalamityUtils.SyncExtraAI(NPC);
                         float velocityXLimit = velocity * 2f;
                         if (Math.Abs(NPC.velocity.X) < velocityXLimit)
                             NPC.velocity.X *= death ? 1.02f : 1.01f;
@@ -504,7 +504,7 @@ public sealed partial class QueenBee_Anomaly
                     NPC.ai[2] = 0f;
                     NPC.ai[1] += 1f;
                     calamityGlobalNPC.newAI[0] = 0f;
-                    NPC.SyncExtraAI();
+                    CalamityUtils.SyncExtraAI(NPC);
                 }
 
                 NPC.ForceNetUpdate(false);
@@ -542,7 +542,7 @@ public sealed partial class QueenBee_Anomaly
                 NPC.ai[1] = 0f;
                 calamityGlobalNPC.newAI[0] = 0f;
                 NPC.netUpdate = true;
-                NPC.SyncExtraAI();
+                CalamityUtils.SyncExtraAI(NPC);
                 return false;
             }
 

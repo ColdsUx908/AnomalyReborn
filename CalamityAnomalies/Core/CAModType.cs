@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using CalamityMod.Items;
 using CalamityMod.NPCs;
@@ -40,7 +40,7 @@ public abstract class CAModNPC : TOModNPC, ICAModNPC
     public static bool Ultra => CASharedData.AnomalyUltramundane;
 
     public CAGlobalNPC AnomalyNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => NPC.Anomaly; }
-    public CalamityGlobalNPC CalamityNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => NPC.Calamity; }
+    public CalamityGlobalNPC CalamityNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => NPC.CalamityNPC; }
 
     public virtual bool PreUpdateCalBossBar(BetterBossHPUI newBar) => true;
     public virtual void PostUpdateCalBossBar(BetterBossHPUI newBar) { }
@@ -58,7 +58,7 @@ public abstract class CAModProjectile : TOModProjectile, ICAModProjectile
     public static bool Ultra => CASharedData.AnomalyUltramundane;
 
     public CAGlobalProjectile AnomalyProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Projectile.Anomaly; }
-    public CalamityGlobalProjectile CalamityProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Projectile.Calamity; }
+    public CalamityGlobalProjectile CalamityProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Projectile.CalamityProjectile; }
 
     public virtual void ModifyHitNPC_DR(NPC target, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 }
@@ -73,7 +73,7 @@ public abstract class CAModItem : TOModItem, ICAModItem
     public static bool Ultra => CASharedData.AnomalyUltramundane;
 
     public CAGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Item.Anomaly; }
-    public CalamityGlobalItem CalamityItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Item.Calamity; }
+    public CalamityGlobalItem CalamityItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Item.CalamityItem; }
 
     public virtual void ModifyHitNPC_DR(NPC target, Player player, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 }

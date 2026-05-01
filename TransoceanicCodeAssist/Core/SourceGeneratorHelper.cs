@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 namespace TransoceanicCodeAssist;
 
@@ -7,6 +7,10 @@ internal static class SourceGeneratorHelper
     public const string NeverBrowsableIdentifier = "[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]";
 
     public const string ExternalAttributePrefix = "global::Transoceanic.Framework.ExternalAttributes.";
+
+    public const string Version = "1.0.0.0";
+
+    public static string GetGeneratedCodeMarker(string generatorName) => $"""[global::System.CodeDom.Compiler.GeneratedCode("TransoceanicCodeAssist.{generatorName}", "{Version}")]""";
 
     public static IncrementalValuesProvider<TypeDeclarationSyntax> GetTypeDeclarations(IncrementalGeneratorInitializationContext context) =>
         context.SyntaxProvider.CreateSyntaxProvider(

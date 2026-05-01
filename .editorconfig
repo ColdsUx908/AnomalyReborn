@@ -7,7 +7,7 @@ root = true
 #### Core EditorConfig 选项 ####
 
 # 文件头
-file_header_template = Designed by ColdsUx
+file_header_template = Developed by ColdsUx
 
 # 缩进和间距
 indent_size = 4

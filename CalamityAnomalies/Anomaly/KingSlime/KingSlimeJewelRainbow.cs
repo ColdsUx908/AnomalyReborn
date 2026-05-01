@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using CalamityAnomalies.DataStructures;
 
@@ -120,8 +120,8 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
         NPC.knockBackResist = 0.2f;
         NPC.noGravity = true;
         NPC.noTileCollide = true;
-        NPC.HitSound = SoundID.NPCHit5;
-        NPC.DeathSound = SoundID.NPCDeath15;
+        NPC.HitSound = KingSlime_Handler.HitSound;
+        NPC.DeathSound = KingSlime_Handler.ShatterSound;
         CalamityNPC.VulnerableToSickness = false;
     }
 

@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using MonoMod.Utils;
 using Terraria.GameContent.Bestiary;

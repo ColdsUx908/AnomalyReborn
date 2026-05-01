@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 namespace Transoceanic.Framework.ExternalAttributes;
 
@@ -25,7 +25,7 @@ namespace Transoceanic.Framework.ExternalAttributes;
 /// [Publicize(typeof(ExampleHelper))]
 /// public partial class ExampleHelper_Publicizer(object Source) : InstancedPublicizer(Source); //应用特性，指定目标类型
 /// 
-/// // 使用生成的公共包装器
+/// //使用生成的公共包装器
 /// ExampleHelper instance = new();
 /// ExampleHelper_Publicizer publicizer = new(instance);
 /// publicizer._counter = 10; //访问私有成员

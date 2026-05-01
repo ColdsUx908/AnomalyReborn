@@ -1,10 +1,11 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 using CalamityMod.CalPlayer;
 using CalamityMod.Graphics;
 
 namespace CalamityAnomalies.ModCompatibility.CalamityBridge;
 
+/// <inheritdoc cref="EnhancedDarknessSystem"/>
 internal static class EnhancedDarknessSystem_Bridge
 {
     public static void AddLightSource(Vector2? center = null, Texture2D texture = null, float scale = 1f, float rotation = 0, Vector2? vectorScale = null, float opacity = 1) =>
@@ -14,7 +15,7 @@ internal static class EnhancedDarknessSystem_Bridge
     {
         if (intensityModifier is null)
             return;
-        CalamityPlayer calamityPlayer = player.Calamity;
+        CalamityPlayer calamityPlayer = player.CalamityPlayer;
         calamityPlayer.darknessIntensity = Math.Clamp(intensityModifier(calamityPlayer.darknessIntensity), 0f, 1f);
     }
 }

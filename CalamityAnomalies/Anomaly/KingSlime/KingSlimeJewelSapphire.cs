@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
@@ -69,8 +69,8 @@ public class KingSlimeJewelSapphire : CAModNPC, IKingSlimeJewel
         NPC.knockBackResist = 0.4f;
         NPC.noGravity = true;
         NPC.noTileCollide = true;
-        NPC.HitSound = SoundID.NPCHit5;
-        NPC.DeathSound = SoundID.NPCDeath15;
+        NPC.HitSound = KingSlime_Handler.HitSound;
+        NPC.DeathSound = KingSlime_Handler.ShatterSound;
         CalamityNPC.VulnerableToSickness = false;
     }
 

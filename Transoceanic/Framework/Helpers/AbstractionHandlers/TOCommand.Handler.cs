@@ -1,4 +1,4 @@
-﻿// Designed by ColdsUx
+﻿// Developed by ColdsUx
 
 namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
@@ -73,7 +73,7 @@ public sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
 public sealed class TOCommandHelper : IContentLoader, ILocalizationPrefix
 {
     /// <summary>
-    /// <see cref="TOCommandHelper"/> 的单例实例。在 <see cref="IContentLoader.PostSetupContent"/> 中赋值。
+    /// <see cref="TOCommandHelper"/> 的单例实例。。
     /// </summary>
     internal static TOCommandHelper Instance { get; private set; }
 
