@@ -8,10 +8,10 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
 {
     public enum Attack
     {
-        NormalAttack1 = 1,
-        NormalAttack2 = 2,
-        NormalAttack3 = 3,
-        RingAttack = 4,
+        Triangle = 1,
+        Star = 2,
+        Square = 3,
+        Circle = 4,
     }
 
     public const float DespawnDistance = 5000f;
@@ -19,6 +19,8 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
 
     private static readonly ProjectileDamageContainer _jewelProjectileRainbowDamage = new(40, 65, 90, 110, 105, 125);
     public static int JewelProjectileRainbowDamage => _jewelProjectileRainbowDamage.Value;
+
+    public const float MaxProjectileSpeed = 18f;
 
     public Attack CurrentAttack
     {
@@ -147,7 +149,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
             return;
         }
 
-        KingSlime_Anomaly masterBehavior = new() { _entity = master };
+        KingSlime_Anomaly masterBehavior = KingSlime_Anomaly.GetNewInstance(master);
 
         Lighting.AddLight(NPC.Center, 1f, 0f, 0f);
 
@@ -193,17 +195,17 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
             {
                 switch (CurrentAttack)
                 {
-                    case Attack.NormalAttack1:
-                        NormalAttack1();
+                    case Attack.Triangle:
+                        Attack_Triangle();
                         break;
-                    case Attack.NormalAttack2:
-                        NormalAttack2();
+                    case Attack.Star:
+                        Attack_Star();
                         break;
-                    case Attack.NormalAttack3:
-                        NormalAttack3();
+                    case Attack.Square:
+                        Attack_Square();
                         break;
-                    case Attack.RingAttack:
-                        RingAttack();
+                    case Attack.Circle:
+                        Attack_Circle();
                         break;
                 }
             }
@@ -219,18 +221,18 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
         {
             CurrentAttack = AttackCounter switch
             {
-                0 => Attack.NormalAttack1,
-                1 => Attack.NormalAttack2,
-                2 => Attack.NormalAttack3,
-                3 => Attack.RingAttack,
-                _ => Attack.NormalAttack1,
+                0 => Attack.Triangle,
+                1 => Attack.Star,
+                2 => Attack.Square,
+                3 => Attack.Circle,
+                _ => Attack.Triangle,
             };
             AttackCounter = (AttackCounter + 1) % 4;
             ShouldUseBuffedAttack = masterBehavior.Phase2_2;
             IsAttacking = true;
         }
 
-        void NormalAttack1()
+        void Attack_Triangle()
         {
             SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
             for (int i = 0; i < 20; i++)
@@ -242,7 +244,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 int amount = 30;
                 float totalAngle = MathHelper.TwoPi;
                 float singleRadian = totalAngle / amount;
-                Vector2 originalVelocity = (PolarVector2)NPC.GetVelocityTowards(Target, 20f);
+                Vector2 originalVelocity = (PolarVector2)NPC.GetVelocityTowards(Target, MaxProjectileSpeed);
                 Vector2 rotatedOriginalVelocity = originalVelocity.RotatedBy(TOMathUtils.PiOver3 * 2);
                 Vector2 rotatedOriginalVelocity2 = rotatedOriginalVelocity.RotatedBy(TOMathUtils.PiOver3 * 2);
 
@@ -252,16 +254,16 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
 
-                    Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity, JewelProjectileRainbowDamage, 0f);
+                    Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity, JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Triangle);
                     if (ShouldUseBuffedAttack)
-                        Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity * -1f, JewelProjectileRainbowDamage, 0f);
+                        Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity * -1f, JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Triangle);
                 }
             }
 
             IsAttacking = false;
         }
 
-        void NormalAttack2()
+        void Attack_Star()
         {
             SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
             for (int i = 0; i < 20; i++)
@@ -273,7 +275,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 int amount = 60;
                 float totalAngle = MathHelper.TwoPi;
                 float singleRadian = totalAngle / amount;
-                Vector2 originalVelocity = (PolarVector2)NPC.GetVelocityTowards(Target, 20f);
+                Vector2 originalVelocity = (PolarVector2)NPC.GetVelocityTowards(Target, MaxProjectileSpeed);
                 Vector2 rotatedOriginalVelocity = originalVelocity.RotatedBy(TOMathUtils.PiOver5 * 4);
                 Vector2 rotatedOriginalVelocity2 = rotatedOriginalVelocity.RotatedBy(TOMathUtils.PiOver5 * 4);
                 Vector2 rotatedOriginalVelocity3 = rotatedOriginalVelocity2.RotatedBy(TOMathUtils.PiOver5 * 4);
@@ -285,37 +287,37 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
 
-                    Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity, JewelProjectileRainbowDamage, 0f);
+                    Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity, JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Star);
                     if (ShouldUseBuffedAttack)
-                        Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity * -0.75f, JewelProjectileRainbowDamage, 0f);
+                        Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity * -0.75f, JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Star);
                 }
             }
 
             IsAttacking = false;
         }
 
-        void NormalAttack3()
+        void Attack_Square()
         {
             Timer1++;
 
             if (TOSharedData.GeneralClient)
             {
                 if (Timer1 == 1)
-                    NormalAttack3Core();
+                    AttackCore();
                 else if (Timer1 == 11)
                 {
-                    NormalAttack3Core(MathHelper.PiOver4);
+                    AttackCore(MathHelper.PiOver4);
                     if (!ShouldUseBuffedAttack)
                         IsAttacking = false;
                 }
                 else if (ShouldUseBuffedAttack && Timer1 == 21)
                 {
-                    NormalAttack3Core(MathHelper.PiOver4 + Main.rand.NextFloat(-0.2f, 0.2f));
+                    AttackCore(MathHelper.PiOver4 + Main.rand.NextFloat(-0.2f, 0.2f));
                     IsAttacking = false;
                 }
             }
 
-            void NormalAttack3Core(float offset = 0f)
+            void AttackCore(float offset = 0f)
             {
                 SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
                 for (int i = 0; i < 20; i++)
@@ -325,7 +327,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 int amount = 32;
                 float totalAngle = MathHelper.TwoPi;
                 float singleRadian = totalAngle / amount;
-                Vector2 originalVelocity = (PolarVector2)NPC.GetVelocityTowards(Target, 20f).RotatedBy(offset);
+                Vector2 originalVelocity = (PolarVector2)NPC.GetVelocityTowards(Target, MaxProjectileSpeed).RotatedBy(offset);
                 Vector2 rotatedOriginalVelocity = originalVelocity.RotatedBy(MathHelper.PiOver2);
                 Vector2 rotatedOriginalVelocity2 = rotatedOriginalVelocity.RotatedBy(MathHelper.PiOver2);
                 Vector2 rotatedOriginalVelocity3 = rotatedOriginalVelocity2.RotatedBy(MathHelper.PiOver2);
@@ -335,12 +337,12 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 for (int i = 0; i < amount; i++)
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
-                    Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity, JewelProjectileRainbowDamage, 0f);
+                    Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity, JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Square);
                 }
             }
         }
 
-        void RingAttack()
+        void Attack_Circle()
         {
             int totalAttackNum = ShouldUseBuffedAttack ? 8 : 6;
 
@@ -376,7 +378,6 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                     KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
                 KingSlime_Handler.SpawnPointingParticle(NPC, pointingParticleAmount, true);
 
-
                 if (TOSharedData.GeneralClient)
                 {
                     int amount = attackNum switch
@@ -387,8 +388,8 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                         3 => 12,
                         4 => 16,
                         5 => 36,
-                        6 => 24,
-                        7 => 60,
+                        6 => 16,
+                        7 => 80,
                         _ => 0
                     };
                     float singleRadian = MathHelper.TwoPi / amount;
@@ -397,10 +398,14 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                     switch (attackNum)
                     {
                         case <= 5:
-                            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(20f - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f);
+                            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(MaxProjectileSpeed - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Circle);
                             break;
                         case 6 or 7:
-                            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(6.5f - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f, action: p => p.timeLeft = 300);
+                            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(MaxProjectileSpeed / 2.5f - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f, action: p =>
+                            {
+                                p.ai[0] = JewelProjectileRainbow.TextureType_Circle;
+                                p.timeLeft = 450;
+                            });
                             break;
                     }
                 }

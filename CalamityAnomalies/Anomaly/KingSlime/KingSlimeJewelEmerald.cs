@@ -240,7 +240,7 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
                 bool validSapphire = !HasEnteredPhase2 && kingSlimeBehavior.HasSapphireBuff;
                 NPC sapphire = validSapphire ? kingSlimeBehavior.JewelSapphire : null;
 
-                SoundEngine.PlaySound(KingSlime_Handler.DashSound, NPC.Center);
+                SoundEngine.PlaySound(validSapphire ? KingSlime_Handler.DashSoundBuff : KingSlime_Handler.DashSoundNormal, NPC.Center);
                 KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
                 int particleAmount = HasEnteredPhase2 ? 10 : 15;
                 if (validSapphire)

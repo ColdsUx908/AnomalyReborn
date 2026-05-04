@@ -1,0 +1,9 @@
+StoryMode: {
+	Enable:
+		'''
+		Story mode has been enabled.
+		In this mode, the dynamic damage reduction of Anomaly bosses will be enabled to ensure the spectacle of battles.
+		Note: This mode will not be saved to the world file and must be re-enabled each time you enter the world.
+		'''
+	Disable: Story mode has been disabled.
+}

@@ -83,7 +83,7 @@ public partial class BloodlettingServant : CAModNPC
 
         NPC.target = master.target; //同步目标
 
-        EyeofCthulhu_Anomaly masterBehavior = new() { _entity = master };
+        EyeofCthulhu_Anomaly masterBehavior = EyeofCthulhu_Anomaly.GetNewInstance(master);
 
         NPC.dontTakeDamage = true;
 

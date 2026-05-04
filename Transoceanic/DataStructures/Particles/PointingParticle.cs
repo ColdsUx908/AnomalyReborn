@@ -27,7 +27,7 @@ public class PointingParticle : Particle
         Scale *= 0.95f;
         Color = Color.Lerp(InitialColor, Color.Transparent, (float)Math.Pow(LifetimeCompletion, 3D));
         if (AffectedByLight)
-            Color = Lighting.GetColor(Center.ToTileCoordinates()).MultiplyRGBA(Color);
+            Color.MultiplyWithWorldLight(Center);
 
         Velocity *= 0.95f;
         if (Velocity.Length() < 12f && AffectedByGravity)

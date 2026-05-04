@@ -22,10 +22,10 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<NoWarn>1701;1702;649</NoWarn>
 	</PropertyGroup>
+
+	<!-- References -->
 	<ItemGroup>
 		<ProjectReference Include="..\TransoceanicCodeAssist\TransoceanicCodeAssist.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
-
-	<!-- References -->
 
 </Project>

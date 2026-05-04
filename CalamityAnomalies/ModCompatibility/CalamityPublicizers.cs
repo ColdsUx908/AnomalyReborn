@@ -20,6 +20,9 @@ internal partial class CalamityMod_Publicizer(CalamityMod_ Source) : InstancedPu
 [Publicize(typeof(HiveMind))]
 internal partial class HiveMind_Publicizer(HiveMind Source) : InstancedPublicizer(Source);
 
+[Publicize(typeof(RogueDamageClass))]
+internal partial class RogueDamageClass_Publicizer;
+
 [Publicize(typeof(TrueMeleeDamageClass))]
 internal partial class TrueMeleeDamageClass_Publicizer;
 

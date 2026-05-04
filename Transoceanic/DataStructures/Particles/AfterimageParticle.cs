@@ -42,7 +42,7 @@ public class AfterimageParticle : Particle, IContentLoader
     {
         Color color = Color * Opacity;
         if (AffectedByLight)
-            color = Lighting.GetColor(Center.ToTileCoordinates()).MultiplyRGBA(color);
+            color.MultiplyWithWorldLight(Center);
         spriteBatch.DrawFromCenter(Texture, Center + DrawOffset - Main.screenPosition, Frame, color, Rotation, Scale, SpriteEffects.None);
     }
 }

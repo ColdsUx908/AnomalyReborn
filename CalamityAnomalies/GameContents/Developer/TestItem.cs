@@ -3,9 +3,7 @@
 #define TEST_DEV
 
 #if TEST_DEV
-using CalamityAnomalies.GameContents;
-
-namespace CalamityAnomalies.DeveloperContents;
+namespace CalamityAnomalies.GameContents.Developer;
 
 /// <summary>
 /// CA测试物品。

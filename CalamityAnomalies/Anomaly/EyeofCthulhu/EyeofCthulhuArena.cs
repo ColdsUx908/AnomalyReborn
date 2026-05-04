@@ -36,7 +36,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
         }
         set => Projectile.ai[0] = value.whoAmI;
     }
-    public EyeofCthulhu_Anomaly MasterBehavior => new() { _entity = Master };
+    public EyeofCthulhu_Anomaly MasterBehavior => EyeofCthulhu_Anomaly.GetNewInstance(Master);
 
     public Ring ArenaRing => new(Projectile.Center, RealArenaRadius - 20f, RealArenaRadius + 20f);
 
@@ -108,10 +108,11 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
             action?.Invoke(eye);
     }
 
-    public void AddHighlightTo(int index, int lifetime)
+    public void AddHighlightTo(int index, int lifetime, bool playSound = false)
     {
         index = (int)TOMathUtils.NormalizeWithPeriod(index, 32);
-        SoundEngine.PlaySound(EyeofCthulhu_Handler.HighlightActivateSound, GetEyeCenter(index));
+        if (playSound)
+            SoundEngine.PlaySound(EyeofCthulhu_Handler.HighlightActivateSound, GetEyeCenter(index));
         ExecuteActionToArenaEye(index, e => e.Highlights.Add(new EyeHighlight(lifetime, 20, 10f)));
     }
     #endregion 交互方法
@@ -283,7 +284,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                 if (masterBehavior.Timer1 - 1 == teleportDuration - EyeofCthulhu_Handler.NormalTeleportDuration)
                 {
                     for (int i = -1; i <= 1; i++)
-                        AddHighlightTo((int)TOMathUtils.NormalizeWithPeriod(masterBehavior.UsedEyeIndex1 + i, 32), EyeofCthulhu_Handler.NormalTeleportDuration + 10);
+                        AddHighlightTo((int)TOMathUtils.NormalizeWithPeriod(masterBehavior.UsedEyeIndex1 + i, 32), EyeofCthulhu_Handler.NormalTeleportDuration + 10, i == 0);
                 }
             }
 
@@ -298,16 +299,16 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                                 //ChangeArenaRadiusTo(EyeofCthulhu_Handler.MaxArenaRadius2, 75);
                                 break;
                             case 5: //第一个高光
-                                AddHighlightTo(masterBehavior.UsedEyeIndex1, 135);
+                                AddHighlightTo(masterBehavior.UsedEyeIndex1, 135, true);
                                 break;
                             case 35: //第二个高光
-                                AddHighlightTo(masterBehavior.UsedEyeIndex2, 135);
+                                AddHighlightTo(masterBehavior.UsedEyeIndex2, 135, true);
                                 break;
                             case 65: //第三个高光
-                                AddHighlightTo(masterBehavior.UsedEyeIndex3, 135);
+                                AddHighlightTo(masterBehavior.UsedEyeIndex3, 135, true);
                                 break;
                             case 95: //第四个高光
-                                AddHighlightTo(masterBehavior.UsedEyeIndex4, 135);
+                                AddHighlightTo(masterBehavior.UsedEyeIndex4, 135, true);
                                 break;
                         }
                         break;
@@ -332,7 +333,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                         bool shouldIncreaseHighlightTime = i % (32 / (buff ? 4 : 2)) == 0;
                         int actualIndex = (int)TOMathUtils.NormalizeWithPeriod(index1 + i, 32);
                         int hightliteTime = shouldIncreaseHighlightTime ? EyeofCthulhu_Handler.EyeSpinTime + 15 : EyeofCthulhu_Handler.EyeSpinTime;
-                        AddHighlightTo(actualIndex, hightliteTime);
+                        AddHighlightTo(actualIndex, hightliteTime, shouldIncreaseHighlightTime);
 
                         if (!buff)
                         {

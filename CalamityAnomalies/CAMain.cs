@@ -36,6 +36,7 @@ global using Transoceanic.Framework;
 global using Transoceanic.Framework.Abstractions;
 global using Transoceanic.Framework.ExternalAttributes;
 global using Transoceanic.Framework.Helpers;
+global using static CalamityAnomalies.Common.CASharedData.QuickAccess;
 
 namespace CalamityAnomalies;
 

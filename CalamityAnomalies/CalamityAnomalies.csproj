@@ -6,6 +6,7 @@
 	<!-- General -->
 	<PropertyGroup>
 		<LangVersion>preview</LangVersion>
+		<TargetFramework>net8.0</TargetFramework>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
 	</PropertyGroup>
@@ -21,6 +22,8 @@
 		<EmbeddedResource Remove="Tweaks\**" />
 		<None Remove="Tweaks\**" />
 	</ItemGroup>
+
+	<!-- References -->
 	<ItemGroup>
 		<ProjectReference Include="..\Transoceanic\Transoceanic.csproj" />
 		<ProjectReference Include="..\TransoceanicCodeAssist\TransoceanicCodeAssist.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
@@ -30,7 +33,5 @@
 			<HintPath>..\..\CalamityMod\CalamityMod.dll</HintPath>
 		</Reference>
 	</ItemGroup>
-
-	<!-- References -->
 
 </Project>

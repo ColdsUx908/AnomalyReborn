@@ -54,10 +54,13 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
     {
         get
         {
+            /*
             float value = Phase2_3 ? 150f : Phase2 ? 100f : 75f;
             value += MathHelper.Lerp(0f, 100f, 1f - (NPC.LifeRatio / 2));
             value *= 2f;
             return value;
+            */
+            return 20f;
         }
     }
 
@@ -165,8 +168,6 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
     #endregion 数据
 
     public override int ApplyingType => NPCID.QueenBee;
-
-    public override bool ShouldProcess => false; //暂时禁用
 
     public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior method) => method switch
     {

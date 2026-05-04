@@ -36,6 +36,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
         {
             case Phase.Initialize:
                 CurrentPhase = Phase.Phase1;
+                CurrentBehavior = Behavior.Phase1_Charge;
                 break;
             case >= Phase.Phase1 and <= Phase.Phase2_3:
                 Phase1And2AI();
@@ -77,6 +78,9 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                 case Behavior.Phase1_Stinger:
                     Stinger();
                     break;
+                default:
+                    SelectNextAttack();
+                    break;
             }
 
             void SelectNextAttack()
@@ -89,9 +93,9 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                         SelectCore();
                         break;
                     case Behavior.Phase1_Charge:
-                        int chargeAmt = Phase2_3 ? 2 : Phase2_2 ? 4 : Phase2 ? 3 : 4;
+                        int chargeAmount = Phase2_3 ? 2 : Phase2_2 ? 4 : Phase2 ? 3 : 4;
                         AttackCounter++;
-                        if (AttackCounter > chargeAmt)
+                        if (AttackCounter > chargeAmount)
                         {
                             AttackCounter = 0;
                             SelectCore();
@@ -477,7 +481,9 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
         {
             switch (CurrentBehavior)
             {
-
+                default:
+                    SelectNextAttack();
+                    break;
             }
 
             void SelectNextAttack()

@@ -160,6 +160,8 @@ public sealed class CAGlobalNPC : GlobalNPC, IContentLoader
     public int AnomalyUltraBarTimer;
 
     public List<HPThresholdIndicator> HPThresholdIndicators = [];
+
+    public DynamicDamageReductionHandler DynamicDRHandler;
     #endregion 额外数据
 }
 

@@ -1,5 +1,6 @@
 ﻿// Developed by ColdsUx
 
+using CalamityAnomalies.Anomaly.KingSlime;
 using CalamityAnomalies.DataStructures;
 using CalamityMod.Dusts;
 using Transoceanic.Framework.Helpers.AbstractionHandlers;
@@ -434,6 +435,8 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
      */
     #endregion 数据
 
+    public static EyeofCthulhu_Anomaly GetNewInstance(NPC npc) => new() { _entity = npc };
+
     public override int ApplyingType => NPCID.EyeofCthulhu;
 
     public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior method) => method switch
@@ -453,6 +456,12 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
         ServantLeft = NPC.DummyNPC;
         ServantRight = NPC.DummyNPC;
         ArenaProjectile = Projectile.DummyProjectile;
+
+        AnomalyNPC.DynamicDRHandler = new(
+            new DynamicDamageReductionHandler.SingleDDRHandler(1f, Phase2LifeRatio, null, n => GetNewInstance(n).CurrentPhase >= Phase.PhaseChange_1To2, 15),
+            new DynamicDamageReductionHandler.SingleDDRHandler(Phase2LifeRatio, Phase3LifeRatio, null, n => GetNewInstance(n).CurrentPhase >= Phase.PhaseChange_2To3, 55),
+            new DynamicDamageReductionHandler.SingleDDRHandler(0.5f, 0f, n => GetNewInstance(n).Phase3, null, 30)
+        );
     }
 
     public override bool PreAI()
@@ -1246,7 +1255,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
                         //弹幕
                         int projectileGateValue = NextChargeTypeIsHorizontal ? 20 : 30;
-                        int maxProjectileSpawnsPerAttack = NextChargeTypeIsHorizontal ? (AttackCounter == 0 ? (Ultra ? 3 : 2) : Ultra ? 2 : 1) : 1;
+                        int maxProjectileSpawnsPerAttack = NextChargeTypeIsHorizontal ? (AttackCounter2 == 0 ? 0 : Ultra ? 3 : 2) : 1;
                         int projectileDelay = 10;
                         int adjustedTimer1 = Timer1 - projectileDelay;
                         if (adjustedTimer1 % projectileGateValue == 0)
@@ -1255,8 +1264,8 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             if (num > 0 && num <= maxProjectileSpawnsPerAttack && TOSharedData.GeneralClient && CanShootProjectile() && Timer2 == 0)
                             {
                                 bool buff = Ultra && NextChargeTypeIsHorizontal && AttackCounter2 == 0;
-                                int amount = buff ? 5 : 3;
-                                float halfRange = MathHelper.ToRadians(buff ? 60f : 30f);
+                                int amount = 5;
+                                float halfRange = TOMathUtils.PiOver3;
                                 EyeofCthulhu_Handler.ShootProjectile(NPC, ProjectileID.BloodNautilusShot, BloodDamage, 20f, amount, halfRange, p => p.timeLeft = 600);
                             }
 
@@ -1361,7 +1370,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
                         if (CanShootProjectile())
                         {
-                            int projectileAmountOver4 = Ultra ? 8 : 6;
+                            int projectileAmountOver4 = Ultra ? 10 : 8;
                             int particleAmount = projectileAmountOver4 * 8;
                             for (int i = 0; i < particleAmount; i++)
                                 EyeofCthulhu_Handler.SpawnOrbParticle(NPC.Center, Main.rand.NextFloat(5f, 10f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.5f, 1f));

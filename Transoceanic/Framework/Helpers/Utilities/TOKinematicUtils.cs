@@ -16,7 +16,7 @@ public enum PriorityType : byte
     /// </summary>
     LifeMax = 1,
     /// <summary>
-    /// 当前生命值最高单位。
+    /// 当前生命值最低单位。
     /// </summary>
     Life = 2
 }
@@ -33,7 +33,7 @@ public static class TOKinematicUtils
     /// <param name="maxDistanceToCheck">最大检索距离（像素）。</param>
     /// <param name="ignoreTiles">是否忽略实体物块阻挡。若为 <see langword="true"/>，则只进行距离判断；若为 <see langword="false"/>，则需要视线通畅（<see cref="Collision.CanHit(Vector2, int, int, Vector2, int, int)"/>）。</param>
     /// <param name="bossPriority">是否优先锁定Boss单位。若为 <see langword="true"/>，则当范围内存在Boss时，只返回符合条件的Boss，否则再考虑普通敌怪。</param>
-    /// <param name="priorityType">目标排序优先级类型，可选最近距离、最高最大生命值、最高当前生命值。</param>
+    /// <param name="priorityType">目标排序优先级类型，可选最近距离、最高最大生命值、最低当前生命值。</param>
     /// <returns>符合条件的 NPC 实例；若未检索到则返回 <see langword="null"/>。</returns>
     /// <remarks>
     /// <strong>警告：</strong>遍历 NPC 集合对性能有较大影响，应仅在必要的时候（例如弹幕索敌、召唤物 AI 更新）调用此方法，避免在每帧绘制中调用。
@@ -48,14 +48,15 @@ public static class TOKinematicUtils
             case PriorityType.LifeMax:
                 if (bossPriority)
                 {
-                    foreach (NPC npc in
-                        TOIteratorFactory.NewNPCIterator(
-                            ignoreTiles ? n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared
-                            : n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, n.Center, 1, 1)))
+                    foreach (NPC npc in NPC.ActiveNPCs)
                     {
+                        if (!npc.CanBeChasedBy() || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1)))
+                            continue;
+
                         if (target is null)
                         {
                             target = npc;
+                            hasPriority = npc.IsBossEnemy;
                             continue;
                         }
                         switch (hasPriority, npc.IsBossEnemy)
@@ -74,11 +75,11 @@ public static class TOKinematicUtils
                 }
                 else
                 {
-                    foreach (NPC npc in
-                        TOIteratorFactory.NewNPCIterator(
-                            ignoreTiles ? n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared
-                            : n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, n.Center, 1, 1)))
+                    foreach (NPC npc in NPC.ActiveNPCs)
                     {
+                        if (!npc.CanBeChasedBy() || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1)))
+                            continue;
+
                         if (target is null || npc.lifeMax > target.lifeMax)
                             target = npc;
                     }
@@ -87,14 +88,15 @@ public static class TOKinematicUtils
             case PriorityType.Life:
                 if (bossPriority)
                 {
-                    foreach (NPC npc in
-                        TOIteratorFactory.NewNPCIterator(
-                            ignoreTiles ? n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared
-                            : n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, n.Center, 1, 1)))
+                    foreach (NPC npc in NPC.ActiveNPCs)
                     {
+                        if (!npc.CanBeChasedBy() || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1)))
+                            continue;
+
                         if (target is null)
                         {
                             target = npc;
+                            hasPriority = npc.IsBossEnemy;
                             continue;
                         }
                         switch (hasPriority, npc.IsBossEnemy)
@@ -113,11 +115,11 @@ public static class TOKinematicUtils
                 }
                 else
                 {
-                    foreach (NPC npc in
-                        TOIteratorFactory.NewNPCIterator(
-                            ignoreTiles ? n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared
-                            : n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, n.Center, 1, 1)))
+                    foreach (NPC npc in NPC.ActiveNPCs)
                     {
+                        if (!npc.CanBeChasedBy() || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1)))
+                            continue;
+
                         if (target is null || npc.life < target.life)
                             target = npc;
                     }
@@ -125,19 +127,20 @@ public static class TOKinematicUtils
                 return target;
             case PriorityType.Closest:
             default:
-                float distanceTemp1 = 0f;
-                float distanceTemp2 = maxDistanceToCheckSquared;
+                float distanceTemp = maxDistanceToCheckSquared;
                 if (bossPriority)
                 {
-                    foreach (NPC npc in
-                        TOIteratorFactory.NewNPCIterator(
-                            ignoreTiles ? n => n.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, n.Center)) <= maxDistanceToCheckSquared
-                            : n => n.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, n.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, n.Center, 1, 1)))
+                    foreach (NPC npc in NPC.ActiveNPCs)
                     {
+                        float distanceSquared = Vector2.DistanceSquared(origin, npc.Center);
+                        if (!npc.CanBeChasedBy() || distanceSquared > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1)))
+                            continue;
+
                         if (target is null)
                         {
                             target = npc;
-                            distanceTemp2 = distanceTemp1;
+                            hasPriority = npc.IsBossEnemy;
+                            distanceTemp = distanceSquared;
                             continue;
                         }
                         switch (hasPriority, npc.IsBossEnemy)
@@ -146,27 +149,28 @@ public static class TOKinematicUtils
                                 break;
                             case (false, true):
                                 target = npc;
-                                distanceTemp2 = distanceTemp1;
+                                distanceTemp = distanceSquared;
                                 hasPriority = true;
                                 break;
-                            case (true, true) or (false, false) when distanceTemp1 < distanceTemp2:
+                            case (true, true) or (false, false) when distanceSquared < distanceTemp:
                                 target = npc;
-                                distanceTemp2 = distanceTemp1;
+                                distanceTemp = distanceSquared;
                                 break;
                         }
                     }
                 }
                 else
                 {
-                    foreach (NPC npc in
-                        TOIteratorFactory.NewNPCIterator(
-                            ignoreTiles ? n => n.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, n.Center)) <= maxDistanceToCheckSquared
-                            : n => n.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, n.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, n.Center, 1, 1)))
+                    foreach (NPC npc in NPC.ActiveNPCs)
                     {
-                        if (target is null || distanceTemp1 < distanceTemp2)
+                        float distanceSquared = Vector2.DistanceSquared(origin, npc.Center);
+                        if (!npc.CanBeChasedBy() || distanceSquared > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1)))
+                            continue;
+
+                        if (target is null || distanceSquared < distanceTemp)
                         {
                             target = npc;
-                            distanceTemp2 = distanceTemp1;
+                            distanceTemp = distanceSquared;
                         }
                     }
                 }
@@ -196,38 +200,38 @@ public static class TOKinematicUtils
         switch (priorityType)
         {
             case PriorityType.LifeMax:
-                foreach (Player player in
-                    TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? p => p.Alive && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared
-                        : p => p.Alive && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1)))
+                foreach (Player player in Player.AlivePlayers)
                 {
+                    if (Vector2.DistanceSquared(origin, player.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, player.Center, 1, 1)))
+                        continue;
+
                     if (target is null || player.statLifeMax2 > target.statLifeMax2)
                         target = player;
                 }
                 return target;
             case PriorityType.Life:
-                foreach (Player player in
-                    TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? p => p.Alive && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared
-                        : p => p.Alive && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1)))
+                foreach (Player player in Player.AlivePlayers)
                 {
+                    if (Vector2.DistanceSquared(origin, player.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, player.Center, 1, 1)))
+                        continue;
+
                     if (target is null || player.statLife > target.statLife)
                         target = player;
                 }
                 return target;
             case PriorityType.Closest:
             default:
-                float distanceTemp1 = 0f;
-                float distanceTemp2 = maxDistanceToCheckSquared;
-                foreach (Player player in
-                    TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? p => p.Alive && (distanceTemp1 = Vector2.DistanceSquared(origin, p.Center)) <= maxDistanceToCheckSquared
-                        : p => p.Alive && (distanceTemp1 = Vector2.DistanceSquared(origin, p.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1)))
+                float distanceTemp = maxDistanceToCheckSquared;
+                foreach (Player player in Player.AlivePlayers)
                 {
-                    if (target is null || distanceTemp1 < distanceTemp2)
+                    float distanceSquared = Vector2.DistanceSquared(origin, player.Center);
+                    if (distanceSquared > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, player.Center, 1, 1)))
+                        continue;
+
+                    if (target is null || distanceSquared < distanceTemp)
                     {
                         target = player;
-                        distanceTemp2 = distanceTemp1;
+                        distanceTemp = distanceSquared;
                     }
                 }
                 return target;
@@ -257,38 +261,38 @@ public static class TOKinematicUtils
         switch (priorityType)
         {
             case PriorityType.LifeMax:
-                foreach (Player player in
-                    TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? p => p.IsPvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared
-                        : p => p.IsPvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1), owner))
+                foreach (Player player in Player.PVPPlayers)
                 {
+                    if (player == owner || Vector2.DistanceSquared(origin, player.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, player.Center, 1, 1)))
+                        continue;
+
                     if (target is null || player.statLifeMax2 > target.statLifeMax2)
                         target = player;
                 }
                 return target;
             case PriorityType.Life:
-                foreach (Player player in
-                    TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? p => p.IsPvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared
-                        : p => p.IsPvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1), owner))
+                foreach (Player player in Player.PVPPlayers)
                 {
+                    if (player == owner || Vector2.DistanceSquared(origin, player.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, player.Center, 1, 1)))
+                        continue;
+
                     if (target is null || player.statLife > target.statLife)
                         target = player;
                 }
                 return target;
             case PriorityType.Closest:
             default:
-                float distanceTemp1 = 0f;
-                float distanceTemp2 = maxDistanceToCheckSquared;
-                foreach (Player player in
-                    TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? p => p.IsPvP && (distanceTemp1 = Vector2.DistanceSquared(origin, p.Center)) <= maxDistanceToCheckSquared
-                        : p => p.IsPvP && (distanceTemp1 = Vector2.DistanceSquared(origin, p.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1), owner))
+                float distanceTemp = maxDistanceToCheckSquared;
+                foreach (Player player in Player.PVPPlayers)
                 {
-                    if (target is null || distanceTemp1 < distanceTemp2)
+                    float distanceSquared = Vector2.DistanceSquared(origin, player.Center);
+                    if (player == owner || distanceSquared > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, player.Center, 1, 1)))
+                        continue;
+
+                    if (target is null || distanceSquared < distanceTemp)
                     {
                         target = player;
-                        distanceTemp2 = distanceTemp1;
+                        distanceTemp = distanceSquared;
                     }
                 }
                 return target;

@@ -40,15 +40,3 @@ public class ILEditingMethodToAttribute : Attribute
     /// <param name="targetType">目标源类型。</param>
     public ILEditingMethodToAttribute(Type targetType) => SourceType = targetType ?? throw new ArgumentNullException(nameof(targetType));
 }
-
-/// <summary>
-/// 标记一个不在 IL 编辑类中的方法，指明其要编辑 IL 的目标泛型源类型。
-/// </summary>
-/// <typeparam name="T">目标源类型。</typeparam>
-public class ILEditingMethodToAttribute<T> : ILEditingMethodToAttribute
-{
-    /// <summary>
-    /// 初始化 <see cref="ILEditingMethodToAttribute{T}"/> 的新实例。
-    /// </summary>
-    public ILEditingMethodToAttribute() : base(typeof(T)) { }
-}

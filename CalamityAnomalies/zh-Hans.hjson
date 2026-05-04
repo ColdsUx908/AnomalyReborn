@@ -1,0 +1,10 @@
+Mods: {
+	CalamityAnomalies: {
+		DeveloperContents: {
+			TestItem: {
+				// DisplayName: Test Item
+				// Tooltip: ""
+			}
+		}
+	}
+}

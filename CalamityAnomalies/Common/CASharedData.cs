@@ -26,6 +26,8 @@ public sealed class CASharedData : ModSystem
 
     public static readonly Color GFBColor = Color.IndianRed;
 
+    public static readonly Color RebornColor = new(0xff, 0xa5, 0x00);
+
     public static Assembly Assembly => field ??= CAMain.Instance.Code;
 
     public static string ModName => field ??= CAMain.Instance.Name;
@@ -98,6 +100,11 @@ public sealed class CASharedData : ModSystem
     }
     public static event Action<bool> OnAnomalyUltramundaneToggled;
 
+    /// <summary>
+    /// 故事模式。
+    /// </summary>
+    public static bool StoryMode { get; internal set; }
+
     public override void OnWorldLoad()
     {
         AnomalyUltramundane = false;
@@ -123,6 +130,12 @@ public sealed class CASharedData : ModSystem
         tag["Anomaly"] = Anomaly;
     }
     #endregion World
+
+    public static class QuickAccess
+    {
+        public static bool Ultra => AnomalyUltramundane;
+        public static bool Story => StoryMode;
+    }
 }
 
 

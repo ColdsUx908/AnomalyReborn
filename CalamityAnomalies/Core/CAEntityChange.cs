@@ -88,8 +88,6 @@ public enum CalamityLogicType_NPCBehavior
 
 public abstract class CASingleNPCBehavior : SingleNPCBehavior
 {
-    public static bool Ultra => CASharedData.AnomalyUltramundane;
-
     public sealed override CAMain Mod => CAMain.Instance;
 
     public CAGlobalNPC AnomalyNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }
@@ -160,8 +158,6 @@ public enum OrigMethodType_CalamityGlobalProjectile
 
 public abstract class CASingleProjectileBehavior : SingleProjectileBehavior
 {
-    public static bool Ultra => CASharedData.AnomalyUltramundane;
-
     public sealed override CAMain Mod => CAMain.Instance;
 
     public CAGlobalProjectile AnomalyProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }
@@ -205,8 +201,6 @@ public abstract class AnomalyProjecileBehavior<T> : CASingleProjectileBehavior<T
 
 public abstract class CASingleItemBehavior : SingleItemBehavior
 {
-    public static bool Ultra => CASharedData.AnomalyUltramundane;
-
     public sealed override CAMain Mod => CAMain.Instance;
 
     public CAGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }

@@ -2,17 +2,16 @@
 
 #define CELESS_DEV
 
-using CalamityAnomalies.GameContents;
 using CalamityMod.NPCs.DevourerofGods;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework.Input;
 using Terraria.GameContent.ItemDropRules;
 using Transoceanic.Framework.Helpers.AbstractionHandlers;
 
-namespace CalamityAnomalies.DeveloperContents;
+namespace CalamityAnomalies.GameContents.Developer;
 
 #region 物品
-public sealed class ColdheartIcicle : CAModItem
+public sealed class ColdheartIcicle : CALegendaryItem
 {
     #region Static
     public const int SpriteWidth = 24;
@@ -24,10 +23,7 @@ public sealed class ColdheartIcicle : CAModItem
     #endregion Static
 
     #region 传奇
-    public int Phase = 1;
-    public int SubPhase = 1;
-
-    public void LegendaryUpdate()
+    public override void LegendaryUpdate()
     {
         if (DownedBossSystem_Bridge.downedPrimordialWyrm)
         {
@@ -102,7 +98,7 @@ public sealed class ColdheartIcicle : CAModItem
         }
     }
 
-    public void LegendaryUpdate(Player player)
+    public override void LegendaryUpdate(Player player)
     {
         LegendaryUpdate();
         CAPlayer anomalyPlayer = player.Anomaly;
@@ -113,7 +109,7 @@ public sealed class ColdheartIcicle : CAModItem
 
     public override string Texture => TexturePath;
 
-    public override string LocalizationCategory => "DeveloperContents";
+    public override string LocalizationCategory => "GameContents.Developer";
 
     public override void SetStaticDefaults()
     {
@@ -150,7 +146,7 @@ public sealed class ColdheartIcicle : CAModItem
 
     public override void UpdateInventory(Player player)
     {
-        LegendaryUpdate();
+        LegendaryUpdate(player);
     }
 
     public override bool AltFunctionUse(Player player) => true;
@@ -258,7 +254,7 @@ public sealed class ColdheartIcicleProj : BaseShortswordProjectile, ICAModProjec
 {
     public override string Texture => ColdheartIcicle.TexturePath;
 
-    public new string LocalizationCategory => "DeveloperContents";
+    public new string LocalizationCategory => "GameContents.Developer";
 
     public bool IsRightClick;
     public int Phase = 1;
@@ -296,7 +292,7 @@ public sealed class ColdheartIcicleProj : BaseShortswordProjectile, ICAModProjec
     public override void AI()
     {
         Behavior();
-        if (Projectile.OnOwnerClient)
+        if (Projectile.IsOnOwnerClient)
         {
             if (IsRightClick)
             {
@@ -433,7 +429,7 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IContentLoader
 
     public override string Texture => TOTextures.InvisibleTexturePath;
 
-    public override string LocalizationCategory => "DeveloperContents";
+    public override string LocalizationCategory => "GameContents.Developer";
 
     public override void SetDefaults()
     {
@@ -695,7 +691,7 @@ public sealed class ColdheartIcicleSnowflake : CAModProjectile, ICAModProjectile
 
     public override string Texture => TOTextures.InvisibleTexturePath;
 
-    public override string LocalizationCategory => "DeveloperContents";
+    public override string LocalizationCategory => "GameContents.Developer";
 
     public override void SetDefaults()
     {
@@ -828,7 +824,7 @@ public sealed class ColdheartIcicleIceRain : CAModProjectile
 {
     public override string Texture => CASharedData.CATexturePath + "Touhou/Ice1";
 
-    public override string LocalizationCategory => "DeveloperContents";
+    public override string LocalizationCategory => "GameContents.Developer";
 }
 
 #endregion 弹幕

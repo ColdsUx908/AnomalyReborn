@@ -126,7 +126,7 @@ public static class EyeofCthulhu_Handler
     private static Asset<Texture2D> _bloodOrbBigBorderTexture;
     public static Texture2D BloodOrbBigBorderTexture => _bloodOrbBigBorderTexture.Value;
 
-    public static readonly SoundStyle HighlightActivateSound = new(AnomalyEyeofCthulhuPath + "HighlightActivate");
+    public static readonly SoundStyle HighlightActivateSound = new(AnomalyEyeofCthulhuPath + "HighlightActivate") { MaxInstances = 0 };
 
     public static float MaxArenaRadius => 480f; //30格
 
@@ -149,6 +149,9 @@ public static class EyeofCthulhu_Handler
 
     public static void ShootProjectile(NPC npc, int type, int damage, float speed, int amount, float halfRange, Action<Projectile> action = null)
     {
+        if (amount <= 0)
+            return;
+
         float offset = npc.type == NPCID.EyeofCthulhu ? EyeofCthulhu_Anomaly.ProjectileOffset
             : npc.ModNPC is BloodlettingServant ? BloodlettingServant.ProjectileOffset
             : 0f;

@@ -146,7 +146,10 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
             {
                 Texture2D texture = particle.Texture;
                 Rectangle? frame = particle.GetFrame(texture);
-                spriteBatch.DrawFromCenter(texture, particle.Center - Main.screenPosition, frame, particle.Color, particle.Rotation, particle.Scale, SpriteEffects.None, 0f);
+                Color color = particle.Color;
+                if (particle.AffectedByLight)
+                    color.MultiplyWithWorldLight(particle.Center);
+                spriteBatch.DrawFromCenter(texture, particle.Center - Main.screenPosition, frame, color, particle.Rotation, particle.Scale, SpriteEffects.None, 0f);
             }
 
             particle.PostDraw(spriteBatch);

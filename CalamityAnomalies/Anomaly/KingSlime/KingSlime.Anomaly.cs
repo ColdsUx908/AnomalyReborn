@@ -1,5 +1,6 @@
 ﻿// Developed by ColdsUx
 
+using CalamityAnomalies.DataStructures;
 using CalamityMod.NPCs.NormalNPCs;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
@@ -389,6 +390,8 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
      */
     #endregion 数据
 
+    public static KingSlime_Anomaly GetNewInstance(NPC npc) => new() { _entity = npc };
+
     public string LocalizationPrefix => CASharedData.AnomalyLocalizationPrefix + "KingSlime";
 
     public override int ApplyingType => NPCID.KingSlime;
@@ -408,6 +411,11 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
         JewelRuby = NPC.DummyNPC;
         JewelEmerald = NPC.DummyNPC;
         JewelSapphire = NPC.DummyNPC;
+
+        AnomalyNPC.DynamicDRHandler = new(
+            new DynamicDamageReductionHandler.SingleDDRHandler(1f, Phase2LifeRatio, null, n => GetNewInstance(n).CurrentPhase >= Phase.PhaseChange_1To2, 60),
+            new DynamicDamageReductionHandler.SingleDDRHandler(0.5f, 0f, n => GetNewInstance(n).Phase2, null, 30)
+        );
     }
 
     public override bool CheckActive() => false;

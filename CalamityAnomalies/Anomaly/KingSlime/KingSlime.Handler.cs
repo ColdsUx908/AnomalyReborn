@@ -29,11 +29,12 @@ public sealed class KingSlime_Handler : IContentLoader
     private static Asset<Texture2D> _rainbowShardTexture;
     public static Texture2D RainbowShardTexture => _rainbowShardTexture.Value;
 
-    public static readonly SoundStyle SpawnSound = new("CalamityMod/Sounds/Custom/KingSlimeJewelSpawn") { Volume = 1f };
+    public static readonly SoundStyle SpawnSound = new(AnomalyKingSlimePath + "JewelSpawn");
     public static readonly SoundStyle ShatterSound = new(AnomalyKingSlimePath + "JewelShatter");
     public static readonly SoundStyle ShootSound = new("CalamityMod/Sounds/Custom/RedJewelFire");
-    public static readonly SoundStyle DashSound = new(AnomalyKingSlimePath + "JewelDash");
-    public static readonly SoundStyle HitSound = new(AnomalyKingSlimePath + "JewelHit", 3);
+    public static readonly SoundStyle DashSoundNormal = new(AnomalyKingSlimePath + "JewelDashNormal");
+    public static readonly SoundStyle DashSoundBuff = new(AnomalyKingSlimePath + "JewelDashBuff");
+    public static readonly SoundStyle HitSound = new(AnomalyKingSlimePath + "JewelHit", 3) { Volume = 0.6f };
 
     public static Color RubyColor => Main.zenithWorld ? Color.Cyan : Color.Red;
     public static Color EmeraldColor => Main.zenithWorld ? Color.Purple : Color.Lime with { B = 40 };

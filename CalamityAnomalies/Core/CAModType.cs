@@ -37,8 +37,6 @@ public interface ICAModNPC
 
 public abstract class CAModNPC : TOModNPC, ICAModNPC
 {
-    public static bool Ultra => CASharedData.AnomalyUltramundane;
-
     public CAGlobalNPC AnomalyNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => NPC.Anomaly; }
     public CalamityGlobalNPC CalamityNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => NPC.CalamityNPC; }
 
@@ -55,8 +53,6 @@ public interface ICAModProjectile
 
 public abstract class CAModProjectile : TOModProjectile, ICAModProjectile
 {
-    public static bool Ultra => CASharedData.AnomalyUltramundane;
-
     public CAGlobalProjectile AnomalyProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Projectile.Anomaly; }
     public CalamityGlobalProjectile CalamityProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Projectile.CalamityProjectile; }
 
@@ -70,8 +66,6 @@ public interface ICAModItem
 
 public abstract class CAModItem : TOModItem, ICAModItem
 {
-    public static bool Ultra => CASharedData.AnomalyUltramundane;
-
     public CAGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Item.Anomaly; }
     public CalamityGlobalItem CalamityItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Item.CalamityItem; }
 

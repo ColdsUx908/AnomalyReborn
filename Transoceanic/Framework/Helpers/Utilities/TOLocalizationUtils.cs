@@ -6,6 +6,8 @@ namespace Transoceanic.Framework.Helpers;
 
 public static class TOLocalizationUtils
 {
+    public static LocalizedText GetItemName<T>() where T : ModItem => ItemLoader.GetItem(ModContent.ItemType<T>()).GetLocalization("DisplayName");
+
     public static void ChatLiteralText(string text, Color? textColor = null)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)

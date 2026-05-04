@@ -1,0 +1,43 @@
+Developer: {
+	AscendantWings: {
+		DisplayName: Ascendant Wings
+		Tooltip:
+			'''
+			Legendary wings that soar through the sky
+			Created from the feathers of a golden eagle struck by lightning on a stormy night
+			They can carry you to any height with a single flap
+			'''
+	}
+
+	ColdheartIcicle: {
+		DisplayName: Coldheart Icicle
+		Tooltip: ""
+	}
+
+	ColdheartIcicleDream.DisplayName: Coldheart Icicle Dream
+	ColdheartIcicleIceRain.DisplayName: Coldheart Icicle Ice Rain
+	ColdheartIcicleProj.DisplayName: Coldheart Icicle
+	ColdheartIcicleSnowflake.DisplayName: Coldheart Icicle Snowflake
+
+	Permafrost: {
+		Spawn: Permafrost has awoken!
+		Welcome1: ""
+		Welcome2: ""
+		Beginning: ""
+	}
+
+	TestItem: {
+		DisplayName: Test Item
+		Tooltip: ""
+	}
+}
+
+Contributor: {
+	ImmaculateWhite: {
+		DisplayName: Immaculate White
+		Tooltip: ""
+	}
+
+	ImmaculateLight.DisplayName: Immaculate Light
+	ImmaculateBolt.DisplayName: Immaculate Bolt
+}

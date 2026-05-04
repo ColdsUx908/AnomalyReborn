@@ -109,7 +109,7 @@ public static partial class TOExtensions
         /// <param name="keepVelocity">是否保持速度大小。</param>
         /// <param name="velocityOverride">覆盖的速度大小。</param>
         /// <returns>追踪是否成功。若目标实体无效（<c>null</c> 或未激活）或追踪失败则返回 <see langword="false"/>。</returns>
-        public bool Homing<T>(T target, HomingAlgorithm algorithm = HomingAlgorithm.SmoothStep, float homingRatio = 1f, float? maxHomingDistance = null, float sightAngle = MathHelper.TwoPi, bool keepVelocity = true, float? velocityOverride = null) where T : Entity =>
+        public bool HomeIn<T>(T target, HomingAlgorithm algorithm = HomingAlgorithm.SmoothStep, float homingRatio = 1f, float? maxHomingDistance = null, float sightAngle = MathHelper.TwoPi, bool keepVelocity = true, float? velocityOverride = null) where T : Entity =>
             target is not null && target.active && entity.HomeInOn(target.Center, algorithm, homingRatio, maxHomingDistance, sightAngle, keepVelocity, velocityOverride);
     }
 }

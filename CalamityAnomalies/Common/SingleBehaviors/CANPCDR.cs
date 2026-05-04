@@ -19,6 +19,8 @@ public sealed class CANPCDR : CAGlobalNPCBehavior, IContentLoader
 
     public override decimal Priority => 100m;
 
+    public override void PostAI(NPC npc) => npc.Anomaly.DynamicDRHandler?.Update(npc);
+
     public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
     {
         float baseDR = GetBaseDR(npc);
@@ -36,7 +38,7 @@ public sealed class CANPCDR : CAGlobalNPCBehavior, IContentLoader
 
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);
-        float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR));
+        float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR) + (npc.Anomaly.DynamicDRHandler?.GetCurrentDDR(npc) ?? 0f));
 
         modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR - npc.Anomaly.ExtraDR, 0f, 1f);
     }
@@ -58,7 +60,7 @@ public sealed class CANPCDR : CAGlobalNPCBehavior, IContentLoader
 
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);
-        float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR));
+        float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR) + (npc.Anomaly.DynamicDRHandler?.GetCurrentDDR(npc) ?? 0f));
 
         modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR - npc.Anomaly.ExtraDR, 0f, 1f);
     }
@@ -91,9 +93,9 @@ public sealed class CANPCDR : CAGlobalNPCBehavior, IContentLoader
             float extraDRLimit = (1f - baseDR) * tdrFactor / 2f;
             float lifeCompletion = npc.LostLifeRatio;
             float timeCompletion = (float)aiTimer / killTime;
-            float timedDRStrength = lifeCompletion - timeCompletion;
-            if (timedDRStrength > 0f)
-                timedDR = extraDRLimit * timedDRStrength / (1 + timedDRStrength);
+            float tdrIntensity = lifeCompletion - timeCompletion;
+            if (tdrIntensity > 0f)
+                timedDR = extraDRLimit * tdrIntensity / (1 + tdrIntensity);
         }
 
         return timedDR;

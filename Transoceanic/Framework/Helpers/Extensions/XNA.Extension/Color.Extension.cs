@@ -28,6 +28,16 @@ public static partial class TOExtensions
         public string FormatString(string input) => $"[c/{color.ToHexCode()}:{input}]";
     }
 
+    extension(ref Color color)
+    {
+        /// <summary>
+        /// 将当前颜色与指定位置的世界光照颜色进行乘法混合，得到最终的显示颜色。
+        /// </summary>
+        /// <param name="center">要获取光照的中心位置。</param>
+        /// <returns>乘法混合后的颜色。</returns>
+        public void MultiplyWithWorldLight(Vector2 center) => color =  color.MultiplyRGBA(Lighting.GetColor(center.ToTileCoordinates()));
+    }
+
     extension(Color)
     {
         /// <summary>

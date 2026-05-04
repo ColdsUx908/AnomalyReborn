@@ -1299,7 +1299,7 @@ public sealed partial class EmpressofLight_Anomaly : AnomalyNPCBehavior
                 float fadeInScalar = MathHelper.Lerp(1.3f, 0.7f, npc.Opacity) * Utils.GetLerpValue(0f, 120f, timer, clamped: true);
                 Color newColor = Main.hslToRgb(timer / spawnTime, 1f, 0.5f);
                 int dust = Dust.NewDust(npc.position, npc.width, npc.height, DustID.RainbowMk2, 0f, 0f, 0, newColor);
-                Main.dust[dust].position = npc.Center + Main.rand.NextVector2Circular((float)npc.width * 3f, (float)npc.height * 3f) + new Vector2(0f, -150f);
+                Main.dust[dust].position = npc.Center + Main.rand.NextVector2Circular(npc.width * 3f, npc.height * 3f) + new Vector2(0f, -150f);
                 Main.dust[dust].velocity *= Main.rand.NextFloat() * 0.8f;
                 Main.dust[dust].noGravity = true;
                 Main.dust[dust].fadeIn = 0.6f + Main.rand.NextFloat() * 0.7f * fadeInScalar;

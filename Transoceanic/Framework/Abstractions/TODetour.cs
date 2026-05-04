@@ -137,18 +137,6 @@ public class DetourClassToAttribute : Attribute
 }
 
 /// <summary>
-/// 标记一个类，表明该类中的所有静态方法都将尝试作为指定泛型类型的 Detour 方法。
-/// </summary>
-/// <typeparam name="T">目标源类型。</typeparam>
-public class DetourClassToAttribute<T> : DetourClassToAttribute where T : class
-{
-    /// <summary>
-    /// 初始化 <see cref="DetourClassToAttribute{T}"/> 的新实例。
-    /// </summary>
-    public DetourClassToAttribute() : base(typeof(T)) { }
-}
-
-/// <summary>
 /// 标记一个类，表明该类中的所有静态方法都可能作为多个源类型之一的 Detour 方法，通过方法名前缀中的类型名区分。
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
@@ -195,18 +183,6 @@ public class DetourMethodToAttribute : Attribute
     /// </summary>
     /// <param name="targetType">目标源类型。</param>
     public DetourMethodToAttribute(Type targetType) => SourceType = targetType ?? throw new ArgumentNullException(nameof(targetType));
-}
-
-/// <summary>
-/// 标记一个不在 Detour 类中的方法，指明其要 Detour 的目标泛型源类型。
-/// </summary>
-/// <typeparam name="T">目标源类型。</typeparam>
-public class DetourMethodToAttribute<T> : DetourMethodToAttribute
-{
-    /// <summary>
-    /// 初始化 <see cref="DetourMethodToAttribute{T}"/> 的新实例。
-    /// </summary>
-    public DetourMethodToAttribute() : base(typeof(T)) { }
 }
 
 /// <summary>

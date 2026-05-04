@@ -71,7 +71,7 @@ public static partial class TOExtensions
         /// <summary>
         /// 判断弹幕的所有者是否为本地客户端。
         /// </summary>
-        public bool OnOwnerClient => projectile.owner == Main.myPlayer;
+        public bool IsOnOwnerClient => projectile.owner == Main.myPlayer;
 
         /// <summary>
         /// 判断弹幕是否正在进行最后一次更新（<see cref="Projectile.numUpdates"/> == -1）。
