@@ -117,4 +117,14 @@ public sealed class ImmaculateWhite : CALegendaryItem
             _ => 1f
         };
     }
+
+    public override void AddRecipes()
+    {
+        CreateRecipe()
+            .AddIngredient(ItemID.WoodenBow)
+            .AddIngredient(ItemID.AngelStatue)
+            .AddIngredient(ItemID.AngelHalo)
+            .AddCondition(Condition.NearShimmer)
+            .Register();
+    }
 }
