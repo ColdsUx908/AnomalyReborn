@@ -1,6 +1,7 @@
 ﻿// Developed by ColdsUx
 
 using CalamityAnomalies.DataStructures;
+using CalamityMod.Items.Potions.Alcohol;
 using Transoceanic.Framework.Helpers.Utilities;
 
 namespace CalamityAnomalies.Common;
@@ -21,6 +22,12 @@ public sealed class CAPlayer : ModPlayer
     //public readonly SmoothInt[] YharimsGift_Change = new SmoothInt[YharimsGift_Handler._totalBlessings];
     public Item YharimsGift_Last;
 
+    public int ImmaculateWhite_Timer
+    {
+        get;
+        set => field = Math.Max(0, value);
+    }
+
     public override ModPlayer Clone(Player newEntity)
     {
         CAPlayer clone = (CAPlayer)base.Clone(newEntity);
@@ -37,12 +44,15 @@ public sealed class CAPlayer : ModPlayer
         //Array.Copy(YharimsGift_Change, clone.YharimsGift_Change, YharimsGift_Change.Length);
         clone.YharimsGift_Last = YharimsGift_Last;
 
+        clone.ImmaculateWhite_Timer = ImmaculateWhite_Timer;
+
         return clone;
     }
 
     public override void ResetEffects()
     {
         Debuff_DimensionalRend = false;
+        ImmaculateWhite_Timer--;
     }
 }
 

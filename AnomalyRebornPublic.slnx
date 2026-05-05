@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Project Path="CalamityAnomalies/CalamityAnomalies.csproj" />
+  <Project Path="Transoceanic/Transoceanic.csproj" />
+  <Project Path="TransoceanicCodeAssist/TransoceanicCodeAssist.csproj" />
+</Solution>

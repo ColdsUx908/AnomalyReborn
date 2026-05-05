@@ -173,7 +173,7 @@ public sealed class ImmaculateBolt : CAModProjectile
         return false;
     }
 
-    public override bool? CanHitNPC(NPC target) => IsBigProjectile || Timer1 > 40;
+    public override bool? CanHitNPC(NPC target) => !target.friendly && (IsBigProjectile || Timer1 > 40);
 
     public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
     {

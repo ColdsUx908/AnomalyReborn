@@ -73,10 +73,9 @@ public sealed class ImmaculateWhite : CALegendaryItem
         Item.rare = ModContent.RarityType<Celestial>();
         Item.value = Celestial.CelestialPrice;
         Item.noUseGraphic = true;
-        CalamityItem.devItem = true;
     }
 
-    public override bool CanUseItem(Player player) => player.ownedProjectileCounts[Item.shoot] <= 0;
+    public override bool CanUseItem(Player player) => player.ownedProjectileCounts[Item.shoot] <= 0 && player.Anomaly.ImmaculateWhite_Timer == 0;
 
     public override bool CanConsumeAmmo(Item ammo, Player player) => player.ownedProjectileCounts[Item.shoot] > 0; //召唤弓本身不消耗弹药
 

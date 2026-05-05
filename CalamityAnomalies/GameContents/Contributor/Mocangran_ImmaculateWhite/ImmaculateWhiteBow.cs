@@ -27,7 +27,6 @@ public sealed class ImmaculateWhiteBow : CAModProjectile
         bool canUseItem = !player.CantUseHoldout() && player.HasAmmo(player.HeldItem);
         Vector2 actualPlayerPosition = player.RotatedRelativePoint(player.MountedCenter, true);
 
-
         if (Projectile.IsOnOwnerClient)
         {
             if (canUseItem)
@@ -74,7 +73,10 @@ public sealed class ImmaculateWhiteBow : CAModProjectile
                 Timer1++;
             }
             else
+            {
+                player.Anomaly.ImmaculateWhite_Timer = 90;
                 Projectile.Kill();
+            }
         }
     }
 
