@@ -44,8 +44,8 @@ public sealed class ImmaculateWhiteBow : CAModProjectile
             ShootSpeed -= 1f;
         if (NPC.downedGolemBoss)//石巨人
             ShootSpeed -= 1f;
-        if (DownedBossSystem_Bridge.downedCeaselessVoid 
-            && DownedBossSystem_Bridge.downedSignus 
+        if (DownedBossSystem_Bridge.downedCeaselessVoid
+            && DownedBossSystem_Bridge.downedSignus
             && DownedBossSystem_Bridge.downedStormWeaver)//无尽虚空、西格纳斯，风编
             ShootSpeed -= 1f;
         if (DownedBossSystem_Bridge.downedYharon)//犽戎

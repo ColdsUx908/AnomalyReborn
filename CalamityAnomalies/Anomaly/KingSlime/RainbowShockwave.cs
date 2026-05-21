@@ -1,11 +1,11 @@
 ﻿// Developed by ColdsUx
 
+using CalamityAnomalies.GameContents.Base;
 using CalamityMod.NPCs.NormalNPCs;
-using Transoceanic.DataStructures.GameContent;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
-public sealed class RainbowShockwave : TOShockwaveProjectile, IContentLoader
+public sealed class RainbowShockwave : BaseShockwaveProjectile, IContentLoader
 {
     public override bool Hostile => false;
     public override List<int> NPCTypesToHit => _npcTypesToHit;

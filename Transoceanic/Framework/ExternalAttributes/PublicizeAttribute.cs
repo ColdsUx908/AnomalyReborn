@@ -7,7 +7,7 @@ namespace Transoceanic.Framework.ExternalAttributes;
 /// </summary>
 /// <remarks>
 /// 将此特性应用于一个 <see langword="partial"/> 类（该类可选择继承 <see cref="InstancedPublicizer"/> 类以获得 <c>Source</c> 字段），并传入目标类型的 <see cref="Type"/> 对象。
-/// 源生成器 <c>PublicizerGenerator</c> 会在编译时扫描目标类型的所有非公开成员，为它们生成对应的公共包装属性/方法，从而允许在外部代码中通过反射动态访问这些成员。
+/// <br/>源生成器 <c>PublicizerGenerator</c> 会在编译时扫描目标类型的所有非公开成员，为它们生成对应的公共包装属性/方法，从而允许在外部代码中通过反射动态访问这些成员。
 /// <para/>
 /// 生成的包装类将包含：
 /// <list type="bullet">

@@ -22,7 +22,16 @@ public partial class BloodlettingServant : CAModNPC
         set => field = TOMathUtils.NormalizeWithPeriod(value);
     }
 
-    public bool ShouldUsePhase2Frame;
+    public bool ShouldUsePhase2Frame
+    {
+        get => AI_Union_0.bits[0];
+        set
+        {
+            Union32 union = AI_Union_0;
+            union.bits[0] = value;
+            AI_Union_0 = union;
+        }
+    }
     public BehaviorCommand_Servant MasterCommandReceiver;
     public float FollowDistance;
     public float ArenaRadius;
@@ -158,6 +167,7 @@ public partial class BloodlettingServant : CAModNPC
             EyeofCthulhu_Handler.ShootProjectile(NPC, ProjectileID.BloodShot, EyeofCthulhu_Anomaly.BloodDamage, projectileSpeed, amount, MathHelper.ToRadians(15f), p => p.timeLeft = 300);
 
             MasterCommandReceiver = BehaviorCommand_Servant.None;
+            NPC.netUpdate = true;
         }
 
         void ChangeFollowDistance()
@@ -170,7 +180,10 @@ public partial class BloodlettingServant : CAModNPC
             NPC.Center = master.Center + offset;
 
             if (Timer4 == (increase ? 10 : 0))
+            {
                 MasterCommandReceiver = BehaviorCommand_Servant.None;
+                NPC.netUpdate = true;
+            }
         }
 
         void GetToArenaPosition()
@@ -181,6 +194,7 @@ public partial class BloodlettingServant : CAModNPC
             if (masterBehavior.Phase3)
             {
                 MasterCommandReceiver = BehaviorCommand_Servant.None;
+                NPC.netUpdate = true;
                 return;
             }
 
@@ -573,4 +587,22 @@ public partial class BloodlettingServant : CAModNPC
         return true;
     }
     #endregion Zenith
+
+    public override void SendExtraAI(BinaryWriter writer)
+    {
+        writer.Write((int)Place);
+        writer.Write(PositionRotation);
+        writer.Write((int)MasterCommandReceiver);
+        writer.Write(FollowDistance);
+        writer.Write(ArenaRadius);
+    }
+
+    public override void ReceiveExtraAI(BinaryReader reader)
+    {
+        Place = (ServantPlace)reader.ReadInt32();
+        PositionRotation = reader.ReadSingle();
+        MasterCommandReceiver = (BehaviorCommand_Servant)reader.ReadInt32();
+        FollowDistance = reader.ReadSingle();
+        ArenaRadius = reader.ReadSingle();
+    }
 }

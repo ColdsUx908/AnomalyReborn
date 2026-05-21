@@ -58,6 +58,37 @@ public static partial class TOExtensions
         /// <param name="quiet">是否安静添加（不发出声音或特效）。</param>
         /// <param name="foodHack">是否为食物类增益。</param>
         public void AddBuff<T>(int time, bool quiet = false, bool foodHack = false) where T : ModBuff => player.AddBuff(ModContent.BuffType<T>(), time, quiet, foodHack);
+
+        /// <summary>
+        /// 使玩家进入无法行动状态。
+        /// </summary>
+        /// <param name="preventDashing">是否禁止玩家冲刺。</param>
+        public void Incapacitate(bool preventDashing = true)
+        {
+            player.controlLeft = false;
+            player.controlRight = false;
+            player.controlJump = false;
+            player.controlDown = false;
+            player.controlUseItem = false;
+            player.controlUseTile = false;
+            player.controlHook = false;
+            player.releaseHook = true;
+
+            if (player.grapCount > 0)
+                player.RemoveAllGrapplingHooks();
+            if (player.mount.Active)
+                player.mount.Dismount(player);
+            if (preventDashing)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    player.doubleTapCardinalTimer[i] = 0;
+                    player.holdDownCardinalTimer[i] = 0;
+                }
+            }
+            if (player.dashDelay < 10 && preventDashing)
+                player.dashDelay = 10;
+        }
     }
 
     extension(Player)

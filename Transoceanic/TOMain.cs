@@ -32,7 +32,6 @@ global using Transoceanic.DataStructures;
 global using Transoceanic.Framework.Abstractions;
 global using Transoceanic.Framework.ExternalAttributes;
 global using Transoceanic.Framework.Helpers;
-global using Transoceanic.Framework.Helpers.AbstractionHandlers;
 
 namespace Transoceanic;
 

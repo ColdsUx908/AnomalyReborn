@@ -1,14 +1,10 @@
 ﻿// Developed by ColdsUx
 
-using Terraria.GameContent.ItemDropRules;
-
 namespace CalamityAnomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
 
 public sealed class ImmaculateBolt : CAModProjectile
 {
-    //似乎是存了一个最大timelife，但是好像有些错位
-    //方便热重载暂时从常量改成字段，不过这玩意真有必要做个常量吗
-    public int LifeTime = 2400;
+    public const int LifeTime = 2400;
 
     public NPC Target
     {
@@ -23,10 +19,10 @@ public sealed class ImmaculateBolt : CAModProjectile
 
     public bool IsNotSmallProjectile => Projectile.ai[1] != 1f;
 
-    public float NPCMaxLife { get; set; }//存一下npc的生命值，应该？不需要同步吧
-    public bool IsFirstHit { get; set; } = true;//第一次击中npc，也许（？）可以模拟一下穿透数。
-    public int ItemPentrate { get; set; } = 1;//存储穿透数
-    public int PentrateExtraDamage { get; set; }//穿透数额外伤害，超过原本伤害上限的部分会以这种形式存在，下一次击中时会加到伤害里
+    public float NPCMaxLife;
+    public bool IsFirstHit = true;
+    public int ItemPentrate= 1;
+    public int PentrateExtraDamage;
 
     public override string LocalizationCategory => "GameContents.Contributor";
 
@@ -44,7 +40,7 @@ public sealed class ImmaculateBolt : CAModProjectile
         Projectile.height = 30;
         Projectile.alpha = 255;
         Projectile.friendly = true;
-        Projectile.timeLeft = 2400;
+        Projectile.timeLeft = LifeTime;
         Projectile.tileCollide = false;
         Projectile.DamageType = DamageClass.Magic;
         Projectile.ignoreWater = true;
@@ -100,7 +96,7 @@ public sealed class ImmaculateBolt : CAModProjectile
         Texture2D projectileTexture = asset.Value;
         int frameHeight = asset.Height() / Main.projFrames[type];
         int sourceY = frameHeight * Projectile.frame;
-        Rectangle sourceRectangle = new Rectangle(0, sourceY, projectileTexture.Width, frameHeight);
+        Rectangle sourceRectangle = new(0, sourceY, projectileTexture.Width, frameHeight);
         Vector2 origin = sourceRectangle.Size() / 2f;
         Vector2 positionOffset = Vector2.Zero;
         float rotationOffset = 0f;
@@ -171,7 +167,7 @@ public sealed class ImmaculateBolt : CAModProjectile
         Vector2 glowScaleHorizontal = new Vector2(0.5f, 2f) * glowFactor;
         tearsBaseColor *= glowFactor;
         tearsDimColor *= glowFactor;
-        
+
         // Offset multiplier is zero, so position stays the same
         int glowOffsetMultiplier = 0;
         Vector2 glowPosition = centerScreenPos + Projectile.velocity.SafeNormalize(Vector2.Zero) * MathHelper.Lerp(0.5f, 1f, Projectile.localAI[0] / 60f) * glowOffsetMultiplier;

@@ -133,11 +133,7 @@ public abstract class GeneralEntityBehavior<TEntity> : EntityBehavior<TEntity> w
 /// <typeparam name="TEntity">行为所附加的实体类型。</typeparam>
 public abstract class GlobalEntityBehavior<TEntity> : GeneralEntityBehavior<TEntity> where TEntity : Entity
 {
-    /// <summary>
-    /// 用于设置实体的默认值。当实体初次创建或重置时，该行为会调用此方法。
-    /// </summary>
-    /// <param name="entity">要设置默认值的实体实例。</param>
-    /// <remarks>等效于 <see cref="GlobalType{TEntity, TGlobal}.SetDefaults(TEntity)"/> 的行为。</remarks>
+    /// <inheritdoc cref="GlobalType{TEntity, TGlobal}.SetDefaults(TEntity)"/>
     public virtual void SetDefaults(TEntity entity) { }
 }
 
@@ -149,14 +145,11 @@ public abstract class GlobalEntityBehavior<TEntity> : GeneralEntityBehavior<TEnt
 public abstract class SingleEntityBehavior<TEntity> : EntityBehavior<TEntity> where TEntity : Entity
 {
     /// <summary>
-    /// 获取此行为所应用的实体类型标识（通常为实体类型的唯一 ID）。
+    /// 此行为所应用的实体 ID。
     /// </summary>
     public abstract int ApplyingType { get; }
 
-    /// <summary>
-    /// 为此行为设定的实体设置默认值。该方法仅在实体匹配 <see cref="ApplyingType"/> 时被调用。
-    /// </summary>
-    /// <remarks>等效于 <see cref="GlobalType{TEntity, TGlobal}.SetDefaults(TEntity)"/> 的作用，但只针对特定实体类型。</remarks>
+    /// <inheritdoc cref="GlobalType{TEntity, TGlobal}.SetDefaults(TEntity)"/>
     public virtual void SetDefaults() { }
 }
 #endregion Base

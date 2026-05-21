@@ -15,7 +15,7 @@ public static partial class TOExtensions
         /// 获取物品所关联的 <see cref="ModItem"/> 实例，并转换为指定类型。
         /// </summary>
         /// <typeparam name="T">目标 <see cref="ModItem"/> 类型。</typeparam>
-        /// <returns>转换后的实例，若不存在则返回 <c>null</c>。</returns>
+        /// <returns>转换后的实例，若不存在则返回 <see langword="null"/>。</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetModItem<T>() where T : ModItem => item?.ModItem as T;
 
@@ -32,7 +32,7 @@ public static partial class TOExtensions
         /// 尝试获取物品所关联的 <see cref="ModItem"/> 实例，并转换为指定类型。
         /// </summary>
         /// <typeparam name="T">目标 <see cref="ModItem"/> 类型。</typeparam>
-        /// <param name="result">输出转换后的实例，成功时为有效值，否则为 <c>null</c>。</param>
+        /// <param name="result">输出转换后的实例，成功时为有效值，否则为 <see langword="null"/>。</param>
         /// <returns>如果成功获取则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetModItem<T>([NotNullWhen(true)] out T result) where T : ModItem => (result = item.GetModItem<T>()) is not null;
@@ -72,7 +72,7 @@ public static partial class TOExtensions
     extension(Item)
     {
         /// <summary>
-        /// 获取一个迭代器，用于遍历所有激活状态的物品（<see cref="Item.active"/> 为 <see langword="true"/>）。
+        /// 获取一个迭代器，用于遍历所有激活状态的物品（<see cref="Entity.active"/> 为 <see langword="true"/>）。
         /// </summary>
         public static TOIterator<Item> ActiveItems => TOIteratorFactory.NewItemIterator(IteratorMatches.Item_IsActive);
 

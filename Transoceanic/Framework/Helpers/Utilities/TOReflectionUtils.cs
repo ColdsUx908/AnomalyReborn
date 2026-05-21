@@ -87,31 +87,53 @@ public static class TOReflectionUtils
     ];
 
     /// <summary>
-    /// 安全地创建指定类型的实例，绕过访问修饰符限制，并处理抽象类、接口、值类型以及无参构造函数缺失的情况。
+    /// 安全地尝试创建类型的实例。此方法不会因为构造函数抛出异常而导致调用失败，但可能返回未初始化或默认值的对象。
     /// </summary>
-    /// <param name="type">要实例化的类型。</param>
-    /// <param name="notInitialize">若为 <see langword="true"/>，则强制使用 <see cref="RuntimeHelpers.GetUninitializedObject"/> 创建未初始化实例，忽略默认构造函数。</param>
-    /// <returns>创建的实例；若类型为抽象类或接口，则返回 <see langword="null"/>。</returns>
+    /// <param name="type">要创建实例的类型。</param>
+    /// <param name="notInitialize">
+    /// 为 <see langword="true"/> 时，即使存在无参构造函数也跳过调用（仅对引用类型有效；值类型始终尝试调用无参构造函数）。
+    /// </param>
+    /// <returns>
+    /// 创建的实例。如果 <paramref name="type"/> 为抽象类或接口，返回 <see langword="null"/>；
+    /// 对于引用类型，在构造函数被跳过或抛出异常时，返回通过 <see cref="RuntimeHelpers.GetUninitializedObject"/> 创建的未初始化对象（所有字段为零或 null）；
+    /// 对于值类型，若构造函数抛出异常，则返回该值类型的默认值。
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// 该方法适用于先获取对象实例、再通过字段赋值完成初始化的受控场景。
+    /// 返回的引用类型实例可能处于不完整甚至无效的状态，值类型实例可能为默认值，
+    /// 调用方必须通过后续逻辑正确初始化对象，切勿直接用于业务操作。
+    /// </para>
+    /// <para>
+    /// 如果希望始终调用构造函数并在失败时抛出异常，请使用 <see cref="Activator.CreateInstance(Type)"/> 或其他标准方法。
+    /// </para>
+    /// </remarks>
     public static object CreateInstanceSafe(Type type, bool notInitialize = false)
     {
+        ArgumentNullException.ThrowIfNull(type);
+
         if (type.IsAbstract || type.IsInterface)
             return null;
 
         if (type.IsValueType || (type.HasParameterlessConstructor && !notInitialize))
         {
-            try { return Activator.CreateInstance(type, true); }
-            catch (TargetInvocationException) { return RuntimeHelpers.GetUninitializedObject(type); }
+            try
+            {
+                return Activator.CreateInstance(type, true);
+            }
+            catch (TargetInvocationException)
+            {
+                // 值类型不能使用 GetUninitializedObject，需要返回默认值，此处使用数组来实现
+                return type.IsValueType ? Array.CreateInstance(type, 1).GetValue(0) : RuntimeHelpers.GetUninitializedObject(type);
+            }
         }
         else
             return RuntimeHelpers.GetUninitializedObject(type);
     }
 
-    /// <summary>
-    /// 安全地创建指定类型的实例（泛型版本）。
-    /// </summary>
+    /// <inheritdoc cref="CreateInstanceSafe(Type, bool)"/>
     /// <typeparam name="T">要实例化的类型（必须是引用类型）。</typeparam>
-    /// <returns>创建的实例；若失败则返回 <see langword="null"/>。</returns>
-    public static T CreateInstanceSafe<T>() where T : class => (T)CreateInstanceSafe(typeof(T));
+    public static T CreateInstanceSafe<T>(bool notInitialize = false) where T : class => (T)CreateInstanceSafe(typeof(T), notInitialize);
 
     /// <summary>
     /// 尝试安全地创建指定类型的实例。

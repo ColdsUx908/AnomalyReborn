@@ -1,12 +1,10 @@
-using Terraria.GameContent.ItemDropRules;
+// Developed by ColdsUx
 
 namespace CalamityAnomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
 
 public sealed class InfiniteImmaculateBolt : CAModProjectile
 {
-    //似乎是存了一个最大timelife，但是好像有些错位
-    //方便热重载暂时从常量改成字段，不过这玩意真有必要做个常量吗
-    public int LifeTime = 1200;
+    public const int LifeTime = 800;
 
     public NPC Target
     {
@@ -34,7 +32,7 @@ public sealed class InfiniteImmaculateBolt : CAModProjectile
         Projectile.height = 30;
         Projectile.alpha = 255;
         Projectile.friendly = true;
-        Projectile.timeLeft = 750;
+        Projectile.timeLeft = LifeTime;
         Projectile.tileCollide = false;
         Projectile.DamageType = DamageClass.Magic;
         Projectile.ignoreWater = true;
@@ -65,23 +63,20 @@ public sealed class InfiniteImmaculateBolt : CAModProjectile
         if (Timer1 > starTime)
         {
             bool targetIsValid = false;
-            if (Target is not null && CanBeChaseable(Target)
+            if (Target is not null && Target.CanBeChasedBy_IgnoreChaseable()
                 && Projectile.localNPCImmunity[Target.whoAmI] <= 0
                 && Projectile.localNPCImmunity[Target.whoAmI] != -1
                 && Target.immune[Projectile.owner] <= 0)
             {
                 targetIsValid = true;
             }
-            float homingRatio = Utils.Remap(Timer1, starTime, maxLifeTime, 0.2f, 0.6f); 
+
+            float homingRatio = Utils.Remap(Timer1, starTime, maxLifeTime, 0.2f, 0.6f);
             if (!targetIsValid)
-            {
-                Target = GetNPCTarget(Projectile, Projectile.Center, 8000f, ignoreTiles: true, bossPriority: true, respectIFrames: true, canBeChaseable: true);
-            }
+                Target = TOKinematicUtils.GetNPCTarget(Projectile, Projectile.Center, 8000f, ignoreTiles: true, bossPriority: true, respectImmuneFrames: true, ignoreChaseable: true);
 
             if (Target is not null && targetIsValid)
-            {
                 Projectile.HomeIn(Target, HomingAlgorithm.SmootherStep, homingRatio, 8000f, MathHelper.TwoPi, false);
-            }
         }
 
         Projectile.VelocityToRotation(MathHelper.PiOver2);
@@ -97,7 +92,7 @@ public sealed class InfiniteImmaculateBolt : CAModProjectile
         Texture2D projectileTexture = asset.Value;
         int frameHeight = asset.Height() / Main.projFrames[type];
         int sourceY = frameHeight * Projectile.frame;
-        Rectangle sourceRectangle = new Rectangle(0, sourceY, projectileTexture.Width, frameHeight);
+        Rectangle sourceRectangle = new(0, sourceY, projectileTexture.Width, frameHeight);
         Vector2 origin = sourceRectangle.Size() / 2f;
         Vector2 positionOffset = Vector2.Zero;
         float rotationOffset = 0f;
@@ -235,182 +230,5 @@ public sealed class InfiniteImmaculateBolt : CAModProjectile
                 d.velocity += Projectile.velocity * Main.rand.NextFloat();
             });
         }
-    }
-
-    //先暂时放这里  从灾厄抄过来的能看无敌帧索敌npc  合并到TO的方法里 （妈呀AI还能自动补全注释）
-    //respectIFrames控制无敌帧开关
-    //CanBeChaseable控制是否能追踪一些特殊NPC（比如正常情况下不被追踪弹幕索敌的地牢门口邪教徒）
-    //可以改一下命名，我都随便命名的。
-    public static NPC GetNPCTarget(Projectile projectile, Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, bool bossPriority = false, PriorityType priorityType = PriorityType.Closest, bool respectIFrames = false, bool canBeChaseable = false)
-    {
-        float maxDistanceToCheckSquared = maxDistanceToCheck * maxDistanceToCheck;
-        NPC target = null;
-        bool hasPriority = false;
-        switch (priorityType)
-        {
-            case PriorityType.LifeMax:
-                if (bossPriority)
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        bool canBeChased = canBeChaseable ? CanBeChaseable(npc) : npc.CanBeChasedBy();
-                        if (!canBeChased || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared
-                            || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
-                            || (respectIFrames && (projectile.localNPCImmunity[npc.whoAmI] > 0 
-                            || projectile.localNPCImmunity[npc.whoAmI] == -1 || npc.immune[projectile.owner] > 0)))
-                            continue;
-
-                        if (target is null)
-                        {
-                            target = npc;
-                            hasPriority = npc.IsBossEnemy;
-                            continue;
-                        }
-                        switch (hasPriority, npc.IsBossEnemy)
-                        {
-                            case (true, false):
-                                break;
-                            case (false, true):
-                                target = npc;
-                                hasPriority = true;
-                                break;
-                            case (true, true) or (false, false) when npc.lifeMax > target.lifeMax:
-                                target = npc;
-                                break;
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        bool canBeChased = canBeChaseable ? CanBeChaseable(npc) : npc.CanBeChasedBy();
-                        if (!canBeChased || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared 
-                            || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
-                            || (respectIFrames && (projectile.localNPCImmunity[npc.whoAmI] > 0
-                            || projectile.localNPCImmunity[npc.whoAmI] == -1 || npc.immune[projectile.owner] > 0)))
-                            continue;
-
-                        if (target is null || npc.lifeMax > target.lifeMax)
-                            target = npc;
-                    }
-                }
-                return target;
-            case PriorityType.Life:
-                if (bossPriority)
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        bool canBeChased = canBeChaseable ? CanBeChaseable(npc) : npc.CanBeChasedBy();
-                        if (!canBeChased || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared 
-                            || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
-                            || (respectIFrames && (projectile.localNPCImmunity[npc.whoAmI] > 0
-                            || projectile.localNPCImmunity[npc.whoAmI] == -1 || npc.immune[projectile.owner] > 0)))
-                            continue;
-
-                        if (target is null)
-                        {
-                            target = npc;
-                            hasPriority = npc.IsBossEnemy;
-                            continue;
-                        }
-                        switch (hasPriority, npc.IsBossEnemy)
-                        {
-                            case (true, false):
-                                break;
-                            case (false, true):
-                                target = npc;
-                                hasPriority = true;
-                                break;
-                            case (true, true) or (false, false) when npc.life > target.life:
-                                target = npc;
-                                break;
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        bool canBeChased = canBeChaseable ? CanBeChaseable(npc) : npc.CanBeChasedBy();
-                        if (!canBeChased || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared 
-                            || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
-                            || (respectIFrames && (projectile.localNPCImmunity[npc.whoAmI] > 0
-                            || projectile.localNPCImmunity[npc.whoAmI] == -1 || npc.immune[projectile.owner] > 0)))
-                            continue;
-
-                        if (target is null || npc.life < target.life)
-                            target = npc;
-                    }
-                }
-                return target;
-            case PriorityType.Closest:
-            default:
-                float distanceTemp = maxDistanceToCheckSquared;
-                if (bossPriority)
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        float distanceSquared = Vector2.DistanceSquared(origin, npc.Center);
-                        bool canBeChased = canBeChaseable ? CanBeChaseable(npc) : npc.CanBeChasedBy();
-                        if (!canBeChased || distanceSquared > maxDistanceToCheckSquared 
-                            || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
-                            || (respectIFrames && (projectile.localNPCImmunity[npc.whoAmI] > 0
-                            || projectile.localNPCImmunity[npc.whoAmI] == -1 || npc.immune[projectile.owner] > 0)))
-                            continue;
-
-                        if (target is null)
-                        {
-                            target = npc;
-                            hasPriority = npc.IsBossEnemy;
-                            distanceTemp = distanceSquared;
-                            continue;
-                        }
-                        switch (hasPriority, npc.IsBossEnemy)
-                        {
-                            case (true, false):
-                                break;
-                            case (false, true):
-                                target = npc;
-                                distanceTemp = distanceSquared;
-                                hasPriority = true;
-                                break;
-                            case (true, true) or (false, false) when distanceSquared < distanceTemp:
-                                target = npc;
-                                distanceTemp = distanceSquared;
-                                break;
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        float distanceSquared = Vector2.DistanceSquared(origin, npc.Center);
-                        bool canBeChased = canBeChaseable ? CanBeChaseable(npc) : npc.CanBeChasedBy();
-                        if (!canBeChased || distanceSquared > maxDistanceToCheckSquared 
-                            || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
-                            || (respectIFrames && (projectile.localNPCImmunity[npc.whoAmI] > 0
-                            || projectile.localNPCImmunity[npc.whoAmI] == -1 || npc.immune[projectile.owner] > 0)))
-                            continue;
-
-                        if (target is null || distanceSquared < distanceTemp)
-                        {
-                            target = npc;
-                            distanceTemp = distanceSquared;
-                        }
-                    }
-                }
-                return target;
-        }
-    }
-    
-    //一个看起来很扯的方法,返回一些特殊NPC（比如正常情况下不被追踪弹幕索敌的地牢门口邪教徒）
-    public static bool CanBeChaseable(NPC npc, object attacker = null, bool ignoreDontTakeDamage = false)
-    {
-        if (npc.active && npc.lifeMax > 5 && (!npc.dontTakeDamage || ignoreDontTakeDamage) && !npc.friendly)
-            return !npc.immortal;
-
-        return false;
     }
 }

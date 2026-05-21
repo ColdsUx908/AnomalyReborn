@@ -1,6 +1,6 @@
 ﻿// Developed by ColdsUx
 
-namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
+namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
 /// 资产加载器，负责处理标记了 <see cref="LoadTextureAttribute"/> 特性的静态 <see cref="Asset{T}"/> 字段的自动加载与卸载。

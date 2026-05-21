@@ -1,7 +1,6 @@
 ﻿// Developed by ColdsUx
 
 using CalamityAnomalies.DataStructures;
-using CalamityMod.Items.Potions.Alcohol;
 using Transoceanic.Framework.Helpers.Utilities;
 
 namespace CalamityAnomalies.Common;
@@ -16,11 +15,6 @@ public sealed class CAPlayer : ModPlayer
 
     public PlayerDownedBossCalamity DownedBossCalamity = new();
     public PlayerDownedBossCalamity DownedBossAnomaly = new();
-
-    public HysteresisBoolean YharimsGift;
-    //public YharimsGift_CurrentBlessing YharimsGift_Blessing = YharimsGift_CurrentBlessing.None;
-    //public readonly SmoothInt[] YharimsGift_Change = new SmoothInt[YharimsGift_Handler._totalBlessings];
-    public Item YharimsGift_Last;
 
     public int ImmaculateWhite_Timer
     {
@@ -38,11 +32,6 @@ public sealed class CAPlayer : ModPlayer
         clone.Debuff_DimensionalRend = Debuff_DimensionalRend;
         clone.DownedBossCalamity = DownedBossCalamity;
         clone.DownedBossAnomaly = DownedBossAnomaly;
-
-        clone.YharimsGift = YharimsGift;
-        //clone.YharimsGift_Blessing = YharimsGift_Blessing;
-        //Array.Copy(YharimsGift_Change, clone.YharimsGift_Change, YharimsGift_Change.Length);
-        clone.YharimsGift_Last = YharimsGift_Last;
 
         clone.ImmaculateWhite_Timer = ImmaculateWhite_Timer;
 
@@ -68,24 +57,22 @@ public sealed class CAGlobalNPC : GlobalNPC, IContentLoader
     public readonly Union64[] DebugData = new Union64[4];
 #endif
 
-    private const int AISlot = 33;
-    private const int AISlot2 = 17;
-    private const int AISlot3 = 132;
-    private const int AISlot4 = 33;
+    private const int AISlot = 66;
+    private const int AISlot2 = 33;
+    private const int AISlot3 = 33;
+    private const int AISlot4 = 17;
 
     public readonly Union32[] AnomalyAI32 = new Union32[AISlot];
     public readonly Union64[] AnomalyAI64 = new Union64[AISlot2];
 
-    public ref BitArray32 AIChanged32 => ref AnomalyAI32[^1].bits;
+    public ref BitArray32 AIChanged32 => ref AnomalyAI32[^2].bits;
+    public ref BitArray32 AIChanged32_2 => ref AnomalyAI32[^1].bits;
     public ref BitArray64 AIChanged64 => ref AnomalyAI64[^1].bits;
 
     private readonly Union32[] InternalAnomalyAI32 = new Union32[AISlot3];
     private readonly Union64[] InternalAnomalyAI64 = new Union64[AISlot4];
 
-    private ref BitArray32 InternalAIChanged32 => ref InternalAnomalyAI32[^4].bits;
-    private ref BitArray32 InternalAIChanged32_2 => ref InternalAnomalyAI32[^3].bits;
-    private ref BitArray32 InternalAIChanged32_3 => ref InternalAnomalyAI32[^2].bits;
-    private ref BitArray32 InternalAIChanged32_4 => ref InternalAnomalyAI32[^1].bits;
+    private ref BitArray32 InternalAIChanged32 => ref InternalAnomalyAI32[^1].bits;
     private ref BitArray64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;
 
     public override GlobalNPC Clone(NPC from, NPC to)
@@ -171,7 +158,7 @@ public sealed class CAGlobalNPC : GlobalNPC, IContentLoader
 
     public List<HPThresholdIndicator> HPThresholdIndicators = [];
 
-    public DynamicDamageReductionHandler DynamicDRHandler;
+    public IDynamicDRHandler DynamicDRHandler;
     #endregion 额外数据
 }
 

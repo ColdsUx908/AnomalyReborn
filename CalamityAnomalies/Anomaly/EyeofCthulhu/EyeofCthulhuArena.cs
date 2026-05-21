@@ -1,10 +1,10 @@
 ﻿// Developed by ColdsUx
 
-using Transoceanic.Framework.Helpers.AbstractionHandlers;
+using CalamityAnomalies.GameContents.Base;
 
 namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
 
-public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
+public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoader
 {
     #region 数据
     public static int EyeSpawnGateValue => 15;
@@ -15,16 +15,40 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
         (new MathInterval(EyeofCthulhu_Handler.EyeSpinTime - 30f, float.PositiveInfinity, true, false), x => TOMathUtils.Interpolation.QuadraticEaseInOut((EyeofCthulhu_Handler.EyeSpinTime - x) / 30f))
         );
 
-    public bool IsActivated;
-    public BehaviorCommand_Arena MasterCommandReceiver;
-    public bool MasterPhase3_2;
+    public bool IsActivated
+    {
+        get => AI_Union_1.bits[0];
+        set
+        {
+            Union32 union = AI_Union_1;
+            union.bits[0] = value;
+            AI_Union_1 = union;
+        }
+    }
 
-    public float RealArenaRadius = EyeofCthulhu_Handler.MaxArenaRadius;
-    public float ArenaRadius = EyeofCthulhu_Handler.MaxArenaRadius;
-    public float RealRotationSpeed;
+    public bool MasterPhase3_2
+    {
+        get => AI_Union_1.bits[1];
+        set
+        {
+            Union32 union = AI_Union_1;
+            union.bits[1] = value;
+            AI_Union_1 = union;
+        }
+    }
+
+    public BehaviorCommand_Arena MasterCommandReceiver;
+
+    public float UnmodifiedRadius = EyeofCthulhu_Handler.MaxArenaRadius;
+
+    public override float Radius { get; set; } = EyeofCthulhu_Handler.MaxArenaRadius;
+
+    public float UnmodifiedRotationSpeed;
+
     public float RotationSpeed;
 
     public readonly ArenaEye[] Eyes = new ArenaEye[32];
+
     public readonly List<ArenaStatModifier> ArenaStatModifiers = [];
 
     public NPC Master
@@ -38,13 +62,15 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
     }
     public EyeofCthulhu_Anomaly MasterBehavior => EyeofCthulhu_Anomaly.GetNewInstance(Master);
 
-    public Ring ArenaRing => new(Projectile.Center, RealArenaRadius - 20f, RealArenaRadius + 20f);
-
     public float ArenaRotation
     {
         get => Projectile.rotation;
         set => Projectile.rotation = value;
     }
+
+    public override float Thickness => 40f;
+    public override Player Target => MasterBehavior.Target;
+    public override int DustType => DustID.Blood;
     #endregion 数据
 
     #region 交互方法
@@ -63,7 +89,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
     public Vector2 GetEyeCenter(int index)
     {
         index = (int)TOMathUtils.NormalizeWithPeriod(index, 32);
-        return Projectile.Center + GetEyeCenterDirection(index) * RealArenaRadius;
+        return Projectile.Center + GetEyeCenterDirection(index) * Radius;
     }
 
     public void ChangeArenaRadius(float deltaArenaRadius, int duration, bool linear = false)
@@ -74,7 +100,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
 
     public void ChangeArenaRadiusTo(float targetArenaRadius, int duration)
     {
-        float realArenaRadius = RealArenaRadius;
+        float realArenaRadius = Radius;
         foreach (ArenaStatModifier modifier in ArenaStatModifiers)
         {
             if (modifier.Type == ArenaStatModifier.ModifierType.ArenaRadius)
@@ -91,7 +117,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
 
     public void ChangeRotationSpeedTo(float targetRotationSpeed, int duration)
     {
-        float realRotationSpeed = RealRotationSpeed;
+        float realRotationSpeed = RotationSpeed;
         foreach (ArenaStatModifier modifier in ArenaStatModifiers)
         {
             if (modifier.Type == ArenaStatModifier.ModifierType.RotationSpeed)
@@ -134,7 +160,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
         Master = NPC.DummyNPC;
     }
 
-    public override void AI()
+    public override void ExtraAI()
     {
         if (Master is null || !Master.active || Master.type != NPCID.EyeofCthulhu)
             Projectile.Kill();
@@ -155,8 +181,8 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                     break;
             }
 
-            float realArenaRadius = ArenaRadius;
-            float realRotationSpeed = RotationSpeed;
+            float realArenaRadius = UnmodifiedRadius;
+            float realRotationSpeed = UnmodifiedRotationSpeed;
 
             foreach (ArenaStatModifier modifier in ArenaStatModifiers)
             {
@@ -171,21 +197,29 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                     case ArenaStatModifier.ModifierType.ArenaRadius:
                         realArenaRadius += delta;
                         if (modifier.Timer >= modifier.LifeTime)
-                            ArenaRadius += delta;
+                        {
+                            UnmodifiedRadius += delta;
+                            Projectile.netUpdate = true;
+                        }
+
                         break;
                     case ArenaStatModifier.ModifierType.RotationSpeed:
                         realRotationSpeed += delta;
                         if (modifier.Timer >= modifier.LifeTime)
-                            RotationSpeed += delta;
+                        {
+                            UnmodifiedRotationSpeed += delta;
+                            Projectile.netUpdate = true;
+                        }
+
                         break;
                 }
             }
             ArenaStatModifiers.RemoveAll(modifier => modifier is null || modifier.Timer >= modifier.LifeTime);
 
-            RealArenaRadius = realArenaRadius;
-            RealRotationSpeed = realRotationSpeed;
+            Radius = realArenaRadius;
+            RotationSpeed = realRotationSpeed;
 
-            ArenaRotation += RealRotationSpeed;
+            ArenaRotation += RotationSpeed;
 
             UpdateEyes();
 
@@ -295,9 +329,6 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                     case 1: //调整竞技场半径，一次性生成4个高光
                         switch (masterBehavior.Timer1)
                         {
-                            case 1: //调整竞技场半径
-                                //ChangeArenaRadiusTo(EyeofCthulhu_Handler.MaxArenaRadius2, 75);
-                                break;
                             case 5: //第一个高光
                                 AddHighlightTo(masterBehavior.UsedEyeIndex1, 135, true);
                                 break;
@@ -343,7 +374,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                                 int iClone = i;
                                 e.CustomFindRotationFunction = e1 =>
                                 {
-                                    Vector2 originalVector = GetEyeCenterDirection(index1) * (RealArenaRadius - 15f);
+                                    Vector2 originalVector = GetEyeCenterDirection(index1) * (Radius - 15f);
                                     float rotationOffset = TOMathUtils.PiOver16 * iClone;
                                     Vector2 destination = Projectile.Center + EyeofCthulhu_Handler.EyeShapeHelper.GetVector(originalVector, rotationOffset);
                                     Vector2 center = e1.Center;
@@ -353,9 +384,11 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                         }
                     }
                     break;
+
                 case 1 when Timer1 == 11:
                     SoundEngine.PlaySound(SoundID.Item8, Projectile.Center);
                     break;
+
                 case 1 when timer1 == 12:
                     (float targetRotationSpeed, int duration) = MasterPhase3_2 ? masterBehavior.AttackCounter switch
                     {
@@ -366,10 +399,11 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
                     } : (NormalRotationSpeed, 20);
                     ChangeRotationSpeedTo(targetRotationSpeed, duration);
                     break;
+
                 case 1 when timer1 == EyeofCthulhu_Handler.EyeSpinTime - 1:
                     //生成弹幕
 
-                    Vector2 originalVector = GetEyeCenterDirection(index1) * (RealArenaRadius - 15f);
+                    Vector2 originalVector = GetEyeCenterDirection(index1) * (Radius - 15f);
                     Vector2 originalVector2 = originalVector.RotatedBy(MathHelper.PiOver2);
                     int projectileAmountPerEye = 5;
                     int maxOffset = (projectileAmountPerEye - 1) / 2;
@@ -487,7 +521,7 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
             Texture2D particleTexture = ParticleHandler.GetTexture<OrbParticle>();
 
             float rotation = GetEyeRotation(index1);
-            float originalVectorLength = RealArenaRadius - 25f;
+            float originalVectorLength = Radius - 25f;
             Vector2 originalVector = new(originalVectorLength, 0f);
             Vector2 innerVector = EyeofCthulhu_Handler.EyeShapeHelper.GetInnerVector(originalVector);
             float innerVectorLength = innerVector.Length();
@@ -596,14 +630,20 @@ public sealed partial class EyeofCthulhuArena : CAModProjectile, IContentLoader
         return false;
     }
 
-    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => Timer1 > EyeofCthulhu_Anomaly.PhaseChangeGateValue_2To3_1 && ArenaRing.Collides(targetHitbox);
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => Timer1 > EyeofCthulhu_Anomaly.PhaseChangeGateValue_2To3_1 && base.Colliding(projHitbox, targetHitbox) == true;
 
     public override void SendExtraAI(BinaryWriter writer)
     {
+        writer.Write((int)MasterCommandReceiver);
+        writer.Write(UnmodifiedRadius);
+        writer.Write(UnmodifiedRotationSpeed);
     }
 
     public override void ReceiveExtraAI(BinaryReader reader)
     {
+        MasterCommandReceiver = (BehaviorCommand_Arena)reader.ReadInt32();
+        UnmodifiedRadius = reader.ReadSingle();
+        UnmodifiedRotationSpeed = reader.ReadSingle();
     }
 }
 
@@ -620,7 +660,7 @@ public sealed class EyeofCthulhuArena_Player : CAPlayerBehavior
             {
                 success = true;
                 float scaleMultiplier = 0.008f;
-                EnhancedDarknessSystem_Bridge.AddLightSource(projectile.Center, BloomParticle.BloomCircleLarge, scale: arena.RealArenaRadius * scaleMultiplier);
+                EnhancedDarknessSystem_Bridge.AddLightSource(projectile.Center, BloomParticle.BloomCircleLarge, scale: arena.Radius * scaleMultiplier);
                 EnhancedDarknessSystem_Bridge.AddLightSource(scale: 2f, opacity: MathHelper.Clamp(Main.LocalPlayer.Distance(projectile.Center) / 640f, 0, 1));
             }
         }
@@ -635,7 +675,7 @@ public sealed class EyeofCthulhuArena_Player : CAPlayerBehavior
     {
         foreach (Projectile arenaProjectile in Projectile.ActiveProjectiles)
         {
-            if (arenaProjectile.ModProjectile is EyeofCthulhuArena arena && arena.IsActivated && Main.ScreenSize.X > arena.RealArenaRadius * 2.2f && Main.ScreenSize.Y > arena.RealArenaRadius * 2.2f)
+            if (arenaProjectile.ModProjectile is EyeofCthulhuArena arena && arena.IsActivated && Main.ScreenSize.X > arena.Radius * 2.2f && Main.ScreenSize.Y > arena.Radius * 2.2f)
             {
                 OceanPlayer.ScreenFocusCenter = arenaProjectile.Center;
                 OceanPlayer.ScreenFocusInterpolant += 0.12f;

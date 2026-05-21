@@ -93,6 +93,11 @@ public sealed class TOGlobalNPC : GlobalNPC, ITOLoader
 
     public readonly List<AfterimageParticle> Afterimages = [];
 
+    /// <summary>
+    /// 帧计数器，用于自定义实现的 FindFrame 方法。
+    /// </summary>
+    public double FrameCounter;
+
     private const int AISlot = 33;
     private const int AISlot2 = 17;
 

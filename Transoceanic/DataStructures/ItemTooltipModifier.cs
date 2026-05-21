@@ -55,10 +55,10 @@ public class ItemTooltipDictionary
     /// <summary>
     /// 尝试根据 Mod 和 Name 获取对应的提示行及其在列表中的索引。
     /// </summary>
-    /// <param name="mod">提示行所属的 Mod 标识。若为 <c>null</c>，则默认视为 "Terraria"。</param>
+    /// <param name="mod">提示行所属的 Mod 标识。若为 <see langword="null"/>，则默认视为 "Terraria"。</param>
     /// <param name="name">提示行的名称。</param>
     /// <param name="index">当方法返回 <see langword="true"/> 时，包含该提示行在 <see cref="_tooltips"/> 中的索引；否则为 -1。</param>
-    /// <param name="line">当方法返回 <see langword="true"/> 时，包含找到的 <see cref="TooltipLine"/> 实例；否则为 <c>null</c>。</param>
+    /// <param name="line">当方法返回 <see langword="true"/> 时，包含找到的 <see cref="TooltipLine"/> 实例；否则为 <see langword="null"/>。</param>
     /// <returns>如果找到对应的提示行，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public bool TryGet(string mod, string name, out int index, out TooltipLine line)
     {
@@ -102,7 +102,7 @@ public partial class ItemTooltipModifier : ItemTooltipDictionary
     /// <summary>
     /// 修改指定 Mod 和 Name 对应的提示行文本内容。
     /// </summary>
-    /// <param name="mod">提示行所属的 Mod 标识。若为 <c>null</c>，则默认视为 "Terraria"。</param>
+    /// <param name="mod">提示行所属的 Mod 标识。若为 <see langword="null"/>，则默认视为 "Terraria"。</param>
     /// <param name="name">提示行的名称。</param>
     /// <param name="newText">新的文本内容。</param>
     /// <returns>当前 <see cref="ItemTooltipModifier"/> 实例，支持链式调用。</returns>
@@ -116,7 +116,7 @@ public partial class ItemTooltipModifier : ItemTooltipDictionary
     /// <summary>
     /// 修改指定 Mod 和 Name 对应的提示行文本内容及覆盖颜色。
     /// </summary>
-    /// <param name="mod">提示行所属的 Mod 标识。若为 <c>null</c>，则默认视为 "Terraria"。</param>
+    /// <param name="mod">提示行所属的 Mod 标识。若为 <see langword="null"/>，则默认视为 "Terraria"。</param>
     /// <param name="name">提示行的名称。</param>
     /// <param name="newText">新的文本内容。</param>
     /// <param name="newColor">新的覆盖颜色。将设置 <see cref="TooltipLine.OverrideColor"/> 属性。</param>
@@ -134,7 +134,7 @@ public partial class ItemTooltipModifier : ItemTooltipDictionary
     /// <summary>
     /// 对指定 Mod 和 Name 对应的提示行执行自定义操作。
     /// </summary>
-    /// <param name="mod">提示行所属的 Mod 标识。若为 <c>null</c>，则默认视为 "Terraria"。</param>
+    /// <param name="mod">提示行所属的 Mod 标识。若为 <see langword="null"/>，则默认视为 "Terraria"。</param>
     /// <param name="name">提示行的名称。</param>
     /// <param name="action">要应用于找到的 <see cref="TooltipLine"/> 的委托操作。</param>
     /// <returns>当前 <see cref="ItemTooltipModifier"/> 实例，支持链式调用。</returns>
@@ -148,7 +148,7 @@ public partial class ItemTooltipModifier : ItemTooltipDictionary
     /// <summary>
     /// 修改指定序号的工具提示行的文本内容。
     /// 该方法是 <see cref="Modify(string, string, string)"/> 的快捷方式，
-    /// 自动将 Mod 视为 <c>null</c>（即 "Terraria"），并将 Name 组合为 "Tooltip" + 序号。
+    /// 自动将 Mod 视为 <see langword="null"/>（即 "Terraria"），并将 Name 组合为 "Tooltip" + 序号。
     /// </summary>
     /// <param name="num">工具提示的序号（例如 0、1、2）。</param>
     /// <param name="newText">新的文本内容。</param>
@@ -158,7 +158,7 @@ public partial class ItemTooltipModifier : ItemTooltipDictionary
     /// <summary>
     /// 修改指定序号的工具提示行的文本内容及覆盖颜色。
     /// 该方法是 <see cref="Modify(string, string, string, Color)"/> 的快捷方式，
-    /// 自动将 Mod 视为 <c>null</c>（即 "Terraria"），并将 Name 组合为 "Tooltip" + 序号。
+    /// 自动将 Mod 视为 <see langword="null"/>（即 "Terraria"），并将 Name 组合为 "Tooltip" + 序号。
     /// </summary>
     /// <param name="num">工具提示的序号（例如 0、1、2）。</param>
     /// <param name="newText">新的文本内容。</param>
@@ -169,7 +169,7 @@ public partial class ItemTooltipModifier : ItemTooltipDictionary
     /// <summary>
     /// 对指定序号的工具提示行执行自定义操作。
     /// 该方法是 <see cref="Modify(string, string, Action{TooltipLine})"/> 的快捷方式，
-    /// 自动将 Mod 视为 <c>null</c>（即 "Terraria"），并将 Name 组合为 "Tooltip" + 序号。
+    /// 自动将 Mod 视为 <see langword="null"/>（即 "Terraria"），并将 Name 组合为 "Tooltip" + 序号。
     /// </summary>
     /// <param name="num">工具提示的序号（例如 0、1、2）。</param>
     /// <param name="action">要应用于找到的 <see cref="TooltipLine"/> 的委托操作。</param>

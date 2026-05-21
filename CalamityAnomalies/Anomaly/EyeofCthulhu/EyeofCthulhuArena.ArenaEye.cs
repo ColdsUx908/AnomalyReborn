@@ -39,7 +39,7 @@ public sealed partial class EyeofCthulhuArena
 
             float targetRotation = (ShouldUseCustomRotation ? CustomFindRotationFunction?.Invoke(this) : null)
                 ?? (ShouldFaceTarget ? (Target.Center - Master.GetEyeCenter(Index)).ToRotation(MathHelper.Pi) : Master.GetEyeRotation(Index));
-            float rotationSpeed = Math.Max(Master.RealRotationSpeed + 0.1f, 0.3f);
+            float rotationSpeed = Math.Max(Master.RotationSpeed + 0.1f, 0.3f);
             EyeofCthulhu_Handler.UpdateRotation(ref Rotation, targetRotation, rotationSpeed);
 
             foreach (EyeHighlight highlight in Highlights)

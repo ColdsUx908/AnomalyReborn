@@ -7,7 +7,7 @@ root = true
 #### Core EditorConfig 选项 ####
 
 # 文件头
-file_header_template = Developed by ColdsUx
+file_header_template = // Developed by ColdsUx
 
 # 缩进和间距
 indent_size = 4
@@ -220,14 +220,6 @@ dotnet_naming_rule.非字段成员_should_be_帕斯卡拼写法.severity = warni
 dotnet_naming_rule.非字段成员_should_be_帕斯卡拼写法.symbols = 非字段成员
 dotnet_naming_rule.非字段成员_should_be_帕斯卡拼写法.style = 帕斯卡拼写法
 
-dotnet_naming_rule.实例字段_should_be_以下划线开始的驼峰拼写法.severity = silent
-dotnet_naming_rule.实例字段_should_be_以下划线开始的驼峰拼写法.symbols = 实例字段
-dotnet_naming_rule.实例字段_should_be_以下划线开始的驼峰拼写法.style = 以下划线开始的驼峰拼写法
-
-dotnet_naming_rule.静态字段_should_be_以下划线开始的驼峰拼写法.severity = silent
-dotnet_naming_rule.静态字段_should_be_以下划线开始的驼峰拼写法.symbols = 静态字段
-dotnet_naming_rule.静态字段_should_be_以下划线开始的驼峰拼写法.style = 以下划线开始的驼峰拼写法
-
 # 符号规范
 
 dotnet_naming_symbols.interface.applicable_kinds = interface
@@ -262,10 +254,6 @@ dotnet_naming_style.以_i_开始.required_suffix =
 dotnet_naming_style.以_i_开始.word_separator = 
 dotnet_naming_style.以_i_开始.capitalization = pascal_case
 
-dotnet_naming_style.以下划线开始的驼峰拼写法.required_prefix = _
-dotnet_naming_style.以下划线开始的驼峰拼写法.required_suffix = 
-dotnet_naming_style.以下划线开始的驼峰拼写法.word_separator = 
-dotnet_naming_style.以下划线开始的驼峰拼写法.capitalization = camel_case
 csharp_style_prefer_unbound_generic_type_in_nameof = true:suggestion
 csharp_style_prefer_implicitly_typed_lambda_expression = true:suggestion
 dotnet_diagnostic.CA1805.severity = silent

@@ -1,6 +1,6 @@
 ﻿// Developed by ColdsUx
 
-namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
+namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
 /// 自定义持续伤害（DOT）系统的全局处理器。

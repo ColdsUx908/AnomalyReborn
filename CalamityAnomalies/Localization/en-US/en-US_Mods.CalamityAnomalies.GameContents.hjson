@@ -30,6 +30,8 @@ Developer: {
 		DisplayName: Test Item
 		Tooltip: ""
 	}
+
+	ColdheartIcicleHoldout.DisplayName: Coldheart Icicle Holdout
 }
 
 Contributor: {

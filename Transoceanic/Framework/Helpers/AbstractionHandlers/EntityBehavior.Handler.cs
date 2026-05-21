@@ -5,7 +5,7 @@ using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
 
-namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
+namespace Transoceanic.Framework.Helpers;
 
 #region Set
 /// <summary>

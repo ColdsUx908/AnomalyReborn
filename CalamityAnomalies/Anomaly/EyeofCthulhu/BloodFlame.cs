@@ -1,7 +1,6 @@
 ﻿// Developed by ColdsUx
 
 using CalamityMod.Buffs.DamageOverTime;
-using Transoceanic.Framework.Helpers.AbstractionHandlers;
 
 namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
 

@@ -30,7 +30,7 @@ public static partial class TOExtensions
         /// </summary>
         /// <param name="itemType">要查找的物品类型 ID。</param>
         /// <param name="index">当找到物品时，输出该物品在箱子物品数组中的索引；否则输出 -1。</param>
-        /// <param name="item">当找到物品时，输出对应的 <see cref="Item"/> 实例；否则输出 <c>null</c>。</param>
+        /// <param name="item">当找到物品时，输出对应的 <see cref="Item"/> 实例；否则输出 <see langword="null"/>。</param>
         /// <returns>如果箱子中存在指定类型的物品，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
         public bool HasItem(int itemType, out int index, [NotNullWhen(true)] out Item item)
         {

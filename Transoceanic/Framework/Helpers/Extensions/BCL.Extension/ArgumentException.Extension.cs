@@ -16,7 +16,7 @@ public static partial class TOExtensions
         /// 此参数由调用方表达式自动填充，通常无需手动提供。
         /// </param>
         /// <exception cref="ArgumentNullException"><paramref name="argument"/> 为 <see langword="null"/>。</exception>
-        /// <exception cref="ArgumentException"><paramref name="argument"/> 为空（即 <see cref="IList{T}.Count"/> 为 0）。</exception>
+        /// <exception cref="ArgumentException"><paramref name="argument"/> 为空（即 <see cref="ICollection{T}.Count"/> 为 0）。</exception>
         public static void ThrowIfNullOrEmpty<T>([NotNull] IList<T> argument, [CallerArgumentExpression(nameof(argument))] string paramName = null)
         {
             ArgumentNullException.ThrowIfNull(argument, paramName);
@@ -35,7 +35,7 @@ public static partial class TOExtensions
         /// </param>
         /// <exception cref="ArgumentNullException"><paramref name="argument"/> 为 <see langword="null"/>。</exception>
         /// <exception cref="ArgumentException">
-        /// <paramref name="argument"/> 为空（即 <see cref="IList{T}.Count"/> 为 0），
+        /// <paramref name="argument"/> 为空（即 <see cref="ICollection{T}.Count"/> 为 0），
         /// 或列表中包含值为 <see langword="null"/> 的元素。
         /// </exception>
         public static void ThrowIfNullOrEmptyOrAnyNull<T>([NotNull] IList<T> argument, [CallerArgumentExpression(nameof(argument))] string paramName = null) where T : class

@@ -8,17 +8,14 @@ public static partial class TOMathUtils
     /// 提供常用插值缓动函数（Easing Functions）的实现。
     /// </summary>
     /// <remarks>
-    /// 所有方法均接受一个进度比率 <paramref name="ratio"/>（通常范围为 [0, 1]），并返回应用缓动曲线后的插值系数。
-    /// 重载方法可直接在起始值 <paramref name="from"/> 和结束值 <paramref name="to"/> 之间进行插值。
+    /// 所有方法均接受一个进度比率 <c>ratio</c>（通常范围为 [0, 1]），并返回应用缓动曲线后的插值系数。
+    /// 重载方法可直接在起始值 <c>from</c> 和结束值 <c>to</c> 之间进行插值。
     /// </remarks>
     public static class Interpolation
     {
         /// <summary>
         /// 二次方缓入（Quadratic Ease In）。
         /// </summary>
-        /// <param name="ratio">插值进度，通常范围 [0, 1]。</param>
-        /// <param name="clamped">是否将 <paramref name="ratio"/> 限制在 [0, 1] 范围内。默认为 <see langword="true"/>。</param>
-        /// <returns>经过缓入处理的插值系数。</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float QuadraticEaseIn(float ratio, bool clamped = true)
         {
@@ -28,8 +25,6 @@ public static partial class TOMathUtils
         }
 
         /// <inheritdoc cref="QuadraticEaseIn(float, bool)"/>
-        /// <param name="from">起始值。</param>
-        /// <param name="to">结束值。</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float QuadraticEaseIn(float from, float to, float ratio, bool clamped = true) => from + (to - from) * QuadraticEaseIn(ratio, clamped);
 

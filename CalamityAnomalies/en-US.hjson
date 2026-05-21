@@ -6,5 +6,7 @@ Mods: {
 				Tooltip: ""
 			}
 		}
+
+		Projectiles.BeeProjectile.DisplayName: Bee Projectile
 	}
 }

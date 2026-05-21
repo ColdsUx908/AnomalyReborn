@@ -1,7 +1,6 @@
 ﻿// Developed by ColdsUx
 
 using CalamityMod;
-using CalamityMod.NPCs.PlagueEnemies;
 using CalamityMod.Projectiles.Boss;
 
 namespace CalamityAnomalies.Anomaly.QueenBee;
@@ -69,9 +68,6 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
         {
             switch (CurrentBehavior)
             {
-                case Behavior.Phase1_SpawnBee:
-                    SpawnBee();
-                    break;
                 case Behavior.Phase1_Charge:
                     Charge();
                     break;
@@ -89,9 +85,6 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                 Timer2 = 0;
                 switch (CurrentBehavior)
                 {
-                    case Behavior.Phase1_SpawnBee:
-                        SelectCore();
-                        break;
                     case Behavior.Phase1_Charge:
                         int chargeAmount = Phase2_3 ? 2 : Phase2_2 ? 4 : Phase2 ? 3 : 4;
                         AttackCounter++;
@@ -115,7 +108,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
 
                     Behavior newBehavior;
 
-                    do newBehavior = (Behavior)Main.rand.Next((byte)Behavior.Phase1_SpawnBee, (byte)Behavior.Phase1_Stinger + 1);
+                    do newBehavior = (Behavior)Main.rand.Next((byte)Behavior.Phase1_Charge, (byte)Behavior.Phase1_Stinger + 1);
                     while (newBehavior == currentBehavior || (!allTheSameBehavior && new HashSet<Behavior> { lastBehavior, lastBehavior2, currentBehavior, newBehavior }.Count < 3));
                 }
             }
@@ -141,6 +134,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                 return false;
             }
 
+            /*
             void SpawnBee()
             {
                 float acceleration = 0.48f;
@@ -194,6 +188,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                                 totalHornets++;
                         }
 
+                        //待重构：将蜜蜂NPC改为蜜蜂弹幕
                         bool beeLimitReached = totalBees >= beeLimit;
                         bool hornetLimitReached = totalHornets >= hornetLimit;
 
@@ -265,6 +260,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                         break;
                 }
             }
+            */
 
             void Charge()
             {
@@ -280,17 +276,11 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                         if (distanceFromTargetY < chargeDistanceY && distanceFromTargetX >= chargeDistanceX)
                         {
                             NPC.damage = NPC.defDamage;
-                            LocalAI0 = 1;
+                            IsCharging = true;
                             CurrentAttackPhase = 1;
                             AI2 = 0;
 
-                            Vector2 beeLocation = NPC.Center;
-                            float targetXDist = Target.Center.X - beeLocation.X;
-                            float targetYDist = Target.Center.Y - beeLocation.Y;
-                            float targetDistance = (float)Math.Sqrt(targetXDist * targetXDist + targetYDist * targetYDist);
-                            targetDistance = speed / targetDistance;
-                            NPC.velocity.X = targetXDist * targetDistance;
-                            NPC.velocity.Y = targetYDist * targetDistance;
+                            NPC.velocity = NPC.GetVelocityTowards(Target.Center, speed);
 
                             NPC.FaceTarget(Target);
                             NPC.spriteDirection = NPC.direction;
@@ -298,7 +288,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                             return;
                         }
 
-                        LocalAI0 = 0;
+                        IsCharging = false;
                         float chargeVelocityX = (Phase2 ? 24f : Phase1_2 ? 20f : 16f) + 8f;
                         float chargeVelocityY = (Phase2 ? 18f : Phase1_2 ? 15f : 12f) + 6f;
                         float chargeAccelerationX = (Phase2 ? 0.7f : Phase1_2 ? 0.6f : 0.5f) + 0.25f;
@@ -355,7 +345,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                             float playerLocation = NPC.Center.X - Target.Center.X;
                             NPC.direction = playerLocation < 0 ? 1 : -1;
                             NPC.spriteDirection = NPC.direction;
-                            LocalAI0 = 0;
+                            IsCharging = false;
                             NPC.velocity *= 0.8f;
 
                             float chargeDeceleration = 0.2f;
@@ -387,13 +377,12 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                             Timer2++;
                             if (Timer2 > accelerateGateValue) //加速
                             {
-                                CalamityUtils.SyncExtraAI(NPC);
                                 float velocityXLimit = speed * 2f;
                                 if (Math.Abs(NPC.velocity.X) < velocityXLimit)
                                     NPC.velocity.X *= 1.02f;
                             }
 
-                            LocalAI0 = 1;
+                            IsCharging = true;
                         }
                         break;
                 }
@@ -436,23 +425,29 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                         SoundEngine.PlaySound(SoundID.Item17, stingerSpawnLocation);
                         if (TOSharedData.GeneralClient)
                         {
-                            float stingerSpeed = Phase1_3 ? 7f : 6f;
+                            bool buff = num % 3 == 0;
 
-                            float stingerTargetX = Target.Center.X - stingerSpawnLocation.X;
-                            float stingerTargetY = Target.Center.Y - stingerSpawnLocation.Y;
-                            float stingerTargetDist = (float)Math.Sqrt(stingerTargetX * stingerTargetX + stingerTargetY * stingerTargetY);
-                            stingerTargetDist = stingerSpeed / stingerTargetDist;
-                            stingerTargetX *= stingerTargetDist;
-                            stingerTargetY *= stingerTargetDist;
-                            Vector2 stingerVelocity = new(stingerTargetX, stingerTargetY);
+                            float stingerSpeed = Ultra ? 18f : 15f;
+                            Vector2 stingerVelocity = (Target.Center - stingerSpawnLocation).ToCustomLength(stingerSpeed);
                             int type = Main.zenithWorld ? (Phase1_3 ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.FlamingWood) : ProjectileID.QueenBeeStinger;
 
                             Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation, stingerVelocity, type, StingerDamage, 0f, action: p =>
                             {
                                 p.ai[1] = (Main.zenithWorld && Phase1_3) ? Target.position.Y : 0f;
-                                p.timeLeft = 1200;
-                                p.extraUpdates = 1;
+                                p.timeLeft = 600;
                             });
+
+                            if (buff) //追踪蜜蜂弹幕
+                            {
+                                for (int i = 0; i < 2; i++)
+                                {
+                                    Projectile.NewProjectileAction<BeeProjectile>(SourceAI, stingerSpawnLocation, stingerVelocity.RotatedByRandom(0.2f).ToCustomLength(5f), StingerDamage * 2, 0f, action: p =>
+                                    {
+                                        p.ai[0] = BeeProjectile.Behavior_HomeIn;
+                                        p.ai[1] = NPC.target;
+                                    });
+                                }
+                            }
 
                             if (Phase1_2)
                             {
@@ -461,8 +456,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                                 {
                                     Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation + Main.rand.NextVector2CircularEdge(16f, 16f) * (i + 1), stingerVelocity * MathHelper.Lerp(0.75f, 1f, i / (float)numExtraStingers), type, StingerDamage, 0f, action: p =>
                                     {
-                                        p.timeLeft = 1200;
-                                        p.extraUpdates = 1;
+                                        p.timeLeft = 600;
                                     });
                                 }
                             }

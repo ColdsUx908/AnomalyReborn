@@ -7,9 +7,9 @@ namespace Transoceanic.Framework.Helpers;
 /// </summary>
 public enum HomingAlgorithm
 {
-    /// <summary>平滑插值（使用 <see cref="Vector2.SmoothStep"/>）。</summary>
+    /// <summary>平滑插值（使用 <see cref="Vector2.SmoothStep(Vector2, Vector2, float)"/>）。</summary>
     SmoothStep,
-    /// <summary>线性插值（使用 <see cref="Vector2.Lerp"/>）。</summary>
+    /// <summary>线性插值（使用 <see cref="Vector2.Lerp(Vector2, Vector2, float)"/>）。</summary>
     Linear,
     /// <summary>相比 <see cref="SmoothStep"/> 更加平滑的插值（使用 <see cref="TOExtensions.SmootherStep(Vector2, Vector2, float, bool)"/>）。</summary>
     SmootherStep,
@@ -62,7 +62,7 @@ public static partial class TOExtensions
         /// <param name="destination">追踪的目标地点坐标。</param>
         /// <param name="algorithm">采用的追踪算法类型。</param>
         /// <param name="homingRatio">追踪强度，取值范围 [0,1]。0 表示不追踪，1 表示直接指向目标。该值作为插值方法的 amount 参数。</param>
-        /// <param name="maxHomingDistance">最大追踪距离。若实体与目标距离超过此值，追踪失败。为 <c>null</c> 时不限制。</param>
+        /// <param name="maxHomingDistance">最大追踪距离。若实体与目标距离超过此值，追踪失败。为 <see langword="null"/> 时不限制。</param>
         /// <param name="sightAngle">视野角度（弧度）。以当前速度方向为中心，左右各 <c>sightAngle/2</c> 的扇形区域。默认为 <see cref="MathHelper.TwoPi"/>（全方向）。</param>
         /// <param name="keepVelocity">是否在调整角度时保持速度大小不变。仅在 <paramref name="homingRatio"/> 不为 1 时有效。</param>
         /// <param name="velocityOverride">覆盖的速度大小。若提供，则使用此值作为速度大小进行计算，而非实体当前速度大小。</param>
@@ -104,11 +104,11 @@ public static partial class TOExtensions
         /// <param name="target">追踪的目标实体。</param>
         /// <param name="algorithm">采用的追踪算法类型。</param>
         /// <param name="homingRatio">追踪强度，取值范围 [0,1]。</param>
-        /// <param name="maxHomingDistance">最大追踪距离。为 <c>null</c> 时不限制。</param>
+        /// <param name="maxHomingDistance">最大追踪距离。为 <see langword="null"/> 时不限制。</param>
         /// <param name="sightAngle">视野角度（弧度），默认为全方向。</param>
         /// <param name="keepVelocity">是否保持速度大小。</param>
         /// <param name="velocityOverride">覆盖的速度大小。</param>
-        /// <returns>追踪是否成功。若目标实体无效（<c>null</c> 或未激活）或追踪失败则返回 <see langword="false"/>。</returns>
+        /// <returns>追踪是否成功。若目标实体无效（<see langword="null"/> 或未激活）或追踪失败则返回 <see langword="false"/>。</returns>
         public bool HomeIn<T>(T target, HomingAlgorithm algorithm = HomingAlgorithm.SmoothStep, float homingRatio = 1f, float? maxHomingDistance = null, float sightAngle = MathHelper.TwoPi, bool keepVelocity = true, float? velocityOverride = null) where T : Entity =>
             target is not null && target.active && entity.HomeInOn(target.Center, algorithm, homingRatio, maxHomingDistance, sightAngle, keepVelocity, velocityOverride);
     }

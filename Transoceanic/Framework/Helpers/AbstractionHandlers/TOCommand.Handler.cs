@@ -1,6 +1,6 @@
 ﻿// Developed by ColdsUx
 
-namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
+namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
 /// 处理聊天命令 "/chat"（需要输入 "//chat"）的入口命令类。

@@ -1,6 +1,8 @@
 ﻿// Developed by ColdsUx
 
+#if DEBUG
 #define TEST_DEV
+#endif
 
 #if TEST_DEV
 namespace CalamityAnomalies.GameContents.Developer;

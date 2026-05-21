@@ -1,6 +1,6 @@
 ﻿// Developed by ColdsUx
 
-namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
+namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
 /// 调度所有实现了 <see cref="IContentLoader"/> 接口的类型，在对应的生命周期阶段按优先级执行加载与卸载逻辑。

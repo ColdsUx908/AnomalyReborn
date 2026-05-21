@@ -98,7 +98,7 @@ public class BloodOrbProjectile : CAModProjectile
 
                     goto default;
                 default:
-                    if (ArenaProjectileAlive && Projectile.Distance(ArenaProjectile.Center) > ArenaModProjectile.RealArenaRadius + 30f)
+                    if (ArenaProjectileAlive && Projectile.Distance(ArenaProjectile.Center) > ArenaModProjectile.Radius + 30f)
                         Projectile.Kill();
                     break;
             }

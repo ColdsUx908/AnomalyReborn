@@ -134,7 +134,7 @@ public static partial class TOMathUtils
         /// <param name="a">轴对齐矩形。</param>
         /// <param name="b">圆环（具有内外半径）。</param>
         /// <returns>若矩形与圆环区域相交则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
-        public static bool FloatRectanglevRingCollision(FloatRectangle a, Ring b)
+        public static bool FloatRectanglevRingCollision(FloatRectangle a, Annulus b)
         {
             float minDistanceSquared = MinDistanceSquaredFromTo(a, b.Center);
             if (minDistanceSquared > b.OuterRadius * b.OuterRadius)

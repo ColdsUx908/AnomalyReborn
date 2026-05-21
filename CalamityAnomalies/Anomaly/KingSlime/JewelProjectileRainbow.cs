@@ -42,6 +42,7 @@ public class JewelProjectileRainbow : CAModProjectile
         Projectile.height = 10;
         Projectile.penetrate = -1;
         Projectile.hostile = true;
+        Projectile.timeLeft = 450;
     }
 
     public override void AI()

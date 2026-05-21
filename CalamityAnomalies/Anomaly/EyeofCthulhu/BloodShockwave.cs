@@ -1,10 +1,10 @@
 ﻿// Developed by ColdsUx
 
-using Transoceanic.DataStructures.GameContent;
+using CalamityAnomalies.GameContents.Base;
 
 namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
 
-public sealed class BloodShockwave : TOShockwaveProjectile, IContentLoader
+public sealed class BloodShockwave : BaseShockwaveProjectile, IContentLoader
 {
     public override bool Hostile => false;
     public override List<int> NPCTypesToHit => _npcTypesToHit;

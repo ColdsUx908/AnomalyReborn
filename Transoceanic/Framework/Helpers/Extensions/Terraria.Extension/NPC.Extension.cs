@@ -18,7 +18,7 @@ public static partial class TOExtensions
         /// 获取 NPC 所关联的 <see cref="ModNPC"/> 实例，并转换为指定类型。
         /// </summary>
         /// <typeparam name="T">目标 <see cref="ModNPC"/> 类型。</typeparam>
-        /// <returns>转换后的实例，若不存在则返回 <c>null</c>。</returns>
+        /// <returns>转换后的实例，若不存在则返回 <see langword="null"/>。</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetModNPC<T>() where T : ModNPC => npc?.ModNPC as T;
 
@@ -35,7 +35,7 @@ public static partial class TOExtensions
         /// 尝试获取 NPC 所关联的 <see cref="ModNPC"/> 实例，并转换为指定类型。
         /// </summary>
         /// <typeparam name="T">目标 <see cref="ModNPC"/> 类型。</typeparam>
-        /// <param name="result">输出转换后的实例，成功时为有效值，否则为 <c>null</c>。</param>
+        /// <param name="result">输出转换后的实例，成功时为有效值，否则为 <see langword="null"/>。</param>
         /// <returns>如果成功获取则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetModNPC<T>([NotNullWhen(true)] out T result) where T : ModNPC => (result = npc.GetModNPC<T>()) is not null;
@@ -138,6 +138,9 @@ public static partial class TOExtensions
         /// 判断 NPC 是否面向其目标。
         /// </summary>
         public bool IsFacingTarget => npc.direction == npc.TargetDirection;
+
+        public bool CanBeChasedBy_IgnoreChaseable(object attacker = null, bool ignoreDontTakeDamage = false) =>
+            npc.active && npc.lifeMax > 5 && (!npc.dontTakeDamage || ignoreDontTakeDamage) && !npc.friendly && !npc.immortal;
 
         /// <summary>
         /// 使 NPC 面向指定实体。
@@ -561,7 +564,7 @@ public static partial class TOExtensions
         /// 检查是否存在指定类型的活跃 NPC，并输出找到的第一个实例。
         /// </summary>
         /// <param name="type">NPC 类型 ID。</param>
-        /// <param name="npc">输出找到的 NPC 实例，若不存在则为 <c>null</c>。</param>
+        /// <param name="npc">输出找到的 NPC 实例，若不存在则为 <see langword="null"/>。</param>
         /// <returns>如果存在则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
         public static bool AnyNPCs(int type, [NotNullWhen(true)] out NPC npc)
         {
@@ -579,7 +582,7 @@ public static partial class TOExtensions
         /// 检查是否存在指定 ModNPC 类型的活跃 NPC，并输出找到的第一个实例。
         /// </summary>
         /// <typeparam name="T">继承自 <see cref="ModNPC"/> 的类型。</typeparam>
-        /// <param name="npc">输出找到的 NPC 实例，若不存在则为 <c>null</c>。</param>
+        /// <param name="npc">输出找到的 NPC 实例，若不存在则为 <see langword="null"/>。</param>
         /// <returns>如果存在则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
         public static bool AnyNPCs<T>([NotNullWhen(true)] out NPC npc) where T : ModNPC
         {
@@ -716,7 +719,7 @@ public static partial class TOExtensions
         /// 生成一个新的 NPC 到世界中，并在生成后执行一个 <see cref="Action{NPC}"/>，同时返回生成结果和索引。
         /// </summary>
         /// <param name="index">输出 NPC 在 <see cref="Main.npc"/> 中的索引。</param>
-        /// <param name="npc">输出 NPC 实例，生成失败时为 <c>null</c>。</param>
+        /// <param name="npc">输出 NPC 实例，生成失败时为 <see langword="null"/>。</param>
         /// <param name="source">生成源。</param>
         /// <param name="position">生成位置。</param>
         /// <param name="type">NPC 类型 ID。</param>

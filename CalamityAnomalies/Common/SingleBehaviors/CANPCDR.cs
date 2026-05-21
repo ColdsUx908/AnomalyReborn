@@ -1,9 +1,7 @@
 ﻿// Developed by ColdsUx
 
-using CalamityMod.Events;
 using CalamityMod.NPCs;
 using CalamityMod.NPCs.Providence;
-using Transoceanic.Framework.Helpers.AbstractionHandlers;
 using Transoceanic.Framework.RuntimeEditing;
 
 namespace CalamityAnomalies.Common.SingleBehaviors;
@@ -87,7 +85,7 @@ public sealed class CANPCDR : CAGlobalNPCBehavior, IContentLoader
         bool isNightProvidence = npc.ModNPC is Providence providence && providence.hasBeenGivenFullPower;
         bool isGFBDayEmpressofLight = CASharedData.Anomaly && Main.zenithWorld && npc.type == NPCID.HallowBoss && npc.Anomaly.IsRunningAnomalyAI;
 
-        if (killTime > 0 && aiTimer < killTime && !BossRushEvent.BossRushActive && (isNightProvidence || isGFBDayEmpressofLight))
+        if (killTime > 0 && aiTimer < killTime && !BossRushEvent_Bridge.BossRushActive && (isNightProvidence || isGFBDayEmpressofLight))
         {
             const float tdrFactor = 10f;
             float extraDRLimit = (1f - baseDR) * tdrFactor / 2f;

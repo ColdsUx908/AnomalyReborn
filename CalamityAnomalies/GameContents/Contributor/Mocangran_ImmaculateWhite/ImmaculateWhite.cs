@@ -1,9 +1,5 @@
 ﻿// Developed by ColdsUx
 
-using CalamityAnomalies.GameContents.Developer;
-using CalamityMod.Items.Weapons.Summon;
-using CalamityMod.Projectiles.Ranged;
-
 namespace CalamityAnomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
 
 public sealed class ImmaculateWhite : CALegendaryItem
@@ -73,7 +69,7 @@ public sealed class ImmaculateWhite : CALegendaryItem
     {
         Item.width = 22;
         Item.height = 60;
-        Item.damage = 24; 
+        Item.damage = 24;
         Item.DamageType = DamageClass.Magic;
         Item.useAmmo = AmmoID.Arrow;
         Item.mana = 12;
@@ -130,8 +126,8 @@ public sealed class ImmaculateWhite : CALegendaryItem
         Projectile.NewProjectileAction(source, position, velocity, Item.shoot, newDamage, knockback, player.whoAmI, p =>
         {
             //肉后可以分裂出小弹幕
-            if (Phase >= 2) 
-            { 
+            if (Phase >= 2)
+            {
                 p.ai[2] = 1f;
             }
             //光女后可以右键发射另一种弹幕

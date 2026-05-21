@@ -11,7 +11,6 @@ using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.UI;
 using Terraria.GameContent.Events;
 using Terraria.GameContent.UI.BigProgressBar;
-using Transoceanic.Framework.Helpers.AbstractionHandlers;
 using static CalamityAnomalies.Visuals.BetterBossHealthBar;
 using static CalamityMod.UI.BossHealthBarManager;
 

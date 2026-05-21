@@ -168,7 +168,7 @@ public struct Line : IEquatable<Line>
     /// 计算当前直线与另一条直线的交点。
     /// </summary>
     /// <param name="other">另一条直线。</param>
-    /// <returns>如果两条直线相交，返回交点坐标；如果平行或重合，返回 <c>null</c>。</returns>
+    /// <returns>如果两条直线相交，返回交点坐标；如果平行或重合，返回 <see langword="null"/>。</returns>
     public readonly Vector2? Intersection(Line other)
     {
         float determinant = A * other.B - other.A * B;

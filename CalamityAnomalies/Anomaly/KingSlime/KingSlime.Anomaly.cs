@@ -412,9 +412,9 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
         JewelEmerald = NPC.DummyNPC;
         JewelSapphire = NPC.DummyNPC;
 
-        AnomalyNPC.DynamicDRHandler = new(
-            new DynamicDamageReductionHandler.SingleDDRHandler(1f, Phase2LifeRatio, null, n => GetNewInstance(n).CurrentPhase >= Phase.PhaseChange_1To2, 60),
-            new DynamicDamageReductionHandler.SingleDDRHandler(0.5f, 0f, n => GetNewInstance(n).Phase2, null, 30)
+        AnomalyNPC.DynamicDRHandler = new TimedDDRHandler(
+            new TimedDDRHandler.SingleDDRHandler(1f, Phase2LifeRatio, null, n => GetNewInstance(n).CurrentPhase >= Phase.PhaseChange_1To2, 60),
+            new TimedDDRHandler.SingleDDRHandler(0.5f, 0f, n => GetNewInstance(n).Phase2, null, 30)
         );
     }
 
@@ -469,6 +469,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     Despawn();
                 }
                 break;
+
             case Phase.Phase1 or Phase.Phase2 or Phase.Phase2_2:
                 switch (CurrentBehavior)
                 {
@@ -487,6 +488,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                         break;
                 }
                 break;
+
             case Phase.PhaseChange_1To2:
                 PhaseChange();
                 break;
@@ -499,8 +501,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
         NPC.GraphicAlpha = (byte)(255 * TOMathUtils.Interpolation.ExponentialEaseOut(TeleportScaleMultiplier * 3f, 4f));
 
-        if (Main.dedServ)
-            NPC.netUpdate = true;
+        NPC.netUpdate = true;
 
         return false;
 
@@ -782,6 +783,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     }
 
                     break;
+
                 case 1: //上升
                 case 2: //下降
                     NPC.damage = NPC.defDamage;
@@ -937,6 +939,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     TeleportDestination = destination ?? Target.Bottom;
                     CurrentAttackPhase = 1;
                     break;
+
                 case 1: //停止水平移动并缩小体型，满足条件时传送
                     MakeSlimeDust((int)Utils.Remap(NPC.scale, MinScale, MaxScale, 5f, 12.5f));
                     TeleportScaleMultiplier -= MathHelper.Lerp(Ultra ? 0.016f : 0.013f, Ultra ? 0.02f : 0.015f, NPC.LostLifeRatio);
@@ -947,6 +950,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                         CurrentAttackPhase = 2;
                     }
                     break;
+
                 case 2: //恢复体型，恢复完成后开始下一次攻击
                     TeleportScaleMultiplier += MathHelper.Lerp(0.03f, 0.05f, NPC.LostLifeRatio);
                     if (TeleportScaleMultiplier >= 1f)
@@ -974,6 +978,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     if (JewelSapphireAlive)
                         KingSlime_Handler.DisableAttack(JewelSapphire);
                     break;
+
                 case 90:
                     SoundEngine.PlaySound(SoundID.Item38, NPC.Center);
                     SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
@@ -1002,9 +1007,11 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                         JewelRainbowSpawned = true;
                     });
                     break;
+
                 case 100:
                     PhaseChangeLifeRatio = NPC.LifeRatio;
                     break;
+
                 case 160:
                     CurrentPhase = Phase.Phase2;
                     TeleportTimer = 2000f;
@@ -1034,46 +1041,6 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                 TeleportScaleMultiplier -= 0.01f;
         }
         #endregion 行为函数
-    }
-
-    public override void FindFrame(int frameHeight)
-    {
-        /*
-        if (NPC.velocity.Y != 0f)
-        {
-            if (NPC.frame.Y < frameHeight * 4)
-            {
-                NPC.frame.Y = frameHeight * 4;
-                NPC.frameCounter = 0.0;
-            }
-
-            if ((NPC.frameCounter += 1.0) >= 4.0)
-                NPC.frame.Y = frameHeight * 5;
-
-        }
-        else
-        {
-            if (NPC.frame.Y >= frameHeight * 5)
-            {
-                NPC.frame.Y = frameHeight * 4;
-                NPC.frameCounter = 0.0;
-            }
-            NPC.frameCounter += 1.0;
-
-
-            if (num2 > 0)
-                NPC.frameCounter += 1.0;
-            if (num2 == 4)
-                NPC.frameCounter += 1.0;
-            if (frameCounter >= 8.0)
-            {
-                NPC.frame.Y += frameHeight;
-                NPC.frameCounter = 0.0;
-                if (NPC.frame.Y >= frameHeight * 4)
-                    NPC.frame.Y = 0;
-            }
-        }
-        */
     }
 
     public override Color? GetAlpha(Color drawColor)

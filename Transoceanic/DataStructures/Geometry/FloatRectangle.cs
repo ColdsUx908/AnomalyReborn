@@ -10,7 +10,7 @@ public struct FloatRectangle : IEquatable<FloatRectangle>,
     ICollidable<FloatRectangle, FloatRectangle>,
     ICollidable<FloatRectangle, Circle>,
     ICollidable<FloatRectangle, RotatedRectangle>,
-    ICollidable<FloatRectangle, Ring>
+    ICollidable<FloatRectangle, Annulus>
 {
     /// <summary>
     /// 矩形左上角的位置坐标。
@@ -151,5 +151,5 @@ public struct FloatRectangle : IEquatable<FloatRectangle>,
     public readonly bool Collides(FloatRectangle other) => Left < other.Right && Right > other.Left && Top < other.Bottom && Bottom > other.Top;
     public readonly bool Collides(Circle other) => TOMathUtils.Geometry.FloatRectanglevCircleCollision(this, other);
     public readonly bool Collides(RotatedRectangle other) => TOMathUtils.Geometry.RotatedRectanglevFloatRectangleCollision(other, this);
-    public readonly bool Collides(Ring other) => TOMathUtils.Geometry.FloatRectanglevRingCollision(this, other);
+    public readonly bool Collides(Annulus other) => TOMathUtils.Geometry.FloatRectanglevRingCollision(this, other);
 }

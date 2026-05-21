@@ -1,7 +1,5 @@
 ﻿// Developed by ColdsUx
 
-using Transoceanic.Framework.Helpers.AbstractionHandlers;
-
 namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
 
 public enum BehaviorCommand_Servant
@@ -21,14 +19,6 @@ public enum BehaviorCommand_Arena
     Charge,
     EyeSpin,
     EyeSpinLast,
-}
-
-public enum BehaviorCommand_ArenaEye
-{
-    None = 0,
-
-    ShootBlood_Charge,
-    ShootBlood_EyeSpin,
 }
 
 public static class EyeofCthulhu_Handler

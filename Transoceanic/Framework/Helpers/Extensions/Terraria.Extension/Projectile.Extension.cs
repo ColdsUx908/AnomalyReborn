@@ -16,7 +16,7 @@ public static partial class TOExtensions
         /// <summary>
         /// 获取弹幕的所有者玩家。
         /// </summary>
-        /// <returns>所有者的 <see cref="Player"/> 实例，若索引无效则返回 <c>null</c>。</returns>
+        /// <returns>所有者的 <see cref="Player"/> 实例，若索引无效则返回 <see langword="null"/>。</returns>
         public Player Owner
         {
             get
@@ -32,7 +32,7 @@ public static partial class TOExtensions
         /// 获取弹幕所关联的 <see cref="ModProjectile"/> 实例，并转换为指定类型。
         /// </summary>
         /// <typeparam name="T">目标 <see cref="ModProjectile"/> 类型。</typeparam>
-        /// <returns>转换后的实例，若不存在则返回 <c>null</c>。</returns>
+        /// <returns>转换后的实例，若不存在则返回 <see langword="null"/>。</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetModProjectile<T>() where T : ModProjectile => projectile?.ModProjectile as T;
 
@@ -49,7 +49,7 @@ public static partial class TOExtensions
         /// 尝试获取弹幕所关联的 <see cref="ModProjectile"/> 实例，并转换为指定类型。
         /// </summary>
         /// <typeparam name="T">目标 <see cref="ModProjectile"/> 类型。</typeparam>
-        /// <param name="result">输出转换后的实例，成功时为有效值，否则为 <c>null</c>。</param>
+        /// <param name="result">输出转换后的实例，成功时为有效值，否则为 <see langword="null"/>。</param>
         /// <returns>如果成功获取则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetModProjectile<T>([NotNullWhen(true)] out T result) where T : ModProjectile => (result = projectile.GetModProjectile<T>()) is not null;
@@ -350,7 +350,7 @@ public static partial class TOExtensions
         /// 生成一个新的弹幕到世界中，并在生成后执行一个 <see cref="Action{Projectile}"/>，同时返回生成结果和索引。
         /// </summary>
         /// <param name="index">输出弹幕在 <see cref="Main.projectile"/> 中的索引。</param>
-        /// <param name="projectile">输出弹幕实例，生成失败时为 <c>null</c>。</param>
+        /// <param name="projectile">输出弹幕实例，生成失败时为 <see langword="null"/>。</param>
         /// <param name="source">生成源。</param>
         /// <param name="position">生成位置。</param>
         /// <param name="velocity">初始速度。</param>

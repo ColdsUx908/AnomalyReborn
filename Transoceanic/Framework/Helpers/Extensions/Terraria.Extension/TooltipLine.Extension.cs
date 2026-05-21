@@ -11,7 +11,7 @@ public static partial class TOExtensions
         /// </summary>
         /// <param name="match">匹配条件委托。</param>
         /// <param name="index">输出匹配项的索引，未找到时为 -1。</param>
-        /// <param name="tooltip">输出匹配的工具行实例，未找到时为 <c>null</c>。</param>
+        /// <param name="tooltip">输出匹配的工具行实例，未找到时为 <see langword="null"/>。</param>
         /// <returns>如果找到则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
         public bool TryFindTooltip(Func<TooltipLine, bool> match, out int index, out TooltipLine tooltip)
         {

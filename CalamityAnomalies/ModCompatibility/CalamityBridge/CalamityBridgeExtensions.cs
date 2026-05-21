@@ -18,7 +18,7 @@ using CalamityMod.NPCs.Ravager;
 using CalamityMod.NPCs.StormWeaver;
 using CalamityMod.Projectiles;
 
-namespace CalamityAnomalies.Core;
+namespace CalamityAnomalies.Common;
 
 public static class CalamityBridgeExtensions
 {
