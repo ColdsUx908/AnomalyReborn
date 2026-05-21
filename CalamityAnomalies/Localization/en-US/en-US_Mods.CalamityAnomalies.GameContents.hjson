@@ -40,4 +40,6 @@ Contributor: {
 
 	ImmaculateLight.DisplayName: Immaculate Light
 	ImmaculateBolt.DisplayName: Immaculate Bolt
+	ImmaculateInfiniteBolt.DisplayName: Immaculate Infinite Bolt
+	InfiniteImmaculateBolt.DisplayName: Infinite Immaculate Bolt
 }
