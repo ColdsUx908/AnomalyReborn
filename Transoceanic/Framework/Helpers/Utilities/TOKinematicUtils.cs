@@ -31,337 +31,387 @@ public static class TOKinematicUtils
     /// </summary>
     /// <param name="origin">检索的中心点（世界坐标）。</param>
     /// <param name="maxDistanceToCheck">最大检索距离（像素）。</param>
-    /// <param name="ignoreTiles">是否忽略实体物块阻挡。若为 <see langword="true"/>，则只进行距离判断；若为 <see langword="false"/>，则需要视线通畅（<see cref="Collision.CanHit(Vector2, int, int, Vector2, int, int)"/>）。</param>
-    /// <param name="bossPriority">是否优先锁定Boss单位。若为 <see langword="true"/>，则当范围内存在Boss时，只返回符合条件的Boss，否则再考虑普通敌怪。</param>
+    /// <param name="ignoreTiles">是否忽略实体物块阻挡。若为 true，则只进行距离判断；若为 false，则需要视线通畅（<see cref="Collision.CanHit(Vector2, int, int, Vector2, int, int)"/>）。</param>
     /// <param name="priorityType">目标排序优先级类型，可选最近距离、最高最大生命值、最低当前生命值。</param>
-    /// <param name="ignoreChaseable">是否忽略可追逐性判断。若为 <see langword="true"/>，则不考虑 <see cref="NPC.chaseable"/>；若为 <see langword="false"/>，则需要满足可追逐条件。</param>
-    /// <returns>符合条件的 NPC 实例；若未检索到则返回 <see langword="null"/>。</returns>
+    /// <param name="bossPriority">是否优先锁定Boss单位。若为 true，则当范围内存在Boss时，只返回符合条件的Boss，否则再考虑普通敌怪。</param>
+    /// <returns>符合条件的 NPC 实例；若未检索到则返回 null。</returns>
     /// <remarks>
     /// <strong>警告：</strong>遍历 NPC 集合对性能有较大影响，应仅在必要的时候（例如弹幕索敌、召唤物 AI 更新）调用此方法，避免在每帧绘制中调用。
     /// </remarks>
-    public static NPC GetNPCTarget(Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, bool bossPriority = false, PriorityType priorityType = PriorityType.Closest, bool ignoreChaseable = false)
+    public static NPC GetNPCTarget(Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, PriorityType priorityType = PriorityType.Closest, bool bossPriority = false)
     {
-        float maxDistanceToCheckSquared = maxDistanceToCheck * maxDistanceToCheck;
+        float maxDistanceSquared = maxDistanceToCheck * maxDistanceToCheck;
         NPC target = null;
-        bool hasPriority = false;
-        switch (priorityType)
+        float bestValue = 0f;
+
+        if (bossPriority)
         {
-            case PriorityType.LifeMax:
-                if (bossPriority)
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        bool chaseable = ignoreChaseable ? npc.CanBeChasedBy_IgnoreChaseable() : npc.CanBeChasedBy();
-                        if (!chaseable || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1)))
-                            continue;
+            bool anyBoss = false;
 
-                        if (target is null)
-                        {
-                            target = npc;
-                            hasPriority = npc.IsBossEnemy;
-                            continue;
-                        }
-                        switch (hasPriority, npc.IsBossEnemy)
-                        {
-                            case (true, false):
-                                break;
-                            case (false, true):
-                                target = npc;
-                                hasPriority = true;
-                                break;
-                            case (true, true) or (false, false) when npc.lifeMax > target.lifeMax:
-                                target = npc;
-                                break;
-                        }
-                    }
+            foreach (NPC npc in NPC.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy())
+                    continue;
+
+                float distanceSquared = Vector2.DistanceSquared(origin, npc.Center);
+                if (distanceSquared > maxDistanceSquared)
+                    continue;
+
+                if (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
+                    continue;
+
+                // 首次命中或与当前最佳目标比较
+                if (target is null)
+                {
+                    target = npc;
+                    anyBoss = npc.IsBossEnemy;
+                    bestValue = priorityType switch
+                    {
+                        PriorityType.Closest => distanceSquared,
+                        PriorityType.LifeMax => npc.lifeMax,
+                        PriorityType.Life => npc.life,
+                        _ => distanceSquared
+                    };
                 }
                 else
                 {
-                    foreach (NPC npc in NPC.ActiveNPCs)
+                    switch (anyBoss, npc.IsBossEnemy)
                     {
-                        bool chaseable = ignoreChaseable ? npc.CanBeChasedBy_IgnoreChaseable() : npc.CanBeChasedBy();
-                        if (!chaseable || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1)))
-                            continue;
-
-                        if (target is null || npc.lifeMax > target.lifeMax)
+                        case (true, false):
+                            break;
+                        case (false, true):
                             target = npc;
+                            anyBoss = true;
+                            bestValue = priorityType switch
+                            {
+                                PriorityType.Closest => distanceSquared,
+                                PriorityType.LifeMax => npc.lifeMax,
+                                PriorityType.Life => npc.life,
+                                _ => distanceSquared
+                            };
+                            break;
+                        case (true, true) or (false, false):
+                            TryReplaceTarget(ref target, npc, distanceSquared, ref bestValue, priorityType);
+                            break;
                     }
                 }
-                return target;
-            case PriorityType.Life:
-                if (bossPriority)
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        bool chaseable = ignoreChaseable ? npc.CanBeChasedBy_IgnoreChaseable() : npc.CanBeChasedBy();
-                        if (!chaseable || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1)))
-                            continue;
-
-                        if (target is null)
-                        {
-                            target = npc;
-                            hasPriority = npc.IsBossEnemy;
-                            continue;
-                        }
-                        switch (hasPriority, npc.IsBossEnemy)
-                        {
-                            case (true, false):
-                                break;
-                            case (false, true):
-                                target = npc;
-                                hasPriority = true;
-                                break;
-                            case (true, true) or (false, false) when npc.life > target.life:
-                                target = npc;
-                                break;
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        bool chaseable = ignoreChaseable ? npc.CanBeChasedBy_IgnoreChaseable() : npc.CanBeChasedBy();
-                        if (!chaseable || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1)))
-                            continue;
-
-                        if (target is null || npc.life < target.life)
-                            target = npc;
-                    }
-                }
-                return target;
-            case PriorityType.Closest:
-            default:
-                float distanceTemp = maxDistanceToCheckSquared;
-                if (bossPriority)
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        float distanceSquared = Vector2.DistanceSquared(origin, npc.Center);
-                        bool chaseable = ignoreChaseable ? npc.CanBeChasedBy_IgnoreChaseable() : npc.CanBeChasedBy();
-                        if (!chaseable || distanceSquared > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1)))
-                            continue;
-
-                        if (target is null)
-                        {
-                            target = npc;
-                            hasPriority = npc.IsBossEnemy;
-                            distanceTemp = distanceSquared;
-                            continue;
-                        }
-                        switch (hasPriority, npc.IsBossEnemy)
-                        {
-                            case (true, false):
-                                break;
-                            case (false, true):
-                                target = npc;
-                                distanceTemp = distanceSquared;
-                                hasPriority = true;
-                                break;
-                            case (true, true) or (false, false) when distanceSquared < distanceTemp:
-                                target = npc;
-                                distanceTemp = distanceSquared;
-                                break;
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        float distanceSquared = Vector2.DistanceSquared(origin, npc.Center);
-                        bool chaseable = ignoreChaseable ? npc.CanBeChasedBy_IgnoreChaseable() : npc.CanBeChasedBy();
-                        if (!chaseable || distanceSquared > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1)))
-                            continue;
-
-                        if (target is null || distanceSquared < distanceTemp)
-                        {
-                            target = npc;
-                            distanceTemp = distanceSquared;
-                        }
-                    }
-                }
-                return target;
+            }
         }
+        else
+        {
+            foreach (NPC npc in NPC.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy())
+                    continue;
+
+                float distanceSquared = Vector2.DistanceSquared(origin, npc.Center);
+                if (distanceSquared > maxDistanceSquared)
+                    continue;
+
+                if (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
+                    continue;
+
+                // 首次命中或与当前最佳目标比较
+                if (target is null)
+                {
+                    target = npc;
+                    bestValue = priorityType switch
+                    {
+                        PriorityType.Closest => distanceSquared,
+                        PriorityType.LifeMax => npc.lifeMax,
+                        PriorityType.Life => npc.life,
+                        _ => distanceSquared
+                    };
+                }
+                else
+                    TryReplaceTarget(ref target, npc, distanceSquared, ref bestValue, priorityType);
+            }
+        }
+
+        return target;
     }
 
     /// <summary>
     /// 根据指定条件检索有效的 NPC 目标。
     /// 可选择性考虑弹幕的无敌帧，以排除当前无法命中的 NPC。
+    /// 可选择性忽略 NPC 的可追逐属性。
     /// </summary>
-    /// <param name="projectile">进行索敌的弹幕实例，用于检查 NPC 对该弹幕的免疫状态。</param>
     /// <param name="origin">检索的中心点（世界坐标）。</param>
     /// <param name="maxDistanceToCheck">最大检索距离（像素）。</param>
     /// <param name="ignoreTiles">是否忽略实体物块阻挡。若为 <see langword="true"/>，则只进行距离判断；若为 <see langword="false"/>，则需要视线通畅（<see cref="Collision.CanHit(Vector2, int, int, Vector2, int, int)"/>）。</param>
-    /// <param name="bossPriority">是否优先锁定Boss单位。若为 <see langword="true"/>，则当范围内存在Boss时，只返回符合条件的Boss，否则再考虑普通敌怪。</param>
     /// <param name="priorityType">目标排序优先级类型，可选最近距离、最高最大生命值、最低当前生命值。</param>
-    /// <param name="respectImmuneFrames">是否尊重弹幕无敌帧。若为 <see langword="true"/>，则不会返回当前对该弹幕处于无敌状态的 NPC（即 <see cref="Projectile.localNPCImmunity"/> 或 <see cref="NPC.immune"/> 计数尚未结束）。</param>
-    /// <param name="ignoreChaseable">是否忽略可追逐性判断。若为 <see langword="true"/>，则不考虑 <see cref="NPC.chaseable"/>；若为 <see langword="false"/>，则需要满足可追逐条件。</param>
+    /// <param name="respectImmuneFrames">是否尊重弹幕无敌帧。若为 <see langword="true"/>，且 <paramref name="projectile"/> 不为 <see langword="null"/>，则不会返回当前对该弹幕处于无敌状态的 NPC（即 <see cref="Projectile.localNPCImmunity"/> 或 <see cref="NPC.immune"/> 计数尚未结束）。</param>
+    /// <param name="projectile">进行索敌的弹幕实例，用于检查 NPC 对该弹幕的免疫状态。</param>
+    /// <param name="ignoreChaseable">是否忽略可追逐性判断。若为 <see langword="true"/>，则可追踪 <see cref="NPC.chaseable"/> 为 <see langword="false"/> 的 NPC（仍以 <see cref="NPC.chaseable"/> 为 <see langword="true"/> 的为优先）；若为 <see langword="false"/>，则需要满足可追逐条件。</param>
+    /// <param name="bossPriority">是否优先锁定Boss单位。若为 <see langword="true"/>，则当范围内存在Boss时，只返回符合条件的Boss，否则再考虑普通敌怪。</param>
     /// <returns>符合条件的 NPC 实例；若未检索到则返回 <see langword="null"/>。</returns>
     /// <remarks>
     /// <strong>警告：</strong>遍历 NPC 集合对性能有较大影响，应仅在必要的时候（例如弹幕索敌、召唤物 AI 更新）调用此方法，避免在每帧绘制中调用。
     /// </remarks>
-    public static NPC GetNPCTarget(Projectile projectile, Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, bool bossPriority = false, PriorityType priorityType = PriorityType.Closest, bool respectImmuneFrames = false, bool ignoreChaseable = false)
+    public static NPC GetNPCTarget_Advanced(Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, PriorityType priorityType = PriorityType.Closest, bool respectImmuneFrames = false, Projectile projectile = null, bool ignoreChaseable = false, bool bossPriority = false)
     {
-        float maxDistanceToCheckSquared = maxDistanceToCheck * maxDistanceToCheck;
+        bool hasProjectile = projectile is not null;
+        float maxDistanceSquared = maxDistanceToCheck * maxDistanceToCheck;
         NPC target = null;
-        bool hasPriority = false;
+        float bestValue = 0f;
+
+        if (ignoreChaseable)
+        {
+            if (bossPriority)
+            {
+                bool anyBoss = false;
+                bool anyChaseable = false;
+
+                foreach (NPC npc in NPC.ActiveNPCs)
+                {
+                    if (!npc.CanBeChasedBy_IgnoreChaseable())
+                        continue;
+                    float distanceSquared = Vector2.DistanceSquared(origin, npc.Center);
+                    if (distanceSquared > maxDistanceSquared)
+                        continue;
+                    if (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
+                        continue;
+                    if (respectImmuneFrames && hasProjectile && (projectile.localNPCImmunity[npc.whoAmI] is -1 or > 0 || npc.immune[projectile.owner] > 0))
+                        continue;
+
+                    if (target is null)
+                    {
+                        target = npc;
+                        anyBoss = npc.IsBossEnemy;
+                        anyChaseable = npc.chaseable;
+                        bestValue = priorityType switch
+                        {
+                            PriorityType.Closest => distanceSquared,
+                            PriorityType.LifeMax => npc.lifeMax,
+                            PriorityType.Life => npc.life,
+                            _ => distanceSquared
+                        };
+                    }
+                    else
+                    {
+                        switch ((anyBoss, npc.IsBossEnemy))
+                        {
+                            case (true, false):
+                                break;
+                            case (false, true):
+                                target = npc;
+                                anyBoss = true;
+                                anyChaseable = npc.chaseable;
+                                bestValue = priorityType switch
+                                {
+                                    PriorityType.Closest => distanceSquared,
+                                    PriorityType.LifeMax => npc.lifeMax,
+                                    PriorityType.Life => npc.life,
+                                    _ => distanceSquared
+                                };
+                                break;
+                            case (true, true) or (false, false):
+                                switch (anyChaseable, npc.chaseable)
+                                {
+                                    case (true, false):
+                                        break;
+                                    case (false, true):
+                                        target = npc;
+                                        anyChaseable = true;
+                                        bestValue = priorityType switch
+                                        {
+                                            PriorityType.Closest => distanceSquared,
+                                            PriorityType.LifeMax => npc.lifeMax,
+                                            PriorityType.Life => npc.life,
+                                            _ => distanceSquared
+                                        };
+                                        break;
+                                    case (true, true) or (false, false):
+                                        TryReplaceTarget(ref target, npc, distanceSquared, ref bestValue, priorityType);
+                                        break;
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                bool anyChaseable = false;
+
+                foreach (NPC npc in NPC.ActiveNPCs)
+                {
+                    if (!npc.CanBeChasedBy_IgnoreChaseable())
+                        continue;
+                    float distanceSquared = Vector2.DistanceSquared(origin, npc.Center);
+                    if (distanceSquared > maxDistanceSquared)
+                        continue;
+                    if (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
+                        continue;
+                    if (respectImmuneFrames && hasProjectile && (projectile.localNPCImmunity[npc.whoAmI] is -1 or > 0 || npc.immune[projectile.owner] > 0))
+                        continue;
+
+                    // 首次命中：直接记录目标与对应属性
+                    if (target is null)
+                    {
+                        target = npc;
+                        anyChaseable = npc.chaseable;
+                        bestValue = priorityType switch
+                        {
+                            PriorityType.Closest => distanceSquared,
+                            PriorityType.LifeMax => npc.lifeMax,
+                            PriorityType.Life => npc.life,
+                            _ => distanceSquared
+                        };
+                    }
+                    else
+                    {
+                        switch (anyChaseable, npc.chaseable)
+                        {
+                            case (true, false):
+                                break;
+
+                            case (false, true):
+                                target = npc;
+                                anyChaseable = true;
+                                bestValue = priorityType switch
+                                {
+                                    PriorityType.Closest => distanceSquared,
+                                    PriorityType.LifeMax => npc.lifeMax,
+                                    PriorityType.Life => npc.life,
+                                    _ => distanceSquared
+                                };
+                                break;
+
+                            case (true, true) or (false, false):
+                                TryReplaceTarget(ref target, npc, distanceSquared, ref bestValue, priorityType);
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (bossPriority)
+            {
+                bool anyBoss = false;
+
+                foreach (NPC npc in NPC.ActiveNPCs)
+                {
+                    if (!npc.CanBeChasedBy())
+                        continue;
+                    float distanceSquared = Vector2.DistanceSquared(origin, npc.Center);
+                    if (distanceSquared > maxDistanceSquared)
+                        continue;
+                    if (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
+                        continue;
+                    if (respectImmuneFrames && hasProjectile && (projectile.localNPCImmunity[npc.whoAmI] is -1 or > 0 || npc.immune[projectile.owner] > 0))
+                        continue;
+
+                    // 首次命中：直接记录目标与对应属性
+                    if (target is null)
+                    {
+                        target = npc;
+                        anyBoss = npc.IsBossEnemy;
+                        bestValue = priorityType switch
+                        {
+                            PriorityType.Closest => distanceSquared,
+                            PriorityType.LifeMax => npc.lifeMax,
+                            PriorityType.Life => npc.life,
+                            _ => distanceSquared
+                        };
+                    }
+                    else
+                    {
+                        switch (anyBoss, npc.IsBossEnemy)
+                        {
+                            case (true, false):
+                                break;
+
+                            case (false, true):
+                                target = npc;
+                                anyBoss = true;
+                                bestValue = priorityType switch
+                                {
+                                    PriorityType.Closest => distanceSquared,
+                                    PriorityType.LifeMax => npc.lifeMax,
+                                    PriorityType.Life => npc.life,
+                                    _ => distanceSquared
+                                };
+                                break;
+
+                            case (true, true) or (false, false):
+                                TryReplaceTarget(ref target, npc, distanceSquared, ref bestValue, priorityType);
+                                break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach (NPC npc in NPC.ActiveNPCs)
+                {
+                    if (!npc.CanBeChasedBy())
+                        continue;
+                    float distanceSquared = Vector2.DistanceSquared(origin, npc.Center);
+                    if (distanceSquared > maxDistanceSquared)
+                        continue;
+                    if (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
+                        continue;
+                    if (respectImmuneFrames && hasProjectile && (projectile.localNPCImmunity[npc.whoAmI] is -1 or > 0 || npc.immune[projectile.owner] > 0))
+                        continue;
+                    if (target is null)
+                    {
+                        target = npc;
+                        bestValue = priorityType switch
+                        {
+                            PriorityType.Closest => distanceSquared,
+                            PriorityType.LifeMax => npc.lifeMax,
+                            PriorityType.Life => npc.life,
+                            _ => distanceSquared
+                        };
+                    }
+                    else
+                        TryReplaceTarget(ref target, npc, distanceSquared, ref bestValue, priorityType);
+                }
+            }
+        }
+
+        return target;
+    }
+
+    /// <summary>
+    /// 比较两个 NPC 的对应属性，若候选者更优则替换当前目标。
+    /// 此方法不涉及 Boss 优先级，仅执行纯属性比较。
+    /// </summary>
+    /// <param name="current">当前最佳目标（引用，可能被替换）。</param>
+    /// <param name="other">待比较的新候选 NPC。</param>
+    /// <param name="otherDistanceSq">候选 NPC 与搜索起点的距离平方（仅在优先级为 Closest 时使用）。</param>
+    /// <param name="bestValue">当前最佳值（Closest 时为最小距离平方，LifeMax 时为最高最大生命值，Life 时为最低当前生命值），可能被更新。</param>
+    /// <param name="priorityType">排序优先级类型。</param>
+    private static void TryReplaceTarget(ref NPC current, NPC other, float otherDistanceSq, ref float bestValue, PriorityType priorityType)
+    {
         switch (priorityType)
         {
-            case PriorityType.LifeMax:
-                if (bossPriority)
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        bool chaseable = ignoreChaseable ? npc.CanBeChasedBy_IgnoreChaseable() : npc.CanBeChasedBy();
-                        if (!chaseable || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared
-                            || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
-                            || (respectImmuneFrames && (projectile.localNPCImmunity[npc.whoAmI] > 0
-                            || projectile.localNPCImmunity[npc.whoAmI] == -1 || npc.immune[projectile.owner] > 0)))
-                            continue;
-
-                        if (target is null)
-                        {
-                            target = npc;
-                            hasPriority = npc.IsBossEnemy;
-                            continue;
-                        }
-                        switch (hasPriority, npc.IsBossEnemy)
-                        {
-                            case (true, false):
-                                break;
-                            case (false, true):
-                                target = npc;
-                                hasPriority = true;
-                                break;
-                            case (true, true) or (false, false) when npc.lifeMax > target.lifeMax:
-                                target = npc;
-                                break;
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        bool chaseable = ignoreChaseable ? npc.CanBeChasedBy_IgnoreChaseable() : npc.CanBeChasedBy();
-                        if (!chaseable || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared
-                            || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
-                            || (respectImmuneFrames && (projectile.localNPCImmunity[npc.whoAmI] > 0
-                            || projectile.localNPCImmunity[npc.whoAmI] == -1 || npc.immune[projectile.owner] > 0)))
-                            continue;
-
-                        if (target is null || npc.lifeMax > target.lifeMax)
-                            target = npc;
-                    }
-                }
-                return target;
-            case PriorityType.Life:
-                if (bossPriority)
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        bool chaseable = ignoreChaseable ? npc.CanBeChasedBy_IgnoreChaseable() : npc.CanBeChasedBy();
-                        if (!chaseable || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared
-                            || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
-                            || (respectImmuneFrames && (projectile.localNPCImmunity[npc.whoAmI] > 0
-                            || projectile.localNPCImmunity[npc.whoAmI] == -1 || npc.immune[projectile.owner] > 0)))
-                            continue;
-
-                        if (target is null)
-                        {
-                            target = npc;
-                            hasPriority = npc.IsBossEnemy;
-                            continue;
-                        }
-                        switch (hasPriority, npc.IsBossEnemy)
-                        {
-                            case (true, false):
-                                break;
-                            case (false, true):
-                                target = npc;
-                                hasPriority = true;
-                                break;
-                            case (true, true) or (false, false) when npc.life > target.life:
-                                target = npc;
-                                break;
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        bool chaseable = ignoreChaseable ? npc.CanBeChasedBy_IgnoreChaseable() : npc.CanBeChasedBy();
-                        if (!chaseable || Vector2.DistanceSquared(origin, npc.Center) > maxDistanceToCheckSquared
-                            || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
-                            || (respectImmuneFrames && (projectile.localNPCImmunity[npc.whoAmI] > 0
-                            || projectile.localNPCImmunity[npc.whoAmI] == -1 || npc.immune[projectile.owner] > 0)))
-                            continue;
-
-                        if (target is null || npc.life < target.life)
-                            target = npc;
-                    }
-                }
-                return target;
             case PriorityType.Closest:
-            default:
-                float distanceTemp = maxDistanceToCheckSquared;
-                if (bossPriority)
+                if (otherDistanceSq < bestValue)
                 {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        float distanceSquared = Vector2.DistanceSquared(origin, npc.Center);
-                        bool chaseable = ignoreChaseable ? npc.CanBeChasedBy_IgnoreChaseable() : npc.CanBeChasedBy();
-                        if (!chaseable || distanceSquared > maxDistanceToCheckSquared
-                            || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
-                            || (respectImmuneFrames && (projectile.localNPCImmunity[npc.whoAmI] > 0
-                            || projectile.localNPCImmunity[npc.whoAmI] == -1 || npc.immune[projectile.owner] > 0)))
-                            continue;
-
-                        if (target is null)
-                        {
-                            target = npc;
-                            hasPriority = npc.IsBossEnemy;
-                            distanceTemp = distanceSquared;
-                            continue;
-                        }
-                        switch (hasPriority, npc.IsBossEnemy)
-                        {
-                            case (true, false):
-                                break;
-                            case (false, true):
-                                target = npc;
-                                distanceTemp = distanceSquared;
-                                hasPriority = true;
-                                break;
-                            case (true, true) or (false, false) when distanceSquared < distanceTemp:
-                                target = npc;
-                                distanceTemp = distanceSquared;
-                                break;
-                        }
-                    }
+                    current = other;
+                    bestValue = otherDistanceSq;
                 }
-                else
+                break;
+
+            case PriorityType.LifeMax:
+                if (other.lifeMax > bestValue)
                 {
-                    foreach (NPC npc in NPC.ActiveNPCs)
-                    {
-                        float distanceSquared = Vector2.DistanceSquared(origin, npc.Center);
-                        bool chaseable = ignoreChaseable ? npc.CanBeChasedBy_IgnoreChaseable() : npc.CanBeChasedBy();
-                        if (!chaseable || distanceSquared > maxDistanceToCheckSquared
-                            || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
-                            || (respectImmuneFrames && (projectile.localNPCImmunity[npc.whoAmI] > 0
-                            || projectile.localNPCImmunity[npc.whoAmI] == -1 || npc.immune[projectile.owner] > 0)))
-                            continue;
-
-                        if (target is null || distanceSquared < distanceTemp)
-                        {
-                            target = npc;
-                            distanceTemp = distanceSquared;
-                        }
-                    }
+                    current = other;
+                    bestValue = other.lifeMax;
                 }
-                return target;
+                break;
+
+            case PriorityType.Life:
+                if (other.life < bestValue)
+                {
+                    current = other;
+                    bestValue = other.life;
+                }
+                break;
         }
     }
 

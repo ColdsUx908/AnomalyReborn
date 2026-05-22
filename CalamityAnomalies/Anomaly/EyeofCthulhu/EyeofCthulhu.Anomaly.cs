@@ -74,7 +74,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
     private static readonly ProjectileDamageContainer _bloodDamage = new(30, 60, 75, 90, 84, 108);
     public static int BloodDamage => _bloodDamage.Value;
 
-    private static readonly ProjectileDamageContainer _arenaDamage = new(100, 140, 210, 240, 240, 300);
+    private static readonly ProjectileDamageContainer _arenaDamage = new(30, 60, 90, 90, 90, 150);
     public static int ArenaDamage => _arenaDamage.Value;
 
     private static readonly ProjectileDamageContainer _bloodFlameDamage = new(50, 80, 102, 120, 120, 150);
@@ -120,7 +120,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
         }
     }
 
-    public bool ShouldEnterPhase3 => Ultra && NPC.LifeRatio < Phase3LifeRatio;
+    public bool ShouldEnterPhase3 => Ultra && NPC.LifeRatio <= Phase3LifeRatio;
     public bool InvalidPhase2 => ShouldEnterPhase3 && !Phase3;
     public bool Phase2_2 => CurrentPhase is Phase.Phase2_2 or Phase.Phase2_3;
     public bool Phase2_3 => CurrentPhase == Phase.Phase2_3;
@@ -464,7 +464,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
     public override bool PreAI()
     {
         bool valid = Phase3
-            ? NPC.TargetIfInvalid(true, p => ArenaProjectileAlive && ArenaModProjectile.ArenaRing.CircleContains(p.Hitbox, true, true))
+            ? NPC.TargetIfInvalid(true, p => ArenaProjectileAlive && new Circle(ArenaProjectile.Center, ArenaModProjectile.Radius * 2f).Collides(p.Hitbox))
             : NPC.TargetClosestIfInvalid(true, DespawnDistance);
 
         if (CurrentBehavior == Behavior.Despawn || !valid)
@@ -650,7 +650,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
             bool CheckPhaseChange()
             {
-                if (NPC.LifeRatio >= Phase2LifeRatio)
+                if (NPC.LifeRatio > Phase2LifeRatio)
                     return false;
 
                 //进入阶段转换
@@ -999,9 +999,9 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     AttackCounter = 0;
                     return true;
                 }
-                else if (NPC.LifeRatio < Phase2_3LifeRatio)
+                else if (NPC.LifeRatio <= Phase2_3LifeRatio)
                     CurrentPhase = Phase.Phase2_3;
-                else if (NPC.LifeRatio < Phase2_2LifeRatio)
+                else if (NPC.LifeRatio <= Phase2_2LifeRatio)
                     CurrentPhase = Phase.Phase2_2;
 
                 return false;
@@ -1606,7 +1606,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
             void CheckPhaseChange()
             {
-                if (NPC.LifeRatio < Phase3_2LifeRatio)
+                if (NPC.LifeRatio <= Phase3_2LifeRatio)
                     CurrentPhase = Phase.Phase3_2;
             }
 

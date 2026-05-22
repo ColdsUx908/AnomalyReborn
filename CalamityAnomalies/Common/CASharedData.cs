@@ -28,6 +28,10 @@ public sealed class CASharedData : ModSystem
 
     public static readonly Color RebornColor = new(0xff, 0xa5, 0x00);
 
+    public static Color MainIdentifierColor => Color.LerpMany(ColorList3, TOMathUtils.Interpolation.QuadraticEaseIn(TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 2.5f, unsigned: true)) / 2f);
+    public static Color IdentifierColor => Color.LerpMany(ColorList2, TOMathUtils.Interpolation.QuadraticEaseIn(TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 2.5f, unsigned: true)) / 2f);
+
+
     public static Assembly Assembly => field ??= CAMain.Instance.Code;
 
     public static string ModName => field ??= CAMain.Instance.Name;

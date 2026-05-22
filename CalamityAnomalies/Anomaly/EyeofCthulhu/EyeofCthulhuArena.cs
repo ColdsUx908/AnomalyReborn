@@ -71,6 +71,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
     public override float Thickness => 40f;
     public override Player Target => MasterBehavior.Target;
     public override int DustType => DustID.Blood;
+    public override bool EnableMovementRestriction => IsActivated;
     #endregion 数据
 
     #region 交互方法
@@ -160,7 +161,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
         Master = NPC.DummyNPC;
     }
 
-    public override void ExtraAI()
+    public override void AI()
     {
         if (Master is null || !Master.active || Master.type != NPCID.EyeofCthulhu)
             Projectile.Kill();
@@ -171,6 +172,8 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
         if (IsActivated)
         {
+            MovementRestriction();
+
             switch (Timer1)
             {
                 case 0:

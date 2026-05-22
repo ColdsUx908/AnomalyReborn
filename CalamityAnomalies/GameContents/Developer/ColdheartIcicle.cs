@@ -201,13 +201,13 @@ public sealed class ColdheartIcicle : CALegendaryItem
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
-        CAItemTooltipModifier tooltipModifier = new(Item, tooltips);
-        if (Main.keyState.IsKeyDown(Keys.LeftShift))
+        CAItemTooltipModifier modifier = new(Item, tooltips);
+        if (Main.keyState.PressingShift())
         {
 
         }
         else
-            tooltipModifier.AddExpendedDisplayLine();
+            modifier.AddExpendedDisplayLine();
     }
 
     public override bool PreDrawTooltipLine(DrawableTooltipLine line, ref int yOffset)

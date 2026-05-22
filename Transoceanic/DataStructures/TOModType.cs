@@ -140,13 +140,13 @@ public abstract class TOModProjectile : ModProjectile, ITOModProjectile
     }
     public Union32 AI_Union_1
     {
-        get => (Union32)Projectile.ai[0];
-        set => Projectile.ai[0] = value.f;
+        get => (Union32)Projectile.ai[1];
+        set => Projectile.ai[1] = value.f;
     }
     public Union32 AI_Union_2
     {
-        get => (Union32)Projectile.ai[0];
-        set => Projectile.ai[0] = value.f;
+        get => (Union32)Projectile.ai[2];
+        set => Projectile.ai[2] = value.f;
     }
     public Union32 LocalAI_Union_0
     {

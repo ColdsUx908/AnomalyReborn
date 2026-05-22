@@ -23,4 +23,6 @@ public abstract class CALegendaryItem : CAModItem
     public override void Update(ref float gravity, ref float maxFallSpeed) => LegendaryUpdate();
 
     public override void UpdateInventory(Player player) => LegendaryUpdate(player);
+
+    public void AddLegendaryItemIdentifier(List<TooltipLine> tooltips, int index) => tooltips.Insert(index, new TooltipLine(Mod, "Tooltip_CALegendaryItemIdentifier", Language.GetTextValue(CASharedData.ModLocalizationPrefix + "GameContents.LegendaryItemIdentifier")) { OverrideColor = CASharedData.IdentifierColor });
 }

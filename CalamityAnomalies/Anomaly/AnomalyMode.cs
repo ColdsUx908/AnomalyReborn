@@ -161,7 +161,7 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
             if (self.Data.TryGetHeaderData<CASharedData>(out TagCompound tag) && tag.GetBool("Anomaly"))
             {
                 expertText = Language.GetTextValue(LocalizationPrefix + "Name");
-                gameModeColor = Color.LerpMany(CASharedData.ColorList2, TOMathUtils.Interpolation.QuadraticEaseIn(TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 2.5f, unsigned: true)) / 2f);
+                gameModeColor = CASharedData.IdentifierColor;
             }
         }
     }

@@ -66,9 +66,15 @@ public abstract class BaseArenaProjectile : CAModProjectile
     /// <summary>
     /// 拉回玩家的基础速度（像素/帧）。
     /// 实际拉回速度会在此基础上根据 <see cref="OutofArenaTimer"/> 逐步增加，上限为 60。
-    /// 默认值为 15。
+    /// 默认值为 25。
     /// </summary>
-    public virtual float BasePushSpeed => 15f;
+    public virtual float BasePushSpeed => 25f;
+
+    /// <summary>
+    /// 是否启用移动限制。
+    /// 默认值为 <see langword="true"/>。
+    /// </summary>
+    public virtual bool EnableMovementRestriction => true;
 
     /// <summary>
     /// 当玩家被拉回时产生的粒子效果类型 ID。
@@ -77,14 +83,12 @@ public abstract class BaseArenaProjectile : CAModProjectile
     public virtual int DustType => -1;
 
     /// <summary>
-    /// 每帧执行的主要逻辑（密封方法，不可重写）。
+    /// 竞技场弹幕对玩家移动的限制逻辑。
     /// 包含玩家越界检测、动态速度递增、位置修正、控制剥夺以及粒子生成。
-    /// 随后调用 <see cref="ExtraAI"/> 供子类扩展。
     /// </summary>
-    public sealed override void AI()
+    protected void MovementRestriction()
     {
         Player target = Target;
-
         if (target is not null && target.Alive)
         {
             float distance = target.Distance(Projectile.Center);
@@ -125,14 +129,7 @@ public abstract class BaseArenaProjectile : CAModProjectile
         }
         else //目标玩家无效时也重置计时器
             OutofArenaTimer = 0;
-
-        ExtraAI();
     }
-
-    /// <summary>
-    /// 供子类重写的额外 AI 逻辑，在基础边界约束计算完成后调用。默认无操作。
-    /// </summary>
-    public virtual void ExtraAI() { }
 
     /// <summary>
     /// 判断此弹幕是否能伤害指定玩家。

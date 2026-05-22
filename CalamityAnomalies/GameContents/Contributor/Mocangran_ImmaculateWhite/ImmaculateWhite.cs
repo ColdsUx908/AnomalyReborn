@@ -2,9 +2,9 @@
 
 namespace CalamityAnomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
 
-public sealed class ImmaculateWhite : CALegendaryItem
+public sealed class ImmaculateWhite : CALegendaryItem, ILocalizationPrefix
 {
-    public int itemPentrate = 0;
+    public const int OriginalUseTime = 100;
 
     #region 传奇
     public override void LegendaryUpdate()
@@ -13,15 +13,15 @@ public sealed class ImmaculateWhite : CALegendaryItem
         {
             Phase = 3;
 
-            if (NPC.Focus)//万物的焦点
+            if (NPC.Focus) //万物的焦点
                 SubPhase = 6;
-            else if (DownedBossSystem_Bridge.downedYharon)//犽戎
+            else if (DownedBossSystem_Bridge.downedYharon) //犽戎
                 SubPhase = 5;
-            else if (DownedBossSystem_Bridge.downedDoG)//神吞
+            else if (DownedBossSystem_Bridge.downedDoG) //神吞
                 SubPhase = 4;
-            else if (DownedBossSystem_Bridge.downedPolterghast)//幽花
+            else if (DownedBossSystem_Bridge.downedPolterghast) //幽花
                 SubPhase = 3;
-            else if (DownedBossSystem_Bridge.downedProvidence)//亵渎天神
+            else if (DownedBossSystem_Bridge.downedProvidence) //亵渎天神
                 SubPhase = 2;
             else
                 SubPhase = 1;
@@ -61,6 +61,8 @@ public sealed class ImmaculateWhite : CALegendaryItem
 
     public override string LocalizationCategory => "GameContents.Contributor";
 
+    public string LocalizationPrefix => CASharedData.ModLocalizationPrefix + LocalizationCategory + ".ImmaculateWhite";
+
     public override void SetStaticDefaults()
     {
         ItemID.Sets.ItemsThatAllowRepeatedRightClick[Item.type] = true;
@@ -70,11 +72,10 @@ public sealed class ImmaculateWhite : CALegendaryItem
         Item.width = 22;
         Item.height = 60;
         Item.damage = 24;
-        Item.DamageType = DamageClass.Magic;
+        Item.DamageType = DamageClass.Ranged;
         Item.useAmmo = AmmoID.Arrow;
-        Item.mana = 12;
-        Item.useTime = 100;
-        Item.useAnimation = 100;
+        Item.useTime = OriginalUseTime;
+        Item.useAnimation = OriginalUseTime;
         Item.useStyle = ItemUseStyleID.Shoot;
         Item.autoReuse = true;
         Item.channel = true;
@@ -97,48 +98,30 @@ public sealed class ImmaculateWhite : CALegendaryItem
     public override bool AltFunctionUse(Player player) => NPC.downedEmpressOfLight;
     public override bool ConsumeItem(Player player) => false;
 
-    #region 按住shift+右键可以同比转换攻速和弹幕穿透数。
-    public override bool CanRightClick() => (Main.keyState.PressingShift() && Phase >= 3);
+    public override bool CanRightClick() => Main.keyState.PressingShift() && Phase >= 3;
 
     public override void RightClick(Player player)
     {
-        if (itemPentrate == 9)
-        {
-            itemPentrate = 0;
-        }
-        else
-        {
-            itemPentrate += 1;
-        }
-        Item.NetStateChanged();
     }
-    #endregion
+
     public override bool CanConsumeAmmo(Item ammo, Player player) => false; //召唤弓本身不消耗弹药
 
     public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
     {
-        //假如通过某种手段更改了月总的击败状况，自动重置回默认穿透。
-        itemPentrate = Phase >= 3 ? itemPentrate : 0;
-
-        StatModifier rangedModifier = player.GetTotalDamage(DamageClass.Magic);
+        StatModifier rangedModifier = player.GetTotalDamage(DamageClass.Ranged);
         CombinedHooks.ModifyWeaponDamage(player, Item, ref rangedModifier);
         int newDamage = Math.Max(0, (int)(rangedModifier.ApplyTo(Item.damage) + 5E-06f));
         Projectile.NewProjectileAction(source, position, velocity, Item.shoot, newDamage, knockback, player.whoAmI, p =>
         {
-            //肉后可以分裂出小弹幕
-            if (Phase >= 2)
-            {
-                p.ai[2] = 1f;
-            }
-            //光女后可以右键发射另一种弹幕
-            if (NPC.downedEmpressOfLight)
-            {
-                p.ai[2] = 2f;
-            }
-            if (p.ModProjectile is ImmaculateWhiteBow bow)
-            {
-                bow.itemPentrate = itemPentrate;
-            }
+            ImmaculateWhiteBow modP = p.GetModProjectile<ImmaculateWhiteBow>();
+
+            modP.ShootSpeedMultiplier = (float)Item.useTime / OriginalUseTime;
+
+            if (Phase >= 2) //肉后可以分裂出小弹幕
+                modP.CanShootSplitBolt = true;
+
+            if (NPC.downedEmpressOfLight) //光女后可以右键发射另一种弹幕
+                modP.CanUseRightClickFunction = true;
         });
         return false;
     }
@@ -148,35 +131,55 @@ public sealed class ImmaculateWhite : CALegendaryItem
         //莫沧然：ModifyWeaponDamage的加成在词缀的加成之后，可以考虑到时候移植到别的地方。唉唉灾厄起的坏头
         damage *= Phase switch
         {
-            3 => SubPhase switch//月后
+            3 => SubPhase switch //月后
             {
                 6 => 300f,    //万物的焦点
-                5 => 10f,    //丛林龙后
-                4 => 10f,     //神明吞噬者后
-                3 => 10f,     //噬魂幽花后
-                2 => 12f,     //亵渎天神后
-                _ => 10f
+                5 => 50f,     //丛林龙后
+                4 => 27.5f,   //神明吞噬者后
+                3 => 20f,     //噬魂幽花后
+                2 => 17.5f,   //亵渎天神后
+                _ => 13.5f
             },
-            2 => SubPhase switch//肉后
+            2 => SubPhase switch //肉后
             {
-                5 => 10f,     //教徒后
-                4 => 7f,     //石巨人后
+                5 => 9f,      //教徒后
+                4 => 7f,      //石巨人后
                 3 => 6f,      //世纪之花后
                 2 => 4f,      //机械三王后
                 _ => 3f
             },
-            1 => SubPhase switch//肉前
+            1 => SubPhase switch //肉前
             {
                 3 => 3f,      //骷髅王后
-                2 => 1.5f,      //世界吞噬者/克苏鲁之脑后
+                2 => 1.5f,    //世界吞噬者/克苏鲁之脑后
                 _ => 1f
             },
             _ => 1f
         };
-        if (player.altFunctionUse != 2)
+    }
+
+    public override void ModifyTooltips(List<TooltipLine> tooltips)
+    {
+        CAItemTooltipModifier modifier = new(Item, tooltips);
+        if (!modifier.TryGet(null, "Tooltip0", out int index, out _))
+            return;
+
+        if (Phase >= 3)
+            tooltips.Insert(++index, new TooltipLine(Mod, "Tooltip1", this.GetTextValue("Tooltip1")));
+        if (NPC.downedEmpressOfLight)
+            tooltips.Insert(++index, new TooltipLine(Mod, "Tooltip2", this.GetTextValue("Tooltip2")));
+
+        AddContributorItemIdentifier(tooltips, ++index);
+        AddLegendaryItemIdentifier(tooltips, ++index);
+
+        modifier.Update();
+
+        if (Main.keyState.PressingShift())
         {
-            damage /= itemPentrate == 0 ? 1 : (itemPentrate + 1);
+
         }
+        else
+            modifier.AddExpendedDisplayLine();
     }
 
     public override void AddRecipes()

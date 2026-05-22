@@ -38,11 +38,11 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
     public static float SpawnSlimePow => Main.zenithWorld ? 0.5f : Ultra ? 0.3f : 0.2f;
 
     public const float JewelRubyLifeRatio_Anomaly = 0.7f;
-    public const float JewelRubyLifeRatio_Ultra = 0.75f;
+    public const float JewelRubyLifeRatio_Ultra = 0.8f;
     public const float JewelEmeraldLifeRatio_Anomaly = 0.5f;
-    public const float JewelEmeraldLifeRatio_Ultra = 0.75f;
+    public const float JewelEmeraldLifeRatio_Ultra = 0.6f;
     public const float JewelSapphireLifeRatio_Anomaly = 0.3f;
-    public const float JewelSapphireLifeRatio_Ultra = 0.5f;
+    public const float JewelSapphireLifeRatio_Ultra = 0.4f;
     public const float Phase2LifeRatio_Anomaly = 0f;
     public const float Phase2LifeRatio_Ultra = 0.1f;
     public const float Phase2_2LifeRatio_Anomaly = 0f;
@@ -447,7 +447,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                 if (Timer1 == 0) //注册血量阈值
                 {
                     NPC.AddAnomalyHPIndicator(JewelRubyLifeRatio_Anomaly, JewelRubyLifeRatio_Ultra, true);
-                    NPC.AddAnomalyHPIndicator(JewelEmeraldLifeRatio_Anomaly, JewelEmeraldLifeRatio_Ultra, true, _ => !CASharedData.AnomalyUltramundane);
+                    NPC.AddAnomalyHPIndicator(JewelEmeraldLifeRatio_Anomaly, JewelEmeraldLifeRatio_Ultra, true);
                     NPC.AddAnomalyHPIndicator(JewelSapphireLifeRatio_Anomaly, JewelSapphireLifeRatio_Ultra, true);
                     NPC.AddAnomalyHPIndicator(Phase2LifeRatio_Anomaly, Phase2LifeRatio_Ultra);
                     NPC.AddAnomalyHPIndicator(Phase2_2LifeRatio_Anomaly, Phase2_2LifeRatio_Ultra, true, n => new KingSlime_Anomaly { _entity = n }.Phase2);
@@ -515,7 +515,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             }
             else
             {
-                if (Phase2 && NPC.LifeRatio < Phase2_2LifeRatio)
+                if (Phase2 && NPC.LifeRatio <= Phase2_2LifeRatio)
                     CurrentPhase = Phase.Phase2_2;
 
                 if (TeleportTimer > MathHelper.Lerp(1250f, 1000f, NPC.LostLifeRatio) || !NPC.WithinRange(Target.Center, 2400f))
@@ -531,7 +531,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                             CurrentBehavior = Behavior.HighJump;
                             SmallJumpCounter = 0;
                             break;
-                        case 1 or 2 when NPC.LifeRatio < JewelSapphireLifeRatio:
+                        case 1 or 2 when NPC.LifeRatio <= JewelSapphireLifeRatio:
                             CurrentBehavior = Behavior.RapidJump;
                             break;
                         default:
@@ -642,7 +642,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             if (!TOSharedData.GeneralClient || NPC.Master is not null) //史莱姆王召唤的史莱姆王不再召唤仆从
                 return;
 
-            if (NPC.LifeRatio < JewelRubyLifeRatio && !JewelRubySpawned)
+            if (NPC.LifeRatio <= JewelRubyLifeRatio && !JewelRubySpawned)
             {
                 NPC.NewNPCAction<KingSlimeJewelRuby>(SourceAI, GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
                 {
@@ -651,7 +651,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     JewelRubySpawned = true;
                 });
             }
-            if (NPC.LifeRatio < JewelEmeraldLifeRatio && !JewelEmeraldSpawned)
+            if (NPC.LifeRatio <= JewelEmeraldLifeRatio && !JewelEmeraldSpawned)
             {
                 NPC.NewNPCAction<KingSlimeJewelEmerald>(SourceAI, GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
                 {
@@ -660,7 +660,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     JewelEmeraldSpawned = true;
                 });
             }
-            if (NPC.LifeRatio < JewelSapphireLifeRatio && !JewelSapphireSpawned)
+            if (NPC.LifeRatio <= JewelSapphireLifeRatio && !JewelSapphireSpawned)
             {
                 NPC.NewNPCAction<KingSlimeJewelSapphire>(SourceAI, GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
                 {

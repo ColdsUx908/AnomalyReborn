@@ -8,7 +8,7 @@ public sealed class ColdheartIcicleHoldout : BaseShortswordProjectile, ICAModPro
 {
     public override string Texture => ColdheartIcicle.TexturePath;
 
-    public new string LocalizationCategory => "GameContents.Developer";
+    public override LocalizedText DisplayName => ModContent.GetModItem<ColdheartIcicle>().DisplayName;
 
     public bool IsRightClick;
     public int Phase = 1;

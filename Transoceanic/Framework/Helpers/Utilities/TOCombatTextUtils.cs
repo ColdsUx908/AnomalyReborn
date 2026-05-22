@@ -8,7 +8,7 @@ namespace Transoceanic.Framework.Helpers;
 public static class TOCombatTextUtils
 {
     /// <summary>
-    /// 在 <see cref="ModItem.OnHitNPC(Player, NPC, NPC.HitInfo, int)"/> 等 OnHitNPC 方法中调用，修改本次命中生成的 <see cref="CombatText"/> 实例。"
+    /// 在 <see cref="ModItem.OnHitNPC(Player, NPC, NPC.HitInfo, int)"/> 等 <c>OnHitNPC</c> 方法中调用，修改本次命中生成的 <see cref="CombatText"/> 实例。"
     /// </summary>
     /// <param name="action"></param>
     public static void ChangeHitNPCText(Action<CombatText> action)

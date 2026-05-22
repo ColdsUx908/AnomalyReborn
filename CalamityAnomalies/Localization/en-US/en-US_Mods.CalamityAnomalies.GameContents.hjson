@@ -30,18 +30,19 @@ Developer: {
 		DisplayName: Test Item
 		Tooltip: ""
 	}
-
-	ColdheartIcicleHoldout.DisplayName: Coldheart Icicle Holdout
 }
 
 Contributor: {
 	ImmaculateWhite: {
 		DisplayName: Immaculate White
-		Tooltip: ""
+		Tooltip: Shoot immaculate light that rapidly tracks enemies
+		Tooltip1: Immaculate light will split into more immaculate light
+		Tooltip2: Press <right> to shoot piercing immaculate light
 	}
 
-	ImmaculateLight.DisplayName: Immaculate Light
 	ImmaculateBolt.DisplayName: Immaculate Bolt
-	ImmaculateInfiniteBolt.DisplayName: Immaculate Infinite Bolt
-	InfiniteImmaculateBolt.DisplayName: Infinite Immaculate Bolt
 }
+
+DeveloperItemIdentifier: - Developer Item -
+ContributorItemIdentifier: - Contributor Item -
+LegendaryItemIdentifier: - Legendary Item -

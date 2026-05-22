@@ -83,6 +83,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
             {
                 Timer1 = 0;
                 Timer2 = 0;
+                CurrentAttackPhase = 0;
                 switch (CurrentBehavior)
                 {
                     case Behavior.Phase1_Charge:
@@ -121,15 +122,15 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                     CurrentBehavior = Behavior.PhaseChange_2To3;
                     return true;
                 }
-                else if (NPC.LifeRatio < Phase2_3LifeRatio)
+                else if (NPC.LifeRatio <= Phase2_3LifeRatio)
                     CurrentPhase = Phase.Phase2_3;
-                else if (NPC.LifeRatio < Phase2_2LifeRatio)
+                else if (NPC.LifeRatio <= Phase2_2LifeRatio)
                     CurrentPhase = Phase.Phase2_2;
-                else if (NPC.LifeRatio < Phase2LifeRatio)
+                else if (NPC.LifeRatio <= Phase2LifeRatio)
                     CurrentPhase = Phase.Phase2;
-                else if (NPC.LifeRatio < Phase1_3LifeRatio)
+                else if (NPC.LifeRatio <= Phase1_3LifeRatio)
                     CurrentPhase = Phase.Phase1_3;
-                else if (NPC.LifeRatio < Phase1_2LifeRatio)
+                else if (NPC.LifeRatio <= Phase1_2LifeRatio)
                     CurrentPhase = Phase.Phase1_2;
                 return false;
             }
@@ -273,7 +274,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
 
                         float distanceFromTargetX = Math.Abs(NPC.Center.X - Target.Center.X);
                         float distanceFromTargetY = Math.Abs(NPC.Center.Y - Target.Center.Y);
-                        if (distanceFromTargetY < chargeDistanceY && distanceFromTargetX >= chargeDistanceX)
+                        if (distanceFromTargetY < chargeDistanceY && distanceFromTargetX >= chargeDistanceX && distanceFromTargetX <= chargeDistanceX * 2f)
                         {
                             NPC.damage = NPC.defDamage;
                             IsCharging = true;
@@ -487,7 +488,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
 
             void CheckPhaseChange()
             {
-                if (NPC.LifeRatio < Phase3_2LifeRatio)
+                if (NPC.LifeRatio <= Phase3_2LifeRatio)
                     CurrentPhase = Phase.Phase3_2;
             }
         }

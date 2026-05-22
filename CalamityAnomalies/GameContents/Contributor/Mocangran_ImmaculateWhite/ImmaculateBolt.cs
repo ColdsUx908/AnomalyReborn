@@ -17,14 +17,53 @@ public sealed class ImmaculateBolt : CAModProjectile
         set => Projectile.ai[0] = value?.whoAmI ?? -1;
     }
 
-    public bool IsNotSmallProjectile => Projectile.ai[1] != 1f;
+    public bool IsSmallProjectile
+    {
+        get => AI_Union_2.bits[0];
+        set
+        {
+            Union32 union = AI_Union_2;
+            union.bits[0] = value;
+            AI_Union_2 = union;
+        }
+    }
 
-    public float NPCMaxLife;
-    public bool IsFirstHit = true;
-    public int ItemPentrate= 1;
-    public int PentrateExtraDamage;
+    public bool IsInfiniteProjectile
+    {
+        get => AI_Union_2.bits[1];
+        set
+        {
+            Union32 union = AI_Union_2;
+            union.bits[1] = value;
+            AI_Union_2 = union;
+        }
+    }
+
+    public bool IsSplittableProjectile
+    {
+        get => AI_Union_2.bits[2];
+        set
+        {
+            Union32 union = AI_Union_2;
+            union.bits[2] = value;
+            AI_Union_2 = union;
+        }
+    }
+
+    public bool IsNotFirstHit
+    {
+        get => AI_Union_2.bits[3];
+        set
+        {
+            Union32 union = AI_Union_2;
+            union.bits[3] = value;
+            AI_Union_2 = union;
+        }
+    }
 
     public override string LocalizationCategory => "GameContents.Contributor";
+
+    public string LocalizationPrefix => CASharedData.ModLocalizationPrefix + LocalizationCategory + "ImmaculateWhite";
 
     public override void SetStaticDefaults()
     {
@@ -42,7 +81,7 @@ public sealed class ImmaculateBolt : CAModProjectile
         Projectile.friendly = true;
         Projectile.timeLeft = LifeTime;
         Projectile.tileCollide = false;
-        Projectile.DamageType = DamageClass.Magic;
+        Projectile.DamageType = DamageClass.Ranged;
         Projectile.ignoreWater = true;
         Projectile.extraUpdates = 4;
         Projectile.penetrate = -1;
@@ -53,33 +92,68 @@ public sealed class ImmaculateBolt : CAModProjectile
         Target = NPC.DummyNPC;
     }
 
-    /*public override void OnSpawn(IEntitySource source)
-    {
-        if (source is EntitySource_Parent parent && parent.Entity is Projectile projectile && projectile.ModProjectile is ImmaculateWhiteBow immaculateWhiteBow)
-        {
-            ItemPentrate = immaculateWhiteBow.itemPentrate;
-        }
-    }*/
     public override void AI()
     {
+        if (Timer1 == 0) //初始化
+        {
+            if (IsInfiniteProjectile)
+            {
+                Projectile.timeLeft /= 4;
+                Projectile.localNPCHitCooldown = -1;
+            }
+        }
+
         Timer1++;
 
-        float linearAccelerationLimit = IsNotSmallProjectile ? 10f : 4f;
-        if (Projectile.velocity.Modulus <= linearAccelerationLimit)
+        if (IsInfiniteProjectile)
         {
-            float acceleration = IsNotSmallProjectile ? 0.2f : 0.5f;
-            Projectile.velocity.Modulus += acceleration;
+            float linearAccelerationLimit = 10f;
+            if (Projectile.velocity.Modulus <= linearAccelerationLimit)
+            {
+                float acceleration = 2f;
+                Projectile.velocity.Modulus += acceleration;
+            }
+            else
+                Projectile.velocity *= 1.01f;
+
+            int starTime = 20;
+            if (Timer1 > starTime)
+            {
+                bool targetIsValid = false;
+                if (Target is not null && Target.CanBeChasedBy_IgnoreChaseable()
+                    && Projectile.localNPCImmunity[Target.whoAmI] <= 0
+                    && Projectile.localNPCImmunity[Target.whoAmI] != -1
+                    && Target.immune[Projectile.owner] <= 0)
+                {
+                    targetIsValid = true;
+                }
+
+                float homingRatio = Utils.Remap(Timer1, starTime, LifeTime / 4, 0.2f, 0.6f);
+                if (!targetIsValid && Projectile.IsFinalUpdate)
+                    Target = TOKinematicUtils.GetNPCTarget_Advanced(Projectile.Center, 8000f, ignoreTiles: true, respectImmuneFrames: true, projectile: Projectile, ignoreChaseable: true, bossPriority: true);
+
+                if (Target is not null && targetIsValid)
+                    Projectile.HomeIn(Target, HomingAlgorithm.SmootherStep, homingRatio, 8000f, MathHelper.TwoPi, false);
+            }
         }
         else
-            Projectile.velocity *= 1.005f;
-
-        int starTime = 10;
-        int maxLifeTime = 1200;
-        if (Timer1 > starTime)
         {
-            float homingRatio = Utils.Remap(Timer1, starTime, maxLifeTime, 0.2f, 0.4f);
-            if (Target is null || !Target.CanBeChasedBy() || !Projectile.HomeIn(Target, HomingAlgorithm.SmootherStep, homingRatio, 8000f, MathHelper.TwoPi, false))
-                Target = TOKinematicUtils.GetNPCTarget(Projectile.Center, 8000f, ignoreTiles: true, bossPriority: Projectile.ai[2] >= 2f);
+            float linearAccelerationLimit = !IsSmallProjectile ? 10f : 6f;
+            if (Projectile.velocity.Modulus <= linearAccelerationLimit)
+            {
+                float acceleration = !IsSmallProjectile ? 0.5f : 0.3f;
+                Projectile.velocity.Modulus += acceleration;
+            }
+            else
+                Projectile.velocity *= 1.005f;
+
+            int starTime = 20;
+            if (Timer1 > starTime)
+            {
+                float homingRatio = Utils.Remap(Timer1, starTime, LifeTime / 2, 0.2f, 0.5f);
+                if (Target is null || !Target.CanBeChasedBy() || !Projectile.HomeIn(Target, HomingAlgorithm.SmootherStep, homingRatio, 8000f, MathHelper.TwoPi, false) && Projectile.IsFinalUpdate)
+                    Target = TOKinematicUtils.GetNPCTarget(Projectile.Center, 8000f, ignoreTiles: true);
+            }
         }
 
         Projectile.VelocityToRotation(MathHelper.PiOver2);
@@ -189,65 +263,47 @@ public sealed class ImmaculateBolt : CAModProjectile
         return false;
     }
 
-    public override bool? CanHitNPC(NPC target) => !target.friendly && (IsNotSmallProjectile || Timer1 > 40);
+    public override bool? CanHitNPC(NPC target)
+    {
+        if (target.friendly || IsSmallProjectile && Timer1 <= 40)
+            return false;
+
+        if (!IsInfiniteProjectile && target != Target)
+            return false;
+
+        return true;
+    }
 
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
     {
-        NPCMaxLife += target.life;
     }
 
     public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
     {
-        if (Projectile.ai[2] >= 1f)
-        {
-            for (int i = 0; i < 2; i++)
-            {
-                Projectile.NewProjectileAction<ImmaculateBolt>(Projectile.GetSource_FromAI(), Projectile.Center, Main.rand.NextPolarVector2(2f, 2.5f), Projectile.damage / 3, Projectile.knockBack * 0.4f, Projectile.owner, p =>
-                {
-                    p.scale /= 2f;
-                    p.ai[1] = 1f;
-                    if (p.ModProjectile is ImmaculateBolt bow)
-                    {
-                        bow.ItemPentrate = ItemPentrate;
-                    }
-                });
-            }
-        }
-        //改了一堆数值之后发现穿透数多了之后好乱，所以做成了下面这样的效果
-        //击中npc后如果伤害溢出了，能够以溢出的伤害继续攻击
+        TOCombatTextUtils.ChangeHitNPCText(t => t.color = Color.White);
 
-        //我写的代码你觉得哪里有问题的话改改就行，总之应该是没bug（
-
-        //此处模拟穿透数。
-        int pentrate = 0 + (IsFirstHit && IsNotSmallProjectile ? ItemPentrate : 0);
-        int extraDamage = Projectile.damage * pentrate;
-        if (hit.SourceDamage + extraDamage >= MathHelper.Clamp(NPCMaxLife, 0f, hit.SourceDamage))
+        if (IsInfiniteProjectile)
         {
-            float newDamage = Math.Max(0f, hit.SourceDamage + extraDamage - MathHelper.Clamp(NPCMaxLife, 0f, hit.SourceDamage));
-            NPCMaxLife = 0;
-            newDamage += PentrateExtraDamage;
-            PentrateExtraDamage = 0;
-            if (newDamage > 1)
-            {
-                if (newDamage > Projectile.damage)
-                {
-                    PentrateExtraDamage += (int)newDamage - Projectile.damage;
-                    newDamage = Projectile.damage;
-                }
-                Projectile.damage = (int)newDamage;
-                //然后我是不是应该动一下弹幕存在时长
-                Projectile.timeLeft = 1200 - 10;
-            }
-            else
-            {
-                Projectile.Kill();
-            }
+            Projectile.damage = (int)Math.Round(Projectile.damage * 0.96f);
         }
         else
         {
+            if (IsSplittableProjectile && !IsSmallProjectile)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    Projectile.NewProjectileAction<ImmaculateBolt>(Projectile.GetSource_FromAI(), Projectile.Center, Main.rand.NextPolarVector2(2f, 2.5f), Projectile.damage / 3, Projectile.knockBack * 0.4f, Projectile.owner, p =>
+                    {
+                        ImmaculateBolt modP = p.GetModProjectile<ImmaculateBolt>();
+
+                        p.scale /= 2f;
+                        modP.IsSmallProjectile = true;
+                    });
+                }
+            }
+
             Projectile.Kill();
         }
-        IsFirstHit = false;
     }
 
     public override void OnKill(int timeLeft)

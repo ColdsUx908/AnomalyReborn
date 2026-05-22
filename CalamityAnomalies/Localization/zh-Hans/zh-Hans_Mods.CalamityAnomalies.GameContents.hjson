@@ -30,18 +30,19 @@ Developer: {
 		DisplayName: 测试物品
 		Tooltip: ""
 	}
-
-	// ColdheartIcicleHoldout.DisplayName: Coldheart Icicle Holdout
 }
 
 Contributor: {
 	ImmaculateWhite: {
 		DisplayName: 纯白
-		Tooltip: ""
+		Tooltip: 发射纯白之光，高速追踪敌人
+		Tooltip1: 纯白之光会分裂为更多的纯白之光
+		Tooltip2: 右键点击发射可穿透的纯白之光
 	}
 
-	ImmaculateLight.DisplayName: 纯白之光
-	// ImmaculateBolt.DisplayName: Immaculate Bolt
-	// ImmaculateInfiniteBolt.DisplayName: Immaculate Infinite Bolt
-	// InfiniteImmaculateBolt.DisplayName: Infinite Immaculate Bolt
+	ImmaculateBolt.DisplayName: 纯白之光
 }
+
+DeveloperItemIdentifier: - 开发者物品 -
+ContributorItemIdentifier: - 贡献者物品 -
+LegendaryItemIdentifier: - 传奇物品 -

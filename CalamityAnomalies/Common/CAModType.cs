@@ -70,4 +70,7 @@ public abstract class CAModItem : TOModItem, ICAModItem
     public CalamityGlobalItem CalamityItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Item.CalamityItem; }
 
     public virtual void ModifyHitNPC_DR(NPC target, Player player, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
+
+    public void AddDeveloperItemIdentifier(List<TooltipLine> tooltips, int index) => tooltips.Insert(index, new TooltipLine(Mod, "Tooltip_DeveloperItemIdentifier", Language.GetTextValue(CASharedData.ModLocalizationPrefix + "GameContents.DeveloperItemIdentifier")) { OverrideColor = CASharedData.MainIdentifierColor });
+    public void AddContributorItemIdentifier(List<TooltipLine> tooltips, int index) => tooltips.Insert(index, new TooltipLine(Mod, "Tooltip_ContributorItemIdentifier", Language.GetTextValue(CASharedData.ModLocalizationPrefix + "GameContents.ContributorItemIdentifier")) { OverrideColor = CASharedData.AnomalyUltramundaneColor });
 }

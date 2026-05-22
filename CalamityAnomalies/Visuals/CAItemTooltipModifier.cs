@@ -57,7 +57,7 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
                 _nextCATooltipNum = index + 1;
                 return;
             }
-            if (line.Mod == "Terraria" && line.Name.StartsWith(Tooltip))
+            if (line.Name.StartsWith(Tooltip))
             {
                 _nextCATooltipIndex = i + 1;
                 _nextCATooltipNum = 0;
