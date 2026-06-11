@@ -368,8 +368,8 @@ public sealed class CalamityGlobalNPCBehaviorDetour : GlobalNPCDetour<CalamityGl
 {
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalNPC self, NPC npc)
     {
-        if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreAI)) &&
-            !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.PreAI))
+        if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreAI))
+            && !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.PreAI))
             return true;
 
         return orig(self, npc);
@@ -377,8 +377,8 @@ public sealed class CalamityGlobalNPCBehaviorDetour : GlobalNPCDetour<CalamityGl
 
     public override Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalNPC self, NPC npc, Color drawColor)
     {
-        if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.GetAlpha)) &&
-            !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.GetAlpha))
+        if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.GetAlpha))
+            && !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.GetAlpha))
             return null;
 
         return orig(self, npc, drawColor);
@@ -398,8 +398,8 @@ public sealed class CalamityVanillaAIOverrideDetour : GlobalNPCDetour<CalamityVa
 {
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityVanillaAIOverrideNPC self, NPC npc)
     {
-        if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreAI)) &&
-            !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.VanillaOverrideAI))
+        if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreAI))
+            && !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.VanillaOverrideAI))
             return true;
 
         return orig(self, npc);

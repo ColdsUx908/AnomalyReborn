@@ -103,7 +103,7 @@ public class BloodFlame : CAModProjectile
         target.AddBuff<BurningBlood>(120);
         target.AddBuff(BuffID.OnFire3, 120);
 
-        if (Main.zenithWorld)
+        if (Aroma)
             target.AddBuff<MiracleBlight>(60);
 
         // Cook you up (still scales with player size in case it's manipulated)

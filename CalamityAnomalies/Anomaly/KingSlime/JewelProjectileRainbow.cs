@@ -6,8 +6,7 @@ public class JewelProjectileRainbow : CAModProjectile
 {
     public override string LocalizationCategory => "Anomaly.KingSlime";
 
-    //TODO: 四种材质
-    public override string Texture => TOTextures.InvisibleTexturePath;
+    public override string Texture => KingSlime_Handler.AnomalyKingSlimePath + "JewelProjectileRainbow_Triangle";
 
     [LoadTexture(KingSlime_Handler.AnomalyKingSlimePath + "JewelProjectileRainbow_Triangle")]
     private static Asset<Texture2D> _texture_Triangle;
@@ -30,6 +29,33 @@ public class JewelProjectileRainbow : CAModProjectile
     public const int TextureType_Square = 2;
     public const int TextureType_Circle = 3;
 
+    //用 ai[0] 来区分四种形状
+
+    public Texture2D RealTexture
+    {
+        get
+        {
+            int type = (int)Projectile.ai[0];
+            return type switch
+            {
+                TextureType_Triangle => Texture_Triangle,
+                TextureType_Star => Texture_Star,
+                TextureType_Square => Texture_Square,
+                TextureType_Circle => Texture_Circle,
+                _ => Texture_Triangle
+            };
+        }
+    }
+
+    public float ScaleMultiplier
+    {
+        get
+        {
+            int type = (int)Projectile.ai[0];
+            return type == TextureType_Circle ? 0.22f : 0.25f;
+        }
+    }
+
     public override void SetStaticDefaults()
     {
         ProjectileID.Sets.TrailCacheLength[Projectile.type] = 2;
@@ -48,15 +74,19 @@ public class JewelProjectileRainbow : CAModProjectile
     public override void AI()
     {
         Projectile.rotation += 0.25f;
-        for (int index = 0; index < 2; ++index)
+
+        for (int i = 0; i < 2; i++)
         {
-            int rainbow = Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, KingSlime_Handler.GetRandomDustID(), Projectile.velocity.X, Projectile.velocity.Y, 90, default, 1.2f);
-            Dust dust = Main.dust[rainbow];
-            dust.noGravity = true;
-            dust.velocity *= 0.3f;
+            Dust.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, KingSlime_Handler.GetRandomDustID(), Projectile.velocity, d =>
+            {
+                d.alpha = 90;
+                d.scale = 1.2f;
+                d.noGravity = true;
+                d.velocity *= 0.3f;
+            });
         }
 
-        Projectile.SpawnAfterimage(5, Projectile.GetAlpha(Lighting.GetColor(Projectile.Center.WorldCoordinateSafe)));
+        Projectile.SpawnAfterimage(new AfterimageParticle(RealTexture, null, Projectile.Center, 5, Projectile.rotation, Projectile.scale * ScaleMultiplier, Projectile.GetAlpha(Lighting.GetColor(Projectile.Center.WorldCoordinateSafe)), Projectile.Opacity * 0.9f));
     }
 
     public override void OnKill(int timeLeft)
@@ -64,11 +94,13 @@ public class JewelProjectileRainbow : CAModProjectile
         SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
         for (int i = 0; i < 15; i++)
         {
-            int rainbow = Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, KingSlime_Handler.GetRandomDustID(), Projectile.oldVelocity.X, Projectile.oldVelocity.Y, 50, default, 1.2f);
-            Dust dust = Main.dust[rainbow];
-            dust.noGravity = true;
-            dust.scale *= 1.25f;
-            dust.velocity *= 0.5f;
+            Dust.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, KingSlime_Handler.GetRandomDustID(), Projectile.oldVelocity, d =>
+            {
+                d.alpha = 50;
+                d.scale = 1.5f;
+                d.noGravity = true;
+                d.velocity *= 0.5f;
+            });
         }
     }
 
@@ -76,23 +108,17 @@ public class JewelProjectileRainbow : CAModProjectile
 
     public override bool PreDraw(ref Color lightColor)
     {
-        //用ai[0]来区分四种形状
-
         int type = (int)Projectile.ai[0];
-        Texture2D texture = type switch
-        {
-            TextureType_Triangle => Texture_Triangle,
-            TextureType_Star => Texture_Star,
-            TextureType_Square => Texture_Square,
-            TextureType_Circle => Texture_Circle,
-            _ => Texture_Triangle
-        };
+
+        Texture2D texture = RealTexture;
+
         Vector2 origin = texture.Size() / 2f;
         if (type == TextureType_Star)
             origin.Y = 41;
         else if (type == TextureType_Triangle)
             origin.Y = 47;
-        float scale = type == TextureType_Circle ? 0.22f : 0.25f;
+
+        float scale = ScaleMultiplier;
         TODrawUtils.DrawBorderTexture(Main.spriteBatch, texture, Projectile.Center - Main.screenPosition, null, Color.Lerp(Main.DiscoColor, Color.White * 0.5f, 0.1f), Projectile.rotation, origin, scale, way: 12, borderWidth: 1.5f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.4f, 1.2f, unsigned: true));
         Main.spriteBatch.Draw(texture, Projectile.Center - Main.screenPosition, null, Color.Lerp(Main.DiscoColor, Color.White * 0.5f, 0.1f), Projectile.rotation, origin, scale, SpriteEffects.None, 0f);
         return false;

@@ -14,4 +14,9 @@ CAClientConfig: {
 		Label: 辅助视觉效果
 		Tooltip: 可能有助于指示实体的某些行为或状态的辅助视觉效果。
 	}
+
+	UseCalamityStyleTextures: {
+		Label: 使用灾厄风格的纹理
+		Tooltip: 将模组中的某些纹理替换为与 Calamity Mod 的艺术风格更一致的版本。
+	}
 }

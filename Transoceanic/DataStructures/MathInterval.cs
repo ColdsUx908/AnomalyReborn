@@ -335,14 +335,9 @@ public readonly struct MathInterval : IEquatable<MathInterval>
     /// 一个新创建的闭区间 <c>[min, max]</c>，其中 <c>min</c> 和 <c>max</c> 分别为
     /// <paramref name="values"/> 中的最小值和最大值。
     /// </returns>
-    /// <remarks>
-    /// 注意：当前实现中存在一个逻辑错误，<c>min</c> 被初始化为 <c>float.MinValue</c>，
-    /// <c>max</c> 被初始化为 <c>float.MaxValue</c>，这将导致结果永远为 <c>[float.MinValue, float.MaxValue]</c>。
-    /// 正确做法应为 <c>min = float.MaxValue</c> 和 <c>max = float.MinValue</c>。
-    /// </remarks>
     public static MathInterval FromValues(params ReadOnlySpan<float> values)
     {
-        float min = float.MinValue, max = float.MaxValue;
+        float min = float.MaxValue, max = float.MinValue;
         foreach (float value in values)
         {
             min = Math.Min(min, value);

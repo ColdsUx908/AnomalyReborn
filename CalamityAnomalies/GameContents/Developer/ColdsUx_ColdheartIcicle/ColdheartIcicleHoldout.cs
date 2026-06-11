@@ -2,7 +2,7 @@
 
 using CalamityMod.Projectiles.BaseProjectiles;
 
-namespace CalamityAnomalies.GameContents.Developer;
+namespace CalamityAnomalies.GameContents.Developer.ColdsUx_ColdheartIcicle;
 
 public sealed class ColdheartIcicleHoldout : BaseShortswordProjectile, ICAModProjectile, ILocalizedModType
 {

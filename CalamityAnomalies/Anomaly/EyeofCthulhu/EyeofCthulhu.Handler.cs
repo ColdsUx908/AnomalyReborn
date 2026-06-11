@@ -170,7 +170,7 @@ public static class EyeofCthulhu_Handler
 
         Vector2 innerVector = EyeShapeHelper.GetInnerVector(originalVelocity);
 
-        if (TOSharedData.GeneralClient)
+        if (TOSharedData.NotClient)
         {
             for (int i = 0; i < amount; i++)
             {

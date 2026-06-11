@@ -5,12 +5,7 @@ namespace Transoceanic.DataStructures.Geometry;
 /// <summary>
 /// 表示一个轴对齐的矩形，其位置和尺寸使用浮点数表示。
 /// </summary>
-public struct FloatRectangle : IEquatable<FloatRectangle>,
-    ICollidableWithRectangle,
-    ICollidable<FloatRectangle, FloatRectangle>,
-    ICollidable<FloatRectangle, Circle>,
-    ICollidable<FloatRectangle, RotatedRectangle>,
-    ICollidable<FloatRectangle, Annulus>
+public struct FloatRectangle : IEquatable<FloatRectangle>, ICollidableWithRectangle
 {
     /// <summary>
     /// 矩形左上角的位置坐标。
@@ -141,6 +136,18 @@ public struct FloatRectangle : IEquatable<FloatRectangle>,
     public static implicit operator FloatRectangle(Rectangle rect) => new(rect.X, rect.Y, rect.Width, rect.Height);
 
     /// <summary>
+    /// 定义从 <see cref="FloatRectangle"/> 到 <see cref="Parallelogram"/> 的隐式转换。
+    /// </summary>
+    /// <param name="rect">要转换的 <see cref="FloatRectangle"/>。</param>
+    public static implicit operator Parallelogram(FloatRectangle rect)
+    {
+        float halfWidth = rect.Width / 2f;
+        float halfHeight = rect.Height / 2f;
+        Vector2 halfSize = new(halfWidth, halfHeight);
+        return new Parallelogram(rect.Position + halfSize, halfSize, new Vector2(halfWidth, -halfHeight));
+    }
+
+    /// <summary>
     /// 判断指定的点是否位于当前矩形内部（包含边界）。
     /// </summary>
     /// <param name="point">要测试的点坐标。</param>
@@ -149,7 +156,4 @@ public struct FloatRectangle : IEquatable<FloatRectangle>,
 
     public readonly bool Collides(Rectangle other) => Collides((FloatRectangle)other);
     public readonly bool Collides(FloatRectangle other) => Left < other.Right && Right > other.Left && Top < other.Bottom && Bottom > other.Top;
-    public readonly bool Collides(Circle other) => TOMathUtils.Geometry.FloatRectanglevCircleCollision(this, other);
-    public readonly bool Collides(RotatedRectangle other) => TOMathUtils.Geometry.RotatedRectanglevFloatRectangleCollision(other, this);
-    public readonly bool Collides(Annulus other) => TOMathUtils.Geometry.FloatRectanglevRingCollision(this, other);
 }

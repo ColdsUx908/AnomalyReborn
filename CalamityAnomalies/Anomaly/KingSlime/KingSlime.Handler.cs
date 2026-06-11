@@ -29,19 +29,19 @@ public sealed class KingSlime_Handler : IContentLoader
     public static Texture2D RainbowShardTexture => _rainbowShardTexture.Value;
 
     public static readonly SoundStyle SpawnSound = new(AnomalyKingSlimePath + "JewelSpawn");
-    public static readonly SoundStyle ShatterSound = new(AnomalyKingSlimePath + "JewelShatter");
+    public static readonly SoundStyle ShatterSound = new(AnomalyKingSlimePath + "JewelShatter"); // TODO 死亡音效
     public static readonly SoundStyle ShootSound = new("CalamityMod/Sounds/Custom/RedJewelFire");
     public static readonly SoundStyle DashSoundNormal = new(AnomalyKingSlimePath + "JewelDashNormal");
     public static readonly SoundStyle DashSoundBuff = new(AnomalyKingSlimePath + "JewelDashBuff");
     public static readonly SoundStyle HitSound = new(AnomalyKingSlimePath + "JewelHit", 3) { Volume = 0.6f };
 
-    public static Color RubyColor => Main.zenithWorld ? Color.Cyan : Color.Red;
-    public static Color EmeraldColor => Main.zenithWorld ? Color.Purple : Color.Lime with { B = 40 };
-    public static Color SapphireColor => Main.zenithWorld ? Color.Yellow : Color.Blue;
+    public static Color RubyColor => Aroma ? Color.Cyan : Color.Red;
+    public static Color EmeraldColor => Aroma ? Color.Purple : Color.Lime with { B = 40 };
+    public static Color SapphireColor => Aroma ? Color.Yellow : Color.Blue;
     public static Color RainbowColor => Main.DiscoColor;
-    public static Color RubyFinalColor => Main.zenithWorld ? new(175, 255, 255) : new(255, 175, 175);
-    public static Color EmeraldFinalColor => Main.zenithWorld ? new(255, 175, 255) : new(175, 255, 175);
-    public static Color SapphireFinalColor => Main.zenithWorld ? new(255, 255, 175) : new(175, 175, 255);
+    public static Color RubyFinalColor => Aroma ? new(175, 255, 255) : new(255, 175, 175);
+    public static Color EmeraldFinalColor => Aroma ? new(255, 175, 255) : new(175, 255, 175);
+    public static Color SapphireFinalColor => Aroma ? new(255, 255, 175) : new(175, 175, 255);
     public static Color RainbowFinalColor => Color.Lerp(Main.DiscoColor, Color.White, 0.7f);
 
     /// <summary>

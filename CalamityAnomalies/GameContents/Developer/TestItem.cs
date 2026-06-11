@@ -14,7 +14,7 @@ public sealed class TestItem : CAModItem
 {
     public override string Texture => TOAssetUtils.FormatVanillaItemTexturePath(ItemID.IronBroadsword);
 
-    public override string LocalizationCategory => "DeveloperContents";
+    public override string LocalizationCategory => "GameContents.Developer";
 
     public override void SetDefaults()
     {

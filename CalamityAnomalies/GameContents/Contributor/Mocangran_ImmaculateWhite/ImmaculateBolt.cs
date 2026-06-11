@@ -128,7 +128,7 @@ public sealed class ImmaculateBolt : CAModProjectile
                     targetIsValid = true;
                 }
 
-                float homingRatio = Utils.Remap(Timer1, starTime, LifeTime / 4, 0.2f, 0.6f);
+                float homingRatio = Utils.Remap(Timer1, starTime, LifeTime / 4, 0.2f, 0.7f);
                 if (!targetIsValid && Projectile.IsFinalUpdate)
                     Target = TOKinematicUtils.GetNPCTarget_Advanced(Projectile.Center, 8000f, ignoreTiles: true, respectImmuneFrames: true, projectile: Projectile, ignoreChaseable: true, bossPriority: true);
 
@@ -150,7 +150,7 @@ public sealed class ImmaculateBolt : CAModProjectile
             int starTime = 20;
             if (Timer1 > starTime)
             {
-                float homingRatio = Utils.Remap(Timer1, starTime, LifeTime / 2, 0.2f, 0.5f);
+                float homingRatio = Utils.Remap(Timer1, starTime, LifeTime / 2, 0.2f, 0.7f);
                 if (Target is null || !Target.CanBeChasedBy() || !Projectile.HomeIn(Target, HomingAlgorithm.SmootherStep, homingRatio, 8000f, MathHelper.TwoPi, false) && Projectile.IsFinalUpdate)
                     Target = TOKinematicUtils.GetNPCTarget(Projectile.Center, 8000f, ignoreTiles: true);
             }

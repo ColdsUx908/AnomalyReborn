@@ -55,6 +55,12 @@ public static partial class TOExtensions
         /// 获取当前世界坐标对应的安全图格坐标（将世界坐标右移4位并限制在有效图格范围内）。
         /// </summary>
         public Point WorldCoordinateSafe => new(Math.Clamp((int)vector.X >> 4, 0, Main.maxTilesX), Math.Clamp((int)vector.Y >> 4, 0, Main.maxTilesY));
+
+        /// <summary>
+        /// 返回向量的曼哈顿长度（即 <c>X</c> 与 <c>Y</c> 分量绝对值之和）。
+        /// </summary>
+        /// <returns><c>|X| + |Y|</c>。</returns>
+        public float ManhattanLength => Math.Abs(vector.X) + Math.Abs(vector.Y);
     }
 
 #pragma warning disable IDE0059 //作为ref扩展方法，其理应修改原向量值，因此不应警告无需赋值。

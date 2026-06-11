@@ -96,12 +96,12 @@ public sealed class TOSharedData : ModSystem, ITOLoader
     public static bool Multiplayer => Main.netMode != NetmodeID.SinglePlayer;
 
     /// <summary>
-    /// 当前是否处于通用客户端模式（服务器或单人，而非多人客户端）。
+    /// 当前是否不是客户端模式（服务器或单人，而非多人客户端）。
     /// </summary>
     /// <remarks>
     /// 即 <see cref="Main.netMode"/> 不等于 <see cref="NetmodeID.MultiplayerClient"/>，用于判断代码是否运行在本地完整权限环境下。
     /// </remarks>
-    public static bool GeneralClient => Main.netMode != NetmodeID.MultiplayerClient;
+    public static bool NotClient => Main.netMode != NetmodeID.MultiplayerClient;
 
     /// <summary>
     /// 获取当前帧的游戏时间对象 <see cref="GameTime"/>，由主循环更新。

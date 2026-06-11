@@ -5,8 +5,7 @@ namespace Transoceanic.DataStructures.Geometry;
 /// <summary>
 /// 表示一个二维正六边形。
 /// </summary>
-public struct Hexagon : IEquatable<Hexagon>,
-    ICollidableWithRectangle
+public struct Hexagon : IEquatable<Hexagon>, ICollidableWithRectangle
 {
     /// <summary>
     /// 六边形的中心坐标。
@@ -79,11 +78,48 @@ public struct Hexagon : IEquatable<Hexagon>,
         for (int i = 0; i < 3; i++)
         {
             float axisAngle = Rotation + TOMathUtils.PiOver6 + i * TOMathUtils.PiOver3;
-            if (!TOMathUtils.Geometry.OverlapOnAxis(new PolarVector2(axisAngle), hex, rect))
+            Vector2 axis = new PolarVector2(axisAngle);
+            if (!TOMathUtils.Geometry.OverlapOnAxis(axis, hex, rect))
                 return false;
         }
 
-        // 所有轴均重叠，则发生碰撞
+        //所有轴均重叠，则发生碰撞
+        return true;
+    }
+
+    public readonly bool Collides(Hexagon other)
+    {
+        //构造两个六边形的世界坐标顶点（各6个）
+        Span<Vector2> vertsA = stackalloc Vector2[6];
+        Span<Vector2> vertsB = stackalloc Vector2[6];
+
+        for (int i = 0; i < 6; i++)
+        {
+            float angleA = Rotation + i * TOMathUtils.PiOver3;
+            float angleB = other.Rotation + i * TOMathUtils.PiOver3;
+            vertsA[i] = Center + new PolarVector2(CircumRadius, angleA);
+            vertsB[i] = other.Center + new PolarVector2(other.CircumRadius, angleB);
+        }
+
+        //测试当前六边形的三条分离轴（边法线方向）
+        for (int i = 0; i < 3; i++)
+        {
+            float axisAngle = Rotation + TOMathUtils.PiOver6 + i * TOMathUtils.PiOver3;
+            Vector2 axis = new PolarVector2(axisAngle);
+            if (!TOMathUtils.Geometry.OverlapOnAxis(axis, vertsA, vertsB))
+                return false;
+        }
+
+        //测试另一个六边形的三条分离轴
+        for (int i = 0; i < 3; i++)
+        {
+            float axisAngle = other.Rotation + TOMathUtils.PiOver6 + i * TOMathUtils.PiOver3;
+            Vector2 axis = new PolarVector2(axisAngle);
+            if (!TOMathUtils.Geometry.OverlapOnAxis(axis, vertsA, vertsB))
+                return false;
+        }
+
+        //所有轴均重叠，则发生碰撞
         return true;
     }
 }

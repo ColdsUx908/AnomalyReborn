@@ -369,9 +369,9 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                         int hightliteTime = shouldIncreaseHighlightTime ? EyeofCthulhu_Handler.EyeSpinTime + 15 : EyeofCthulhu_Handler.EyeSpinTime;
                         AddHighlightTo(actualIndex, hightliteTime, shouldIncreaseHighlightTime);
 
-                        if (!buff)
+                        ExecuteActionToArenaEye(actualIndex, e =>
                         {
-                            ExecuteActionToArenaEye(actualIndex, e =>
+                            if (!buff)
                             {
                                 e.ShouldUseCustomRotation = true;
                                 int iClone = i;
@@ -383,8 +383,13 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                                     Vector2 center = e1.Center;
                                     return (destination - center).ToRotation(MathHelper.Pi);
                                 };
-                            });
-                        }
+                            }
+                            else
+                            {
+                                e.ShouldUseCustomRotation = false;
+                                e.CustomFindRotationFunction = null;
+                            }
+                        });
                     }
                     break;
 
@@ -582,7 +587,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
             foreach (Projectile p in bloodOrbs)
             {
-                float intensity = TOMathUtils.Interpolation.QuadraticEaseOut((p.Timer1 - 10) / 10f);
+                float intensity = TOMathUtils.Interpolation.QuadraticEaseOut((p.Timer1 - 12) / 12f);
                 spriteBatch.DrawFromCenter(orbBorderBigTexture, p.Center - Main.screenPosition, null, Color.DarkRed * intensity, p.rotation, p.scale);
             }
 
@@ -595,7 +600,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
             foreach (Projectile p in bloodOrbs)
             {
-                float intensity = p.Timer2 > BloodOrbProjectile.StillTime ? TOMathUtils.Interpolation.QuadraticEaseOut((BloodOrbProjectile.StillTime + 10 - p.Timer2) / 10f) : TOMathUtils.Interpolation.QuadraticEaseOut((p.Timer1 - 12) / 10f);
+                float intensity = p.Timer2 > BloodOrbProjectile.StillTime ? TOMathUtils.Interpolation.QuadraticEaseOut((BloodOrbProjectile.StillTime + 6 - p.Timer2) / 6f) : TOMathUtils.Interpolation.QuadraticEaseOut((p.Timer1 - 12) / 10f);
                 spriteBatch.DrawFromCenter(orbBorderTexture, p.Center - Main.screenPosition, null, Color.Red * intensity, p.rotation, p.scale);
             }
 

@@ -1,6 +1,5 @@
 AnomalyMode: {
 	Name: Anomaly
-	Name_GFB: Ylamona
 	ShortInfo: '''[c/FFCCFF:"Final challenge after transcending the abyss"]'''
 	ExpandedInfo:
 		'''
@@ -9,12 +8,10 @@ AnomalyMode: {
 		[c/FF0000:Then...]
 		'''
 	Activate: Anomaly is active... are you serious?
-	Activate_GFB: Ylamona is active! Your world is going to be delicious~
 	Deactivate: Anomaly is not active; wise choice.
-	Deactivate_GFB: Ylamona is not active. Don't you want something delicious?
 	Invalid: Anomaly is only available in TRUE Master difficulty.
 	UltraInvalid_NotLegendary: Anomaly Ultramundane is only available in TRUE Legendary difficulty.
-	UltraInvalid_Zenith: Anomaly Ultramundane is not supported in Get fixed boi worlds.
+	UltraInvalid_Aromaly: You must cook fried rice in such a delicious mode!
 	UltraActivate:
 		'''
 		Anomaly Ultramundane is fully activated, please make sure you know what you're doing!
@@ -25,6 +22,12 @@ AnomalyMode: {
 		Anomaly Ultramundane is back to normal...
 		Did you try it?
 		'''
+
+	Aromaly: {
+		Name: Aromaly
+		Activate: Aromaly is active! Your world is going to be delicious~
+		Deactivate: Aromaly is not active. Don't you want something delicious?
+	}
 }
 
 KingSlime: {
@@ -35,6 +38,7 @@ KingSlime: {
 	KingSlimeJewelEmeraldShadow.DisplayName: Emerald Jewel Shadow
 	RainbowShockwave.DisplayName: Rainbow Shockwave
 	JewelProjectileRainbow.DisplayName: Rainbow Bolt
+	SlimeGel.DisplayName: Slime Gel
 }
 
 EyeofCthulhu: {
@@ -43,4 +47,9 @@ EyeofCthulhu: {
 	EyeofCthulhuArena.DisplayName: Eye of Cthulhu Arena
 	BloodShockwave.DisplayName: Blood Shockwave
 	BloodOrbProjectile.DisplayName: Blood Orb
+}
+
+QueenBee: {
+	BeeProjectile.DisplayName: Bee Projectile
+	CombCell.DisplayName: Comb Cell
 }

@@ -1,6 +1,5 @@
 AnomalyMode: {
 	Name: 异象
-	Name_GFB: 香溢
 	ShortInfo: "[c/FFCFFF:“跨越深渊后的真正挑战”]"
 	ExpandedInfo:
 		'''
@@ -9,12 +8,10 @@ AnomalyMode: {
 		[c/FF0000:那么……]
 		'''
 	Activate: 异象模式已开启……你还好吗？
-	Activate_GFB: 香溢模式已开启！你的世界将变得十足美味～
 	Deactivate: 异象模式已关闭，明智之选。
-	Deactivate_GFB: 香溢模式已关闭。难道你不想来点好吃的吗？
 	Invalid: 异象模式只能在真正的大师难度下开启。
 	UltraInvalid_NotLegendary: 异象超凡只能在真正的传奇难度下开启。
-	UltraInvalid_Zenith: 异象超凡不支持 Get fixed boi 世界。
+	UltraInvalid_Aromaly: 如此香溢的模式必须要炒饭！
 	UltraActivate:
 		'''
 		异象超凡的力量完全激发，请确定你理解自己在做什么！
@@ -25,6 +22,12 @@ AnomalyMode: {
 		异象超凡的力量回归正常……
 		你已经尝试过了，对吧？
 		'''
+
+	Aromaly: {
+		Name: 香溢
+		Activate: 香溢模式已开启！你的世界将变得十足美味～
+		Deactivate: 香溢模式已关闭。难道你不想来点好吃的吗？
+	}
 }
 
 KingSlime: {
@@ -35,6 +38,7 @@ KingSlime: {
 	KingSlimeJewelEmeraldShadow.DisplayName: 王冠绿宝石幻影
 	RainbowShockwave.DisplayName: 彩虹冲击波
 	JewelProjectileRainbow.DisplayName: 彩虹弹幕
+	SlimeGel.DisplayName: 史莱姆凝胶
 }
 
 EyeofCthulhu: {
@@ -43,4 +47,9 @@ EyeofCthulhu: {
 	EyeofCthulhuArena.DisplayName: 克苏鲁之眼竞技场
 	BloodShockwave.DisplayName: 血化冲击波
 	BloodOrbProjectile.DisplayName: 血珠
+}
+
+QueenBee: {
+	BeeProjectile.DisplayName: 蜜蜂
+	CombCell.DisplayName: 蜂巢单元
 }

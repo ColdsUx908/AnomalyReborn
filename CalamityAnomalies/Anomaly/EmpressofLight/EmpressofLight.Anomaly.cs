@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Anomaly.EmpressofLight;
 
 public sealed partial class EmpressofLight_Anomaly : AnomalyNPCBehavior
 {
-    public override bool ShouldProcess => Main.zenithWorld; //暂时仅在天顶世界启用
+    public override bool ShouldProcess => Aroma; //暂时仅在天顶世界启用
 
     public override int ApplyingType => NPCID.HallowBoss;
 
@@ -16,7 +16,7 @@ public sealed partial class EmpressofLight_Anomaly : AnomalyNPCBehavior
 
     public override bool PreAI()
     {
-        if (Main.zenithWorld)
+        if (Aroma)
             return EmpressOfLightLegacyCalamityAI.AI(NPC, CalamityNPC);
 
         return true;

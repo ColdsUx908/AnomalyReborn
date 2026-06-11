@@ -5,11 +5,7 @@ namespace Transoceanic.DataStructures.Geometry;
 /// <summary>
 /// 表示一个可以旋转的矩形。
 /// </summary>
-public struct RotatedRectangle : IEquatable<RotatedRectangle>,
-    ICollidableWithRectangle,
-    ICollidable<RotatedRectangle, RotatedRectangle>,
-    ICollidable<RotatedRectangle, FloatRectangle>,
-    ICollidable<RotatedRectangle, Circle>
+public struct RotatedRectangle : IEquatable<RotatedRectangle>, ICollidableWithRectangle
 {
     /// <summary>
     /// 旋转前的基础轴对齐矩形。
@@ -203,6 +199,6 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>,
     }
 
     public readonly bool Collides(Rectangle other) => Collides((FloatRectangle)other);
-    public readonly bool Collides(FloatRectangle other) => TOMathUtils.Geometry.RotatedRectanglevFloatRectangleCollision(this, other);
-    public readonly bool Collides(Circle other) => TOMathUtils.Geometry.RotatedRectanglevCircleCollision(this, other);
+    public readonly bool Collides(FloatRectangle other) => TOMathUtils.Geometry.RotatedRectangleVFloatRectangleCollision(this, other);
+    public readonly bool Collides(Circle other) => TOMathUtils.Geometry.RotatedRectangleVCircleCollision(this, other);
 }

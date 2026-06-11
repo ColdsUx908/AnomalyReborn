@@ -23,7 +23,7 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
     public override Asset<Texture2D> OutlineTexture => CATextures._anomalyModeIndicator_Border;
     public override Asset<Texture2D> TextureDisabled => CATextures._anomalyModeIndicator_Off;
 
-    public override SoundStyle ActivationSound => Main.zenithWorld ? CASounds.AnomalyActivate_GFB : SupremeCalamitas.BulletHellEndSound;
+    public override SoundStyle ActivationSound => Main.zenithWorld ? CASounds.AromalyActivate : SupremeCalamitas.BulletHellEndSound;
 
     public override int BackBoneGameModeID => GameModeID.Master;
 
@@ -36,9 +36,9 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
 
     public override float DifficultyScale => 10000f;
 
-    public override LocalizedText Name => this.GetText("Name" + (Main.zenithWorld ? "_GFB" : ""));
+    public override LocalizedText Name => this.GetText((Main.zenithWorld ? "Aromaly." : "") + "Name");
 
-    public override Color ChatTextColor => Main.zenithWorld ? CASharedData.GFBColor : CASharedData.MainColor;
+    public override Color ChatTextColor => Main.zenithWorld ? CASharedData.AromalyColor : CASharedData.MainColor;
 
     public override LocalizedText ShortDescription => this.GetText("ShortInfo");
     public override LocalizedText ExpandedDescription => this.GetText("ExpandedInfo");
@@ -85,7 +85,7 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
 
     public static void DisableAnomaly()
     {
-        if (TOSharedData.GeneralClient)
+        if (TOSharedData.NotClient)
             TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Invalid", Color.Red);
         CASharedData.Anomaly = false;
     }
@@ -102,14 +102,14 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
 
     public static void InvalidInfo_NotLegendary()
     {
-        if (TOSharedData.GeneralClient)
+        if (TOSharedData.NotClient)
             TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "UltraInvalid_NotLegendary", Color.Red);
     }
 
-    public static void InvalidInfo_Zenith()
+    public static void InvalidInfo_Aromaly()
     {
-        if (TOSharedData.GeneralClient)
-            TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "UltraInvalid_Zenith", CASharedData.MainColor);
+        if (TOSharedData.NotClient)
+            TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "UltraInvalid_Aromaly", CASharedData.AromalyColor);
         //SoundEngine.PlaySound();
     }
 
@@ -124,12 +124,12 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
                     DisableUltra();
                     break;
                 case (true, false) when CASharedData.AnomalyUltramundane: //是传奇难度，在GFB世界
-                    InvalidInfo_Zenith();
+                    InvalidInfo_Aromaly();
                     DisableUltra();
                     break;
                 case (false, false) when CASharedData.AnomalyUltramundane: //不是传奇难度，且在GFB世界
                     InvalidInfo_NotLegendary();
-                    InvalidInfo_Zenith();
+                    InvalidInfo_Aromaly();
                     DisableUltra();
                     break;
                 case (true, true) when !CASharedData.AnomalyUltramundane: //是传奇难度，且不在GFB世界，应开启异象超凡

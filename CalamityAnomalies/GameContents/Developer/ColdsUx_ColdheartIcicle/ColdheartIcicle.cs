@@ -2,7 +2,7 @@
 
 using Microsoft.Xna.Framework.Input;
 
-namespace CalamityAnomalies.GameContents.Developer;
+namespace CalamityAnomalies.GameContents.Developer.ColdsUx_ColdheartIcicle;
 
 public sealed class ColdheartIcicle : CALegendaryItem
 {
@@ -129,7 +129,6 @@ public sealed class ColdheartIcicle : CALegendaryItem
         Item.noUseGraphic = true;
         Item.noMelee = true;
         Item.ArmorPenetration = 350258;
-        CalamityItem.devItem = true;
     }
 
     public override void Update(ref float gravity, ref float maxFallSpeed)
@@ -202,6 +201,11 @@ public sealed class ColdheartIcicle : CALegendaryItem
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
         CAItemTooltipModifier modifier = new(Item, tooltips);
+
+        int index = modifier._nextCATooltipIndex;
+        AddDeveloperItemIdentifier(tooltips, index);
+        AddLegendaryItemIdentifier(tooltips, ++index);
+
         if (Main.keyState.PressingShift())
         {
 

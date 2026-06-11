@@ -576,7 +576,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
         void TrySpawnZenithSpinServant(int timer)
         {
             int servantSpawnGateValue = 4;
-            if (Main.zenithWorld && timer >= 0 && timer % servantSpawnGateValue == 0)
+            if (Aroma && timer >= 0 && timer % servantSpawnGateValue == 0)
             {
                 PolarVector2 servantVelocity = Main.rand.NextPolarVector2(6f, 7f);
 
@@ -601,7 +601,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
         void SpawnServantAction(NPC n)
         {
-            if (Main.zenithWorld)
+            if (Aroma)
                 n.ai[2] = 1.5f;
         }
 
@@ -705,7 +705,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                                 Dust.NewDustAction(servantSpawnCenter, 20, 20, DustID.Blood, servantSpawnVelocity * 0.4f);
                         }
 
-                        if (TOSharedData.GeneralClient)
+                        if (TOSharedData.NotClient)
                         {
                             if (shouldSpawnServant)
                             {
@@ -840,7 +840,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     for (int i = 0; i < 20; i++)
                         Dust.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.Blood, new Vector2(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-6f, 6f)));
 
-                    if (!Main.zenithWorld)
+                    if (!Aroma)
                     {
                         //非GFB世界
                         //生成流血仆从
@@ -917,7 +917,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     break;
             }
 
-            if (Main.zenithWorld)
+            if (Aroma)
                 ZenithFlame();
 
             void SelectNextAttack()
@@ -951,7 +951,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             if (Phase2_2)
                             {
                                 CurrentBehavior = Behavior.Phase2_EyeSpin;
-                                Timer1 = -(Main.zenithWorld ? 20 : 8); //8帧缓冲时间（GFB世界20帧）
+                                Timer1 = -(Aroma ? 20 : 8); //8帧缓冲时间（GFB世界20帧）
                             }
                             else
                                 CurrentBehavior = Behavior.Phase2_Hover;
@@ -1046,7 +1046,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
                 if (Timer1 > 0 && Timer1 % projectileGateValue == 0 && CanShootProjectile())
                 {
-                    if (TOSharedData.GeneralClient)
+                    if (TOSharedData.NotClient)
                     {
                         int type = ProjectileID.BloodNautilusShot;
                         int damage = BloodDamage;
@@ -1263,7 +1263,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         if (adjustedTimer1 % projectileGateValue == 0)
                         {
                             int num = adjustedTimer1 / projectileGateValue;
-                            if (num > 0 && num <= maxProjectileSpawnsPerAttack && TOSharedData.GeneralClient && CanShootProjectile() && Timer2 == 0)
+                            if (num > 0 && num <= maxProjectileSpawnsPerAttack && TOSharedData.NotClient && CanShootProjectile() && Timer2 == 0)
                             {
                                 bool buff = Ultra && NextChargeTypeIsHorizontal && AttackCounter2 == 0;
                                 int amount = 5;
@@ -1271,7 +1271,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                                 EyeofCthulhu_Handler.ShootProjectile(NPC, ProjectileID.BloodNautilusShot, BloodDamage, 20f, amount, halfRange, p => p.timeLeft = 600);
                             }
 
-                            if (Main.zenithWorld)
+                            if (Aroma)
                             {
                                 int servantCount = 0;
                                 int bloodlettingServantCount = 0;
@@ -1362,7 +1362,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
             void EyeSpin()
             {
-                if (!Main.zenithWorld)
+                if (!Aroma)
                 {
                     Timer1++;
 
@@ -1371,9 +1371,9 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         StopMovement();
                         NormalUpdateRotation(Math.Clamp(Timer1 * 0.015f, 0f, 3.5f));
 
-                        if (CanShootProjectile())
+                        if (TOSharedData.NotClient)
                         {
-                            int projectileAmountOver4 = Ultra ? 10 : 8;
+                            int projectileAmountOver4 = Ultra ? 8 : 6;
                             int particleAmount = projectileAmountOver4 * 8;
                             for (int i = 0; i < particleAmount; i++)
                                 EyeofCthulhu_Handler.SpawnOrbParticle(NPC.Center, Main.rand.NextFloat(5f, 10f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.5f, 1f));
@@ -1435,7 +1435,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
             void ZenithFlame()
             {
-                if (TOSharedData.GeneralClient) //火焰
+                if (TOSharedData.NotClient) //火焰
                 {
                     Timer3++;
 
@@ -1486,12 +1486,15 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                 case 0:
                     Phase3ArenaCenter = NPC.Center;
                     SendCommandToServants(BehaviorCommand_Servant.GetToArenaPosition);
-                    if (TOSharedData.GeneralClient)
+                    if (TOSharedData.NotClient)
+                    {
                         Projectile.NewProjectileAction<EyeofCthulhuArena>(SourceAI, Phase3ArenaCenter, Vector2.Zero, ArenaDamage, 0f, action: p =>
                         {
                             p.GetModProjectile<EyeofCthulhuArena>().Master = NPC;
                             ArenaProjectile = p;
                         });
+                    }
+
                     break;
 
                 case PhaseChangeGateValue_2To3_2:

@@ -84,12 +84,13 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                 Timer1 = 0;
                 Timer2 = 0;
                 CurrentAttackPhase = 0;
+                ShouldDecelerate = false;
                 switch (CurrentBehavior)
                 {
                     case Behavior.Phase1_Charge:
                         int chargeAmount = Phase2_3 ? 2 : Phase2_2 ? 4 : Phase2 ? 3 : 4;
                         AttackCounter++;
-                        if (AttackCounter > chargeAmount)
+                        if (AttackCounter >= chargeAmount)
                         {
                             AttackCounter = 0;
                             SelectCore();
@@ -110,7 +111,11 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                     Behavior newBehavior;
 
                     do newBehavior = (Behavior)Main.rand.Next((byte)Behavior.Phase1_Charge, (byte)Behavior.Phase1_Stinger + 1);
-                    while (newBehavior == currentBehavior || (!allTheSameBehavior && new HashSet<Behavior> { lastBehavior, lastBehavior2, currentBehavior, newBehavior }.Count < 3));
+                    while (newBehavior == currentBehavior || (!allTheSameBehavior && new HashSet<Behavior> { lastBehavior, lastBehavior2, currentBehavior, newBehavior }.Count < 2));
+
+                    LastBehavior2 = lastBehavior;
+                    LastBehavior = currentBehavior;
+                    CurrentBehavior = newBehavior;
                 }
             }
 
@@ -216,7 +221,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                                 {
                                     int spawnType = Main.rand.NextBool(2) ? NPCID.Bee : NPCID.BeeSmall;
 
-                                    if (Main.zenithWorld)
+                                    if (Aroma)
                                     {
                                         if (Phase1_3)
                                             spawnType = Main.rand.NextBool(3) ? ModContent.NPCType<PlagueChargerLarge>() : ModContent.NPCType<PlagueCharger>();
@@ -247,7 +252,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                                     {
                                         n.velocity = n.GetVelocityTowards(Target.Center, 5f);
 
-                                        if (!Main.zenithWorld)
+                                        if (!Aroma)
                                         {
                                             n.ai[2] = 1f; //enrageScale
                                             n.ai[3] = 1f; //标记之为蜂后召唤的仆从
@@ -424,31 +429,17 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                     else if (num > 0 && NPC.Bottom.Y < Target.Top.Y && Collision.CanHit(stingerSpawnLocation, 1, 1, Target.position, Target.width, Target.height))
                     {
                         SoundEngine.PlaySound(SoundID.Item17, stingerSpawnLocation);
-                        if (TOSharedData.GeneralClient)
+                        if (TOSharedData.NotClient)
                         {
-                            bool buff = num % 3 == 0;
-
                             float stingerSpeed = Ultra ? 18f : 15f;
                             Vector2 stingerVelocity = (Target.Center - stingerSpawnLocation).ToCustomLength(stingerSpeed);
-                            int type = Main.zenithWorld ? (Phase1_3 ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.FlamingWood) : ProjectileID.QueenBeeStinger;
+                            int type = Aroma ? (Phase1_3 ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.FlamingWood) : ProjectileID.QueenBeeStinger;
 
                             Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation, stingerVelocity, type, StingerDamage, 0f, action: p =>
                             {
-                                p.ai[1] = (Main.zenithWorld && Phase1_3) ? Target.position.Y : 0f;
+                                p.ai[1] = (Aroma && Phase1_3) ? Target.position.Y : 0f;
                                 p.timeLeft = 600;
                             });
-
-                            if (buff) //追踪蜜蜂弹幕
-                            {
-                                for (int i = 0; i < 2; i++)
-                                {
-                                    Projectile.NewProjectileAction<BeeProjectile>(SourceAI, stingerSpawnLocation, stingerVelocity.RotatedByRandom(0.2f).ToCustomLength(5f), StingerDamage * 2, 0f, action: p =>
-                                    {
-                                        p.ai[0] = BeeProjectile.Behavior_HomeIn;
-                                        p.ai[1] = NPC.target;
-                                    });
-                                }
-                            }
 
                             if (Phase1_2)
                             {
@@ -461,6 +452,14 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                                     });
                                 }
                             }
+
+                            if (num == numStingerShots) //生成蜂巢
+                                Projectile.NewProjectileAction<CombCell>(SourceAI, stingerSpawnLocation, stingerVelocity * 0.4f,  StingerDamage, 0f, action: p =>
+                                {
+                                    CombCell modP = p.GetModProjectile<CombCell>();
+                                    modP.BehaviorType = CombCell.Behavior.Beehive;
+                                    modP.FinalScale = 0.2f;
+                                });
                         }
                     }
                 }

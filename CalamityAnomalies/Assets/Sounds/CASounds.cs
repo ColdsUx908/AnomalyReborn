@@ -6,6 +6,6 @@ public static class CASounds
 {
     public const string SoundPathPrefix = "CalamityAnomalies/Assets/Sounds/";
 
-    public static SoundStyle AnomalyActivate_GFB = new(SoundPathPrefix + "AnomalyActivate_GFB") { Volume = 0.6f };
-    public static SoundStyle MetalPipeFalling = new(SoundPathPrefix + "MetalPipeFalling");
+    public static readonly SoundStyle AromalyActivate = new(SoundPathPrefix + "AromalyActivate") { Volume = 0.6f };
+    public static readonly SoundStyle MetalPipeFalling = new(SoundPathPrefix + "MetalPipeFalling");
 }

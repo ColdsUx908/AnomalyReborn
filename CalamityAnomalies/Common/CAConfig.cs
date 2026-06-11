@@ -31,4 +31,11 @@ public sealed class CAClientConfig : ModConfig
     /// </summary>
     [DefaultValue(false)]
     public bool AuxiliaryVisualEffects;
+
+    /// <summary>
+    /// 是否使用灾厄模组风格的纹理。
+    /// </summary>
+    [ReloadRequired]
+    [DefaultValue(false)]
+    public bool UseCalamityStyleTextures;
 }

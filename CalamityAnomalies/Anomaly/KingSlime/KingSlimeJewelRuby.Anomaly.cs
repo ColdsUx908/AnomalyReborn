@@ -10,7 +10,7 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
 {
     public const float DespawnDistance = 5000f;
 
-    public int ShootCooldownTime => HasEnteredPhase2 ? (Main.zenithWorld ? 240 : 120) : (Main.zenithWorld ? 180 : 90);
+    public int ShootCooldownTime => HasEnteredPhase2 ? (Aroma ? 240 : 150) : (Aroma ? 180 : 105);
 
     private static readonly ProjectileDamageContainer _jewelProjectileDamage = new(30, 52, 72, 84, 84, 102);
     public static int JewelProjectileDamage => _jewelProjectileDamage.Value;
@@ -129,23 +129,23 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
             NPC sapphire = validSapphire ? kingSlimeBehavior.JewelSapphire : null;
 
             SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
-            int particleAmount = Main.zenithWorld ? 30 : 20;
+            int particleAmount = Aroma ? 30 : 20;
             if (validSapphire)
                 particleAmount += 20;
             for (int i = 0; i < particleAmount; i++)
                 KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
             KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
 
-            if (!TOSharedData.GeneralClient)
+            if (!TOSharedData.NotClient)
                 return;
 
-            int amount = HasEnteredPhase2 ? (Main.zenithWorld ? 7 : Ultra ? 3 : 1) : (Main.zenithWorld ? 17 : Ultra ? 5 : 3);
-            float singleRadian = MathHelper.ToRadians(HasEnteredPhase2 ? (Main.zenithWorld ? 18f : 9f) : (Main.zenithWorld ? 18f : Ultra ? 13.5f : 12f));
+            int amount = HasEnteredPhase2 ? (Aroma ? 7 : Ultra ? 3 : 1) : (Aroma ? 17 : Ultra ? 5 : 3);
+            float singleRadian = MathHelper.ToRadians(HasEnteredPhase2 ? (Aroma ? 18f : 9f) : (Aroma ? 18f : Ultra ? 13.5f : 12f));
             float radian = singleRadian * (amount - 1);
             float initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
-            Projectile.RotatedProj<JewelProjectile>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(Main.zenithWorld ? 16f : 15f, initialRotation), JewelProjectileDamage, 0f, Main.myPlayer, p =>
+            Projectile.RotatedProj<JewelProjectile>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(Aroma ? 16f : 15f, initialRotation), JewelProjectileDamage, 0f, Main.myPlayer, p =>
             {
-                if (Main.zenithWorld)
+                if (Aroma)
                 {
                     p.velocity.Modulus *= Main.rand.NextFloat(0.7f, TOSharedData.LegendaryMode ? 1f : 0.85f);
                     if (TOSharedData.LegendaryMode)
@@ -155,16 +155,16 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
 
             if (validSapphire)
             {
-                KingSlime_Handler.CreateDustFromJewelTo(sapphire, NPC.Center, Main.zenithWorld ? DustID.GemTopaz : DustID.GemSapphire);
+                KingSlime_Handler.CreateDustFromJewelTo(sapphire, NPC.Center, Aroma ? DustID.GemTopaz : DustID.GemSapphire);
 
-                int type = Main.zenithWorld ? ModContent.ProjectileType<KingSlimeJewelEmeraldShadow>() : ModContent.ProjectileType<JewelProjectile>();
-                int amount1 = Ultra ? 7 : Main.zenithWorld ? 9 : 5;
-                Projectile.RotatedProj(amount1, MathHelper.TwoPi / amount1, SourceAI, NPC.Center, NPC.GetVelocityTowards(NPC.PlayerTarget, Main.zenithWorld ? 13.5f : 18f), type, JewelProjectileDamage, 0f, Main.myPlayer, BuffedRubyProjectileAction);
+                int type = Aroma ? ModContent.ProjectileType<KingSlimeJewelEmeraldShadow>() : ModContent.ProjectileType<JewelProjectile>();
+                int amount1 = Ultra ? 7 : Aroma ? 9 : 5;
+                Projectile.RotatedProj(amount1, MathHelper.TwoPi / amount1, SourceAI, NPC.Center, NPC.GetVelocityTowards(NPC.PlayerTarget, Aroma ? 13.5f : 18f), type, JewelProjectileDamage, 0f, Main.myPlayer, BuffedRubyProjectileAction);
             }
 
             void BuffedRubyProjectileAction(Projectile p)
             {
-                if (Main.zenithWorld)
+                if (Aroma)
                 {
                     p.velocity.Modulus *= Main.rand.NextFloat(1.2f, TOSharedData.LegendaryMode ? 1.5f : 1.3f);
                     if (TOSharedData.LegendaryMode)
@@ -181,7 +181,7 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
         float timeLeftGateValue = 30f;
         float gateValue = ShootCooldownTime - timeLeftGateValue;
         float ratio = Timer1 > gateValue ? (Timer1 - gateValue) / timeLeftGateValue : 0f;
-        KingSlime_Handler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, Main.zenithWorld ? 120f : 100f, 0.35f);
+        KingSlime_Handler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, Aroma ? 120f : 100f, 0.35f);
         KingSlime_Handler.DrawJewel(spriteBatch, screenPos, NPC, ratio);
         return false;
     }

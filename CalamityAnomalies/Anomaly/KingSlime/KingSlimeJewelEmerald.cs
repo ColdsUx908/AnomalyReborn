@@ -17,7 +17,7 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
     }
 
     public const float DespawnDistance = 5000f;
-    public int ChargeCooldownTime => HasEnteredPhase2 ? 210 : 150;
+    public int ChargeCooldownTime => HasEnteredPhase2 ? 240 : 180;
     public int ChargePreparationTime => HasEnteredPhase2 ? 75 : 60;
     public static int ChargeTime => 60;
     public float ChargeSpeed => Ultra ? (HasEnteredPhase2 ? 24f : 28f) : (HasEnteredPhase2 ? 18f : 22f);
@@ -199,7 +199,7 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
                             d.velocity = dustVelocity;
                             d.scale = Main.rand.NextFloat(0.9f, 1.2f);
                             d.noGravity = true;
-                            d.fadeIn = 0.66f;
+                            d.fadeIn = 0.5f;
                             d.color = KingSlime_Handler.EmeraldColor;
                         });
                     }
@@ -257,11 +257,11 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
                 NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, chargeSpeed), MathHelper.PiOver2);
                 NPC.netSpam = 0;
 
-                if (TOSharedData.GeneralClient && validSapphire)
+                if (TOSharedData.NotClient && validSapphire)
                 {
-                    KingSlime_Handler.CreateDustFromJewelTo(sapphire, NPC.Center, Main.zenithWorld ? DustID.GemTopaz : DustID.GemSapphire);
+                    KingSlime_Handler.CreateDustFromJewelTo(sapphire, NPC.Center, Aroma ? DustID.GemTopaz : DustID.GemSapphire);
 
-                    int type = Main.zenithWorld ? ModContent.ProjectileType<JewelProjectile>() : ModContent.ProjectileType<KingSlimeJewelEmeraldShadow>();
+                    int type = Aroma ? ModContent.ProjectileType<JewelProjectile>() : ModContent.ProjectileType<KingSlimeJewelEmeraldShadow>();
                     Vector2 velocityUnit = NPC.GetVelocityTowards(NPC.PlayerTarget, 1f);
                     Vector2 offset = velocityUnit.RotatedBy(MathHelper.PiOver2);
                     int amount = Ultra ? 4 : 3;
@@ -269,7 +269,7 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
                     {
                         Projectile.NewProjectileAction(SourceAI, NPC.Center + offset * 24f * i + velocityUnit * (60f - 20f * Math.Abs(i)), velocityUnit * chargeSpeed, type, KingSlimeJewelEmeraldCloneDamage, 0f, Main.myPlayer, p =>
                         {
-                            if (Main.zenithWorld)
+                            if (Aroma)
                                 p.timeLeft = 60;
                             else
                                 p.VelocityToRotation(MathHelper.PiOver2);

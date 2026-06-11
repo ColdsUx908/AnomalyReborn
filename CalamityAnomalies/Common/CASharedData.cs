@@ -4,7 +4,7 @@ using CalamityAnomalies.Anomaly;
 
 namespace CalamityAnomalies.Common;
 
-public sealed class CASharedData : ModSystem
+public sealed partial class CASharedData : ModSystem
 {
     public const string ModLocalizationPrefix = "Mods.CalamityAnomalies.";
     public const string AnomalyLocalizationPrefix = ModLocalizationPrefix + "Anomaly.";
@@ -24,13 +24,12 @@ public sealed class CASharedData : ModSystem
 
     public static readonly List<Color> ColorList3 = [MainColor, AnomalyUltramundaneColor, MainColor];
 
-    public static readonly Color GFBColor = Color.IndianRed;
+    public static readonly Color AromalyColor = Color.IndianRed;
 
     public static readonly Color RebornColor = new(0xff, 0xa5, 0x00);
 
-    public static Color MainIdentifierColor => Color.LerpMany(ColorList3, TOMathUtils.Interpolation.QuadraticEaseIn(TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 2.5f, unsigned: true)) / 2f);
+    public static Color MainIdentifierColor => Color.LerpMany(ColorList3, TOMathUtils.Interpolation.QuadraticEaseIn(TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 3f, unsigned: true)) / 1.5f);
     public static Color IdentifierColor => Color.LerpMany(ColorList2, TOMathUtils.Interpolation.QuadraticEaseIn(TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 2.5f, unsigned: true)) / 2f);
-
 
     public static Assembly Assembly => field ??= CAMain.Instance.Code;
 
@@ -68,10 +67,10 @@ public sealed class CASharedData : ModSystem
 
             field = value;
 
-            if (TOSharedData.GeneralClient)
+            if (TOSharedData.NotClient)
             {
-                string key = AnomalyLocalizationPrefix + "AnomalyMode." + (value ? "Activate" : "Deactivate") + (Main.zenithWorld ? "_GFB" : "");
-                Color color = Main.zenithWorld ? GFBColor : MainColor;
+                string key = AnomalyLocalizationPrefix + "AnomalyMode." + (Main.zenithWorld ? "Aromaly." : "") + (value ? "Activate" : "Deactivate") ;
+                Color color = Main.zenithWorld ? AromalyColor : MainColor;
                 TOLocalizationUtils.ChatLocalizedText(key, color);
             }
             if (value)
@@ -95,14 +94,19 @@ public sealed class CASharedData : ModSystem
                 return;
 
             field = value;
-            if (TOSharedData.GeneralClient)
+            if (TOSharedData.NotClient)
                 TOLocalizationUtils.ChatLocalizedText(AnomalyLocalizationPrefix + "AnomalyMode." + (value ? "UltraActivate" : "UltraDeactivate"), Color.Red);
 
             OnAnomalyUltramundaneToggled?.Invoke(value);
         }
-
     }
     public static event Action<bool> OnAnomalyUltramundaneToggled;
+
+    /// <summary>
+    /// 香溢模式。
+    /// <br/>在 GFB 世界中启用。
+    /// </summary>
+    public static bool Aromaly => Anomaly && Main.zenithWorld;
 
     /// <summary>
     /// 故事模式。
@@ -133,13 +137,8 @@ public sealed class CASharedData : ModSystem
     {
         tag["Anomaly"] = Anomaly;
     }
-    #endregion World
 
-    public static class QuickAccess
-    {
-        public static bool Ultra => AnomalyUltramundane;
-        public static bool Story => StoryMode;
-    }
+    #endregion World
 }
 
 

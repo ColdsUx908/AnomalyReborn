@@ -75,7 +75,7 @@ public partial class BloodlettingServant : CAModNPC
 
     public override void AI()
     {
-        if (Main.zenithWorld)
+        if (Aroma)
         {
             AI_Zenith();
             return;
@@ -217,7 +217,7 @@ public partial class BloodlettingServant : CAModNPC
 
     public override void FindFrame(int frameHeight)
     {
-        if (Main.zenithWorld)
+        if (Aroma)
         {
             FindFrame_Zenith(frameHeight);
             return;
@@ -251,7 +251,7 @@ public partial class BloodlettingServant : CAModNPC
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        if (Main.zenithWorld)
+        if (Aroma)
             return PreDraw_Zenith(spriteBatch, screenPos, drawColor);
 
         Texture2D npcTexture = NPC.Texture;

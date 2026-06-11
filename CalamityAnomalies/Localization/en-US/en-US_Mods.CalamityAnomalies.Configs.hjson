@@ -14,4 +14,9 @@ CAClientConfig: {
 		Label: Auxiliary Visual Effects
 		Tooltip: Auxiliary visual effects that may help indicate certain behaviors or states of entities.
 	}
+
+	UseCalamityStyleTextures: {
+		Label: Use Calamity-Style Textures
+		Tooltip: Replace certain textures in the mod with versions that are more consistent with the art style of the Calamity Mod.
+	}
 }

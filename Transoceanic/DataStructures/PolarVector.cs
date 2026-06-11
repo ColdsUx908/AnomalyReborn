@@ -200,6 +200,13 @@ public struct PolarVector2 : IEquatable<PolarVector2>
     public readonly PolarVector2 RotatedBy(float offset) => new(Radius, Angle + offset);
 
     /// <summary>
+    /// 返回将此向量旋转随机角度后的新向量。
+    /// </summary>
+    /// <param name="maxOffset">旋转的最大角度偏移量（弧度制，必须为正数）。</param>
+    /// <returns>旋转后的新极坐标向量。</returns>
+    public readonly PolarVector2 RotatedByRandom(float maxOffset) => RotatedBy(Main.rand.NextFloat(-maxOffset, maxOffset));
+
+    /// <summary>
     /// 获取两个极坐标向量之间的夹角（绝对值，范围 [0, π]）。
     /// <br/>若任一向量为零向量，返回 0。
     /// </summary>

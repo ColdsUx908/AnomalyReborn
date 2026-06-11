@@ -79,92 +79,20 @@ public static partial class TOMathUtils
             return aMax >= bMin && bMax >= aMin;
         }
 
-        #region 碰撞
-
         /// <summary>
-        /// 检测实现了 <see cref="ICollidableWithRectangle"/> 接口的对象与指定矩形的碰撞。
+        /// 在轴对齐矩形 <paramref name="b"/> 的世界坐标轴（X 轴与 Y 轴）上进行投影重叠检测。
+        /// <br/>此方法验证给定形状的顶点集合在水平方向和垂直方向上的投影区间是否均与矩形自身的区间相交，通常作为分离轴定理（SAT）的一部分，用于判断任意多边形（或点集）与轴对齐矩形之间是否存在碰撞。
         /// </summary>
-        /// <typeparam name="T">实现了 <see cref="ICollidableWithRectangle"/> 的类型。</typeparam>
-        /// <param name="a">可碰撞对象。</param>
-        /// <param name="targetHitbox">目标矩形碰撞箱。</param>
-        /// <returns>若发生碰撞则为 <see langword="true"/>，否则为 <see langword="false"/>。</returns>
-        public static bool Collides<T>(T a, Rectangle targetHitbox) where T : ICollidableWithRectangle => a.Collides(targetHitbox);
-
-        /// <summary>
-        /// 检测两个实现了相互碰撞接口的对象之间的碰撞。
-        /// </summary>
-        /// <typeparam name="T1">第一个对象的类型，需实现 <see cref="ICollidable{T1, T2}"/>。</typeparam>
-        /// <typeparam name="T2">第二个对象的类型，需实现 <see cref="ICollidable{T2, T1}"/>。</typeparam>
-        /// <param name="a">第一个对象。</param>
-        /// <param name="b">第二个对象。</param>
-        /// <returns>若发生碰撞则为 <see langword="true"/>，否则为 <see langword="false"/>。</returns>
-        public static bool Collides<T1, T2>(T1 a, T2 b)
-            where T1 : ICollidable<T1, T2>
-            where T2 : ICollidable<T2, T1>
-            => a.Collides(b);
-
-        /// <summary>
-        /// 检测轴对齐矩形与圆的碰撞。
-        /// </summary>
-        /// <param name="a">轴对齐矩形。</param>
-        /// <param name="b">圆。</param>
-        /// <returns>若矩形与圆相交则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
-        public static bool FloatRectanglevCircleCollision(FloatRectangle a, Circle b)
+        /// <param name="aPoints">
+        /// 待检测形状所有顶点的只读跨度。顶点排列顺序任意，但必须包含形状的所有极值点，
+        /// 以确保投影区间计算准确。
+        /// </param>
+        /// <param name="b">用于重叠检测的目标轴对齐矩形。</param>
+        /// <returns>
+        /// 如果 <paramref name="aPoints"/> 在 X 轴和 Y 轴上的投影区间均与矩形 <paramref name="b"/> 的对应区间存在重叠，则返回 <see langword="true"/>；否则返回 <see langword="false"/>。
+        /// </returns>
+        public static bool OverlapOnFloatRectangleAxis(ReadOnlySpan<Vector2> aPoints, FloatRectangle b)
         {
-            float distance = MinDistanceSquaredFromTo(a, b.Center);
-            return distance <= b.Radius * b.Radius;
-        }
-
-        /// <summary>
-        /// 检测旋转矩形与圆的碰撞。
-        /// </summary>
-        /// <param name="a">旋转矩形。</param>
-        /// <param name="b">圆。</param>
-        /// <returns>若旋转矩形与圆相交则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
-        public static bool RotatedRectanglevCircleCollision(RotatedRectangle a, Circle b)
-        {
-            Vector2 newCenter = b.Center.RotatedBy(-a.Rotation, a.Center);
-            float distanceSquared = MinDistanceSquaredFromTo(a.Source, newCenter);
-            return distanceSquared <= b.Radius * b.Radius;
-        }
-
-        /// <summary>
-        /// 检测轴对齐矩形与圆环的碰撞。
-        /// </summary>
-        /// <param name="a">轴对齐矩形。</param>
-        /// <param name="b">圆环（具有内外半径）。</param>
-        /// <returns>若矩形与圆环区域相交则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
-        public static bool FloatRectanglevRingCollision(FloatRectangle a, Annulus b)
-        {
-            float minDistanceSquared = MinDistanceSquaredFromTo(a, b.Center);
-            if (minDistanceSquared > b.OuterRadius * b.OuterRadius)
-                return false;
-
-            float maxDistanceSquared = MaxDistanceSquaredFromTo(a, b.Center);
-            if (maxDistanceSquared < b.InnerRadius * b.InnerRadius)
-                return false;
-
-            return true;
-        }
-
-        /// <summary>
-        /// 检测旋转矩形与轴对齐矩形的碰撞（基于分离轴定理）。
-        /// </summary>
-        /// <param name="a">旋转矩形。</param>
-        /// <param name="b">轴对齐矩形。</param>
-        /// <returns>若两者相交则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
-        public static bool RotatedRectanglevFloatRectangleCollision(RotatedRectangle a, FloatRectangle b)
-        {
-            (Vector2 aPoint1, Vector2 aPoint2, Vector2 aPoint3, Vector2 aPoint4) = a.Vertices;
-            ReadOnlySpan<Vector2> aPoints = [aPoint1, aPoint2, aPoint3, aPoint4];
-            ReadOnlySpan<Vector2> bPoints = [b.TopLeft, b.TopRight, b.BottomLeft, b.BottomRight];
-
-            (float sinA, float cosA) = MathF.SinCos(a.Rotation);
-            if (!OverlapOnAxis(new Vector2(cosA, sinA), aPoints, bPoints))
-                return false;
-            if (!OverlapOnAxis(new Vector2(-sinA, cosA), aPoints, bPoints))
-                return false;
-
             float aMin = float.MaxValue, aMax = float.MinValue;
             foreach (Vector2 point in aPoints)
             {
@@ -187,6 +115,128 @@ public static partial class TOMathUtils
                 return false;
 
             return true;
+        }
+
+        #region 碰撞
+        /// <summary>
+        /// 检测实现了 <see cref="ICollidableWithRectangle"/> 接口的对象与指定矩形的碰撞。
+        /// </summary>
+        /// <typeparam name="T">实现了 <see cref="ICollidableWithRectangle"/> 的类型。</typeparam>
+        /// <param name="a">可碰撞对象。</param>
+        /// <param name="targetHitbox">目标矩形碰撞箱。</param>
+        /// <returns>若发生碰撞则为 <see langword="true"/>，否则为 <see langword="false"/>。</returns>
+        public static bool Collides<T>(T a, Rectangle targetHitbox) where T : ICollidableWithRectangle => a.Collides(targetHitbox);
+
+        /// <summary>
+        /// 检测轴对齐矩形与圆的碰撞。
+        /// </summary>
+        /// <param name="a">轴对齐矩形。</param>
+        /// <param name="b">圆。</param>
+        /// <returns>若矩形与圆相交则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
+        public static bool FloatRectangleVCircleCollision(FloatRectangle a, Circle b)
+        {
+            float distance = MinDistanceSquaredFromTo(a, b.Center);
+            return distance <= b.Radius * b.Radius;
+        }
+
+        /// <summary>
+        /// 检测旋转矩形与圆的碰撞。
+        /// </summary>
+        /// <param name="a">旋转矩形。</param>
+        /// <param name="b">圆。</param>
+        /// <returns>若旋转矩形与圆相交则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
+        public static bool RotatedRectangleVCircleCollision(RotatedRectangle a, Circle b)
+        {
+            Vector2 newCenter = b.Center.RotatedBy(-a.Rotation, a.Center);
+            float distanceSquared = MinDistanceSquaredFromTo(a.Source, newCenter);
+            return distanceSquared <= b.Radius * b.Radius;
+        }
+
+        /// <summary>
+        /// 检测轴对齐矩形与圆环的碰撞。
+        /// </summary>
+        /// <param name="a">轴对齐矩形。</param>
+        /// <param name="b">圆环（具有内外半径）。</param>
+        /// <returns>若矩形与圆环区域相交则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
+        public static bool FloatRectangleVAnnulusCollision(FloatRectangle a, Annulus b)
+        {
+            float minDistanceSquared = MinDistanceSquaredFromTo(a, b.Center);
+            if (minDistanceSquared > b.OuterRadius * b.OuterRadius)
+                return false;
+
+            float maxDistanceSquared = MaxDistanceSquaredFromTo(a, b.Center);
+            if (maxDistanceSquared < b.InnerRadius * b.InnerRadius)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// 检测旋转矩形与轴对齐矩形的碰撞（基于分离轴定理）。
+        /// </summary>
+        /// <param name="a">旋转矩形。</param>
+        /// <param name="b">轴对齐矩形。</param>
+        /// <returns>若两者相交则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
+        public static bool RotatedRectangleVFloatRectangleCollision(RotatedRectangle a, FloatRectangle b)
+        {
+            (Vector2 aPoint1, Vector2 aPoint2, Vector2 aPoint3, Vector2 aPoint4) = a.Vertices;
+            ReadOnlySpan<Vector2> aPoints = [aPoint1, aPoint2, aPoint3, aPoint4];
+            ReadOnlySpan<Vector2> bPoints = [b.TopLeft, b.TopRight, b.BottomLeft, b.BottomRight];
+
+            (float sinA, float cosA) = MathF.SinCos(a.Rotation);
+            if (!OverlapOnAxis(new Vector2(cosA, sinA), aPoints, bPoints))
+                return false;
+            if (!OverlapOnAxis(new Vector2(-sinA, cosA), aPoints, bPoints))
+                return false;
+
+            if (!OverlapOnFloatRectangleAxis(aPoints, b))
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// 检测平行四边形与轴对齐矩形的碰撞（基于分离轴定理）。
+        /// </summary>
+        /// <param name="a">平行四边形。</param>
+        /// <param name="b">轴对齐矩形。</param>
+        /// <returns>若两者相交则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
+        public static bool ParallelogramVFloatRectangleCollision(Parallelogram a, FloatRectangle b)
+        {
+            (Vector2 aPoint1, Vector2 aPoint2, Vector2 aPoint3, Vector2 aPoint4) = a.Vertices;
+            ReadOnlySpan<Vector2> aPoints = [aPoint1, aPoint2, aPoint3, aPoint4];
+            ReadOnlySpan<Vector2> bPoints = [b.TopLeft, b.TopRight, b.BottomLeft, b.BottomRight];
+
+            (LineSegment aSide1, LineSegment aSide2, _, _) = a.Sides;
+            Vector2 aSideVector1 = aSide1.Vector;
+            Vector2 aSideVector2 = aSide2.Vector;
+
+            if (!OverlapOnAxis(new Vector2(-aSideVector1.Y, aSideVector1.X), aPoints, bPoints))
+                return false;
+            if (!OverlapOnAxis(new Vector2(-aSideVector2.Y, aSideVector2.X), aPoints, bPoints))
+                return false;
+
+            if (!OverlapOnFloatRectangleAxis(aPoints, b))
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// 检测平行四边形与圆的碰撞。
+        /// </summary>
+        /// <param name="a">平行四边形。</param>
+        /// <param name="b">圆。</param>
+        /// <returns>若平行四边形与圆相交则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
+        public static bool ParallelogramVCircleCollision(Parallelogram a, Circle b)
+        {
+            Vector2 center = b.Center;
+            if (a.ContainsPoint(center)) //圆心在平行四边形内
+                return true;
+
+            (LineSegment c, LineSegment d, LineSegment e, LineSegment f) = a.Sides;
+            float radiusSquared = b.Radius * b.Radius;
+            return c.DistanceToPointSquared(center) <= radiusSquared || d.DistanceToPointSquared(center) <= radiusSquared || e.DistanceToPointSquared(center) <= radiusSquared || f.DistanceToPointSquared(center) <= radiusSquared;
         }
         #endregion 碰撞
     }

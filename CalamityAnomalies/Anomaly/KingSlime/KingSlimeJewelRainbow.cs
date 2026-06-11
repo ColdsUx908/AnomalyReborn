@@ -15,9 +15,9 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
     }
 
     public const float DespawnDistance = 5000f;
-    public static int ShootCooldownTime => 180;
+    public static int ShootCooldownTime => 240;
 
-    private static readonly ProjectileDamageContainer _jewelProjectileRainbowDamage = new(40, 65, 90, 110, 105, 125);
+    private static readonly ProjectileDamageContainer _jewelProjectileRainbowDamage = new(40, 60, 90, 120, 90, 120);
     public static int JewelProjectileRainbowDamage => _jewelProjectileRainbowDamage.Value;
 
     public const float MaxProjectileSpeed = 18f;
@@ -41,17 +41,6 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
         {
             Union32 union = AI_Union_2;
             union.bits[0] = value;
-            AI_Union_2 = union;
-        }
-    }
-
-    public bool ShouldUseBuffedAttack
-    {
-        get => AI_Union_2.bits[1];
-        set
-        {
-            Union32 union = AI_Union_2;
-            union.bits[1] = value;
             AI_Union_2 = union;
         }
     }
@@ -149,8 +138,6 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
             return;
         }
 
-        KingSlime_Anomaly masterBehavior = KingSlime_Anomaly.GetNewInstance(master);
-
         Lighting.AddLight(NPC.Center, 1f, 0f, 0f);
 
         NPC.damage = 0;
@@ -228,7 +215,6 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 _ => Attack.Triangle,
             };
             AttackCounter = (AttackCounter + 1) % 4;
-            ShouldUseBuffedAttack = masterBehavior.Phase2_2;
             IsAttacking = true;
         }
 
@@ -239,7 +225,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
             KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
 
-            if (TOSharedData.GeneralClient)
+            if (TOSharedData.NotClient)
             {
                 int amount = 30;
                 float totalAngle = MathHelper.TwoPi;
@@ -253,10 +239,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 for (int i = 0; i < amount; i++)
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
-
                     Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity, JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Triangle);
-                    if (ShouldUseBuffedAttack)
-                        Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity * -1f, JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Triangle);
                 }
             }
 
@@ -270,7 +253,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
             KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
 
-            if (TOSharedData.GeneralClient)
+            if (TOSharedData.NotClient)
             {
                 int amount = 60;
                 float totalAngle = MathHelper.TwoPi;
@@ -286,10 +269,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 for (int i = 0; i < amount; i++)
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
-
                     Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity, JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Star);
-                    if (ShouldUseBuffedAttack)
-                        Projectile.NewProjectileAction<JewelProjectileRainbow>(SourceAI, NPC.Center, velocity * -0.75f, JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Star);
                 }
             }
 
@@ -300,19 +280,13 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
         {
             Timer1++;
 
-            if (TOSharedData.GeneralClient)
+            if (TOSharedData.NotClient)
             {
                 if (Timer1 == 1)
                     AttackCore();
                 else if (Timer1 == 11)
                 {
                     AttackCore(MathHelper.PiOver4);
-                    if (!ShouldUseBuffedAttack)
-                        IsAttacking = false;
-                }
-                else if (ShouldUseBuffedAttack && Timer1 == 21)
-                {
-                    AttackCore(MathHelper.PiOver4 + Main.rand.NextFloat(-0.2f, 0.2f));
                     IsAttacking = false;
                 }
             }
@@ -344,7 +318,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
 
         void Attack_Circle()
         {
-            int totalAttackNum = ShouldUseBuffedAttack ? 8 : 6;
+            int totalAttackNum = 6;
 
             if (Timer1 % 4 == 0)
             {
@@ -356,9 +330,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                     2 => 5,
                     3 => 10,
                     4 => 15,
-                    5 => ShouldUseBuffedAttack ? 20 : 30,
-                    6 => 15,
-                    7 => 60,
+                    5 => 30,
                     _ => 0
                 };
                 int pointingParticleAmount = attackNum switch
@@ -368,7 +340,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                     2 => 2,
                     3 => 3,
                     4 => 4,
-                    5 => ShouldUseBuffedAttack ? 4 : 8,
+                    5 => 8,
                     6 => 5,
                     7 => 10,
                     _ => 0
@@ -378,7 +350,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                     KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
                 KingSlime_Handler.SpawnPointingParticle(NPC, pointingParticleAmount, true);
 
-                if (TOSharedData.GeneralClient)
+                if (TOSharedData.NotClient)
                 {
                     int amount = attackNum switch
                     {

@@ -350,7 +350,7 @@ public sealed partial class QueenBee_Anomaly
                         if (Main.netMode != NetmodeID.MultiplayerClient)
                         {
                             int spawnType = Main.rand.Next(NPCID.Bee, NPCID.BeeSmall + 1);
-                            if (Main.zenithWorld)
+                            if (Aroma)
                             {
                                 if (Phase1_3)
                                     spawnType = Main.rand.NextBool(3) ? ModContent.NPCType<PlagueChargerLarge>() : ModContent.NPCType<PlagueCharger>();
@@ -383,7 +383,7 @@ public sealed partial class QueenBee_Anomaly
                                 Vector2 beeVelocity = (Target.Center - NPC.Center).SafeNormalize(Vector2.UnitY);
                                 Main.npc[spawn].velocity = beeVelocity;
                                 Main.npc[spawn].velocity *= 5f;
-                                if (!Main.zenithWorld)
+                                if (!Aroma)
                                 {
                                     Main.npc[spawn].ai[2] = enrageScale;
                                     Main.npc[spawn].ai[3] = 1f;
@@ -504,7 +504,7 @@ public sealed partial class QueenBee_Anomaly
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     int spawnType = Main.rand.Next(NPCID.Bee, NPCID.BeeSmall + 1);
-                    if (Main.zenithWorld)
+                    if (Aroma)
                     {
                         if (Phase1_3)
                             spawnType = Main.rand.NextBool(3) ? ModContent.NPCType<PlagueChargerLarge>() : ModContent.NPCType<PlagueCharger>();
@@ -535,7 +535,7 @@ public sealed partial class QueenBee_Anomaly
                     Vector2 beeVelocity = (Target.Center - NPC.Center).SafeNormalize(Vector2.UnitY);
                     Main.npc[spawn].velocity = beeVelocity;
                     Main.npc[spawn].velocity *= 5f;
-                    if (!Main.zenithWorld)
+                    if (!Aroma)
                     {
                         Main.npc[spawn].ai[2] = enrageScale;
                         Main.npc[spawn].ai[3] = 1f;
@@ -606,9 +606,9 @@ public sealed partial class QueenBee_Anomaly
                     stingerTargetX *= stingerTargetDist;
                     stingerTargetY *= stingerTargetDist;
                     Vector2 stingerVelocity = new Vector2(stingerTargetX, stingerTargetY);
-                    int type = Main.zenithWorld ? (Phase1_3 ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.FlamingWood) : ProjectileID.QueenBeeStinger;
+                    int type = Aroma ? (Phase1_3 ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.FlamingWood) : ProjectileID.QueenBeeStinger;
 
-                    int projectile = Projectile.NewProjectile(NPC.GetSource_FromAI(), stingerSpawnLocation, stingerVelocity, type, StingerDamage, 0f, Main.myPlayer, 0f, (Main.zenithWorld && Phase1_3) ? Target.position.Y : 0f);
+                    int projectile = Projectile.NewProjectile(NPC.GetSource_FromAI(), stingerSpawnLocation, stingerVelocity, type, StingerDamage, 0f, Main.myPlayer, 0f, (Aroma && Phase1_3) ? Target.position.Y : 0f);
                     Main.projectile[projectile].timeLeft = 1200;
                     Main.projectile[projectile].extraUpdates = 1;
 
@@ -617,7 +617,7 @@ public sealed partial class QueenBee_Anomaly
                         int numExtraStingers = Phase2_3 ? 4 : 2;
                         for (int i = 0; i < numExtraStingers; i++)
                         {
-                            projectile = Projectile.NewProjectile(NPC.GetSource_FromAI(), stingerSpawnLocation + Main.rand.NextVector2CircularEdge(16f, 16f) * (i + 1), stingerVelocity * MathHelper.Lerp(0.75f, 1f, i / (float)numExtraStingers), type, StingerDamage, 0f, Main.myPlayer, 0f, (Main.zenithWorld && Phase1_3) ? Target.position.Y : 0f);
+                            projectile = Projectile.NewProjectile(NPC.GetSource_FromAI(), stingerSpawnLocation + Main.rand.NextVector2CircularEdge(16f, 16f) * (i + 1), stingerVelocity * MathHelper.Lerp(0.75f, 1f, i / (float)numExtraStingers), type, StingerDamage, 0f, Main.myPlayer, 0f, (Aroma && Phase1_3) ? Target.position.Y : 0f);
                             Main.projectile[projectile].timeLeft = 1200;
                             Main.projectile[projectile].extraUpdates = 1;
                         }
@@ -704,7 +704,7 @@ public sealed partial class QueenBee_Anomaly
                         stingerSpeed += 1f;
 
                         Vector2 projectileVelocity = (Target.Center - NPC.Center).SafeNormalize(Vector2.UnitY) * stingerSpeed;
-                        int type = Main.zenithWorld ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.QueenBeeStinger;
+                        int type = Aroma ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.QueenBeeStinger;
                         int numProj = Phase2_3 ? 7 : Phase2_2 ? 11 : 15;
                         int spread = Phase2_3 ? 30 : Phase2_2 ? 50 : 60;
                         numProj += Phase2_3 ? 2 : Phase2_2 ? 4 : 6;
@@ -721,7 +721,7 @@ public sealed partial class QueenBee_Anomaly
                             Main.projectile[projectile].timeLeft = 1200;
                             Main.projectile[projectile].extraUpdates = 1;
 
-                            if (!Main.zenithWorld)
+                            if (!Aroma)
                                 Main.projectile[projectile].tileCollide = false;
                         }
                     }

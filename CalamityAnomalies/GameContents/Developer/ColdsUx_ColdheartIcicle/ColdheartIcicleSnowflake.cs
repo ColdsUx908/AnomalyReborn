@@ -1,6 +1,6 @@
 ﻿// Developed by ColdsUx
 
-namespace CalamityAnomalies.GameContents.Developer;
+namespace CalamityAnomalies.GameContents.Developer.ColdsUx_ColdheartIcicle;
 
 public sealed class ColdheartIcicleSnowflake : CAModProjectile, ICAModProjectile
 {
@@ -96,7 +96,10 @@ public sealed class ColdheartIcicleSnowflake : CAModProjectile, ICAModProjectile
         foreach (Projectile p in Projectile.ActiveProjectiles)
         {
             if (p.ModProjectile is ColdheartIcicleDream dream && dream.Target == target)
+            {
+                p.Timer1 = 0; //重置计时器（即延长封锁时间）
                 return;
+            }
         }
 
         Projectile.NewProjectileAction<ColdheartIcicleDream>(Projectile.GetSource_OnHit(target), target.Center, Vector2.Zero, 0, 0, Projectile.owner, p =>

@@ -1,6 +1,6 @@
 ﻿// Developed by ColdsUx
 
-namespace CalamityAnomalies.GameContents.Developer;
+namespace CalamityAnomalies.GameContents.Developer.ColdsUx_ColdheartIcicle;
 
 public static class ColdheartIclcle_Handler
 {

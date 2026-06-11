@@ -5,11 +5,7 @@ namespace Transoceanic.DataStructures.Geometry;
 /// <summary>
 /// 表示一个二维圆形。
 /// </summary>
-public struct Circle : IEquatable<Circle>,
-    ICollidableWithRectangle,
-    ICollidable<Circle, Circle>,
-    ICollidable<Circle, FloatRectangle>,
-    ICollidable<Circle, RotatedRectangle>
+public struct Circle : IEquatable<Circle>, ICollidableWithRectangle
 {
     /// <summary>
     /// 圆心的坐标。
@@ -56,8 +52,10 @@ public struct Circle : IEquatable<Circle>,
     /// </returns>
     public override readonly string ToString() => $"Circle {{ Center: {Center}, Radius: {Radius} }}";
 
-    public readonly bool Collides(Rectangle other) => Collides((FloatRectangle)other);
-    public readonly bool Collides(Circle other) => Vector2.Distance(Center, other.Center) <= Radius + other.Radius;
-    public readonly bool Collides(FloatRectangle other) => TOMathUtils.Geometry.FloatRectanglevCircleCollision(other, this);
-    public readonly bool Collides(RotatedRectangle other) => TOMathUtils.Geometry.RotatedRectanglevCircleCollision(other, this);
+    public readonly bool Collides(Rectangle other) => TOMathUtils.Geometry.FloatRectangleVCircleCollision(other, this);
+
+    /// <summary>
+    /// 单位圆，中心在原点（<see cref="Vector2.Zero"/>），半径为 <c>1</c>。
+    /// </summary>
+    public static readonly Circle Unit = new(Vector2.Zero, 1f);
 }

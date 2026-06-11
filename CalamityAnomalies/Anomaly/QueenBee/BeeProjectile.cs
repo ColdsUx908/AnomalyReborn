@@ -14,6 +14,8 @@ public sealed class BeeProjectile : CAModProjectile
      *   若行为类型为1（追踪），表示追踪目标玩家的索引
      */
 
+    public override string LocalizationCategory => "Anomaly.QueenBee";
+
     public override string Texture => TOAssetUtils.FormatVanillaProjectileTexturePath(ProjectileID.GiantBee);
 
     public override void SetStaticDefaults() => Main.projFrames[Projectile.type] = 4;
@@ -24,19 +26,28 @@ public sealed class BeeProjectile : CAModProjectile
         Projectile.height = 16;
         Projectile.hostile = true;
         Projectile.tileCollide = false;
-        Projectile.timeLeft = 600;
+        Projectile.timeLeft = 450;
     }
 
     public override void AI()
     {
         Timer1++;
 
+        if (++Projectile.frameCounter >= 3)
+        {
+            Projectile.frameCounter = 0;
+            if (++Projectile.frame >= 3)
+                Projectile.frame = 0;
+        }
+
+        Projectile.spriteDirection = (Projectile.velocity.X >= 0f).ToDirectionInt();
+
         switch ((byte)Projectile.ai[0])
         {
             case Behavior_HomeIn:
                 switch (Timer1)
                 {
-                    case < 120:
+                    case < 90:
                         int index = (int)Projectile.ai[1];
                         if (index is >= 0 and < Main.maxPlayers)
                         {
@@ -56,16 +67,16 @@ public sealed class BeeProjectile : CAModProjectile
                             Projectile.Kill();
                         break;
 
-                    case 300:
+                    case 240:
                         Projectile.Kill();
                         break;
                 }
-                Projectile.velocity *= 1.005f;
+                Projectile.velocity *= 1.008f;
                 break;
 
             default:
-                if (Timer1 >= 300)
-                    Projectile.velocity *= 1.004f;
+                if (Timer1 >= 240)
+                    Projectile.velocity *= 1.006f;
                 break;
         }
     }

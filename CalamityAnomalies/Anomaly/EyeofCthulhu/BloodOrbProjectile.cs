@@ -115,7 +115,7 @@ public class BloodOrbProjectile : CAModProjectile
         target.AddBuff<BurningBlood>(120);
         target.AddBuff(BuffID.OnFire3, 120);
 
-        if (Main.zenithWorld)
+        if (Aroma)
             target.AddBuff<MiracleBlight>(60);
     }
 

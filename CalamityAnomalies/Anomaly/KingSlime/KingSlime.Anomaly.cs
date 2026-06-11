@@ -1,6 +1,7 @@
 ﻿// Developed by ColdsUx
 
 using CalamityAnomalies.DataStructures;
+using CalamityMod.Dusts;
 using CalamityMod.NPCs.NormalNPCs;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
@@ -32,10 +33,10 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
     }
 
     public const float DespawnDistance = 5000f;
-    public static float MaxScale => Main.zenithWorld ? (TOSharedData.LegendaryMode ? 6f : 5f) : Ultra ? 4.5f : 3f;
-    public static float MinScale => Main.zenithWorld ? 0.5f : 1f;
-    public static float SpawnSlimeDistance => TOSharedData.LegendaryMode && Main.zenithWorld ? 0.01f : 0.05f;
-    public static float SpawnSlimePow => Main.zenithWorld ? 0.5f : Ultra ? 0.3f : 0.2f;
+    public static float MaxScale => Aroma ? (TOSharedData.LegendaryMode ? 6f : 5f) : Ultra ? 4.5f : 3f;
+    public static float MinScale => Aroma ? 0.5f : 1f;
+    public static float SpawnSlimeDistance => TOSharedData.LegendaryMode && Aroma ? 0.01f : 0.05f;
+    public static float SpawnSlimePow => Aroma ? 0.5f : Ultra ? 0.3f : 0.2f;
 
     public const float JewelRubyLifeRatio_Anomaly = 0.7f;
     public const float JewelRubyLifeRatio_Ultra = 0.8f;
@@ -53,6 +54,9 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
     public static float JewelSapphireLifeRatio => Ultra ? JewelSapphireLifeRatio_Ultra : JewelSapphireLifeRatio_Anomaly;
     public static float Phase2LifeRatio => Ultra ? Phase2LifeRatio_Ultra : Phase2LifeRatio_Anomaly;
     public static float Phase2_2LifeRatio => Ultra ? Phase2_2LifeRatio_Ultra : Phase2_2LifeRatio_Anomaly;
+
+    private static readonly ProjectileDamageContainer _gelDamage = new(40, 60, 90, 120, 90, 120);
+    public static int GelDamage => _gelDamage.Value;
 
     public Phase CurrentPhase
     {
@@ -74,8 +78,8 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
     public bool Phase2 => CurrentPhase is Phase.Phase2 or Phase.Phase2_2;
     public bool Phase2_2 => CurrentPhase == Phase.Phase2_2;
 
-    public float LifeRatio2 => Math.Min(NPC.LifeRatio * 2f, 1f);
-    public float LostLifeRatio2 => 1f - LifeRatio2;
+    public float LifeRatioForPhase2 => Math.Min(NPC.LifeRatio * 2f, 1f);
+    public float LostLifeRatioForPhase2 => 1f - LifeRatioForPhase2;
 
     public Behavior CurrentBehavior
     {
@@ -432,6 +436,8 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             NPC.FaceTarget(Target);
 
         NPC.noTileCollide = false;
+        NPC.noGravity = false;
+
         bool hasSapphireBuff = HasSapphireBuff;
         if (hasSapphireBuff)
             SapphireBuffRatio += 0.02f;
@@ -531,7 +537,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                             CurrentBehavior = Behavior.HighJump;
                             SmallJumpCounter = 0;
                             break;
-                        case 1 or 2 when NPC.LifeRatio <= JewelSapphireLifeRatio:
+                        case 1 or 2 when NPC.LifeRatio <= JewelSapphireLifeRatio || Phase2:
                             CurrentBehavior = Behavior.RapidJump;
                             break;
                         default:
@@ -565,13 +571,13 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             for (int i = 0; i < amount; i++)
             {
                 bool useRainbowDust = Main.rand.NextProbability(RainbowRatio);
-                Dust.NewDustAction(NPC.Center, NPC.width + 25, NPC.height, useRainbowDust ? KingSlime_Handler.GetRandomDustID() : JewelSapphireAlive ? (Main.remixWorld || Main.zenithWorld ? DustID.GemTopaz : DustID.GemSapphire) : DustID.TintableDust, Vector2.Zero, d =>
+                Dust.NewDustAction(NPC.Center, NPC.width + 25, NPC.height, useRainbowDust ? KingSlime_Handler.GetRandomDustID() : JewelSapphireAlive ? (Main.remixWorld || Aroma ? DustID.GemTopaz : DustID.GemSapphire) : DustID.TintableDust, Vector2.Zero, d =>
                 {
                     d.alpha = 150;
                     if (!useRainbowDust)
                     {
                         Color color = new(78, 136, 255, 80);
-                        if (Main.remixWorld || Main.zenithWorld)
+                        if (Main.remixWorld || Aroma)
                         {
                             byte r = color.R;
                             byte g = color.G;
@@ -610,8 +616,8 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
         }
 
         void ChangeScale() => NPC.ChangeScaleFixBottom(98, 92, MathHelper.Lerp(
-            Main.zenithWorld ? MinScale : MaxScale,
-            Main.zenithWorld ? MaxScale : MinScale,
+            Aroma ? MinScale : MaxScale,
+            Aroma ? MaxScale : MinScale,
             CurrentPhase == Phase.PhaseChange_1To2 && PhaseChangeLifeRatio > 0f ? 1f - PhaseChangeLifeRatio : NPC.LostLifeRatio) * TeleportScaleMultiplier * DespawnScaleMultiplier);
 
         void SpawnSlime(int type)
@@ -627,7 +633,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             });
         }
 
-        Vector2 GetJewelSpawnPosition() => NPC.Top - new Vector2(0, NPC.height);
+        Vector2 GetJewelSpawnPosition() => NPC.Top + new Vector2(0, -NPC.height);
 
         void SpawnJewelAction(NPC n)
         {
@@ -637,9 +643,15 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             SpawnJewelParticle(n, 50);
         }
 
+        void SpawnGelAction(Projectile p)
+        {
+            if (Phase2)
+                p.ai[1] = 1f;
+        }
+
         void TrySpawnMinions()
         {
-            if (!TOSharedData.GeneralClient || NPC.Master is not null) //史莱姆王召唤的史莱姆王不再召唤仆从
+            if (!TOSharedData.NotClient || NPC.Master is not null) //史莱姆王召唤的史莱姆王不再召唤仆从
                 return;
 
             if (NPC.LifeRatio <= JewelRubyLifeRatio && !JewelRubySpawned)
@@ -675,7 +687,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             if (distance >= distanceNeeded && RainbowRatio == 0f)
             {
                 LastSpawnSlimeLife = NPC.life;
-                int spawnAmount = Main.rand.Next(1, Main.zenithWorld ? (int)MathHelper.Lerp(3f, 6f, NPC.LostLifeRatio) : 2) + Math.Clamp((int)Math.Pow(distance / distanceNeeded, SpawnSlimePow), 0, 5);
+                int spawnAmount = Main.rand.Next(1, Aroma ? (int)MathHelper.Lerp(3f, 6f, NPC.LostLifeRatio) : 2) + Math.Clamp((int)Math.Pow(distance / distanceNeeded, SpawnSlimePow), 0, 5);
 
                 for (int i = 0; i < spawnAmount; i++)
                 {
@@ -722,21 +734,21 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                             case 10 when Main.raining: //雨伞史莱姆
                                 type = NPCID.UmbrellaSlime;
                                 break;
-                            case 11 when Main.zenithWorld || Main.bloodMoon: //腐化史莱姆、猩红史莱姆、黑檀枯萎史莱姆、血腥枯萎史莱姆
-                                int corrupt = (Main.zenithWorld || NPC.downedBoss2) && Main.rand.NextBool(4) ? ModContent.NPCType<EbonianBlightSlime>() : NPCID.CorruptSlime;
-                                int crimson = (Main.zenithWorld || NPC.downedBoss2) && Main.rand.NextBool(4) ? ModContent.NPCType<CrimulanBlightSlime>() : NPCID.Crimslime;
+                            case 11 when Aroma || Main.bloodMoon: //腐化史莱姆、猩红史莱姆、黑檀枯萎史莱姆、血腥枯萎史莱姆
+                                int corrupt = (Aroma || NPC.downedBoss2) && Main.rand.NextBool(4) ? ModContent.NPCType<EbonianBlightSlime>() : NPCID.CorruptSlime;
+                                int crimson = (Aroma || NPC.downedBoss2) && Main.rand.NextBool(4) ? ModContent.NPCType<CrimulanBlightSlime>() : NPCID.Crimslime;
                                 type = Main.drunkWorld ? (Main.rand.NextBool() ? crimson : corrupt) : WorldGen.crimson ? crimson : corrupt;
                                 break;
-                            case 12 when Main.zenithWorld || NPC.downedBoss3: //微光史莱姆
+                            case 12 when Aroma || NPC.downedBoss3: //微光史莱姆
                                 type = NPCID.ShimmerSlime;
                                 break;
-                            case 13 when Main.zenithWorld || Main.hardMode: //夜明史莱姆、彩虹史莱姆
+                            case 13 when Aroma || Main.hardMode: //夜明史莱姆、彩虹史莱姆
                                 type = (Main.raining || Ultra) && Main.rand.NextBool(5) ? NPCID.RainbowSlime : NPCID.IlluminantSlime;
                                 break;
                             case 14 when Main.rand.NextBool(15): //粉史莱姆
                                 type = NPCID.Pinky;
                                 break;
-                            case 15 when Main.zenithWorld && Main.rand.NextBool(200): //金史莱姆
+                            case 15 when Aroma && Main.rand.NextBool(200): //金史莱姆
                                 type = NPCID.GoldenSlime;
                                 break;
                         }
@@ -745,7 +757,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     SpawnSlime(type);
                 }
 
-                if (Main.zenithWorld && Main.rand.NextBool(1000)) //GFB世界中0.1%概率生成史莱姆王！
+                if (Aroma && Main.rand.NextBool(1000)) //GFB世界中0.1%概率生成史莱姆王！
                 {
                     NPC.NewNPCAction(NPC.GetBossSpawnSource(Target.whoAmI), NPC.Center, NPCID.KingSlime, action: n =>
                     {
@@ -759,6 +771,9 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
         void Jump()
         {
+            bool rapidJump = CurrentBehavior == Behavior.RapidJump;
+            bool highJump = CurrentBehavior == Behavior.HighJump;
+
             switch (CurrentAttackPhase)
             {
                 case 0: //静止一段时间后起跳
@@ -774,12 +789,35 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     float jumpDelay = MathHelper.Lerp(Ultra ? 20f : 27.5f, Ultra ? 15f : 20f, NPC.LostLifeRatio);
                     if (Timer1 > jumpDelay)
                     {
-                        if (CurrentBehavior != Behavior.HighJump)
+                        if (!highJump)
                             SmallJumpCounter++;
+
                         NPC.damage = NPC.defDamage;
                         NPC.netUpdate = true;
                         NPC.velocity = GetInitialVelocity();
                         CurrentAttackPhase = 1;
+
+                        if (highJump) //凝胶弹幕
+                        {
+                            SoundEngine.PlaySound(SoundID.Item155, NPC.Center);
+
+                            if (TOSharedData.NotClient)
+                            {
+                                int outerAmount = Phase2_2 ? 7 : Ultra ? 5 : 0;
+                                int innerAmount = Phase2_2 ? 5 : 3;
+
+                                for (int i = 0; i < outerAmount; i++)
+                                {
+                                    float rotation = Utils.Remap(i, 0, outerAmount - 1, -TOMathUtils.PiOver24, TOMathUtils.PiOver24 - MathHelper.Pi) + Main.rand.NextFloat(-0.05f, 0.05f);
+                                    Projectile.NewProjectileAction<SlimeGel>(SourceAI, NPC.Center, new PolarVector2(Main.rand.NextFloat(9f, 12f), rotation), GelDamage, 0f, action: SpawnGelAction);
+                                }
+                                for (int i = 0; i < innerAmount; i++)
+                                {
+                                    float rotation = Utils.Remap(i, 0, innerAmount - 1, -TOMathUtils.PiOver12, TOMathUtils.PiOver12 - MathHelper.Pi) + Main.rand.NextFloat(-0.05f, 0.05f);
+                                    Projectile.NewProjectileAction<SlimeGel>(SourceAI, NPC.Center, new PolarVector2(Main.rand.NextFloat(6f, 9f), rotation), GelDamage, 0f, action: SpawnGelAction);
+                                }
+                            }
+                        }
                     }
 
                     break;
@@ -787,8 +825,6 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                 case 1: //上升
                 case 2: //下降
                     NPC.damage = NPC.defDamage;
-                    bool rapidJump = CurrentBehavior == Behavior.RapidJump;
-                    bool highJump = CurrentBehavior == Behavior.HighJump;
                     bool farAway = Math.Abs(NPC.Center.X - Target.Center.X) > (rapidJump ? 2000f : 1000f);
                     if (NPC.velocity.X * NPC.direction <= 0.1f && farAway) //跳跃过度时调整水平速度
                     {
@@ -850,31 +886,31 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             Vector2 GetInitialVelocity() => new(
                 CurrentBehavior switch
                 {
-                    Behavior.NormalJump => Phase2 ? MathHelper.Lerp(7f, 10f, LostLifeRatio2) : MathHelper.Lerp(4f, 7f, NPC.LostLifeRatio),
-                    Behavior.HighJump => Phase2 ? MathHelper.Lerp(9f, 12f, LostLifeRatio2) : MathHelper.Lerp(6f, 9f, NPC.LostLifeRatio),
-                    Behavior.RapidJump => Phase2 ? MathHelper.Lerp(12.5f, 15f, LostLifeRatio2) : MathHelper.Lerp(10f, 12.5f, NPC.LostLifeRatio),
+                    Behavior.NormalJump => Phase2 ? MathHelper.Lerp(7f, 10f, LostLifeRatioForPhase2) : MathHelper.Lerp(4f, 7f, NPC.LostLifeRatio),
+                    Behavior.HighJump => Phase2 ? MathHelper.Lerp(9f, 12f, LostLifeRatioForPhase2) : MathHelper.Lerp(6f, 9f, NPC.LostLifeRatio),
+                    Behavior.RapidJump => Phase2 ? MathHelper.Lerp(12.5f, 15f, LostLifeRatioForPhase2) : MathHelper.Lerp(10f, 12.5f, NPC.LostLifeRatio),
                     _ => 0f
                 } * NPC.direction,
                 CurrentBehavior switch
                 {
-                    Behavior.NormalJump => (Phase2 ? 8.5f : 7f) * (1f + Math.Clamp(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 1000f, 0f, 0.5f)),
-                    Behavior.HighJump => (Phase2 ? MathHelper.Lerp(12.5f, 15f, LostLifeRatio2) : MathHelper.Lerp(10f, 12.5f, NPC.LostLifeRatio)) * (1f + Math.Clamp(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 1000f, 0f, 1f)),
+                    Behavior.NormalJump => (Phase2_2 ? 12f : Phase2 ? 8.5f : 7f) * (1f + Math.Clamp(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 1000f, 0f, 0.65f)),
+                    Behavior.HighJump => (Phase2 ? MathHelper.Lerp(12.5f, 15f, LostLifeRatioForPhase2) : MathHelper.Lerp(10f, 12.5f, NPC.LostLifeRatio)) * (1f + Math.Clamp(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 1000f, 0f, 1f)),
                     Behavior.RapidJump => Phase2 ? 5f : 4f,
                     _ => 0f
                 } * -1f);
 
             float GetMaxVelocityX() => CurrentBehavior switch
             {
-                Behavior.RapidJump => (Phase2 ? MathHelper.Lerp(15f, 17f, LostLifeRatio2) : MathHelper.Lerp(13.5f, 15f, NPC.LostLifeRatio)) + TOMathUtils.Interpolation.QuadraticEaseOut(Math.Max(Math.Abs(NPC.Center.X - Target.Center.X) - 300f, 0f) / 1000f) * 5f,
+                Behavior.RapidJump => (Phase2 ? MathHelper.Lerp(15f, 17f, LostLifeRatioForPhase2) : MathHelper.Lerp(13.5f, 15f, NPC.LostLifeRatio)) + TOMathUtils.Interpolation.QuadraticEaseOut(Math.Max(Math.Abs(NPC.Center.X - Target.Center.X) - 300f, 0f) / 1000f) * 5f,
                 Behavior.HighJump => DirectionChangeCounter switch
                 {
-                    0 => Phase2 ? MathHelper.Lerp(11.5f, 13f, LostLifeRatio2) : MathHelper.Lerp(9f, 11.5f, NPC.LostLifeRatio),
+                    0 => Phase2 ? MathHelper.Lerp(11.5f, 13f, LostLifeRatioForPhase2) : MathHelper.Lerp(9f, 11.5f, NPC.LostLifeRatio),
                     1 => Phase2 ? 3f : 2.5f,
                     _ => 1.5f
                 },
                 _ => DirectionChangeCounter switch
                 {
-                    0 => Phase2 ? MathHelper.Lerp(10f, 12.5f, LostLifeRatio2) : MathHelper.Lerp(7f, 9f, NPC.LostLifeRatio),
+                    0 => Phase2 ? MathHelper.Lerp(10f, 12.5f, LostLifeRatioForPhase2) : MathHelper.Lerp(7f, 9f, NPC.LostLifeRatio),
                     1 => 2.5f,
                     _ => 1.5f
                 }
@@ -904,35 +940,39 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             {
                 case 0: //寻的
                     Vector2? destination = null;
-                    Vector2 vectorAimedAheadOfTarget = Target.Center + new Vector2(MathF.Round(Target.velocity.X / 2f), 0f).ToCustomLength(800f);
-                    //目标点
-                    Point predictiveTeleportPoint = vectorAimedAheadOfTarget.ToTileCoordinates();
-                    predictiveTeleportPoint.X = Math.Clamp(predictiveTeleportPoint.X, 10, Main.maxTilesX - 10);
-                    predictiveTeleportPoint.Y = Math.Clamp(predictiveTeleportPoint.Y, 10, Main.maxTilesY - 10);
-                    int randomPredictiveTeleportOffset = 5;
 
-                    for (int i = 0; i < 100; i++)
+                    if (!Phase2_2)
                     {
-                        int teleportTileX = Main.rand.Next(predictiveTeleportPoint.X - randomPredictiveTeleportOffset, predictiveTeleportPoint.X + randomPredictiveTeleportOffset + 1);
-                        int teleportTileY = Main.rand.Next(predictiveTeleportPoint.Y - randomPredictiveTeleportOffset, predictiveTeleportPoint.Y);
-                        Tile potentialTile = Main.tile[teleportTileX, teleportTileY];
-                        if (!potentialTile.HasUnactuatedTile)
+                        Vector2 vectorAimedAheadOfTarget = Target.Center + new Vector2(MathF.Round(Target.velocity.X / 2f), 0f).ToCustomLength(800f);
+                        //目标点
+                        Point predictiveTeleportPoint = vectorAimedAheadOfTarget.ToTileCoordinates();
+                        predictiveTeleportPoint.X = Math.Clamp(predictiveTeleportPoint.X, 10, Main.maxTilesX - 10);
+                        predictiveTeleportPoint.Y = Math.Clamp(predictiveTeleportPoint.Y, 10, Main.maxTilesY - 10);
+                        int randomPredictiveTeleportOffset = 5;
+
+                        for (int i = 0; i < 100; i++)
                         {
-                            if (potentialTile.LiquidType != LiquidID.Lava && Collision.CanHitLine(NPC.Center, 0, 0, predictiveTeleportPoint.ToVector2() * 16, 0, 0))
+                            int teleportTileX = Main.rand.Next(predictiveTeleportPoint.X - randomPredictiveTeleportOffset, predictiveTeleportPoint.X + randomPredictiveTeleportOffset + 1);
+                            int teleportTileY = Main.rand.Next(predictiveTeleportPoint.Y - randomPredictiveTeleportOffset, predictiveTeleportPoint.Y);
+                            Tile potentialTile = Main.tile[teleportTileX, teleportTileY];
+                            if (!potentialTile.HasUnactuatedTile)
                             {
-                                destination = new Vector2((teleportTileX + 0.5f) * 16f, (teleportTileY + 1f) * 16f);
-                                break; //在此处退出循环
+                                if (potentialTile.LiquidType != LiquidID.Lava && Collision.CanHitLine(NPC.Center, 0, 0, predictiveTeleportPoint.ToVector2() * 16, 0, 0))
+                                {
+                                    destination = new Vector2((teleportTileX + 0.5f) * 16f, (teleportTileY + 1f) * 16f);
+                                    break; //在此处退出循环
+                                }
+                                else
+                                {
+                                    predictiveTeleportPoint.X += predictiveTeleportPoint.X < 0f ? 1 : -1;
+                                    predictiveTeleportPoint.X = Math.Clamp(predictiveTeleportPoint.X, 10, Main.maxTilesX - 10);
+                                }
                             }
                             else
                             {
                                 predictiveTeleportPoint.X += predictiveTeleportPoint.X < 0f ? 1 : -1;
                                 predictiveTeleportPoint.X = Math.Clamp(predictiveTeleportPoint.X, 10, Main.maxTilesX - 10);
                             }
-                        }
-                        else
-                        {
-                            predictiveTeleportPoint.X += predictiveTeleportPoint.X < 0f ? 1 : -1;
-                            predictiveTeleportPoint.X = Math.Clamp(predictiveTeleportPoint.X, 10, Main.maxTilesX - 10);
                         }
                     }
 
@@ -942,22 +982,92 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
                 case 1: //停止水平移动并缩小体型，满足条件时传送
                     MakeSlimeDust((int)Utils.Remap(NPC.scale, MinScale, MaxScale, 5f, 12.5f));
-                    TeleportScaleMultiplier -= MathHelper.Lerp(Ultra ? 0.016f : 0.013f, Ultra ? 0.02f : 0.015f, NPC.LostLifeRatio);
-                    if (StopHorizontalMovement() && TeleportScaleMultiplier <= 0.2f)
+                    float teleportSpeed = Phase2 ? MathHelper.Lerp(0.03f, 0.037f, LostLifeRatioForPhase2)
+                        : MathHelper.Lerp(Ultra ? 0.016f : 0.013f, Ultra ? 0.02f : 0.015f, NPC.LostLifeRatio);
+                    TeleportScaleMultiplier -= teleportSpeed;
+                    if (StopHorizontalMovement() && TeleportScaleMultiplier <= 0.05f)
                     {
-                        Gore.NewGoreAction(SourceAI, NPC.Center + new Vector2(-40f, -NPC.height / 2f), NPC.velocity, GoreID.KingSlimeCrown, g => g.timeLeft += 180);
-                        NPC.Bottom = TeleportDestination;
+                        Gore.NewGoreAction(SourceAI, NPC.Top + new Vector2(-40f, -30f), NPC.velocity, GoreID.KingSlimeCrown, g => g.timeLeft += 180);
+
+                        if (Phase2_2)
+                            NPC.Center = TeleportDestination = Target.Top + new Vector2(0f, -450f); //重新设置目的地，避免史莱姆王锁定很久以前的位置；传送至玩家头顶；采用Center而不是Bottom
+                        else
+                            NPC.Bottom = TeleportDestination;
+
                         CurrentAttackPhase = 2;
                     }
                     break;
 
-                case 2: //恢复体型，恢复完成后开始下一次攻击
-                    TeleportScaleMultiplier += MathHelper.Lerp(0.03f, 0.05f, NPC.LostLifeRatio);
-                    if (TeleportScaleMultiplier >= 1f)
+                case 2: //传送后恢复阶段
+                    float teleportSpeed2 = Phase2 ? MathHelper.Lerp(0.06f, 0.08f, LostLifeRatioForPhase2)
+                        : MathHelper.Lerp(0.03f, 0.05f, NPC.LostLifeRatio);
+                    TeleportScaleMultiplier += teleportSpeed2;
+
+                    if (Phase2_2)
+                    {
+                        if (Timer2 > 0 || TeleportScaleMultiplier >= 1f) //加速下落
+                        {
+                            TeleportScaleMultiplier = 1f;
+                            Timer2++;
+
+                            if (Timer2 >= 20)
+                            {
+                                float bonusGravity = Utils.Remap(Timer2, 0f, 150f, 3f, 5f);
+                                NPC.GravityMultiplier *= bonusGravity;
+                                NPC.MaxFallSpeedMultiplier *= bonusGravity * 1.25f;
+
+                                if (NPC.velocity.Y == 0f || Math.Abs(NPC.Center.Y - TeleportDestination.Y) >= 2400f) //下落距离过长时同样结束下落
+                                {
+                                    SoundEngine.PlaySound(SoundID.Item167, NPC.Center);
+                                    SoundEngine.PlaySound(SoundID.Item155, NPC.Center);
+
+                                    if (TOSharedData.NotClient)
+                                    {
+                                        int outerAmount = 11;
+                                        int innerAmount = 7;
+
+                                        for (int i = 0; i < outerAmount; i++)
+                                        {
+                                            float rotation = Utils.Remap(i, 0, outerAmount - 1, -TOMathUtils.PiOver24, TOMathUtils.PiOver24 - MathHelper.Pi) + Main.rand.NextFloat(-0.05f, 0.05f);
+                                            Projectile.NewProjectileAction<SlimeGel>(SourceAI, NPC.Center, new PolarVector2(Main.rand.NextFloat(12f, 16f), rotation), GelDamage, 0f, action: SpawnGelAction);
+                                        }
+                                        for (int i = 0; i < innerAmount; i++)
+                                        {
+                                            float rotation = Utils.Remap(i, 0, innerAmount - 1, -TOMathUtils.PiOver12, TOMathUtils.PiOver12 - MathHelper.Pi) + Main.rand.NextFloat(-0.05f, 0.05f);
+                                            Projectile.NewProjectileAction<SlimeGel>(SourceAI, NPC.Center, new PolarVector2(Main.rand.NextFloat(7f, 11f), rotation), GelDamage, 0f, action: SpawnGelAction);
+                                        }
+                                    }
+
+                                    SelectNextAttack();
+                                    NPC.Timer1 += 30; //立即开始下一次跳跃
+                                }
+                            }
+                            else //保持原位
+                            {
+                                NPC.noGravity = true;
+                                NPC.Center = TeleportDestination;
+                            }
+                        }
+                        else //保持原位
+                        {
+                            NPC.noGravity = true;
+                            NPC.Center = TeleportDestination;
+
+                            Vector2 dustVelocity = Main.rand.NextPolarVector2(15f, 20f);
+                            Dust.NewDustPerfectAction<SquashDust>(NPC.Center - dustVelocity.ToCustomLength(Main.rand.NextFloat(250f, 400f)), d =>
+                            {
+                                d.velocity = dustVelocity;
+                                d.scale = Main.rand.NextFloat(1.3f, 1.75f);
+                                d.noGravity = true;
+                                d.fadeIn = 0.25f;
+                                d.color = Color.GetRandomRainbowColor();
+                            });
+                        }
+                    }
+                    else if (TeleportScaleMultiplier >= 1f)
                     {
                         TeleportScaleMultiplier = 1f;
-                        if (Timer2++ >= 1f)
-                            SelectNextAttack();
+                        SelectNextAttack();
                     }
                     break;
             }
@@ -987,17 +1097,17 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     Vector2 position = GetJewelSpawnPosition();
                     if (JewelRubyAlive)
                     {
-                        KingSlime_Handler.CreateDustFromJewelTo(JewelRuby, position, Main.zenithWorld ? DustID.IceTorch : DustID.GemRuby);
+                        KingSlime_Handler.CreateDustFromJewelTo(JewelRuby, position, Aroma ? DustID.IceTorch : DustID.GemRuby);
                         KingSlime_Handler.Kill(JewelRuby);
                     }
                     if (JewelEmeraldAlive)
                     {
-                        KingSlime_Handler.CreateDustFromJewelTo(JewelEmerald, position, Main.zenithWorld ? DustID.GemAmethyst : DustID.GemEmerald);
+                        KingSlime_Handler.CreateDustFromJewelTo(JewelEmerald, position, Aroma ? DustID.GemAmethyst : DustID.GemEmerald);
                         KingSlime_Handler.Kill(JewelEmerald);
                     }
                     if (JewelSapphireAlive)
                     {
-                        KingSlime_Handler.CreateDustFromJewelTo(JewelSapphire, position, Main.zenithWorld ? DustID.GemTopaz : DustID.GemSapphire);
+                        KingSlime_Handler.CreateDustFromJewelTo(JewelSapphire, position, Aroma ? DustID.GemTopaz : DustID.GemSapphire);
                         KingSlime_Handler.Kill(JewelSapphire);
                     }
                     NPC.NewNPCAction<KingSlimeJewelRainbow>(SourceAI, GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
@@ -1046,9 +1156,9 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
     public override Color? GetAlpha(Color drawColor)
     {
         Color newColor = Color.Lerp(new Color(0, 0, 150, NPC.alpha), new Color(125, 125, 255, NPC.alpha), TOMathUtils.TimeWrappingFunction.GetTimeSin(0.35f, 1.5f, unsigned: true) + 0.3f);
-        Color preRainbow = Color.Lerp(Main.zenithWorld ? new Color(125, 125, 255, NPC.alpha) : drawColor, newColor, SapphireBuffRatio);
+        Color preRainbow = Color.Lerp(Aroma ? new Color(125, 125, 255, NPC.alpha) : drawColor, newColor, SapphireBuffRatio);
 
-        if (Main.remixWorld || Main.zenithWorld)
+        if (Main.remixWorld || Aroma)
         {
             byte r = preRainbow.R;
             byte g = preRainbow.G;
