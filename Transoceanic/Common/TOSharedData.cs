@@ -170,6 +170,21 @@ public sealed class TOSharedData : ModSystem, ITOLoader
     /// </summary>
     public static bool BossActive { get; internal set; }
 
+    /// <summary>
+    /// Boss 挑战计时器，从第一个 Boss 出现开始累计，每帧递增，直到所有 Boss 都被击败后重置为 0。
+    /// </summary>
+    public static TerrariaTimer BossTimer { get; internal set; }
+
+    /// <summary>
+    /// Boss 挑战开始事件，在第一个 Boss 出现的那一帧触发。
+    /// </summary>
+    public static event Action OnBossChallengeBegin;
+
+    /// <summary>
+    /// Boss 挑战结束事件，在最后一个 Boss 消失的那一帧触发。
+    /// </summary>
+    public static event Action OnBossChallengeEnd;
+
     public override void PreUpdateEntities()
     {
         GameTimer++;
@@ -193,16 +208,31 @@ public sealed class TOSharedData : ModSystem, ITOLoader
     {
         BossList = NPC.Bosses.ToList();
         BossActive = BossList.Count > 0;
+
+        if (BossActive)
+        {
+            BossTimer++;
+            if (BossTimer == 1)
+                OnBossChallengeBegin?.Invoke();
+
+        }
+        else if (BossTimer > 0)
+        {
+            BossTimer = 0;
+            OnBossChallengeEnd?.Invoke();
+        }
     }
 
     public override void OnWorldLoad()
     {
         GameTimer = 0;
+        BossTimer = 0;
     }
 
     public override void OnWorldUnload()
     {
         GameTimer = 0;
+        BossTimer = 0;
     }
 
     void ITOLoader.Load()
@@ -220,6 +250,9 @@ public sealed class TOSharedData : ModSystem, ITOLoader
             catch { }
             orig(self, gameTime);
         }
+
+        OnBossChallengeBegin = null;
+        OnBossChallengeEnd = null;
     }
 
     void ITOLoader.Unload()
@@ -229,6 +262,9 @@ public sealed class TOSharedData : ModSystem, ITOLoader
         JourneyMasterMode = false;
         BossList = [];
         BossActive = false;
+
+        OnBossChallengeBegin = null;
+        OnBossChallengeEnd = null;
     }
     #endregion World
 }

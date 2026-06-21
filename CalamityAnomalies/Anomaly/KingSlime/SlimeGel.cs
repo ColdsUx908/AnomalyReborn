@@ -13,26 +13,16 @@ public sealed class SlimeGel : CAModProjectile
 
     public override string LocalizationCategory => "Anomaly.KingSlime";
 
-    /*
     [LoadTextureWithCalamityStyle(KingSlime_Handler.AnomalyKingSlimePath + "SlimeGel")]
-    private static TextureAssetWithCalamityStyle _texture_Normal;
-    public static Texture2D Texture_Normal => _texture_Normal.Value;
-
-    [LoadTextureWithCalamityStyle(KingSlime_Handler.AnomalyKingSlimePath + "SlimeGel_Rainbow")]
-    private static TextureAssetWithCalamityStyle _texture_Rainbow;
-    public static Texture2D Texture_Rainbow => _texture_Rainbow.Value;
-    */
-
-    [LoadTexture(KingSlime_Handler.AnomalyKingSlimePath + "SlimeGel_Rainbow")]
-    private static Asset<Texture2D> _texture_Rainbow;
-    public static Texture2D Texture_Rainbow => _texture_Rainbow.Value;
+    private static TextureAssetWithCalamityStyle _texture;
+    public static new Texture2D Texture => _texture.Value;
 
     public bool IsRainbow => Projectile.ai[1] > 0f;
 
     public override void SetDefaults()
     {
-        Projectile.width = 25;
-        Projectile.height = 25;
+        Projectile.width = 50;
+        Projectile.height = 50;
         Projectile.aiStyle = -1;
         Projectile.hostile = true;
         Projectile.friendly = false;
@@ -40,6 +30,7 @@ public sealed class SlimeGel : CAModProjectile
         Projectile.ignoreWater = true;
         Projectile.tileCollide = true;
         Projectile.penetrate = -1;
+        Projectile.scale = 0.5f;
     }
 
     public override bool OnTileCollide(Vector2 oldVelocity)
@@ -91,7 +82,7 @@ public sealed class SlimeGel : CAModProjectile
         if (Projectile.velocity.Y > 15f)
             Projectile.velocity.Y = 15f;
 
-        Projectile.VelocityToRotation();
+        Projectile.rotation += 0.05f;
     }
 
     public override Color? GetAlpha(Color lightColor)
@@ -104,9 +95,11 @@ public sealed class SlimeGel : CAModProjectile
 
     public override bool PreDraw(ref Color lightColor)
     {
-        Texture2D texture = /* IsRainbow ? Texture_Rainbow : */ Projectile.Texture /* Texture_Normal */;
+        Texture2D texture = Texture;
         Color color = Projectile.GetAlpha(lightColor);
-        Main.spriteBatch.DrawFromCenter_VectorScale(texture, Projectile.Center - Main.screenPosition, null, color, Projectile.rotation, new Vector2(1f, 1f) * Projectile.scale, SpriteEffects.None, 0f);
+        Main.spriteBatch.DrawFromCenter(texture, Projectile.Center - Main.screenPosition, null, color, Projectile.rotation, Projectile.scale, SpriteEffects.None, 0f);
         return false;
     }
+
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(Projectile.Center, 32f * Projectile.scale).Collides(targetHitbox);
 }

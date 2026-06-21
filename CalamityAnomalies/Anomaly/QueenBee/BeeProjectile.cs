@@ -76,7 +76,7 @@ public sealed class BeeProjectile : CAModProjectile
 
             default:
                 if (Timer1 >= 240)
-                    Projectile.velocity *= 1.006f;
+                    Projectile.velocity *= 1.005f;
                 break;
         }
     }

@@ -56,6 +56,18 @@ public sealed class CATextures
     internal static Asset<Texture2D> _anomalyModeIndicator_Border;
     public static Texture2D AnomalyModeIndicator_Border => _anomalyModeIndicator_Border?.Value;
 
+    [LoadTexture(TexturePathPrefix + "UI/AnomalyUltraIndicator")]
+    internal static Asset<Texture2D> _anomalyUltraIndicator;
+    public static Texture2D AnomalyUltraIndicator => _anomalyUltraIndicator?.Value;
+
+    [LoadTexture(TexturePathPrefix + "UI/AnomalyUltraIndicator_Off")]
+    internal static Asset<Texture2D> _anomalyUltraIndicator_Off;
+    public static Texture2D AnomalyUltraIndicator_Off => _anomalyUltraIndicator_Off?.Value;
+
+    [LoadTexture(TexturePathPrefix + "UI/AnomalyUltraIndicator_Border")]
+    internal static Asset<Texture2D> _anomalyUltraIndicator_Border;
+    public static Texture2D AnomalyUltraIndicator_Border => _anomalyUltraIndicator_Border?.Value;
+
     [LoadTexture(TexturePathPrefix + "UI/HPThresholdIndicator")]
     internal static Asset<Texture2D> _hpThresholdIndicator;
     public static Texture2D HPThresholdIndicator => _hpThresholdIndicator?.Value;

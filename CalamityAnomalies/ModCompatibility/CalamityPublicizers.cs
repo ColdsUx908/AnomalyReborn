@@ -3,6 +3,7 @@
 using CalamityMod;
 using CalamityMod.NPCs;
 using CalamityMod.NPCs.HiveMind;
+using CalamityMod.UI.ModeIndicator;
 
 namespace CalamityAnomalies.ModCompatibility;
 
@@ -19,6 +20,9 @@ internal partial class CalamityMod_Publicizer(CalamityMod_ Source) : InstancedPu
 
 [Publicize(typeof(HiveMind))]
 internal partial class HiveMind_Publicizer(HiveMind Source) : InstancedPublicizer(Source);
+
+[Publicize(typeof(ModeIndicatorUI))]
+internal partial class ModeIndicatorUI_Publicizer(ModeIndicatorUI Source) : InstancedPublicizer(Source);
 
 [Publicize(typeof(RogueDamageClass))]
 internal partial class RogueDamageClass_Publicizer;

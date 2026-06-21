@@ -1522,6 +1522,7 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC
             behavior.PostAI(npc);
     }
 
+    /*
     public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
     {
         if (TOSharedData.SyncEnabled)
@@ -1539,6 +1540,7 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC
             //    behavior.ReceiveExtraAI(npc, bitReader, binaryReader);
         }
     }
+    */
 
     public override void FindFrame(NPC npc, int frameHeight)
     {
@@ -2077,6 +2079,7 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile
             behavior.PostAI(projectile);
     }
 
+    /*
     public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
     {
         if (TOSharedData.SyncEnabled)
@@ -2094,6 +2097,7 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile
             //    behavior.ReceiveExtraAI(projectile, bitReader, binaryReader);
         }
     }
+    */
 
     public override bool ShouldUpdatePosition(Projectile projectile)
     {
@@ -3179,6 +3183,7 @@ public sealed class GlobalItemBehaviorHandler : GlobalItem
             behavior.LoadData(item, tag);
     }
 
+    /*
     public override void NetSend(Item item, BinaryWriter writer)
     {
         if (TOSharedData.SyncEnabled)
@@ -3196,6 +3201,7 @@ public sealed class GlobalItemBehaviorHandler : GlobalItem
             //    behavior.NetReceive(item, reader);
         }
     }
+    */
 }
 
 public sealed class BehaviorLoader : IContentLoader

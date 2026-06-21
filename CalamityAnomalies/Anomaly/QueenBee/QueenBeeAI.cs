@@ -134,7 +134,6 @@ public sealed partial class QueenBee_Anomaly
 
         // 减速免疫调整
         bool immuneToSlowingDebuffs = AI0 == 0;
-        NPC.buffImmune[ModContent.BuffType<GlacialState>()] = immuneToSlowingDebuffs;
         NPC.buffImmune[ModContent.BuffType<TemporalSadness>()] = immuneToSlowingDebuffs;
         NPC.buffImmune[ModContent.BuffType<Eutrophication>()] = immuneToSlowingDebuffs;
         NPC.buffImmune[ModContent.BuffType<TimeDistortion>()] = immuneToSlowingDebuffs;

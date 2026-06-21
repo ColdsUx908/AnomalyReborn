@@ -191,7 +191,7 @@ public abstract class AnomalyProjectileBehavior : CASingleProjectileBehavior
     public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
 }
 
-public abstract class AnomalyProjecileBehavior<T> : CASingleProjectileBehavior<T> where T : ModProjectile
+public abstract class AnomalyProjectileBehavior<T> : CASingleProjectileBehavior<T> where T : ModProjectile
 {
     public override decimal Priority => 100m;
 

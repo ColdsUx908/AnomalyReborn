@@ -451,6 +451,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                                 BloodOrbProjectile modP = p.GetModProjectile<BloodOrbProjectile>();
                                 modP.Master = Master;
                                 modP.ArenaProjectile = Projectile;
+                                modP.BehaviorType = BloodOrbProjectile.Behavior_Explode;
                                 modP.Destination = destination;
 
                                 if (p.whoAmI < Projectile.whoAmI)
@@ -475,6 +476,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                                     BloodOrbProjectile modP = p.GetModProjectile<BloodOrbProjectile>();
                                     modP.Master = Master;
                                     modP.ArenaProjectile = Projectile;
+                                    modP.BehaviorType = BloodOrbProjectile.Behavior_Explode;
                                     modP.Destination = destination2;
 
                                     if (p.whoAmI < Projectile.whoAmI)
@@ -579,7 +581,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
         Texture2D orbBorderTexture = EyeofCthulhu_Handler.BloodOrbBorderTexture;
         Texture2D orbBorderBigTexture = EyeofCthulhu_Handler.BloodOrbBigBorderTexture;
 
-        List<Projectile> bloodOrbs = TOIteratorFactory.NewActiveProjectileIterator(p => p.ModProjectile is BloodOrbProjectile orb && orb.ArenaProjectile == Projectile).ToList();
+        List<Projectile> bloodOrbs = TOIteratorFactory.NewActiveProjectileIterator(p => p.ModProjectile is BloodOrbProjectile orb && orb.ArenaProjectile == Projectile && orb.BehaviorType != 0).ToList();
 
         if (bloodOrbs.Count > 0) //依次进行三次绘制：大边框、主体、高亮材质
         {
@@ -588,7 +590,8 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
             foreach (Projectile p in bloodOrbs)
             {
                 float intensity = TOMathUtils.Interpolation.QuadraticEaseOut((p.Timer1 - 12) / 12f);
-                spriteBatch.DrawFromCenter(orbBorderBigTexture, p.Center - Main.screenPosition, null, Color.DarkRed * intensity, p.rotation, p.scale);
+                float scaleMultiplier = Utils.Remap(p.Timer2, BloodOrbProjectile.StillTime, BloodOrbProjectile.StillTime + 5, 0.9f, 0.84f);
+                spriteBatch.DrawFromCenter(orbBorderBigTexture, p.Center - Main.screenPosition, null, Color.Red * intensity, p.rotation, p.scale * scaleMultiplier);
             }
 
             spriteBatch.ChangeBlendState(BlendState.AlphaBlend);

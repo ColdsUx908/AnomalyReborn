@@ -10,7 +10,7 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
 {
     public const float DespawnDistance = 5000f;
 
-    public int ShootCooldownTime => HasEnteredPhase2 ? (Aroma ? 240 : 150) : (Aroma ? 180 : 105);
+    public int ShootCooldownTime => HasEnteredPhase2 ? (Aroma ? 240 : 150) : (Aroma ? 180 : 120);
 
     private static readonly ProjectileDamageContainer _jewelProjectileDamage = new(30, 52, 72, 84, 84, 102);
     public static int JewelProjectileDamage => _jewelProjectileDamage.Value;
@@ -103,12 +103,12 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
 
         if (CanAttack)
         {
-            KingSlime_Handler.Move(NPC, Target.Center, 15f, 15f, 0.175f, 0.125f, 250f, -250f, -250f, -400f);
+            KingSlime_Handler.Move(NPC, Target.Center, 13f, 13f, 0.15f, 0.11f, 150f, -150f, -300f, -400f);
             Timer1++;
         }
         else
         {
-            KingSlime_Handler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.175f, 150f, -150f, 0f, -200f);
+            KingSlime_Handler.Move(NPC, master.Center, 13f, 13f, 0.2f, 0.175f, 150f, -150f, 0f, -200f);
             Timer1 -= 2;
         }
 
@@ -140,7 +140,7 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
                 return;
 
             int amount = HasEnteredPhase2 ? (Aroma ? 7 : Ultra ? 3 : 1) : (Aroma ? 17 : Ultra ? 5 : 3);
-            float singleRadian = MathHelper.ToRadians(HasEnteredPhase2 ? (Aroma ? 18f : 9f) : (Aroma ? 18f : Ultra ? 13.5f : 12f));
+            float singleRadian = MathHelper.ToRadians(HasEnteredPhase2 ? (Aroma ? 18f : 9f) : (Aroma ? 18f : 12f));
             float radian = singleRadian * (amount - 1);
             float initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
             Projectile.RotatedProj<JewelProjectile>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(Aroma ? 16f : 15f, initialRotation), JewelProjectileDamage, 0f, Main.myPlayer, p =>

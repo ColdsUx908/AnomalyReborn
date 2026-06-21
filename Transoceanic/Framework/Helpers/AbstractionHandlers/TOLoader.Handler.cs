@@ -65,4 +65,48 @@ public sealed class TOLoaderHandler : ModSystem
             }
         }
     }
+
+    /// <summary>
+    /// 通过反射发现所有实现 <see cref="ITOLoader"/> 的类型，
+    /// 并按 <see cref="LoadPriorityAttribute"/> 指定的优先级降序调用其 <c>Load()</c> 方法。
+    /// </summary>
+    internal static void Loader_Load()
+    {
+        foreach (ITOLoader loader in
+            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOReflectionUtils.Assembly)
+            orderby pair.Type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+            select pair.Instance)
+        {
+            loader.Load();
+        }
+    }
+
+    /// <summary>
+    /// 通过反射发现所有实现 <see cref="IContentLoader"/> 的类型，
+    /// 并按 <see cref="LoadPriorityAttribute"/> 指定的优先级降序调用其 <c>PostSetupContent()</c> 方法。
+    /// </summary>
+    internal static void Loader_PostSetupContent()
+    {
+        foreach (IContentLoader loader in
+            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>()
+            orderby pair.type.GetMethod(nameof(IContentLoader.PostSetupContent), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+            select pair.instance)
+        {
+            loader.PostSetupContent();
+        }
+    }
+
+    /// <summary>
+    /// 按加载时优先级的相反顺序调用所有 <see cref="ITOLoader"/> 的 <c>Unload()</c> 方法。
+    /// </summary>
+    internal static void Loader_Unload()
+    {
+        foreach (ITOLoader loader in (
+            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>()
+            orderby pair.type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+            select pair.instance).Reverse())
+        {
+            loader.Unload();
+        }
+    }
 }

@@ -27,6 +27,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
 
         Phase1_Charge,
         Phase1_Stinger,
+        Phase1_Beehell,
         Phase2_Charge,
         Phase2_RapidCharge,
         Phase2_Stinger_Rain,
@@ -59,7 +60,6 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
     public static float Phase3LifeRatio => Ultra ? Phase3LifeRatio_Ultra : Phase3LifeRatio_Anomaly;
     public static float Phase3_2LifeRatio => Ultra ? Phase3_2LifeRatio_Ultra : Phase3_2LifeRatio_Anomaly;
 
-    public float ChargeSpeed => Phase2_3 ? 27f : Phase2_2 ? 16f : Phase2 ? 27f : Phase1_2 ? 22f : 17f;
     public float chargeDistanceX => Phase2_3 ? 700f : Phase2_2 ? 300f : Phase2 ? 600f : Phase1_2 ? 500f : 400f;
     public float chargeDistanceY
     {
@@ -151,6 +151,12 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
         set => NPC.ai[1] = value;
     }
 
+    public int FinishedBehaviorCounter
+    {
+        get => (int)NPC.ai[3];
+        set => NPC.ai[3] = value;
+    }
+
     public bool IsCharging
     {
         get => AnomalyNPC.AnomalyAI32[0].bits[0];
@@ -177,7 +183,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
         }
     }
 
-    public int AttackCounter
+    public int CurrentAttackCounter
     {
         get => AnomalyNPC.AnomalyAI32[4].i;
         set

@@ -64,6 +64,37 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                 NPC.velocity.Y = 0f;
         }
 
+        Vector2 GetStingerSpawnLocation() => new(NPC.Center.X + (Main.rand.Next(20) * NPC.direction), NPC.position.Y + NPC.height * 0.8f);
+
+        bool CanHitTarget()
+        {
+            Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
+            return Collision.CanHit(new Vector2(stingerSpawnLocation.X, stingerSpawnLocation.Y - 30f), 1, 1, Target.position, Target.width, Target.height);
+        }
+
+        void TryMoveAboveTarget()
+        {
+            Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
+
+            float stingerAttackSpeed = 22.5f;
+            float stingerAttackAccel = Phase2_3 ? 0.45f : 0.35f;
+
+            bool canHitTarget = CanHitTarget();
+            Vector2 hoverDestination = Target.Center - Vector2.UnitY * (!canHitTarget ? 0f : Phase2 ? 400f : Phase1_2 ? 360f : 320f);
+            Vector2 idealVelocity = NPC.SafeDirectionTo(hoverDestination) * stingerAttackSpeed;
+
+            if (Vector2.Distance(stingerSpawnLocation, hoverDestination) > 40f || !canHitTarget)
+                NPC.SimpleFlyMovement(idealVelocity, stingerAttackAccel);
+        }
+
+        void SpawnCombCell(Vector2 position, Vector2 velocity, int damage, CombCell.Behavior behavior, float finalScale) => Projectile.NewProjectileAction<CombCell>(SourceAI, position, velocity, damage, 0f, action: p =>
+        {
+            CombCell modP = p.GetModProjectile<CombCell>();
+            modP.Master = NPC;
+            modP.BehaviorType = behavior;
+            modP.FinalScale = finalScale;
+        });
+
         void Phase1And2AI()
         {
             switch (CurrentBehavior)
@@ -73,6 +104,9 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                     break;
                 case Behavior.Phase1_Stinger:
                     Stinger();
+                    break;
+                case Behavior.Phase1_Beehell:
+                    Beehell();
                     break;
                 default:
                     SelectNextAttack();
@@ -85,37 +119,36 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                 Timer2 = 0;
                 CurrentAttackPhase = 0;
                 ShouldDecelerate = false;
+
                 switch (CurrentBehavior)
                 {
                     case Behavior.Phase1_Charge:
-                        int chargeAmount = Phase2_3 ? 2 : Phase2_2 ? 4 : Phase2 ? 3 : 4;
-                        AttackCounter++;
-                        if (AttackCounter >= chargeAmount)
+                        CurrentAttackCounter++;
+                        int chargeAmount = 4;
+                        if (CurrentAttackCounter >= chargeAmount)
                         {
-                            AttackCounter = 0;
-                            SelectCore();
+                            CurrentAttackCounter = 0;
+                            SwitchToNext();
                         }
                         break;
-                    case Behavior.Phase1_Stinger:
-                        SelectCore();
+                    default:
+                        SwitchToNext();
                         break;
                 }
 
-                void SelectCore()
+                void SwitchToNext()
                 {
-                    Behavior lastBehavior = LastBehavior;
-                    Behavior lastBehavior2 = LastBehavior2;
-                    Behavior currentBehavior = CurrentBehavior;
-                    bool allTheSameBehavior = lastBehavior == lastBehavior2 && lastBehavior == currentBehavior;
+                    int attackCycleLength = 4;
+                    FinishedBehaviorCounter++;
+                    CurrentBehavior = (FinishedBehaviorCounter % attackCycleLength) switch
+                    {
+                        0 => Behavior.Phase1_Charge,
+                        1 => Behavior.Phase1_Stinger,
+                        2 => Behavior.Phase1_Charge,
+                        3 => Behavior.Phase1_Beehell,
 
-                    Behavior newBehavior;
-
-                    do newBehavior = (Behavior)Main.rand.Next((byte)Behavior.Phase1_Charge, (byte)Behavior.Phase1_Stinger + 1);
-                    while (newBehavior == currentBehavior || (!allTheSameBehavior && new HashSet<Behavior> { lastBehavior, lastBehavior2, currentBehavior, newBehavior }.Count < 2));
-
-                    LastBehavior2 = lastBehavior;
-                    LastBehavior = currentBehavior;
-                    CurrentBehavior = newBehavior;
+                        _ => Behavior.Phase1_Charge
+                    };
                 }
             }
 
@@ -270,7 +303,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
 
             void Charge()
             {
-                float speed = ChargeSpeed;
+                float speed = MathHelper.Lerp(22.5f, 28f, NPC.LostLifeRatio);
 
                 switch (CurrentAttackPhase)
                 {
@@ -284,55 +317,54 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                             NPC.damage = NPC.defDamage;
                             IsCharging = true;
                             CurrentAttackPhase = 1;
-                            AI2 = 0;
 
                             NPC.velocity = NPC.GetVelocityTowards(Target.Center, speed);
 
                             NPC.FaceTarget(Target);
                             NPC.spriteDirection = NPC.direction;
                             SoundEngine.PlaySound(SoundID.Zombie125, NPC.Center);
-                            return;
                         }
-
-                        IsCharging = false;
-                        float chargeVelocityX = (Phase2 ? 24f : Phase1_2 ? 20f : 16f) + 8f;
-                        float chargeVelocityY = (Phase2 ? 18f : Phase1_2 ? 15f : 12f) + 6f;
-                        float chargeAccelerationX = (Phase2 ? 0.7f : Phase1_2 ? 0.6f : 0.5f) + 0.25f;
-                        float chargeAccelerationY = (Phase2 ? 0.35f : Phase1_2 ? 0.3f : 0.25f) + 0.125f;
-
-                        chargeVelocityX += 1f;
-                        chargeVelocityY += 2f;
-                        chargeAccelerationX += 0.1f;
-                        chargeAccelerationY += 0.2f;
-
-                        if (NPC.Center.Y < Target.Center.Y - chargeDistanceY)
-                            NPC.velocity.Y += chargeAccelerationY;
-                        else if (NPC.Center.Y > Target.Center.Y + chargeDistanceY)
-                            NPC.velocity.Y -= chargeAccelerationY;
                         else
-                            NPC.velocity.Y *= 0.7f;
+                        {
+                            IsCharging = false;
 
-                        if (NPC.velocity.Y < -chargeVelocityY)
-                            NPC.velocity.Y = -chargeVelocityY;
-                        if (NPC.velocity.Y > chargeVelocityY)
-                            NPC.velocity.Y = chargeVelocityY;
+                            Timer1++;
+                            float velocityMultiplier = Utils.Remap(Timer1, 30, 90, 1f, 2f);
 
-                        float distanceXMax = 100f;
-                        float distanceXMin = 20f;
-                        if (distanceFromTargetX > chargeDistanceX + distanceXMax)
-                            NPC.velocity.X += chargeAccelerationX * NPC.direction;
-                        else if (distanceFromTargetX < chargeDistanceX + distanceXMin)
-                            NPC.velocity.X -= chargeAccelerationX * NPC.direction;
-                        else
-                            NPC.velocity.X *= 0.7f;
+                            float approachVelocityX = MathHelper.Lerp(30f, 36f, NPC.LostLifeRatio) * velocityMultiplier;
+                            float approachVelocityY = MathHelper.Lerp(20f, 24f, NPC.LostLifeRatio) * velocityMultiplier;
+                            float approachAccelerationX = MathHelper.Lerp(0.9f, 1.2f, NPC.LostLifeRatio) * velocityMultiplier;
+                            float approachAccelerationY = MathHelper.Lerp(0.6f, 0.9f, NPC.LostLifeRatio) * velocityMultiplier;
 
-                        if (NPC.velocity.X < -chargeVelocityX)
-                            NPC.velocity.X = -chargeVelocityX;
-                        if (NPC.velocity.X > chargeVelocityX)
-                            NPC.velocity.X = chargeVelocityX;
+                            if (NPC.Center.Y < Target.Center.Y - chargeDistanceY)
+                                NPC.velocity.Y += approachAccelerationY;
+                            else if (NPC.Center.Y > Target.Center.Y + chargeDistanceY)
+                                NPC.velocity.Y -= approachAccelerationY;
+                            else
+                                NPC.velocity.Y *= 0.7f;
 
-                        NPC.FaceTarget(Target);
-                        NPC.spriteDirection = NPC.direction;
+                            if (NPC.velocity.Y < -approachVelocityY)
+                                NPC.velocity.Y = -approachVelocityY;
+                            if (NPC.velocity.Y > approachVelocityY)
+                                NPC.velocity.Y = approachVelocityY;
+
+                            float distanceXMax = 100f;
+                            float distanceXMin = 20f;
+                            if (distanceFromTargetX > chargeDistanceX + distanceXMax)
+                                NPC.velocity.X += approachAccelerationX * NPC.direction;
+                            else if (distanceFromTargetX < chargeDistanceX + distanceXMin)
+                                NPC.velocity.X -= approachAccelerationX * NPC.direction;
+                            else
+                                NPC.velocity.X *= 0.7f;
+
+                            if (NPC.velocity.X < -approachVelocityX)
+                                NPC.velocity.X = -approachVelocityX;
+                            if (NPC.velocity.X > approachVelocityX)
+                                NPC.velocity.X = approachVelocityX;
+
+                            NPC.FaceTarget(Target);
+                            NPC.spriteDirection = NPC.direction;
+                        }
                         break;
                     case 1:
                         NPC.damage = NPC.defDamage;
@@ -378,7 +410,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                             if (NPC.velocity.Length() < speed)
                                 NPC.velocity.X = speed * NPC.direction;
 
-                            float accelerateGateValue = Phase2_3 ? 22.5f : Phase2_2 ? 8f : 70f;
+                            int accelerateGateValue = 30;
 
                             Timer2++;
                             if (Timer2 > accelerateGateValue) //加速
@@ -401,19 +433,12 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                 NPC.direction = playerLocation < 0 ? 1 : -1;
                 NPC.spriteDirection = NPC.direction;
 
-                float stingerAttackSpeed = 22.5f;
-                float stingerAttackAccel = Phase2_3 ? 0.45f : 0.35f;
+                Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
 
-                Vector2 stingerSpawnLocation = new(NPC.Center.X + (Main.rand.Next(20) * NPC.direction), NPC.position.Y + NPC.height * 0.8f);
-                bool canHitTarget = Collision.CanHit(new Vector2(stingerSpawnLocation.X, stingerSpawnLocation.Y - 30f), 1, 1, Target.position, Target.width, Target.height);
-                Vector2 hoverDestination = Target.Center - Vector2.UnitY * (!canHitTarget ? 0f : Phase2 ? 400f : Phase1_2 ? 360f : 320f);
-                Vector2 idealVelocity = NPC.SafeDirectionTo(hoverDestination) * stingerAttackSpeed;
+                TryMoveAboveTarget();
 
                 Timer1++;
                 int stingerAttackTimer = Phase2_3 ? 24 : Phase1_2 ? 18 : 12;
-
-                if (Vector2.Distance(stingerSpawnLocation, hoverDestination) > 40f || !canHitTarget)
-                    NPC.SimpleFlyMovement(idealVelocity, stingerAttackAccel);
 
                 if (Timer1 % stingerAttackTimer == 0)
                 {
@@ -454,14 +479,70 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                             }
 
                             if (num == numStingerShots) //生成蜂巢
-                                Projectile.NewProjectileAction<CombCell>(SourceAI, stingerSpawnLocation, stingerVelocity * 0.4f,  StingerDamage, 0f, action: p =>
-                                {
-                                    CombCell modP = p.GetModProjectile<CombCell>();
-                                    modP.BehaviorType = CombCell.Behavior.Beehive;
-                                    modP.FinalScale = 0.2f;
-                                });
+                                SpawnCombCell(stingerSpawnLocation, stingerVelocity * 0.4f, StingerDamage, CombCell.Behavior.Beehive, 0.2f);
                         }
                     }
+                }
+            }
+
+            void Beehell()
+            {
+                Timer1++;
+
+                switch (CurrentAttackPhase)
+                {
+                    case 0:
+                        TryMoveAboveTarget();
+
+                        if (Timer1 >= 40 && NPC.Bottom.Y < Target.Top.Y)
+                        {
+                            Timer1 = 0;
+                            CurrentAttackPhase = 1;
+                        }
+                        break;
+                    case 1:
+                        StopMovement();
+
+                        switch (Timer1)
+                        {
+                            case 1:
+                                SpawnCombCell(NPC.Center, Vector2.Zero, 0, CombCell.Behavior.Beehell, 0.95f);
+                                break;
+                            case 25:
+                                Timer1 = 0;
+                                CurrentAttackPhase = 2;
+                                break;
+                        }
+                        break;
+                    case 2:
+                        StopMovement(0.9f);
+
+                        int adjustedTimer = Timer1 - 1;
+                        int attackTimer = 25;
+                        if (adjustedTimer % attackTimer == 0)
+                        {
+                            int num = adjustedTimer / attackTimer;
+
+                            int amount = (int)MathHelper.Lerp(16, 20, NPC.LostLifeRatio) + num;
+                            float speed = Main.rand.NextFloat(12f, 15f) + num * 2f;
+                            Vector2 velocity = Main.rand.NextPolarVector2(speed);
+                            Projectile.RotatedProj<BeeProjectile>(amount, MathHelper.TwoPi / amount, SourceAI, NPC.Center, velocity, 10, 0f, action: p =>
+                            {
+                                p.velocity *= Main.rand.NextFloat(0.9f, 1.2f);
+                                p.Timer1 += 120;
+                            });
+
+                            if (num >= 4)
+                            {
+                                Timer1 = 0;
+                                CurrentAttackPhase = 3;
+                            }
+                        }
+                        break;
+                    case 3:
+                        if (Timer1 >= 50)
+                            SelectNextAttack();
+                        break;
                 }
             }
         }
@@ -476,6 +557,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
             switch (CurrentBehavior)
             {
                 default:
+                    CheckPhaseChange();
                     SelectNextAttack();
                     break;
             }

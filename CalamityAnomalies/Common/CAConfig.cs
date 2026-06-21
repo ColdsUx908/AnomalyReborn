@@ -35,7 +35,6 @@ public sealed class CAClientConfig : ModConfig
     /// <summary>
     /// 是否使用灾厄模组风格的纹理。
     /// </summary>
-    [ReloadRequired]
     [DefaultValue(false)]
     public bool UseCalamityStyleTextures;
 }

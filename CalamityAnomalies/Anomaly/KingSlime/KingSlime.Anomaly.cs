@@ -500,7 +500,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                 break;
         }
 
-        TeleportTimer += Utils.Remap((Target.Center - NPC.Center).Y, 0f, 800f, 1.5f, 5f);
+        TeleportTimer += Utils.Remap((Target.Center - NPC.Center).Y, 0f, 1200f, 1.5f, 5f);
 
         ChangeScale();
         TrySpawnMinions();
@@ -526,6 +526,9 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
                 if (TeleportTimer > MathHelper.Lerp(1250f, 1000f, NPC.LostLifeRatio) || !NPC.WithinRange(Target.Center, 2400f))
                 {
+                    if (CurrentBehavior == Behavior.PhaseChange_1To2)
+                        SmallJumpCounter = 0;
+
                     CurrentBehavior = Behavior.Teleport;
                     TeleportTimer = 0f;
                 }
@@ -854,9 +857,9 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                             {
                                 TeleportTimer += CurrentBehavior switch
                                 {
-                                    Behavior.HighJump => 400f,
-                                    Behavior.NormalJump => 100f,
-                                    Behavior.RapidJump => 75f,
+                                    Behavior.HighJump => 500f,
+                                    Behavior.NormalJump => 75f,
+                                    Behavior.RapidJump => 50f,
                                     _ => 0f
                                 };
                                 SelectNextAttack();
@@ -1012,6 +1015,8 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
                             if (Timer2 >= 20)
                             {
+                                NPC.damage = NPC.defDamage;
+
                                 float bonusGravity = Utils.Remap(Timer2, 0f, 150f, 3f, 5f);
                                 NPC.GravityMultiplier *= bonusGravity;
                                 NPC.MaxFallSpeedMultiplier *= bonusGravity * 1.25f;

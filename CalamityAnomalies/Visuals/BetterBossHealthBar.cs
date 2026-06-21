@@ -782,8 +782,8 @@ public class BetterBossHPUI : BossHPUI
 
             Texture2D borderTexture = indicator.IsSubPhaseIndicator ? CATextures.HPThresholdIndicator_SubBorder : CATextures.HPThresholdIndicator_Border;
             Texture2D texture = indicator.IsSubPhaseIndicator ? CATextures.HPThresholdIndicator_Sub : CATextures.HPThresholdIndicator;
-            spriteBatch.DrawFromCenter(borderTexture, center, null, color * thresholdAnimationCompletion, scale: borderIntensity);
-            spriteBatch.DrawFromCenter(texture, center, null, Color.White * AnimationCompletionRatio * AnimationCompletionRatio2 * thresholdAnimationCompletion);
+            spriteBatch.DrawFromCenter(borderTexture, center, null, color * thresholdAnimationCompletion, scale: borderIntensity * 0.5f);
+            spriteBatch.DrawFromCenter(texture, center, null, Color.White * AnimationCompletionRatio * AnimationCompletionRatio2 * thresholdAnimationCompletion, scale: 0.5f);
         }
     }
 

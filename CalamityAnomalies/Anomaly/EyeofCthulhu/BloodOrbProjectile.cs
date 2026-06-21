@@ -6,29 +6,40 @@ namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
 
 public class BloodOrbProjectile : CAModProjectile
 {
+    public const byte Behavior_Still = 1;
+    public const byte Behavior_Explode = 2;
+
+    /* 数组使用约定
+     * 
+     * Projectile.ai
+     * [0] 行为类型（默认值0表示无行为，直线运动）
+     * [1] 存储克苏鲁之眼Boss的NPC索引
+     * [2] 存储竞技场Projectile的索引
+     */
+
     public const int StillTime = 25;
+
+    public int BehaviorType
+    {
+        get => (int)Projectile.ai[0];
+        set => Projectile.ai[0] = value;
+    }
 
     public NPC Master
     {
-        get => Main.npc[(int)Projectile.ai[0]];
-        set => Projectile.ai[0] = value.whoAmI;
+        get => Main.npc[(int)Projectile.ai[1]];
+        set => Projectile.ai[1] = value.whoAmI;
     }
 
     public Projectile ArenaProjectile
     {
-        get => Main.projectile[(int)Projectile.ai[1]];
-        set => Projectile.ai[1] = value.whoAmI;
+        get => Main.projectile[(int)Projectile.ai[2]];
+        set => Projectile.ai[2] = value.whoAmI;
     }
     public bool ArenaProjectileAlive => ArenaProjectile.active && ArenaProjectile.ModProjectile is EyeofCthulhuArena arena && arena.Master == Master;
     public EyeofCthulhuArena ArenaModProjectile => ArenaProjectile.GetModProjectile<EyeofCthulhuArena>();
 
     public Vector2 Destination;
-
-    public int BehaviorType
-    {
-        get => (int)Projectile.ai[2];
-        set => Projectile.ai[2] = value;
-    }
 
     public override string LocalizationCategory => "Anomaly.EyeofCthulhu";
 
@@ -46,9 +57,6 @@ public class BloodOrbProjectile : CAModProjectile
 
     public override void AI()
     {
-        if (!ArenaProjectileAlive)
-            Projectile.Kill();
-
         Lighting.AddLight(Projectile.Center, 0.9f, 0f, 0.15f);
         if (Main.rand.NextBool(3))
         {
@@ -64,48 +72,54 @@ public class BloodOrbProjectile : CAModProjectile
 
         Projectile.rotation += 0.05f;
 
-        if (Timer2 <= 0)
+        if (BehaviorType is Behavior_Still or Behavior_Explode)
         {
-            if (Projectile.Distance(Destination) <= Projectile.velocity.Length())
+            if (!ArenaProjectileAlive)
+                Projectile.Kill();
+
+            if (Timer2 <= 0)
+            {
+                if (Projectile.Distance(Destination) <= Projectile.velocity.Length())
+                {
+                    Timer2++;
+                    Projectile.velocity = Vector2.Zero;
+                    Projectile.Center = Destination;
+                }
+            }
+            else
             {
                 Timer2++;
-                Projectile.velocity = Vector2.Zero;
-                Projectile.Center = Destination;
-            }
-        }
-        else
-        {
-            Timer2++;
 
-            switch (Timer2)
-            {
-                case StillTime:
-                    if (BehaviorType == 1)
-                    {
-                        Projectile.Kill();
-                        return;
-                    }
+                switch (Timer2)
+                {
+                    case StillTime:
+                        if (BehaviorType == Behavior_Still)
+                        {
+                            Projectile.Kill();
+                            return;
+                        }
 
-                    Vector2 velocity = (Projectile.Center - ArenaProjectile.Center).ToCustomLength(Main.rand.NextFloat(12f, 17.5f)).RotatedByRandom(-MathHelper.PiOver4, MathHelper.PiOver4);
-                    Projectile.SetVelocityandRotation(velocity);
-                    break;
-                case > StillTime:
-                    if (BehaviorType == 1)
-                    {
-                        Projectile.Kill();
-                        return;
-                    }
+                        Vector2 velocity = (Projectile.Center - ArenaProjectile.Center).ToCustomLength(Main.rand.NextFloat(12f, 17.5f)).RotatedByRandom(-MathHelper.PiOver4, MathHelper.PiOver4);
+                        Projectile.SetVelocityandRotation(velocity);
+                        break;
+                    case > StillTime:
+                        if (BehaviorType == Behavior_Still)
+                        {
+                            Projectile.Kill();
+                            return;
+                        }
 
-                    goto default;
-                default:
-                    if (ArenaProjectileAlive && Projectile.Distance(ArenaProjectile.Center) > ArenaModProjectile.Radius + 30f)
-                        Projectile.Kill();
-                    break;
+                        goto default;
+                    default:
+                        if (ArenaProjectileAlive && Projectile.Distance(ArenaProjectile.Center) > ArenaModProjectile.Radius + 30f)
+                            Projectile.Kill();
+                        break;
+                }
             }
         }
     }
 
-    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(Projectile.Center, 20f * Projectile.scale).Collides(targetHitbox);
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(Projectile.Center, 24f * Projectile.scale).Collides(targetHitbox);
 
     public override void OnHitPlayer(Player target, Player.HurtInfo info)
     {
@@ -131,5 +145,14 @@ public class BloodOrbProjectile : CAModProjectile
         }
     }
 
-    public override bool PreDraw(ref Color lightColor) => false; //在竞技场的PreDraw中集中绘制
+    public override bool PreDraw(ref Color lightColor)
+    {
+        if (BehaviorType != 0)
+            return false; //在竞技场的PreDraw中集中绘制
+
+        float intensity = TOMathUtils.Interpolation.QuadraticEaseOut(Timer1 / 5f);
+        Main.spriteBatch.DrawFromCenter(EyeofCthulhu_Handler.BloodOrbBigBorderTexture, Projectile.Center - Main.screenPosition, null, Color.Red * intensity, Projectile.rotation, Projectile.scale * 0.84f);
+        Main.spriteBatch.DrawFromCenter(EyeofCthulhu_Handler.BloodOrbTexture, Projectile.Center - Main.screenPosition, null, Color.White, Projectile.rotation, Projectile.scale);
+        return false;
+    }
 }

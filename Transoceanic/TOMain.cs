@@ -41,7 +41,7 @@ namespace Transoceanic;
 public sealed class TOMain : Mod
 {
     /// <summary>
-    /// 获取当前 <see cref="TOMain"/> 模组的唯一实例。
+    /// 获取当前 Transoceanic 模组的唯一实例。
     /// </summary>
     internal static TOMain Instance { get; private set; }
 
@@ -66,8 +66,7 @@ public sealed class TOMain : Mod
     internal static bool Unloaded { get; private set; }
 
     /// <summary>
-    /// 模组加载入口点。在此方法中，通过反射发现所有实现 <see cref="ITOLoader"/> 的类型，
-    /// 并按 <see cref="LoadPriorityAttribute"/> 指定的优先级降序调用其 <c>Load()</c> 方法。
+    /// 模组加载入口点。
     /// 加载过程的状态由 <see cref="Loading"/> 和 <see cref="Loaded"/> 标志跟踪。
     /// </summary>
     public override void Load()
@@ -76,14 +75,7 @@ public sealed class TOMain : Mod
         try
         {
             Instance = this;
-
-            foreach (ITOLoader loader in
-                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOReflectionUtils.Assembly)
-                orderby pair.Type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
-                select pair.Instance)
-            {
-                loader.Load();
-            }
+            TOLoaderHandler.Loader_Load();
         }
         finally
         {
@@ -93,22 +85,12 @@ public sealed class TOMain : Mod
     }
 
     /// <summary>
-    /// 在所有模组的内容加载完成后调用。在此方法中，通过反射发现所有实现 <see cref="IContentLoader"/> 的类型，
-    /// 并按 <see cref="LoadPriorityAttribute"/> 指定的优先级降序调用其 <c>PostSetupContent()</c> 方法。
+    /// 在所有模组的内容加载完成后调用。
     /// </summary>
-    public override void PostSetupContent()
-    {
-        foreach (IContentLoader loader in
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>()
-            orderby pair.type.GetMethod(nameof(IContentLoader.PostSetupContent), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
-            select pair.instance)
-        {
-            loader.PostSetupContent();
-        }
-    }
+    public override void PostSetupContent() => TOLoaderHandler.Loader_PostSetupContent();
 
     /// <summary>
-    /// 模组卸载入口点。如果模组先前已加载，则按加载时优先级的相反顺序调用所有 <see cref="ITOLoader"/> 的 <c>Unload()</c> 方法。
+    /// 模组卸载入口点。
     /// 卸载过程的状态由 <see cref="Unloading"/> 和 <see cref="Unloaded"/> 标志跟踪。
     /// </summary>
     public override void Unload()
@@ -118,14 +100,7 @@ public sealed class TOMain : Mod
         {
             if (Loaded)
             {
-                foreach (ITOLoader loader in (
-                    from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>()
-                    orderby pair.type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
-                    select pair.instance).Reverse())
-                {
-                    loader.Unload();
-                }
-
+                TOLoaderHandler.Loader_Unload();
                 TOSharedData.SyncEnabled = false;
                 Instance = null;
             }

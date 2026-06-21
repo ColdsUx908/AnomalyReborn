@@ -641,6 +641,13 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     /// </summary>
     /// <returns>零填充的分钟:秒:刻字符串。</returns>
     public override readonly string ToString() => $"{Minute}:{Second:D2}:{Tick:D2}";
+
+    /// <summary>
+    /// 返回表示当前对象的字符串，格式为 "MM:SS" 或 "MM:SS:TT"，取决于 <paramref name="includeTicks"/> 的值。
+    /// </summary>
+    /// <param name="includeTicks">一个布尔值，指示是否包含刻数。</param>
+    /// <returns>格式化的字符串。</returns>
+    public readonly string ToString(bool includeTicks) => includeTicks ? ToString() : $"{Minute}:{Second:D2}";
 }
 
 /// <summary>

@@ -301,6 +301,8 @@ public partial class BloodlettingServant : CAModNPC
     {
         Lighting.AddLight(NPC.Center, 0.8f, 0f, 0f);
 
+        NPC.dontTakeDamage = false;
+
         NPC.TargetClosest();
         Player target = Main.player[NPC.target];
         bool targetDead = target.dead;
