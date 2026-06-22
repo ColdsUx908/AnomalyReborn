@@ -6,8 +6,9 @@ namespace CalamityAnomalies.Anomaly.KingSlime;
 
 public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
 {
-    public enum Attack
+    public enum Attack : byte
     {
+        Normal = 0,
         Triangle = 1,
         Star = 2,
         Square = 3,
@@ -24,14 +25,13 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
 
     public Attack CurrentAttack
     {
-        get => (Attack)(int)NPC.ai[0];
-        set => NPC.ai[0] = (int)value;
-    }
-
-    public int AttackCounter
-    {
-        get => (int)NPC.ai[1];
-        set => NPC.ai[1] = value;
+        get => (Attack)AI_Union_0.byte0;
+        set
+        {
+            Union32 union = AI_Union_0;
+            union.byte0 = (byte)value;
+            AI_Union_0 = union;
+        }
     }
 
     public bool HasInitialized
@@ -154,7 +154,6 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
             });
 
             CanAttack = true;
-
             HasInitialized = true;
         }
 
@@ -170,10 +169,11 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
             Timer2 = Math.Max(Timer2 - 1, 0);
         }
 
-        if (Timer1 >= ShootCooldownTime)
+        KingSlime_Anomaly masterBehavior = KingSlime_Anomaly.GetNewInstance(master);
+        if (CanAttack && CheckShoot(masterBehavior))
         {
             Timer1 = 0;
-            EnterNextAttack();
+            EnterNextAttack(masterBehavior);
         }
 
         if (CanAttack)
@@ -182,6 +182,9 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
             {
                 switch (CurrentAttack)
                 {
+                    case Attack.Normal:
+                        Attack_Normal();
+                        break;
                     case Attack.Triangle:
                         Attack_Triangle();
                         break;
@@ -204,18 +207,36 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
 
         return;
 
-        void EnterNextAttack()
+        void EnterNextAttack(KingSlime_Anomaly behavior)
         {
-            CurrentAttack = AttackCounter switch
+            CurrentAttack = behavior.CurrentBehavior switch
             {
-                0 => Attack.Triangle,
-                1 => Attack.Star,
-                2 => Attack.Square,
-                3 => Attack.Circle,
-                _ => Attack.Triangle,
+                KingSlime_Anomaly.Behavior.FirstJump => Main.rand.NextBool(2) ? Attack.Triangle : Attack.Star,
+                KingSlime_Anomaly.Behavior.HighJump => Main.rand.NextBool(2) ? Attack.Square : Attack.Circle,
+                _ => Attack.Normal
             };
-            AttackCounter = (AttackCounter + 1) % 4;
             IsAttacking = true;
+        }
+
+        void Attack_Normal()
+        {
+            SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
+            for (int i = 0; i < 20; i++)
+                KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
+            KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
+
+            KingSlime_Handler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
+
+            if (TOSharedData.NotClient)
+            {
+                int amount = 9;
+                float totalAngle = MathHelper.TwoPi;
+                float singleRadian = totalAngle / amount;
+                Vector2 originalVelocity = (PolarVector2)NPC.GetVelocityTowards(Target, MaxProjectileSpeed * 0.85f);
+                Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, originalVelocity, JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Circle);
+            }
+
+            IsAttacking = false;
         }
 
         void Attack_Triangle()
@@ -224,6 +245,8 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
             for (int i = 0; i < 20; i++)
                 KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
             KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
+
+            KingSlime_Handler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
 
             if (TOSharedData.NotClient)
             {
@@ -252,6 +275,8 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
             for (int i = 0; i < 20; i++)
                 KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
             KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
+
+            KingSlime_Handler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
 
             if (TOSharedData.NotClient)
             {
@@ -297,6 +322,8 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 for (int i = 0; i < 20; i++)
                     KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
                 KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
+
+                KingSlime_Handler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
 
                 int amount = 32;
                 float totalAngle = MathHelper.TwoPi;
@@ -350,6 +377,8 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                     KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
                 KingSlime_Handler.SpawnPointingParticle(NPC, pointingParticleAmount, true);
 
+                KingSlime_Handler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
+
                 if (TOSharedData.NotClient)
                 {
                     int amount = attackNum switch
@@ -390,32 +419,16 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
         }
     }
 
+    public static bool CheckMasterJump(KingSlime_Anomaly behavior) =>
+        behavior.CurrentBehavior is KingSlime_Anomaly.Behavior.FirstJump or KingSlime_Anomaly.Behavior.NormalJump or KingSlime_Anomaly.Behavior.HighJump or KingSlime_Anomaly.Behavior.RapidJump
+        && behavior.CurrentAttackPhase == 0;
+
+    public static bool CheckShoot(KingSlime_Anomaly behavior) => CheckMasterJump(behavior) && behavior.Timer1 == KingSlime_Anomaly.JumpDelay;
+
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         DrawRainbowTrail(spriteBatch, screenPos, NPC, NPC.oldPos);
-
-        float timeLeftGateValue = AttackCounter switch
-        {
-            2 => 45,
-            3 => 55,
-            _ => 40
-        };
-        float gateValue = ShootCooldownTime - timeLeftGateValue;
-        float ratio = Timer1 > gateValue ? (Timer1 - gateValue) / timeLeftGateValue : 0f;
-        float radius = AttackCounter switch
-        {
-            2 => 145f,
-            3 => 160f,
-            _ => 135f
-        };
-        float scale = AttackCounter switch
-        {
-            2 => 0.375f,
-            3 => 0.425f,
-            _ => 0.35f
-        };
-        KingSlime_Handler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, radius, scale);
-        KingSlime_Handler.DrawJewel(spriteBatch, screenPos, NPC, ratio);
+        KingSlime_Handler.DrawJewel(spriteBatch, screenPos, NPC);
         return false;
     }
 

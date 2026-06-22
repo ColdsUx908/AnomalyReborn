@@ -113,7 +113,7 @@ public class KingSlimeJewelSapphire : CAModNPC, IKingSlimeJewel
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        KingSlime_Handler.DrawJewel(spriteBatch, screenPos, NPC, 0f);
+        KingSlime_Handler.DrawJewel(spriteBatch, screenPos, NPC);
         return false;
     }
 

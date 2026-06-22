@@ -97,36 +97,26 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
         if (!HasInitialized)
         {
             CanAttack = true;
-
             HasInitialized = true;
         }
 
         if (CanAttack)
-        {
             KingSlime_Handler.Move(NPC, Target.Center, 13f, 13f, 0.15f, 0.11f, 150f, -150f, -300f, -400f);
-            Timer1++;
-        }
         else
-        {
             KingSlime_Handler.Move(NPC, master.Center, 13f, 13f, 0.2f, 0.175f, 150f, -150f, 0f, -200f);
-            Timer1 -= 2;
-        }
 
-        if (Timer1 >= ShootCooldownTime)
-        {
-            Timer1 = 0;
-            Shoot();
-        }
+        KingSlime_Anomaly masterBehavior = KingSlime_Anomaly.GetNewInstance(master);
+        if (CanAttack && CheckShoot(masterBehavior, out bool buff))
+            Shoot(buff);
 
         NPC.netUpdate = true;
 
         return false;
 
-        void Shoot()
+        void Shoot(bool buff)
         {
-            KingSlime_Anomaly kingSlimeBehavior = new() { _entity = master };
-            bool validSapphire = !HasEnteredPhase2 && kingSlimeBehavior.HasSapphireBuff;
-            NPC sapphire = validSapphire ? kingSlimeBehavior.JewelSapphire : null;
+            bool validSapphire = !HasEnteredPhase2 && masterBehavior.HasSapphireBuff;
+            NPC sapphire = validSapphire ? masterBehavior.JewelSapphire : null;
 
             SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
             int particleAmount = Aroma ? 30 : 20;
@@ -136,11 +126,15 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
                 KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
             KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
 
+            KingSlime_Handler.CreateDustFromJewelTo(NPC, master.Center, Aroma ? DustID.IceTorch : DustID.GemRuby);
+            if (validSapphire)
+                KingSlime_Handler.CreateDustFromJewelTo(sapphire, NPC.Center, Aroma ? DustID.GemTopaz : DustID.GemSapphire);
+
             if (!TOSharedData.NotClient)
                 return;
 
-            int amount = HasEnteredPhase2 ? (Aroma ? 7 : Ultra ? 3 : 1) : (Aroma ? 17 : Ultra ? 5 : 3);
-            float singleRadian = MathHelper.ToRadians(HasEnteredPhase2 ? (Aroma ? 18f : 9f) : (Aroma ? 18f : 12f));
+            int amount = HasEnteredPhase2 ? (Aroma ? 7 : buff && Ultra ? 3 : 1) : (Aroma ? 17 : buff ? (Ultra ? 5 : 3) : (Ultra ? 3 : 1));
+            float singleRadian = MathHelper.ToRadians(HasEnteredPhase2 ? (Aroma ? 18f : 10f) : (Aroma ? 18f : 13.5f));
             float radian = singleRadian * (amount - 1);
             float initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
             Projectile.RotatedProj<JewelProjectile>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(Aroma ? 16f : 15f, initialRotation), JewelProjectileDamage, 0f, Main.myPlayer, p =>
@@ -155,10 +149,8 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
 
             if (validSapphire)
             {
-                KingSlime_Handler.CreateDustFromJewelTo(sapphire, NPC.Center, Aroma ? DustID.GemTopaz : DustID.GemSapphire);
-
                 int type = Aroma ? ModContent.ProjectileType<KingSlimeJewelEmeraldShadow>() : ModContent.ProjectileType<JewelProjectile>();
-                int amount1 = Ultra ? 7 : Aroma ? 9 : 5;
+                int amount1 = Aroma ? 9 : buff ? (Ultra ? 7 : 5) : (Ultra ? 5 : 3);
                 Projectile.RotatedProj(amount1, MathHelper.TwoPi / amount1, SourceAI, NPC.Center, NPC.GetVelocityTowards(NPC.PlayerTarget, Aroma ? 13.5f : 18f), type, JewelProjectileDamage, 0f, Main.myPlayer, BuffedRubyProjectileAction);
             }
 
@@ -176,13 +168,27 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
         }
     }
 
+    public static bool CheckMasterJump(KingSlime_Anomaly behavior) => 
+        behavior.CurrentBehavior is KingSlime_Anomaly.Behavior.FirstJump or KingSlime_Anomaly.Behavior.NormalJump or KingSlime_Anomaly.Behavior.HighJump or KingSlime_Anomaly.Behavior.RapidJump
+        && behavior.CurrentAttackPhase == 0;
+
+    public static bool CheckShoot(KingSlime_Anomaly behavior, out bool buff)
+    {
+        if (CheckMasterJump(behavior) && behavior.Timer1 == KingSlime_Anomaly.JumpDelay)
+        {
+            buff = behavior.CurrentBehavior is KingSlime_Anomaly.Behavior.FirstJump or KingSlime_Anomaly.Behavior.HighJump;
+            return true;
+        }
+        else
+        {
+            buff = false;
+            return false;
+        }
+    }
+
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        float timeLeftGateValue = 30f;
-        float gateValue = ShootCooldownTime - timeLeftGateValue;
-        float ratio = Timer1 > gateValue ? (Timer1 - gateValue) / timeLeftGateValue : 0f;
-        KingSlime_Handler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, Aroma ? 120f : 100f, 0.35f);
-        KingSlime_Handler.DrawJewel(spriteBatch, screenPos, NPC, ratio);
+        KingSlime_Handler.DrawJewel(spriteBatch, screenPos, NPC);
         return false;
     }
 

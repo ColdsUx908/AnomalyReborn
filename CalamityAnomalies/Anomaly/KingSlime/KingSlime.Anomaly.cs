@@ -24,6 +24,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
         None = 0,
 
+        FirstJump,
         NormalJump,
         HighJump,
         RapidJump,
@@ -57,6 +58,8 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
     private static readonly ProjectileDamageContainer _gelDamage = new(40, 60, 90, 120, 90, 120);
     public static int GelDamage => _gelDamage.Value;
+
+    public static int JumpDelay => Ultra ? 16 : 20;
 
     public Phase CurrentPhase
     {
@@ -483,7 +486,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                         Despawn();
                         ChangeScale();
                         return false;
-                    case Behavior.NormalJump or Behavior.HighJump or Behavior.RapidJump:
+                    case Behavior.FirstJump or Behavior.NormalJump or Behavior.HighJump or Behavior.RapidJump:
                         Jump();
                         break;
                     case Behavior.Teleport:
@@ -526,9 +529,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
                 if (TeleportTimer > MathHelper.Lerp(1250f, 1000f, NPC.LostLifeRatio) || !NPC.WithinRange(Target.Center, 2400f))
                 {
-                    if (CurrentBehavior == Behavior.PhaseChange_1To2)
-                        SmallJumpCounter = 0;
-
+                    SmallJumpCounter = 0;
                     CurrentBehavior = Behavior.Teleport;
                     TeleportTimer = 0f;
                 }
@@ -540,11 +541,11 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                             CurrentBehavior = Behavior.HighJump;
                             SmallJumpCounter = 0;
                             break;
-                        case 1 or 2 when NPC.LifeRatio <= JewelSapphireLifeRatio || Phase2:
-                            CurrentBehavior = Behavior.RapidJump;
+                        case 1 or 2:
+                            CurrentBehavior = NPC.LifeRatio <= JewelSapphireLifeRatio || Phase2 ? Behavior.RapidJump : Behavior.NormalJump;
                             break;
                         default:
-                            CurrentBehavior = Behavior.NormalJump;
+                            CurrentBehavior = Behavior.FirstJump;
                             break;
                     }
                 }
@@ -787,10 +788,9 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     NPC.MaxFallSpeedMultiplier *= Ultra && NPC.velocity.Y > 0f ? Utils.Remap(Timer2, 15, 60, 1f, 1.75f) : 1f;
                     StopHorizontalMovement();
                     if (NPC.velocity.Y == 0f && TeleportScaleMultiplier > 0.6f)
-                        Timer1++;
+                        Timer1 += rapidJump ? 2 : 1;
 
-                    float jumpDelay = MathHelper.Lerp(Ultra ? 20f : 27.5f, Ultra ? 15f : 20f, NPC.LostLifeRatio);
-                    if (Timer1 > jumpDelay)
+                    if (Timer1 > JumpDelay)
                     {
                         if (!highJump)
                             SmallJumpCounter++;
@@ -857,14 +857,12 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                             {
                                 TeleportTimer += CurrentBehavior switch
                                 {
-                                    Behavior.HighJump => 500f,
-                                    Behavior.NormalJump => 75f,
-                                    Behavior.RapidJump => 50f,
+                                    Behavior.HighJump => 600f,
+                                    Behavior.NormalJump => 100f,
+                                    Behavior.FirstJump or Behavior.RapidJump => 60f,
                                     _ => 0f
                                 };
                                 SelectNextAttack();
-                                if (CurrentBehavior == Behavior.RapidJump)
-                                    Timer1 += Phase2 ? 15 : 10;
                             }
                             else
                             {
@@ -889,14 +887,14 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             Vector2 GetInitialVelocity() => new(
                 CurrentBehavior switch
                 {
-                    Behavior.NormalJump => Phase2 ? MathHelper.Lerp(7f, 10f, LostLifeRatioForPhase2) : MathHelper.Lerp(4f, 7f, NPC.LostLifeRatio),
+                    Behavior.FirstJump or Behavior.NormalJump => Phase2 ? MathHelper.Lerp(7f, 10f, LostLifeRatioForPhase2) : MathHelper.Lerp(4f, 7f, NPC.LostLifeRatio),
                     Behavior.HighJump => Phase2 ? MathHelper.Lerp(9f, 12f, LostLifeRatioForPhase2) : MathHelper.Lerp(6f, 9f, NPC.LostLifeRatio),
                     Behavior.RapidJump => Phase2 ? MathHelper.Lerp(12.5f, 15f, LostLifeRatioForPhase2) : MathHelper.Lerp(10f, 12.5f, NPC.LostLifeRatio),
                     _ => 0f
                 } * NPC.direction,
                 CurrentBehavior switch
                 {
-                    Behavior.NormalJump => (Phase2_2 ? 12f : Phase2 ? 8.5f : 7f) * (1f + Math.Clamp(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 1000f, 0f, 0.65f)),
+                    Behavior.FirstJump or Behavior.NormalJump => (Phase2_2 ? 12f : Phase2 ? 8.5f : 7f) * (1f + Math.Clamp(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 1000f, 0f, 0.65f)),
                     Behavior.HighJump => (Phase2 ? MathHelper.Lerp(12.5f, 15f, LostLifeRatioForPhase2) : MathHelper.Lerp(10f, 12.5f, NPC.LostLifeRatio)) * (1f + Math.Clamp(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 1000f, 0f, 1f)),
                     Behavior.RapidJump => Phase2 ? 5f : 4f,
                     _ => 0f
@@ -985,8 +983,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
                 case 1: //停止水平移动并缩小体型，满足条件时传送
                     MakeSlimeDust((int)Utils.Remap(NPC.scale, MinScale, MaxScale, 5f, 12.5f));
-                    float teleportSpeed = Phase2 ? MathHelper.Lerp(0.03f, 0.037f, LostLifeRatioForPhase2)
-                        : MathHelper.Lerp(Ultra ? 0.016f : 0.013f, Ultra ? 0.02f : 0.015f, NPC.LostLifeRatio);
+                    float teleportSpeed = Phase2 ? 0.035f : 0.016f;
                     TeleportScaleMultiplier -= teleportSpeed;
                     if (StopHorizontalMovement() && TeleportScaleMultiplier <= 0.05f)
                     {
@@ -1044,7 +1041,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                                     }
 
                                     SelectNextAttack();
-                                    NPC.Timer1 += 30; //立即开始下一次跳跃
+                                    NPC.Timer1 += JumpDelay; //立即开始下一次跳跃
                                 }
                             }
                             else //保持原位

@@ -17,8 +17,7 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
     }
 
     public const float DespawnDistance = 5000f;
-    public int ChargeCooldownTime => HasEnteredPhase2 ? 240 : 180;
-    public int ChargePreparationTime => HasEnteredPhase2 ? 75 : 60;
+    public int ChargePreparationTime => 60;
     public static int ChargeTime => 60;
     public float ChargeSpeed => Ultra ? (HasEnteredPhase2 ? 24f : 28f) : (HasEnteredPhase2 ? 18f : 22f);
 
@@ -155,17 +154,12 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
         void FollowTarget()
         {
             if (CanAttack)
-            {
                 KingSlime_Handler.Move(NPC, Target.Center, 15f, 12f, 0.2f, 0.125f, 350f, -350f, -200f, -400f);
-                Timer1++;
-            }
             else
-            {
                 KingSlime_Handler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.175f, 150f, -150f, 0f, -200f);
-                Timer1 -= 2;
-            }
 
-            if (Timer1 >= ChargeCooldownTime)
+            KingSlime_Anomaly masterBehavior = KingSlime_Anomaly.GetNewInstance(master);
+            if (CanAttack && masterBehavior.CurrentBehavior == KingSlime_Anomaly.Behavior.Teleport)
             {
                 Timer1 = 0;
                 CurrentAttack = Behavior.Charge;
@@ -248,6 +242,10 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
                 for (int i = 0; i < particleAmount; i++)
                     KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(4f, 7f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
 
+                KingSlime_Handler.CreateDustFromJewelTo(NPC, master.Center, Aroma ? DustID.GemAmethyst : DustID.GemEmerald);
+                if (validSapphire)
+                    KingSlime_Handler.CreateDustFromJewelTo(sapphire, NPC.Center, Aroma ? DustID.GemTopaz : DustID.GemSapphire);
+
                 NPC.damage = NPC.defDamage;
 
                 float chargeSpeed = ChargeSpeed;
@@ -259,8 +257,6 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
 
                 if (TOSharedData.NotClient && validSapphire)
                 {
-                    KingSlime_Handler.CreateDustFromJewelTo(sapphire, NPC.Center, Aroma ? DustID.GemTopaz : DustID.GemSapphire);
-
                     int type = Aroma ? ModContent.ProjectileType<JewelProjectile>() : ModContent.ProjectileType<KingSlimeJewelEmeraldShadow>();
                     Vector2 velocityUnit = NPC.GetVelocityTowards(NPC.PlayerTarget, 1f);
                     Vector2 offset = velocityUnit.RotatedBy(MathHelper.PiOver2);
@@ -285,11 +281,7 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        float timeLeftGateValue = 30f;
-        float gateValue = ChargePreparationTime - timeLeftGateValue;
-        float ratio = CurrentAttack == Behavior.Charge && CurrentAttackPhase == 0 && Timer1 > gateValue ? (Timer1 - gateValue) / timeLeftGateValue : 0f;
-        KingSlime_Handler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, 120f, 0.35f);
-        KingSlime_Handler.DrawJewel(spriteBatch, screenPos, NPC, ratio);
+        KingSlime_Handler.DrawJewel(spriteBatch, screenPos, NPC);
         return false;
     }
 

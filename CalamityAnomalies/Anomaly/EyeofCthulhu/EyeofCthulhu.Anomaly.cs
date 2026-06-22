@@ -1432,10 +1432,9 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
             void ZenithFlame()
             {
+                Timer3++;
                 if (TOSharedData.NotClient) //火焰
                 {
-                    Timer3++;
-
                     float flamethrowerSpeed = (CurrentBehavior == Behavior.Phase2_EyeSpin ? 16f : 8f) * Math.Clamp(Timer3 / 60f, 0f, 1f);
                     Vector2 flamethrowerVelocity = new PolarVector2(flamethrowerSpeed, ActualRotation) + NPC.velocity * 0.4f;
                     Projectile.NewProjectileAction<BloodFlame>(SourceAI, NPC.Center + new PolarVector2(ProjectileOffset, ActualRotation), flamethrowerVelocity, BloodFlameDamage, 0f, Main.myPlayer);
@@ -1502,12 +1501,15 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         Dust.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.Blood, new Vector2(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-6f, 6f)));
 
                     //生成冲击波清除克苏鲁之仆；使竞技场激活，流血仆从脱战（通过弹幕实现），克苏鲁之仆死亡
-                    Projectile.NewProjectileAction<BloodShockwave>(SourceAI, NPC.Center, Vector2.Zero, 100, 0f, action: p =>
+                    if (TOSharedData.NotClient)
                     {
-                        p.scale = 0f;
-                        BloodShockwave modP = p.GetModProjectile<BloodShockwave>();
-                        modP.Master = NPC;
-                    });
+                        Projectile.NewProjectileAction<BloodShockwave>(SourceAI, NPC.Center, Vector2.Zero, 100, 0f, action: p =>
+                        {
+                            p.scale = 0f;
+                            BloodShockwave modP = p.GetModProjectile<BloodShockwave>();
+                            modP.Master = NPC;
+                        });
+                    }
 
                     if (ArenaProjectileAlive)
                     {
@@ -1645,14 +1647,6 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     NPC.damage = SetDamage;
                     NPC.VelocityToRotation(-MathHelper.PiOver2);
                     NPC.SpawnAfterimage(5, Phase3Color, DrawOffset);
-
-                    //在第二亚阶段喷火
-                    //if (Phase3_2)
-                    //{
-                    //    Vector2 flamethrowerVelocity = NPC.velocity * 1.1f;
-                    //    flamethrowerVelocity.Modulus += 1f;
-                    //    Projectile.NewProjectileAction<BloodFlame>(SourceAI, NPC.Center + new PolarVector2(ProjectileOffset, ActualRotation), flamethrowerVelocity, BloodFlameDamage, 0f, Main.myPlayer);
-                    //}
 
                     if (CurrentAttackPhase == firstAttackPhase && NPC.Distance(ArenaProjectile.Center) <= ArenaModProjectile.Radius + 20f)
                         CurrentAttackPhase = firstAttackPhase + 1;
@@ -2029,17 +2023,20 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                 {
                     SoundEngine.PlaySound(SoundID.Item17, NPC.Center);
 
-                    PolarVector2 offset = ArenaModProjectile.GetEyeCenterDirection(UsedEyeIndex1) * (ArenaModProjectile.Radius - 15f) * EyeofCthulhu_Handler.EyeShapeHelper.InnerVelocityMultiplier;
-                    float singleRadian = MathHelper.TwoPi / projectileAmount;
-                    Projectile.RotatedProj<BloodOrbProjectile>(projectileAmount, singleRadian, SourceAI, NPC.Center, offset / BloodOrbProjectile.StillTime, BloodDamage, 0f, action: p =>
+                    if (TOSharedData.NotClient)
                     {
-                        p.VelocityToRotation();
-                        BloodOrbProjectile modP = p.GetModProjectile<BloodOrbProjectile>();
-                        modP.Master = NPC;
-                        modP.ArenaProjectile = ArenaProjectile;
-                        modP.BehaviorType = BloodOrbProjectile.Behavior_Still;
-                        modP.Destination = p.Center + p.velocity * BloodOrbProjectile.StillTime;
-                    });
+                        PolarVector2 offset = ArenaModProjectile.GetEyeCenterDirection(UsedEyeIndex1) * (ArenaModProjectile.Radius - 15f) * EyeofCthulhu_Handler.EyeShapeHelper.InnerVelocityMultiplier;
+                        float singleRadian = MathHelper.TwoPi / projectileAmount;
+                        Projectile.RotatedProj<BloodOrbProjectile>(projectileAmount, singleRadian, SourceAI, NPC.Center, offset / BloodOrbProjectile.StillTime, BloodDamage, 0f, action: p =>
+                        {
+                            p.VelocityToRotation();
+                            BloodOrbProjectile modP = p.GetModProjectile<BloodOrbProjectile>();
+                            modP.Master = NPC;
+                            modP.ArenaProjectile = ArenaProjectile;
+                            modP.BehaviorType = BloodOrbProjectile.Behavior_Still;
+                            modP.Destination = p.Center + p.velocity * BloodOrbProjectile.StillTime;
+                        });
+                    }
                 }
             }
         }

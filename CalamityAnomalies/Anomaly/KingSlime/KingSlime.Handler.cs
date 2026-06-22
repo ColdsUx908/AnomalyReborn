@@ -65,15 +65,6 @@ public sealed class KingSlime_Handler : IContentLoader
         _ => Color.White
     };
 
-    public static Color GetFinalColor(NPC jewel) => jewel.ModNPC switch
-    {
-        KingSlimeJewelRuby => RubyFinalColor,
-        KingSlimeJewelEmerald => EmeraldFinalColor,
-        KingSlimeJewelSapphire => SapphireFinalColor,
-        KingSlimeJewelRainbow => RainbowFinalColor,
-        _ => Color.White
-    };
-
     public static Color GetFlashColor(NPC jewel) => jewel.ModNPC switch
     {
         KingSlimeJewelRuby => Color.Pink,
@@ -162,45 +153,13 @@ public sealed class KingSlime_Handler : IContentLoader
     /// <param name="screenPos"><c>PreDraw</c> 方法中的 <c>screenPos</c> 参数。</param>
     /// <param name="jewel">宝石。</param>
     /// <param name="ratio">插值比例。<br/>决定闪烁效果强度。</param>
-    public static void DrawJewel(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel, float ratio)
+    public static void DrawJewel(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel)
     {
         bool isRainbowJewel = jewel.ModNPC is KingSlimeJewelRainbow;
         Color jewelColor = GetColor(jewel);
         if (isRainbowJewel)
             TODrawUtils.DrawBorderTextureFromCenter(spriteBatch, jewel.Texture, jewel.Center - screenPos, null, jewelColor, jewel.rotation, jewel.scale, borderWidth: 3f + TOMathUtils.TimeWrappingFunction.GetTimeSin(1f, unsigned: true));
         spriteBatch.DrawFromCenter(jewel.Texture, jewel.Center - screenPos, null, isRainbowJewel ? jewelColor : Color.White with { A = jewel.GraphicAlpha }, jewel.rotation, jewel.scale);
-        if (ratio > 0f) //攻击前的闪烁效果
-        {
-            Color flashColor = Color.Lerp(jewelColor, GetFlashColor(jewel), ratio).MultiplyRGBA(new Color(ratio, ratio, ratio, 0f)) * ratio;
-            spriteBatch.DrawFromCenter(FlashTexture, jewel.Center - screenPos, null, flashColor, jewel.rotation, jewel.scale * ratio * (isRainbowJewel ? 1.4f : 1.25f));
-        }
-    }
-
-    /// <summary>
-    /// 宝石攻击效果（提示圈）绘制通用逻辑。
-    /// </summary>
-    /// <param name="spriteBatch"><c>PreDraw</c> 方法中的 <c>spriteBatch</c> 参数。</param>
-    /// <param name="screenPos"><c>PreDraw</c> 方法中的 <c>screenPos</c> 参数。</param>
-    /// <param name="jewel">宝石。</param>
-    /// <param name="ratio">插值比例。<br/>决定提示圈最终半径、宽度和透明度。</param>
-    /// <param name="radius">提示圈最大半径。</param>
-    /// <param name="scale"></param>
-    public static void DrawAttackEffect(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel, float ratio, float radius, float scale)
-    {
-        if (!CAClientConfig.Instance.AuxiliaryVisualEffects || ratio <= 0f)
-            return;
-
-        bool isRainbowJewel = jewel.ModNPC is KingSlimeJewelRainbow;
-        Color jewelColor = GetColor(jewel);
-        Color color = jewelColor with { A = 0 } * Math.Clamp(ratio * 1.5f, 0f, 1f);
-        float interpolation = TOMathUtils.Interpolation.QuadraticEaseOut(1f - ratio);
-        float interpolation2 = TOMathUtils.Interpolation.QuadraticEaseOut(Math.Clamp(1f - ratio, 0f, 0.2f) * 5f);
-
-        for (int i = 0; i < 300; i++)
-        {
-            Color color2 = isRainbowJewel ? Color.LerpMany(Color.RainbowColors, (ratio + i / 300f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 0.5f, 0f, true)) % 1f) with { A = 0 } * ratio * 1.5f : color;
-            spriteBatch.DrawFromCenter(ParticleHandler.GetTexture<OrbParticle>(), jewel.Center + new PolarVector2(radius * interpolation, MathHelper.TwoPi / 300 * i) - screenPos, null, color2, 0f, scale * interpolation2);
-        }
     }
 
     /// <summary>
@@ -234,7 +193,7 @@ public sealed class KingSlime_Handler : IContentLoader
         }
     }
 
-    public static void CreateDustFromJewelTo(NPC jewel, Vector2 destination, int type)
+    public static void CreateDustFromJewelTo(NPC jewel, Vector2 destination, int type, bool rainbow = false)
     {
         int maxDustIterations = (int)Vector2.Distance(jewel.Center, destination); //distance
         int maxDust = 100;
@@ -247,7 +206,7 @@ public sealed class KingSlime_Handler : IContentLoader
             if (i % dustDivisor == 0)
             {
                 Vector2 position = Vector2.Lerp(start, destination, i / (float)maxDustIterations);
-                Dust.NewDustAction(position, 0, 0, type, Vector2.Zero, d =>
+                Dust.NewDustAction(position, 0, 0, rainbow ? GetRandomDustID() : type, Vector2.Zero, d =>
                 {
                     d.position = position;
                     d.velocity = spinningpoint.RotatedBy(MathHelper.TwoPi * i / maxDustIterations) * (0.9f + Main.rand.NextFloat() * 0.2f);
