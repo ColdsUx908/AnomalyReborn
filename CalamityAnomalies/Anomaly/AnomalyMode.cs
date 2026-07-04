@@ -1,10 +1,16 @@
 ﻿// Developed by ColdsUx
 
+using System.Text.RegularExpressions;
+using CalamityMod;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.Systems;
 using CalamityMod.UI.ModeIndicator;
 using CalamityMod.World;
 using Terraria.GameContent.UI.Elements;
+using Terraria.UI.Chat;
+using static CalamityAnomalies.ModCompatibility.DifficultyModeSystem_Publicizer;
+using static CalamityAnomalies.ModCompatibility.ModeIndicatorUI_Publicizer;
+using static CalamityMod.Systems.DifficultyModeSystem;
 using static CalamityMod.UI.ModeIndicator.ModeIndicatorUI;
 
 namespace CalamityAnomalies.Anomaly;
@@ -47,7 +53,7 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
 
     public override int[] FavoredDifficultyAtTier(int tier)
     {
-        DifficultyMode[] tierList = DifficultyModeSystem.DifficultyTiers[tier];
+        DifficultyMode[] tierList = DifficultyTiers[tier];
 
         List<int> difficulties = [];
 
@@ -149,13 +155,12 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
 
     #region Detour
     public delegate void Orig_CalculateDifficultyData();
-
     [DetourMethodTo(typeof(DifficultyModeSystem))]
     public static void Detour_CalculateDifficultyData(Orig_CalculateDifficultyData orig)
     {
         orig();
 
-        List<DifficultyMode[]> difficultyTiers = DifficultyModeSystem.DifficultyTiers;
+        List<DifficultyMode[]> difficultyTiers = DifficultyTiers;
         bool foundAnomaly = false;
 
         //强制将异象模式图标置于最后
@@ -183,22 +188,21 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
     }
 
     public delegate void Orig_ManageHexIcons(SpriteBatch spriteBatch, out string text);
-
     [DetourMethodTo(typeof(ModeIndicatorUI))]
     public static void Detour_ManageHexIcons(Orig_ManageHexIcons orig, SpriteBatch spriteBatch, out string text)
     {
-        List<DifficultyMode[]> difficultyTiers = DifficultyModeSystem.DifficultyTiers;
+        List<DifficultyMode[]> difficultyTiers = DifficultyTiers;
         bool hasAnomaly = difficultyTiers.Any(tier => tier.Any(mode => mode is AnomalyMode));
         bool ultra = Ultra;
 
         int tiers = difficultyTiers.Count;
-        float barLength = 90 * tiers * ModeIndicatorUI_Publicizer.BarExpansionProgress;
-        float progress = ModeIndicatorUI_Publicizer.menuOpen ? 1 - ModeIndicatorUI_Publicizer.menuOpenTransitionTime / (float)ModeIndicatorUI_Publicizer.MenuAnimLength : ModeIndicatorUI_Publicizer.menuOpenTransitionTime / (float)ModeIndicatorUI_Publicizer.MenuAnimLength;
-        Vector2 basePosition = DrawCenter + (barLength / (float)(tiers + 1f)) * Vector2.UnitY;
+        float barLength = 90 * tiers * BarExpansionProgress;
+        float progress = menuOpen ? 1 - menuOpenTransitionTime / (float)MenuAnimLength : menuOpenTransitionTime / (float)MenuAnimLength;
+        Vector2 basePosition = DrawCenter + barLength / (float)(tiers + 1f) * Vector2.UnitY;
 
         text = string.Empty;
         bool modeHovered = false;
-        Vector2 positionOffset = (barLength / (float)(tiers + 1f)) * Vector2.UnitY;
+        Vector2 positionOffset = barLength / (float)(tiers + 1f) * Vector2.UnitY;
         float progressMult = 0.8f * progress;
         Color progressColor = Color.White * progress;
 
@@ -218,7 +222,7 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
                 Vector2 iconPosition = basePosition + positionOffset * i;
 
                 if (modesAtTier > 1)
-                    iconPosition += Vector2.UnitX * MathHelper.Lerp(width * -1f, width, j / (float)(modesAtTier - 1)) * ModeIndicatorUI_Publicizer.BarWidthExpansionProgress;
+                    iconPosition += Vector2.UnitX * MathHelper.Lerp(width * -1f, width, j / (float)(modesAtTier - 1)) * BarWidthExpansionProgress;
 
                 if (ultra) //修改点：针对异象超凡单独调整位置
                 {
@@ -234,7 +238,7 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
                     usedOpacity = MathHelper.Lerp(usedOpacity, 1f, 0.7f);
 
                 // Outline the currently selected difficulty.
-                if (mode == DifficultyModeSystem.GetCurrentDifficulty)
+                if (mode == GetCurrentDifficulty)
                 {
                     usedOpacity = 1f;
                     Texture2D outlineTexture = mode.OutlineTexture.Value;
@@ -246,12 +250,12 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
 
                 spriteBatch.Draw(hexIcon, iconPosition, null, progressColor * usedOpacity, 0f, hexIconSize * 0.5f, 1f, SpriteEffects.None, 0f);
 
-                if (ModeIndicatorUI_Publicizer.menuOpenTransitionTime == 0 && hovered)
+                if (menuOpenTransitionTime == 0 && hovered)
                 {
-                    if (ModeIndicatorUI_Publicizer.previouslyHoveredMode != mode)
+                    if (previouslyHoveredMode != mode)
                         SoundEngine.PlaySound(SoundID.MenuTick);
 
-                    ModeIndicatorUI_Publicizer.previouslyHoveredMode = mode;
+                    previouslyHoveredMode = mode;
                     modeHovered = true;
 
                     text = GetDifficultyText(mode);
@@ -263,14 +267,200 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
         }
 
         if (!modeHovered)
-            ModeIndicatorUI_Publicizer.previouslyHoveredMode = null;
+            previouslyHoveredMode = null;
+    }
+
+    public delegate void Orig_Draw(SpriteBatch spriteBatch);
+    [DetourMethodTo(typeof(ModeIndicatorUI))]
+    public static void Detour_Draw(Orig_Draw orig, SpriteBatch spriteBatch)
+    {
+        // The mode indicator should only be displayed when the inventory is open, to prevent obstruction.
+        if (!Main.playerInventory)
+        {
+            ClearVariables();
+            return;
+        }
+
+        Texture2D indicatorTexture = GetCurrentDifficulty.Texture.Value;
+
+        GetDifficultyStatus(out LocalizedText difficultyText);
+        GetLockStatus(out LocalizedText lockText, out bool locked);
+
+        //Grows the icon when hovering it.
+        if (MouseScreenArea.Intersects(MainClickArea))
+        {
+            if (!_hasCheckedItOutYet)
+            {
+                GlowFadeTime = GlowFadeAnimLength;
+                _hasCheckedItOutYet = true;
+            }
+
+            if (!previouslyHoveringMainIcon)
+            {
+                previouslyHoveringMainIcon = true;
+                SoundEngine.PlaySound(SoundID.MenuTick);
+            }
+
+            if (iconHoverScaleBoost < MaxIconHoverScaleBoost)
+            {
+                iconHoverScaleBoost = Math.Min(iconHoverScaleBoost + IconHoverScaleIncrement + IconHoverScaleDecrement, MaxIconHoverScaleBoost);
+
+                if (ClickingMouse && menuOpenTransitionTime == 0 && !locked)
+                {
+                    SoundEngine.PlaySound(menuOpen ? SoundID.MenuClose : SoundID.MenuOpen);
+                    menuOpenTransitionTime = MenuAnimLength;
+                    menuOpen = !menuOpen;
+                }
+            }
+        }
+        else
+            previouslyHoveringMainIcon = false;
+
+        if (!_hasCheckedItOutYet || GlowFadeTime > 0)
+        {
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, null, null, null, null, Main.UIScaleMatrix);
+
+            Texture2D bloomTex = ModContent.Request<Texture2D>("CalamityMod/UI/ModeIndicator/BloomFlare").Value;
+            float opacity = !_hasCheckedItOutYet ? 1f : 1f * GlowFadeTime / (float)GlowFadeAnimLength;
+            float scale = 0.4f + (float)Math.Sin(Main.GlobalTimeWrappedHourly) * 0.05f;
+            float rot = Main.GlobalTimeWrappedHourly * 0.5f;
+
+            spriteBatch.Draw(bloomTex, DrawCenter, null, Color.Crimson * opacity, rot, new Vector2(123, 124), scale, SpriteEffects.None, 0f);
+
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, Main.UIScaleMatrix);
+
+            /*
+            Texture2D outlineTexture = ModContent.Request<Texture2D>("CalamityMod/UI/ModeIndicator/ModeIndicatorOutline").Value;
+            spriteBatch.Draw(outlineTexture, DrawCenter, null, Color.White * opacity, 0f, outlineTexture.Size() * 0.5f, MainIconScale, SpriteEffects.None, 0f);
+            */
+        }
+
+        string extraDescText = string.Empty;
+        if (menuOpenTransitionTime > 0 || menuOpen)
+            ManageHexIcons(spriteBatch, out extraDescText);
+
+        //TODO: 对于异象模式，不绘制锁，而是绘制特殊的锁定材质
+
+        //Draw the indicator itself.
+        spriteBatch.Draw(indicatorTexture, DrawCenter, null, Color.White, 0f, indicatorTexture.Size() * 0.5f, MainIconScale, SpriteEffects.None, 0f);
+
+        if (locked)
+            DrawLock(spriteBatch);
+
+        if (difficultyText != LocalizedText.Empty || extraDescText != string.Empty)
+        {
+            string textToDisplay = difficultyText.ToString();
+            if (difficultyText != LocalizedText.Empty)
+            {
+                if (lockText != LocalizedText.Empty)
+                    textToDisplay += "\n" + lockText.ToString();
+            }
+
+            else
+                textToDisplay = extraDescText;
+
+            //Get the size of the textbox
+            //Get a "regexed" size which matches the text properly.
+            //Indeed, there is some scuffery in the code that makes it so that chat tags still get accounted as extra size, so we have to use 2 different values
+            //One for the displacement, which is the improper size vanilla uses, and another for the actual visual size, which is the one the textbox will use
+#pragma warning disable SYSLIB1045 //转换为“GeneratedRegexAttribute”
+            int numLines = 1 + Regex.Matches(textToDisplay, "\n").Count; //It's inconsistent. Adding one by default makes some textboxes too large, not adding one can make some too small
+#pragma warning restore SYSLIB1045 //转换为“GeneratedRegexAttribute”
+            string heightCalculator = string.Concat(Enumerable.Repeat("mis nuevos los gatos \n", numLines));
+            Vector2 regexedBoxSize = new(ChatManager.GetStringSize(FontAssets.MouseText.Value, textToDisplay, Vector2.One).X, ChatManager.GetStringSize(FontAssets.MouseText.Value, heightCalculator, Vector2.One).Y);
+
+            Vector2 textboxStart = new Vector2(Main.mouseX, Main.mouseY) + Vector2.One * 14;
+            if (Main.ThickMouse)
+                textboxStart += Vector2.One * 6;
+
+            if (!Main.mouseItem.IsAir)
+                textboxStart.X += 34;
+
+            if (textboxStart.X + regexedBoxSize.X + 4f > (float)Main.screenWidth)
+                textboxStart.X = Main.screenWidth - regexedBoxSize.X - 4f;
+
+            if (textboxStart.Y + regexedBoxSize.Y + 4f > (float)Main.screenHeight)
+                textboxStart.Y = Main.screenHeight - regexedBoxSize.Y - 4f;
+
+            //It'd be great to be able to add a background to it but i don't think i know how to get the position of the text for that.
+            //Also the "get string size" thing breaks with colored lines so :(
+            Utils.DrawInvBG(spriteBatch, new Rectangle((int)textboxStart.X - 10, (int)textboxStart.Y - 10, (int)regexedBoxSize.X + 20, (int)regexedBoxSize.Y + 16), new Color(50, 20, 35) * 0.925f);
+
+            //Add the hover text.
+            Main.LocalPlayer.mouseInterface = true;
+            Main.instance.MouseText(textToDisplay);
+        }
+        TickVariables();
+    }
+
+    public delegate void Orig_GetDifficultyStatus(out LocalizedText text);
+    [DetourMethodTo(typeof(ModeIndicatorUI))]
+    public static void Detour_GetDifficultyStatus(Orig_GetDifficultyStatus orig, out LocalizedText text)
+    {
+        text = LocalizedText.Empty;
+        if (MouseScreenArea.Intersects(MainClickArea))
+        {
+            //Display the first non-none difficulty by default
+            string modeToDisplay = Main.getGoodWorld && Difficulties[0].FTWName is not null ? Difficulties[0].FTWName.ToString() : Difficulties[1].Name.ToString();
+            bool anyActiveMode = Main.getGoodWorld;
+
+            for (int i = 1; i < Difficulties.Count; i++)
+            {
+                DifficultyMode difficulty = Difficulties[i];
+                if (GetCurrentDifficulty == difficulty)
+                {
+                    modeToDisplay = Main.getGoodWorld && difficulty.FTWName is not null ? difficulty.FTWName.ToString() : difficulty.Name.ToString();
+
+                    if (difficulty is AnomalyMode && Ultra) //异象超凡显示“超凡”后缀
+                        modeToDisplay += " " + Language.GetTextValue(LocalizationPrefix + "UltraSuffix") + " ";
+
+                    anyActiveMode = true;
+                }
+            }
+            string modeStr = CalamityUtils.GetText("UI.ModeAppend").Format(modeToDisplay);
+            string activeText = CalamityUtils.GetTextValue("UI." + (anyActiveMode ? "Active" : "NotActive"));
+            text = CalamityUtils.GetText("UI.DifficultyStatusText").WithFormatArgs(modeStr, activeText.ToLower());
+        }
+    }
+
+    public delegate string Orig_GetDifficultyText(DifficultyMode mode);
+    [DetourMethodTo(typeof(ModeIndicatorUI))]
+    public static string Detour_GetDifficultyText(Orig_GetDifficultyText orig, DifficultyMode mode)
+    {
+        bool useFTWName = mode.FTWName is not null && Main.getGoodWorld;
+        LocalizedText preface = useFTWName ? mode.FTWName : mode.Name;
+        if (mode == GetCurrentDifficulty)
+            preface = CalamityUtils.GetText("UI.CurrentlySelected").WithFormatArgs(useFTWName ? mode.FTWName.ToString() : mode.Name.ToString());
+
+        string text = "\n" + mode.ShortDescription.ToString();
+
+        // Not scuffed anymore.
+        if (mode.ExpandedDescription != LocalizedText.Empty)
+        {
+            // Show the description either if the player is holding shift.
+            if (Main.keyState.PressingShift())
+            {
+                text += "\n" + mode.ExpandedDescription.ToString();
+                if (mode is AnomalyMode && Ultra)
+                    text += "\n\n" + Language.GetTextValue(LocalizationPrefix + "UltraInfo");
+            }
+            else
+                text += "\n" + CalamityUtils.GetTextValue("UI.DifficultyShiftText");
+        }
+
+        string name = preface.ToString();
+        if (mode is AnomalyMode && Ultra) //异象超凡显示“超凡”后缀
+            name += " " + Language.GetTextValue(LocalizationPrefix + "UltraSuffix");
+        return name + text;
     }
     #endregion Detour
 
     void IContentLoader.PostSetupContent()
     {
-        DifficultyModeSystem.Difficulties.Add(AnomalyMode.Instance = new());
-        DifficultyModeSystem.CalculateDifficultyData();
+        Difficulties.Add(AnomalyMode.Instance = new());
+        CalculateDifficultyData();
 
         //世界难度显示（渐变色）
         On_AWorldListItem.GetDifficulty += On_AWorldListItem_GetDifficulty;
@@ -292,8 +482,8 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
 
     void IContentLoader.OnModUnload()
     {
-        if (DifficultyModeSystem.Difficulties.Remove(AnomalyMode.Instance))
-            DifficultyModeSystem.CalculateDifficultyData();
+        if (Difficulties.Remove(AnomalyMode.Instance))
+            CalculateDifficultyData();
         AnomalyMode.Instance = null;
     }
 }

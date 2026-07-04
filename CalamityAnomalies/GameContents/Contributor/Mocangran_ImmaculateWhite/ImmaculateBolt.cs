@@ -8,12 +8,7 @@ public sealed class ImmaculateBolt : CAModProjectile
 
     public NPC Target
     {
-        get
-        {
-            int temp = (int)Projectile.ai[0];
-            return temp >= 0 && temp < Main.maxNPCs ? Main.npc[temp] : null;
-        }
-
+        get => NPC.TryGetNPC((int)Projectile.ai[0]);
         set => Projectile.ai[0] = value?.whoAmI ?? -1;
     }
 
@@ -295,6 +290,8 @@ public sealed class ImmaculateBolt : CAModProjectile
                     Projectile.NewProjectileAction<ImmaculateBolt>(Projectile.GetSource_FromAI(), Projectile.Center, Main.rand.NextPolarVector2(2f, 2.5f), Projectile.damage / 3, Projectile.knockBack * 0.4f, Projectile.owner, p =>
                     {
                         ImmaculateBolt modP = p.GetModProjectile<ImmaculateBolt>();
+
+                        modP.Target = Target;
 
                         p.scale /= 2f;
                         modP.IsSmallProjectile = true;

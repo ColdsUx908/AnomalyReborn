@@ -32,8 +32,8 @@ public sealed class ImmaculateWhiteBow : CAModProjectile
     public float ShootSpeedMultiplier = 1f; //攻速倍率，主要用于修饰语加成
 
     public int CirtLimit => (int)ShootSpeed;
-    public override LocalizedText DisplayName => ModContent.GetModItem<ImmaculateWhite>().DisplayName;
-    public override string Texture => ModContent.GetModItem<ImmaculateWhite>().Texture;
+    public override LocalizedText DisplayName => ModContent.GetModItem<ImmaculateWhite>()?.DisplayName;
+    public override string Texture => ModContent.GetModItem<ImmaculateWhite>()?.Texture;
 
     public override void SetDefaults()
     {
@@ -108,6 +108,8 @@ public sealed class ImmaculateWhiteBow : CAModProjectile
                     {
                         ImmaculateBolt modP = p.GetModProjectile<ImmaculateBolt>();
 
+                        modP.Target = TOKinematicUtils.GetNPCTarget(Main.MouseWorld, 8000f, ignoreTiles: true);
+
                         if (CanShootSplitBolt && player.altFunctionUse == 2)
                         {
                             modP.IsInfiniteProjectile = true;
@@ -136,7 +138,7 @@ public sealed class ImmaculateWhiteBow : CAModProjectile
     //不知道为啥右键使用没法触发channel，在这写一个额外的。
     public static bool CantUseRightHoldout(Player player, bool needsToHold = true)
     {
-        if (player != null && player.active && !player.dead && !(!Main.mouseRight && needsToHold) && !player.CCed)
+        if (player.Alive && !(!Main.mouseRight && needsToHold) && !player.CCed)
         {
             return player.noItems;
         }

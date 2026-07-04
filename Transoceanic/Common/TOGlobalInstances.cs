@@ -95,8 +95,13 @@ public sealed class TOGlobalNPC : GlobalNPC, ITOLoader
 
     /// <summary>
     /// 帧计数器，用于自定义实现的 FindFrame 方法。
+    /// <br/>不同步。
     /// </summary>
     public double FrameCounter;
+    /// <inheritdoc cref="FrameCounter"/>
+    public double FrameCounter2;
+    /// <inheritdoc cref="FrameCounter"/>
+    public int FrameCounter3;
 
     private const int AISlot = 33;
     private const int AISlot2 = 17;

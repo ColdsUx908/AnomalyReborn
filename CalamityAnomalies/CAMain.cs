@@ -38,7 +38,7 @@ global using static CalamityAnomalies.Common.CASharedData.QuickAccess;
 
 namespace CalamityAnomalies;
 
-public sealed class CAMain : Mod, IContentLoader
+public sealed class CAMain : Mod
 {
     internal static CAMain Instance { get; private set; }
 

@@ -8,26 +8,28 @@ namespace CalamityAnomalies.Anomaly.KingSlime;
 
 public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
 {
-    public enum Behavior
+    public enum Behavior : byte
     {
-        Despawn = -1,
-
-        FollowTarget = 0,
-        Charge = 1,
+        None = 0,
+        Charge,
     }
 
     public const float DespawnDistance = 5000f;
-    public int ChargePreparationTime => 60;
     public static int ChargeTime => 60;
     public float ChargeSpeed => Ultra ? (HasEnteredPhase2 ? 24f : 28f) : (HasEnteredPhase2 ? 18f : 22f);
 
-    private static readonly ProjectileDamageContainer _kingSlimeJewelEmeraldCloneDamage = new(30, 60, 90, 120, 102, 150);
+    private static readonly ProjectileDamageContainer _kingSlimeJewelEmeraldCloneDamage = new(30, 60, 90, 120, 120, 180);
     public static int KingSlimeJewelEmeraldCloneDamage => _kingSlimeJewelEmeraldCloneDamage.Value;
 
-    public Behavior CurrentAttack
+    public Behavior CurrentBehavior
     {
-        get => (Behavior)(int)NPC.ai[0];
-        set => NPC.ai[0] = (int)value;
+        get => (Behavior)AI_Union_0.byte0;
+        set
+        {
+            Union32 union = AI_Union_0;
+            union.byte0 = (byte)value;
+            AI_Union_0 = union;
+        }
     }
 
     public int CurrentAttackPhase
@@ -69,7 +71,7 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
         }
     }
 
-    public bool KingSlimeDead
+    public bool MasterDead
     {
         get => AI_Union_2.bits[3];
         set
@@ -86,8 +88,6 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
 
     public override void SetDefaults()
     {
-        NPC.aiStyle = -1;
-        AIType = -1;
         NPC.damage = 30;
         NPC.width = 30;
         NPC.height = 30;
@@ -99,24 +99,26 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
         NPC.knockBackResist = 0.4f;
         NPC.noGravity = true;
         NPC.noTileCollide = true;
-        NPC.HitSound = KingSlime_Handler.HitSound;
-        NPC.DeathSound = KingSlime_Handler.ShatterSound;
+        NPC.HitSound = JewelHandler.HitSound;
+        NPC.DeathSound = JewelHandler.ShatterSound;
         CalamityNPC.VulnerableToSickness = false;
+
+        NPC.IsImportantBossMinion = true;
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) => NPC.lifeMax = (int)(NPC.lifeMax * balance);
 
     public override void AI()
     {
-        if (KingSlimeDead)
+        if (MasterDead)
         {
-            KingSlime_Handler.Kill(NPC);
+            JewelHandler.Kill(NPC);
             return;
         }
 
         if (!NPC.TryGetMaster(NPCID.KingSlime, out NPC master))
         {
-            KingSlime_Handler.Despawn(NPC);
+            JewelHandler.Despawn(NPC);
             return;
         }
 
@@ -132,16 +134,12 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
         if (!HasInitialized)
         {
             CanAttack = true;
-
             HasInitialized = true;
         }
 
-        switch (CurrentAttack)
+        switch (CurrentBehavior)
         {
-            case Behavior.Despawn:
-                KingSlime_Handler.Despawn(NPC);
-                return;
-            case Behavior.FollowTarget:
+            case Behavior.None:
                 FollowTarget();
                 break;
             case Behavior.Charge:
@@ -154,17 +152,9 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
         void FollowTarget()
         {
             if (CanAttack)
-                KingSlime_Handler.Move(NPC, Target.Center, 15f, 12f, 0.2f, 0.125f, 350f, -350f, -200f, -400f);
+                JewelHandler.Move(NPC, Target.Center, 15f, 12f, 0.2f, 0.125f, 350f, -350f, -200f, -400f);
             else
-                KingSlime_Handler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.175f, 150f, -150f, 0f, -200f);
-
-            KingSlime_Anomaly masterBehavior = KingSlime_Anomaly.GetNewInstance(master);
-            if (CanAttack && masterBehavior.CurrentBehavior == KingSlime_Anomaly.Behavior.Teleport)
-            {
-                Timer1 = 0;
-                CurrentAttack = Behavior.Charge;
-                NPC.netUpdate = true;
-            }
+                JewelHandler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.175f, 150f, -150f, 0f, -200f);
         }
 
         void Charge()
@@ -178,48 +168,94 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
                         Timer1++;
                     else
                     {
-                        if ((Timer1 -= 2) <= ChargePreparationTime - 30)
-                            CurrentAttack = Behavior.FollowTarget;
+                        CurrentBehavior = Behavior.None;
+                        Timer1 = 0;
                         break;
                     }
-                    if (Timer1 < ChargePreparationTime) //停止，旋转
-                    {
-                        NPC.velocity *= 0.94f;
-                        NPC.rotation += (0.1f + (float)Timer1 / ChargePreparationTime * 0.4f) * NPC.direction;
 
-                        Vector2 dustVelocity = Main.rand.NextPolarVector2(10.5f, 14.5f);
-                        Dust.NewDustPerfectAction<SquashDust>(NPC.Center - dustVelocity.ToCustomLength(Main.rand.NextFloat(150f, 250f)), d =>
-                        {
-                            d.velocity = dustVelocity;
-                            d.scale = Main.rand.NextFloat(0.9f, 1.2f);
-                            d.noGravity = true;
-                            d.fadeIn = 0.5f;
-                            d.color = KingSlime_Handler.EmeraldColor;
-                        });
-                    }
-                    else //冲刺
+                    NPC.velocity *= 0.94f;
+                    NPC.rotation += (0.1f + Timer1 / 135f) * NPC.direction;
+
+                    Vector2 dustVelocity = Main.rand.NextPolarVector2(10.5f, 14.5f);
+                    Dust.NewDustPerfectAction<SquashDust>(NPC.Center - dustVelocity.ToCustomLength(Main.rand.NextFloat(150f, 250f)), d =>
                     {
-                        Timer1 = 0;
-                        ChargeBehavior();
-                    }
+                        d.velocity = dustVelocity;
+                        d.scale = Main.rand.NextFloat(0.9f, 1.2f);
+                        d.noGravity = true;
+                        d.fadeIn = 0.5f;
+                        d.color = JewelHandler.EmeraldColor;
+                    });
+
+                    if (Timer1 > 150) //正常情况下这里不应该被触发，因为开始冲刺由史莱姆王控制
+                        CurrentAttackPhase = 1;
                     break;
-                case 1: //冲刺中
+
+                case 1: //冲刺
+                    KingSlime_Anomaly kingSlimeBehavior = new() { _entity = master };
+                    bool validSapphire = !HasEnteredPhase2 && kingSlimeBehavior.HasSapphireBuff;
+                    NPC sapphire = validSapphire ? kingSlimeBehavior.JewelSapphire : null;
+
+                    SoundEngine.PlaySound(validSapphire ? JewelHandler.DashSoundBuff : JewelHandler.DashSoundNormal, NPC.Center);
+                    JewelHandler.SpawnPointingParticle(NPC, 6, true);
+                    int particleAmount = HasEnteredPhase2 ? 10 : 15;
+                    if (validSapphire)
+                        particleAmount += 25;
+                    for (int i = 0; i < particleAmount; i++)
+                        JewelHandler.SpawnOrbParticle(NPC, Main.rand.NextFloat(4f, 7f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
+
+                    JewelHandler.CreateDustFromJewelTo(NPC, master.Center, Aroma ? DustID.GemAmethyst : DustID.GemEmerald);
+                    if (validSapphire)
+                        JewelHandler.CreateDustFromJewelTo(sapphire, NPC.Center, Aroma ? DustID.GemTopaz : DustID.GemSapphire);
+
+                    NPC.damage = NPC.defDamage;
+
+                    float chargeSpeed = ChargeSpeed;
+                    if (validSapphire)
+                        chargeSpeed *= 1.2f;
+
+                    NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, chargeSpeed), MathHelper.PiOver2);
+                    NPC.netSpam = 0;
+
+                    if (TOSharedData.NotClient && validSapphire)
+                    {
+                        int type = Aroma ? ModContent.ProjectileType<JewelProjectile>() : ModContent.ProjectileType<KingSlimeJewelEmeraldShadow>();
+                        Vector2 velocityUnit = NPC.GetVelocityTowards(NPC.PlayerTarget, 1f);
+                        Vector2 offset = velocityUnit.RotatedBy(MathHelper.PiOver2);
+                        int amount = Ultra ? 4 : 3;
+                        for (int i = -amount; i <= amount; i++)
+                        {
+                            Projectile.NewProjectileAction(SourceAI, NPC.Center + offset * 24f * i + velocityUnit * (60f - 20f * Math.Abs(i)), velocityUnit * chargeSpeed, type, KingSlimeJewelEmeraldCloneDamage, 0f, Main.myPlayer, p =>
+                            {
+                                if (Aroma)
+                                    p.timeLeft = 60;
+                                else
+                                    p.VelocityToRotation(MathHelper.PiOver2);
+                            });
+                        }
+                    }
+
+                    Timer1 = 0;
+                    CurrentAttackPhase = 2;
+                    break;
+
+                case 2: //冲刺中
                     if (CanAttack)
                         Timer1++;
                     else
                     {
-                        Timer1 -= 2;
-                        CurrentAttack = Behavior.FollowTarget;
+                        Timer1 = 0;
+                        CurrentBehavior = Behavior.None;
                         break;
                     }
                     if (Timer1 >= ChargeTime)
                     {
                         Timer1 = 0;
                         for (int i = 0; i < 15; i++)
-                            KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(2f, 3f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.4f, 0.7f));
+                            JewelHandler.SpawnOrbParticle(NPC, Main.rand.NextFloat(2f, 3f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.4f, 0.7f));
                         SoundEngine.PlaySound(SoundID.Item8, NPC.Center);
                         CurrentAttackPhase = 0;
-                        CurrentAttack = Behavior.FollowTarget;
+                        CurrentBehavior = Behavior.None;
+                        Timer1 = 0;
                         NPC.velocity = Vector2.Zero;
                         NPC.netUpdate = true;
                     }
@@ -227,61 +263,12 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
                         NPC.damage = NPC.defDamage;
                     break;
             }
-
-            void ChargeBehavior()
-            {
-                KingSlime_Anomaly kingSlimeBehavior = new() { _entity = master };
-                bool validSapphire = !HasEnteredPhase2 && kingSlimeBehavior.HasSapphireBuff;
-                NPC sapphire = validSapphire ? kingSlimeBehavior.JewelSapphire : null;
-
-                SoundEngine.PlaySound(validSapphire ? KingSlime_Handler.DashSoundBuff : KingSlime_Handler.DashSoundNormal, NPC.Center);
-                KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
-                int particleAmount = HasEnteredPhase2 ? 10 : 15;
-                if (validSapphire)
-                    particleAmount += 25;
-                for (int i = 0; i < particleAmount; i++)
-                    KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(4f, 7f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
-
-                KingSlime_Handler.CreateDustFromJewelTo(NPC, master.Center, Aroma ? DustID.GemAmethyst : DustID.GemEmerald);
-                if (validSapphire)
-                    KingSlime_Handler.CreateDustFromJewelTo(sapphire, NPC.Center, Aroma ? DustID.GemTopaz : DustID.GemSapphire);
-
-                NPC.damage = NPC.defDamage;
-
-                float chargeSpeed = ChargeSpeed;
-                if (validSapphire)
-                    chargeSpeed *= 1.2f;
-
-                NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, chargeSpeed), MathHelper.PiOver2);
-                NPC.netSpam = 0;
-
-                if (TOSharedData.NotClient && validSapphire)
-                {
-                    int type = Aroma ? ModContent.ProjectileType<JewelProjectile>() : ModContent.ProjectileType<KingSlimeJewelEmeraldShadow>();
-                    Vector2 velocityUnit = NPC.GetVelocityTowards(NPC.PlayerTarget, 1f);
-                    Vector2 offset = velocityUnit.RotatedBy(MathHelper.PiOver2);
-                    int amount = Ultra ? 4 : 3;
-                    for (int i = -amount; i <= amount; i++)
-                    {
-                        Projectile.NewProjectileAction(SourceAI, NPC.Center + offset * 24f * i + velocityUnit * (60f - 20f * Math.Abs(i)), velocityUnit * chargeSpeed, type, KingSlimeJewelEmeraldCloneDamage, 0f, Main.myPlayer, p =>
-                        {
-                            if (Aroma)
-                                p.timeLeft = 60;
-                            else
-                                p.VelocityToRotation(MathHelper.PiOver2);
-                        });
-                    }
-                }
-
-                CurrentAttackPhase = 1;
-                NPC.netUpdate = true;
-            }
         }
     }
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        KingSlime_Handler.DrawJewel(spriteBatch, screenPos, NPC);
+        JewelHandler.DrawJewel(spriteBatch, screenPos, NPC);
         return false;
     }
 
@@ -289,12 +276,12 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
 
     public override bool CheckDead()
     {
-        if (Ultra && !KingSlimeDead)
+        if (Ultra && !MasterDead)
         {
             NPC.life = 1;
             NPC.active = true;
             if (!HasEnteredPhase2)
-                KingSlime_Handler.EnterPhase2(NPC);
+                JewelHandler.EnterPhase2(NPC);
             return false;
         }
         return true;
@@ -302,11 +289,11 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
 
     public override void HitEffect(NPC.HitInfo hit)
     {
-        KingSlime_Handler.HitEffect(NPC);
+        JewelHandler.HitEffect(NPC);
     }
 
     public override void OnKill()
     {
-        KingSlime_Handler.OnKill(NPC);
+        JewelHandler.OnKill(NPC);
     }
 }

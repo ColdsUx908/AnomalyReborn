@@ -91,7 +91,7 @@ public abstract class CASingleNPCBehavior : SingleNPCBehavior
     /// 是否允许灾厄的相关逻辑执行。
     /// <br/>默认返回 <see langword="true"/>，即全部允许。
     /// </summary>
-    public virtual bool AllowCalamityLogic(CalamityLogicType_NPCBehavior method) => true;
+    public virtual bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => true;
 
     /// <summary>
     /// 在更新灾厄的Boss血条之前调用。
@@ -129,26 +129,27 @@ public abstract class CASingleNPCBehavior<T> : CASingleNPCBehavior where T : Mod
     public override int ApplyingType => ModContent.NPCType<T>();
 }
 
-public abstract class AnomalyNPCBehavior : CASingleNPCBehavior
+public abstract class AnomalyNPCBehavior<TBehavior> : CASingleNPCBehavior where TBehavior : AnomalyNPCBehavior<TBehavior>, new()
 {
     public override decimal Priority => 100m;
 
     public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
+
+    public static TBehavior GetInstance(NPC npc) => new() { _entity = npc };
 }
 
-public abstract class AnomalyNPCBehavior<T> : CASingleNPCBehavior<T> where T : ModNPC
+public abstract class AnomalyNPCBehavior<TModNPC, TBehavior> : CASingleNPCBehavior<TModNPC>
+    where TModNPC : ModNPC
+    where TBehavior : AnomalyNPCBehavior<TModNPC, TBehavior>, new()
 {
     public override decimal Priority => 100m;
 
     public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
+
+    public static TBehavior GetInstance(NPC npc) => new() { _entity = npc };
 }
 
-public interface ICASingleNPCBehaviorFactory<TSelf> where TSelf : CASingleNPCBehavior, ICASingleNPCBehaviorFactory<TSelf>, new()
-{
-    public static TSelf GetNewInstance(NPC npc) => new() { _entity = npc };
-}
-
-public enum OrigMethodType_CalamityGlobalProjectile
+public enum CalamityLogicType_ProjectileBehavior
 {
     PreAI,
     GetAlpha,
@@ -163,10 +164,10 @@ public abstract class CASingleProjectileBehavior : SingleProjectileBehavior
     public CalamityGlobalProjectile CalamityProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.CalamityProjectile; }
 
     /// <summary>
-    /// 是否允许灾厄的相关方法执行。
+    /// 是否允许灾厄的相关逻辑执行。
     /// <br/>默认返回 <see langword="true"/>，即全部允许。
     /// </summary>
-    public virtual bool AllowOrigCalMethod(OrigMethodType_CalamityGlobalProjectile type) => true;
+    public virtual bool AllowCalamityLogic(CalamityLogicType_ProjectileBehavior type) => true;
 
     /// <summary>
     /// 编辑受击NPC的DR。
@@ -184,18 +185,24 @@ public abstract class CASingleProjectileBehavior<T> : CASingleProjectileBehavior
     public override int ApplyingType => ModContent.ProjectileType<T>();
 }
 
-public abstract class AnomalyProjectileBehavior : CASingleProjectileBehavior
+public abstract class AnomalyProjectileBehavior<TBehavior> : CASingleProjectileBehavior where TBehavior : AnomalyProjectileBehavior<TBehavior>, new()
 {
     public override decimal Priority => 100m;
 
     public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
+
+    public static TBehavior GetInstance(Projectile projectile) => new() { _entity = projectile };
 }
 
-public abstract class AnomalyProjectileBehavior<T> : CASingleProjectileBehavior<T> where T : ModProjectile
+public abstract class AnomalyProjectileBehavior<TModProjectile, TBehavior> : CASingleProjectileBehavior<TModProjectile>
+    where TModProjectile : ModProjectile
+    where TBehavior : AnomalyProjectileBehavior<TModProjectile, TBehavior>, new()
 {
     public override decimal Priority => 100m;
 
     public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
+
+    public static TBehavior GetInstance(Projectile projectile) => new() { _entity = projectile };
 }
 
 public abstract class CASingleItemBehavior : SingleItemBehavior
@@ -411,7 +418,7 @@ public sealed class CalamityGlobalProjectileBehaviorDetour : GlobalProjectileDet
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalProjectile self, Projectile projectile)
     {
         if (projectile.TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, nameof(CASingleProjectileBehavior.PreAI))
-            && !projectileBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalProjectile.PreAI))
+            && !projectileBehavior.AllowCalamityLogic(CalamityLogicType_ProjectileBehavior.PreAI))
             return true;
 
         return orig(self, projectile);
@@ -420,7 +427,7 @@ public sealed class CalamityGlobalProjectileBehaviorDetour : GlobalProjectileDet
     public override Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalProjectile self, Projectile projectile, Color lightColor)
     {
         if (projectile.TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, nameof(CASingleProjectileBehavior.GetAlpha))
-            && !projectileBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalProjectile.GetAlpha))
+            && !projectileBehavior.AllowCalamityLogic(CalamityLogicType_ProjectileBehavior.GetAlpha))
             return null;
 
         return orig(self, projectile, lightColor);
@@ -429,7 +436,7 @@ public sealed class CalamityGlobalProjectileBehaviorDetour : GlobalProjectileDet
     public override bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalProjectile self, Projectile projectile, ref Color lightColor)
     {
         if (projectile.TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, nameof(CASingleProjectileBehavior.PreDraw))
-            && !projectileBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalProjectile.PreDraw))
+            && !projectileBehavior.AllowCalamityLogic(CalamityLogicType_ProjectileBehavior.PreDraw))
             return true;
 
         return orig(self, projectile, ref lightColor);

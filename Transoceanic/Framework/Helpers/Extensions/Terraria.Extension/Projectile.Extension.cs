@@ -260,6 +260,17 @@ public static partial class TOExtensions
         public static Projectile DummyProjectile => Main.projectile[Main.maxProjectiles];
 
         /// <summary>
+        /// 根据传入的索引尝试获取 <see cref="Main.projectile"/> 数组中对应的弹幕实例。
+        /// </summary>
+        /// <param name="index">索引。</param>
+        /// <returns>
+        /// 弹幕实例。
+        /// <br/>若索引越界或等于 <see cref="Main.maxProjectiles"/>（对应弹幕为 Dummy），返回 DummyProjectile。
+        /// <br/>永不返回 <see langword="null"/>。
+        /// </returns>
+        public static Projectile TryGetProjectile(int index) => index >= 0 && index < Main.maxProjectiles ? Main.projectile[index] : Projectile.DummyProjectile;
+
+        /// <summary>
         /// 获取一个迭代器，用于遍历所有激活状态的弹幕。
         /// </summary>
         public static TOIterator<Projectile> ActiveProjectiles => TOIteratorFactory.NewProjectileIterator(IteratorMatches.Projectile_IsActive);
@@ -328,7 +339,6 @@ public static partial class TOExtensions
                 Projectile projectile = Main.projectile[index];
                 projectile.velocity = velocity;
                 action?.Invoke(projectile);
-                NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, index);
             }
         }
 
@@ -347,90 +357,52 @@ public static partial class TOExtensions
             NewProjectileAction(source, position, velocity, ModContent.ProjectileType<T>(), damage, knockback, owner, action);
 
         /// <summary>
-        /// 生成一个新的弹幕到世界中，并在生成后执行一个 <see cref="Action{Projectile}"/>，同时返回生成结果和索引。
+        /// 生成指定数量的弹幕，所有弹幕的速度关于中心方向对称分布，每个弹幕之间相差固定角度。
         /// </summary>
-        /// <param name="index">输出弹幕在 <see cref="Main.projectile"/> 中的索引。</param>
-        /// <param name="projectile">输出弹幕实例，生成失败时为 <see langword="null"/>。</param>
-        /// <param name="source">生成源。</param>
-        /// <param name="position">生成位置。</param>
-        /// <param name="velocity">初始速度。</param>
-        /// <param name="type">弹幕类型 ID。</param>
-        /// <param name="damage">伤害值。</param>
-        /// <param name="knockback">击退力。</param>
-        /// <param name="owner">所有者玩家索引。</param>
-        /// <param name="action">生成成功后对弹幕执行的行为。</param>
-        /// <returns>如果生成成功则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
-        public static bool NewProjectileActionCheck(out int index, [NotNullWhen(true)] out Projectile projectile, IEntitySource source, Vector2 position, Vector2 velocity, int type, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
-        {
-            index = Projectile.NewProjectile(source, position, velocity, type, damage, knockback, owner);
-            if (index < Main.maxProjectiles)
-            {
-                projectile = Main.projectile[index];
-                projectile.velocity = velocity;
-                action?.Invoke(projectile);
-                NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, index);
-                return true;
-            }
-            else
-            {
-                projectile = null;
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 生成一个新的 ModProjectile 弹幕到世界中，并在生成后执行一个 <see cref="Action{Projectile}"/>，同时返回生成结果和索引。
-        /// </summary>
-        /// <typeparam name="T">继承自 <see cref="ModProjectile"/> 的类型。</typeparam>
-        /// <param name="index">输出弹幕索引。</param>
-        /// <param name="projectile">输出弹幕实例。</param>
-        /// <param name="source">生成源。</param>
-        /// <param name="position">生成位置。</param>
-        /// <param name="velocity">初始速度。</param>
-        /// <param name="damage">伤害值。</param>
-        /// <param name="knockback">击退力。</param>
-        /// <param name="owner">所有者玩家索引。</param>
-        /// <param name="action">生成成功后对弹幕执行的行为。</param>
-        /// <returns>如果生成成功则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
-        public static bool NewProjectileActionCheck<T>(out int index, [NotNullWhen(true)] out Projectile projectile, IEntitySource source, Vector2 position, Vector2 velocity, int damage, float knockback, int owner = -1, Action<Projectile> action = null) where T : ModProjectile =>
-            NewProjectileActionCheck(out index, out projectile, source, position, velocity, ModContent.ProjectileType<T>(), damage, knockback, owner, action);
-
-        /// <summary>
-        /// 生成指定数量的弹幕，每个弹幕的速度方向按固定角度递增旋转。
-        /// </summary>
-        /// <param name="number">弹幕总数。</param>
+        /// <param name="amount">弹幕总数。</param>
         /// <param name="radian">每次递增的旋转角度（顺时针，弧度）。</param>
         /// <param name="source">生成源。</param>
         /// <param name="position">生成位置。</param>
-        /// <param name="velocity">基础速度向量（第一个弹幕的方向）。</param>
+        /// <param name="centerVelocity">
+        /// 中心速度向量，所有弹幕的速度大小与此向量相同。
+        /// 弹幕方向以此向量为中心对称分布：
+        /// 若数量为奇数，中间弹幕将沿此方向发射；两侧弹幕依次旋转 ±<paramref name="radian"/> 的整数倍。
+        /// 若数量为偶数，弹幕将对称分布在中心方向两侧。
+        /// </param>
         /// <param name="type">弹幕类型 ID。</param>
         /// <param name="damage">伤害值。</param>
         /// <param name="knockback">击退力。</param>
         /// <param name="owner">所有者玩家索引。</param>
         /// <param name="action">每个弹幕生成后执行的行为。</param>
-        public static void RotatedProj(int number, float radian,
-            IEntitySource source, Vector2 position, Vector2 velocity, int type, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
+        public static void NewProjectilesArc(int amount, float radian,
+            IEntitySource source, Vector2 position, Vector2 centerVelocity, int type, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
         {
-            for (int i = 0; i < number; i++)
+            Vector2 velocity = centerVelocity.RotatedBy(-radian * (amount - 1) / 2f);
+            for (int i = 0; i < amount; i++)
                 NewProjectileAction(source, position, velocity.RotatedBy(radian * i), type, damage, knockback, owner, action);
         }
 
         /// <summary>
-        /// 生成指定数量的 ModProjectile 弹幕，每个弹幕的速度方向按固定角度递增旋转。
+        /// 生成指定数量的 ModProjectile 弹幕，所有弹幕的速度关于中心方向对称分布，每个弹幕之间相差固定角度。
         /// </summary>
         /// <typeparam name="T">继承自 <see cref="ModProjectile"/> 的类型。</typeparam>
-        /// <param name="number">弹幕总数。</param>
+        /// <param name="amount">弹幕总数。</param>
         /// <param name="radian">每次递增的旋转角度（顺时针，弧度）。</param>
         /// <param name="source">生成源。</param>
         /// <param name="position">生成位置。</param>
-        /// <param name="velocity">基础速度向量。</param>
+        /// <param name="centerVelocity">
+        /// 中心速度向量，所有弹幕的速度大小与此向量相同。
+        /// <br/>弹幕方向以此向量为中心对称分布：
+        /// 若数量为奇数，中间弹幕将沿此方向发射；两侧弹幕依次旋转 ±<paramref name="radian"/> 的整数倍；
+        /// 若数量为偶数，弹幕将对称分布在中心方向两侧。
+        /// </param>
         /// <param name="damage">伤害值。</param>
         /// <param name="knockback">击退力。</param>
         /// <param name="owner">所有者玩家索引。</param>
         /// <param name="action">每个弹幕生成后执行的行为。</param>
-        public static void RotatedProj<T>(int number, float radian,
-            IEntitySource source, Vector2 position, Vector2 velocity, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
+        public static void NewProjectilesArc<T>(int amount, float radian,
+            IEntitySource source, Vector2 position, Vector2 centerVelocity, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
             where T : ModProjectile =>
-            Projectile.RotatedProj(number, radian, source, position, velocity, ModContent.ProjectileType<T>(), damage, knockback, owner, action);
+            Projectile.NewProjectilesArc(amount, radian, source, position, centerVelocity, ModContent.ProjectileType<T>(), damage, knockback, owner, action);
     }
 }

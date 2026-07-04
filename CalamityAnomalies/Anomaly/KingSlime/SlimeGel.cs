@@ -1,4 +1,6 @@
-﻿using CalamityAnomalies.DataStructures;
+﻿// Developed by ColdsUx
+
+using CalamityAnomalies.DataStructures;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
@@ -13,7 +15,7 @@ public sealed class SlimeGel : CAModProjectile
 
     public override string LocalizationCategory => "Anomaly.KingSlime";
 
-    [LoadTextureWithCalamityStyle(KingSlime_Handler.AnomalyKingSlimePath + "SlimeGel")]
+    [LoadTextureWithCalamityStyle(JewelHandler.AnomalyKingSlimePath + "SlimeGel")]
     private static TextureAssetWithCalamityStyle _texture;
     public static new Texture2D Texture => _texture.Value;
 
@@ -26,23 +28,25 @@ public sealed class SlimeGel : CAModProjectile
         Projectile.aiStyle = -1;
         Projectile.hostile = true;
         Projectile.friendly = false;
-        Projectile.timeLeft = 300;
+        Projectile.timeLeft = 450;
         Projectile.ignoreWater = true;
         Projectile.tileCollide = true;
         Projectile.penetrate = -1;
         Projectile.scale = 0.5f;
     }
 
-    public override bool OnTileCollide(Vector2 oldVelocity)
+    public override bool OnTileCollide(Vector2 oldVelocity) => Gel_OnTileCollide(Projectile, oldVelocity, DustID.Skyware, d =>
+    {
+        d.velocity = Main.rand.NextPolarVector2(1f, 5f);
+        d.noGravity = true;
+    });
+
+    public override void AI() => Gel_AI(Projectile);
+
+    public static bool Gel_OnTileCollide(Projectile Projectile, Vector2 oldVelocity, int dustID, Action<Dust> dustAction)
     {
         for (int i = 0; i < 10; i++)
-        {
-            Dust.NewDustPerfectAction(Projectile.Center, DustID.Skyware, d =>
-            {
-                d.velocity = Main.rand.NextPolarVector2(1f, 5f);
-                d.noGravity = true;
-            });
-        }
+            Dust.NewDustPerfectAction(Projectile.Center, dustID, dustAction);
 
         ref float bounceCount = ref Projectile.ai[0]; // 当前已碰撞次数
         bounceCount++;
@@ -64,7 +68,7 @@ public sealed class SlimeGel : CAModProjectile
         {
             for (int j = 0; j < 15; j++)
             {
-                Dust.NewDustPerfectAction(Projectile.Center, DustID.Skyware, d =>
+                Dust.NewDustPerfectAction(Projectile.Center, dustID, d =>
                 {
                     d.velocity = Main.rand.NextPolarVector2(1f, 15f); //速度范围更大
                     d.noGravity = true;
@@ -75,7 +79,7 @@ public sealed class SlimeGel : CAModProjectile
         }
     }
 
-    public override void AI()
+    public static void Gel_AI(Projectile Projectile)
     {
         Projectile.velocity.X *= 0.996f;
         Projectile.velocity.Y += 0.15f;

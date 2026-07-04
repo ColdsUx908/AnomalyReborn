@@ -6,21 +6,21 @@ public class JewelProjectileRainbow : CAModProjectile
 {
     public override string LocalizationCategory => "Anomaly.KingSlime";
 
-    public override string Texture => KingSlime_Handler.AnomalyKingSlimePath + "JewelProjectileRainbow_Triangle";
+    public override string Texture => JewelHandler.AnomalyKingSlimePath + "JewelProjectileRainbow_Triangle";
 
-    [LoadTexture(KingSlime_Handler.AnomalyKingSlimePath + "JewelProjectileRainbow_Triangle")]
+    [LoadTexture(JewelHandler.AnomalyKingSlimePath + "JewelProjectileRainbow_Triangle")]
     private static Asset<Texture2D> _texture_Triangle;
     public static Texture2D Texture_Triangle => _texture_Triangle.Value;
 
-    [LoadTexture(KingSlime_Handler.AnomalyKingSlimePath + "JewelProjectileRainbow_Star")]
+    [LoadTexture(JewelHandler.AnomalyKingSlimePath + "JewelProjectileRainbow_Star")]
     private static Asset<Texture2D> _texture_Star;
     public static Texture2D Texture_Star => _texture_Star.Value;
 
-    [LoadTexture(KingSlime_Handler.AnomalyKingSlimePath + "JewelProjectileRainbow_Square")]
+    [LoadTexture(JewelHandler.AnomalyKingSlimePath + "JewelProjectileRainbow_Square")]
     private static Asset<Texture2D> _texture_Square;
     public static Texture2D Texture_Square => _texture_Square.Value;
 
-    [LoadTexture(KingSlime_Handler.AnomalyKingSlimePath + "JewelProjectileRainbow_Circle")]
+    [LoadTexture(JewelHandler.AnomalyKingSlimePath + "JewelProjectileRainbow_Circle")]
     private static Asset<Texture2D> _texture_Circle;
     public static Texture2D Texture_Circle => _texture_Circle.Value;
 
@@ -77,7 +77,7 @@ public class JewelProjectileRainbow : CAModProjectile
 
         for (int i = 0; i < 2; i++)
         {
-            Dust.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, KingSlime_Handler.GetRandomDustID(), Projectile.velocity, d =>
+            Dust.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, JewelHandler.GetRandomDustID(), Projectile.velocity, d =>
             {
                 d.alpha = 90;
                 d.scale = 1.2f;
@@ -94,7 +94,7 @@ public class JewelProjectileRainbow : CAModProjectile
         SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
         for (int i = 0; i < 15; i++)
         {
-            Dust.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, KingSlime_Handler.GetRandomDustID(), Projectile.oldVelocity, d =>
+            Dust.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, JewelHandler.GetRandomDustID(), Projectile.oldVelocity, d =>
             {
                 d.alpha = 50;
                 d.scale = 1.5f;

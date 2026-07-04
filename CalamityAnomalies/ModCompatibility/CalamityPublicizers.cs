@@ -3,6 +3,7 @@
 using CalamityMod;
 using CalamityMod.NPCs;
 using CalamityMod.NPCs.HiveMind;
+using CalamityMod.Systems;
 using CalamityMod.UI.ModeIndicator;
 
 namespace CalamityAnomalies.ModCompatibility;
@@ -17,6 +18,9 @@ internal partial class CalamityGlobalNPC_Publicizer(CalamityGlobalNPC Source) : 
 
 [Publicize(typeof(CalamityMod_))]
 internal partial class CalamityMod_Publicizer(CalamityMod_ Source) : InstancedPublicizer(Source);
+
+[Publicize(typeof(DifficultyModeSystem))]
+internal partial class DifficultyModeSystem_Publicizer(DifficultyModeSystem Source) : InstancedPublicizer(Source);
 
 [Publicize(typeof(HiveMind))]
 internal partial class HiveMind_Publicizer(HiveMind Source) : InstancedPublicizer(Source);

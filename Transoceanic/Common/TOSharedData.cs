@@ -68,7 +68,7 @@ public sealed class TOSharedData : ModSystem, ITOLoader
     #region World
     /// <summary>
     /// 是否启用 Transoceanic 模组内置的网络同步。
-    /// <br/>由于 Transoceanic 是客户端模组，该选项必须由依赖模组手动开启。
+    /// <br/>由于 Transoceanic 是不同步模组，该选项必须由依赖模组手动开启。
     /// </summary>
     /// <remarks>
     /// 一旦设置为 <see langword="true"/> 后，除非模组正在卸载，否则不可重新设置为 <see langword="false"/>，否则将抛出 <see cref="InvalidOperationException"/>。

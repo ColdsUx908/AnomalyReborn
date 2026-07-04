@@ -8,6 +8,9 @@ public class BloomParticle : Particle
     private static Asset<Texture2D> _bloomCircleLarge;
     public static Texture2D BloomCircleLarge => _bloomCircleLarge.Value;
 
+    public const float BloomCircleRadius = 50f;
+    public const float BloomCircleLargeRadius = 125f;
+
     public override string TexturePath => ParticleHandler.BaseParticleTexturePath + "BloomCircle";
     public override BlendState DrawBlendState => BlendState.Additive;
 

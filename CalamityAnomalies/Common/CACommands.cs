@@ -2,7 +2,7 @@
 
 namespace CalamityAnomalies.Common;
 
-public sealed class CACommands : ModCommand, ILocalizationPrefix
+public sealed class StoryModeCommand : ModCommand, ILocalizationPrefix
 {
     public override string Command => "ca~storymode";
 

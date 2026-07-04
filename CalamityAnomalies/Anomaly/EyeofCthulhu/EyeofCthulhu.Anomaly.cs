@@ -5,7 +5,7 @@ using CalamityMod.Dusts;
 
 namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
 
-public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
+public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior<EyeofCthulhu_Anomaly>
 {
     #region 数据
     public enum Phase : byte
@@ -71,13 +71,13 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
     public static float Phase3LifeRatio => Ultra ? Phase3LifeRatio_Ultra : Phase3LifeRatio_Anomaly;
     public static float Phase3_2LifeRatio => Ultra ? Phase3_2LifeRatio_Ultra : Phase3_2LifeRatio_Anomaly;
 
-    private static readonly ProjectileDamageContainer _bloodDamage = new(30, 60, 75, 90, 84, 108);
+    private static readonly ProjectileDamageContainer _bloodDamage = new(30, 60, 75, 90, 120, 150);
     public static int BloodDamage => _bloodDamage.Value;
 
     private static readonly ProjectileDamageContainer _arenaDamage = new(30, 60, 90, 90, 90, 150);
     public static int ArenaDamage => _arenaDamage.Value;
 
-    private static readonly ProjectileDamageContainer _bloodFlameDamage = new(50, 80, 102, 120, 120, 150);
+    private static readonly ProjectileDamageContainer _bloodFlameDamage = new(50, 80, 102, 120, 180, 210);
     public static int BloodFlameDamage => _bloodFlameDamage.Value;
 
     public static readonly Color Phase3Color = Color.Lerp(Color.DarkRed, Color.Tomato, 0.4f);
@@ -321,10 +321,10 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
     /// </summary>
     public NPC ServantLeft
     {
-        get => Main.npc[AnomalyNPC.AnomalyAI32[1].byte0];
+        get => NPC.TryGetNPC(AnomalyNPC.AnomalyAI32[1].byte0);
         set
         {
-            byte temp = (byte)value.whoAmI;
+            byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
             if (AnomalyNPC.AnomalyAI32[1].byte0 != temp)
             {
                 AnomalyNPC.AnomalyAI32[1].byte0 = temp;
@@ -352,10 +352,10 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
     /// </summary>
     public NPC ServantRight
     {
-        get => Main.npc[AnomalyNPC.AnomalyAI32[1].byte1];
+        get => NPC.TryGetNPC(AnomalyNPC.AnomalyAI32[1].byte1);
         set
         {
-            byte temp = (byte)value.whoAmI;
+            byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
             if (AnomalyNPC.AnomalyAI32[1].byte1 != temp)
             {
                 AnomalyNPC.AnomalyAI32[1].byte1 = temp;
@@ -383,10 +383,10 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
     /// </summary>
     public Projectile ArenaProjectile
     {
-        get => Main.projectile[AnomalyNPC.AnomalyAI32[2].i];
+        get => Projectile.TryGetProjectile(AnomalyNPC.AnomalyAI32[2].i);
         set
         {
-            int temp = value.whoAmI;
+            int temp = value?.whoAmI ?? -1;
             if (AnomalyNPC.AnomalyAI32[2].i != temp)
             {
                 AnomalyNPC.AnomalyAI32[2].i = temp;
@@ -432,11 +432,9 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
      */
     #endregion 数据
 
-    public static EyeofCthulhu_Anomaly GetNewInstance(NPC npc) => new() { _entity = npc };
-
     public override int ApplyingType => NPCID.EyeofCthulhu;
 
-    public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior method) => method switch
+    public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => type switch
     {
         CalamityLogicType_NPCBehavior.VanillaOverrideAI => false,
         _ => true,
@@ -455,10 +453,16 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
         ArenaProjectile = Projectile.DummyProjectile;
 
         AnomalyNPC.DynamicDRHandler = new TimedDDRHandler(
-            new TimedDDRHandler.SingleDDRHandler(1f, Phase2LifeRatio, null, n => GetNewInstance(n).CurrentPhase >= Phase.PhaseChange_1To2, 15),
-            new TimedDDRHandler.SingleDDRHandler(Phase2LifeRatio, Phase3LifeRatio, null, n => GetNewInstance(n).CurrentPhase >= Phase.PhaseChange_2To3, 55),
-            new TimedDDRHandler.SingleDDRHandler(0.5f, 0f, n => GetNewInstance(n).Phase3, null, 30)
+            new TimedDDRHandler.SingleDDRHandler(1f, Phase2LifeRatio, null, n => GetInstance(n).CurrentPhase >= Phase.PhaseChange_1To2, 15),
+            new TimedDDRHandler.SingleDDRHandler(Phase2LifeRatio, Phase3LifeRatio, null, n => GetInstance(n).CurrentPhase >= Phase.PhaseChange_2To3, 55),
+            new TimedDDRHandler.SingleDDRHandler(0.5f, 0f, n => GetInstance(n).Phase3, null, 30)
         );
+
+        NPC.AddAnomalyHPIndicator(Phase2LifeRatio_Anomaly, Phase2LifeRatio_Ultra);
+        NPC.AddAnomalyHPIndicator(Phase2_2LifeRatio_Anomaly, Phase2_2LifeRatio_Ultra, true);
+        NPC.AddAnomalyHPIndicator(Phase2_3LifeRatio_Anomaly, Phase2_3LifeRatio_Ultra, true);
+        NPC.AddAnomalyHPIndicator(Phase3LifeRatio_Anomaly, Phase3LifeRatio_Ultra);
+        NPC.AddAnomalyHPIndicator(Phase3_2LifeRatio_Anomaly, Phase3_2LifeRatio_Ultra, true, n => GetInstance(n).Phase3);
     }
 
     public override bool PreAI()
@@ -501,7 +505,8 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
         switch (CurrentPhase)
         {
             case Phase.Initialize:
-                Initialize();
+                CurrentPhase = Phase.Phase1;
+                CurrentBehavior = Behavior.Phase1_Hover;
                 break;
             case Phase.Phase1:
                 Phase1AI();
@@ -525,19 +530,6 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
         return false;
 
         #region 行为函数
-        void Initialize()
-        {
-            CurrentPhase = Phase.Phase1;
-            CurrentBehavior = Behavior.Phase1_Hover;
-
-            //注册血量阈值
-            NPC.AddAnomalyHPIndicator(Phase2LifeRatio_Anomaly, Phase2LifeRatio_Ultra);
-            NPC.AddAnomalyHPIndicator(Phase2_2LifeRatio_Anomaly, Phase2_2LifeRatio_Ultra, true);
-            NPC.AddAnomalyHPIndicator(Phase2_3LifeRatio_Anomaly, Phase2_3LifeRatio_Ultra, true);
-            NPC.AddAnomalyHPIndicator(Phase3LifeRatio_Anomaly, Phase3LifeRatio_Ultra);
-            NPC.AddAnomalyHPIndicator(Phase3_2LifeRatio_Anomaly, Phase3_2LifeRatio_Ultra, true, n => new EyeofCthulhu_Anomaly { _entity = n }.Phase3);
-        }
-
         bool CanShootProjectile() => Vector2.IncludedAngle(new PolarVector2(ActualRotation), Target.Center - NPC.Center) < MathHelper.ToRadians(Ultra ? 30f : 20f)
             && Vector2.Distance(NPC.Center, Target.Center) > 160f;
 
@@ -592,14 +584,13 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                 }
 
                 float radian = MathHelper.ToRadians(15);
-                Projectile.RotatedProj(3, radian, SourceAI, NPC.Center, servantVelocity.RotatedBy(-radian) * 3f, Main.rand.NextBool(3) ? ProjectileID.BloodNautilusShot : ModContent.ProjectileType<BloodOrbProjectile>(), BloodDamage, 0f, action: p => p.timeLeft = Main.rand.Next(180, 240));
+                Projectile.NewProjectilesArc(3, radian, SourceAI, NPC.Center, servantVelocity * 3f, Main.rand.NextBool(3) ? ProjectileID.BloodNautilusShot : ModContent.ProjectileType<BloodOrbProjectile>(), BloodDamage, 0f, action: p => p.timeLeft = Main.rand.Next(180, 240));
             }
         }
 
         void SpawnServantAction(NPC n)
         {
-            if (Aroma)
-                n.ai[2] = 1.5f;
+             n.ai[2] = 1.5f;
         }
 
         #region 1、2阶段
@@ -614,11 +605,11 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     Charge();
                     break;
                 default:
-                    SelectNextAttack();
+                    SelectNextBehavior();
                     break;
             }
 
-            void SelectNextAttack()
+            void SelectNextBehavior()
             {
                 CurrentAttackPhase = 0;
                 Timer1 = 0;
@@ -675,7 +666,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                 Timer1++;
 
                 if (Timer1 >= (Ultra ? 125 : 150))
-                    SelectNextAttack();
+                    SelectNextBehavior();
                 else if (NPC.WithinRange(hoverDestination, 1280f))
                 {
                     int servantSpawnGateValue = Ultra ? 10 : 12;
@@ -766,7 +757,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         NPC.VelocityToRotation(-MathHelper.PiOver2);
 
                     if (Timer1 >= chargeDelay && !CheckPhaseChange())
-                        SelectNextAttack();
+                        SelectNextBehavior();
                 }
             }
         }
@@ -910,14 +901,14 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     EyeSpin();
                     break;
                 default:
-                    SelectNextAttack();
+                    SelectNextBehavior();
                     break;
             }
 
             if (Aroma)
                 ZenithFlame();
 
-            void SelectNextAttack()
+            void SelectNextBehavior()
             {
                 CurrentAttackPhase = 0;
                 Timer1 = 0;
@@ -1057,7 +1048,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                 }
 
                 if (Timer1 >= phaseLimit && NPC.Distance(Target.Center) > 320f)
-                    SelectNextAttack();
+                    SelectNextBehavior();
 
                 NormalUpdateRotation(0.12f);
                 CheckPhaseChange();
@@ -1110,7 +1101,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         NPC.VelocityToRotation(-MathHelper.PiOver2);
 
                     if (Timer1 >= phase2ChargeDelay && !CheckPhaseChange())
-                        SelectNextAttack();
+                        SelectNextBehavior();
                 }
             }
 
@@ -1206,7 +1197,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             NPC.VelocityToRotation(-MathHelper.PiOver2);
 
                         if (Timer2 >= 13 && !CheckPhaseChange())
-                            SelectNextAttack();
+                            SelectNextBehavior();
                         break;
                 }
             }
@@ -1262,9 +1253,8 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             int num = adjustedTimer1 / projectileGateValue;
                             if (num > 0 && num <= maxProjectileSpawnsPerAttack && TOSharedData.NotClient && CanShootProjectile() && Timer2 == 0)
                             {
-                                bool buff = Ultra && NextChargeTypeIsHorizontal && AttackCounter2 == 0;
-                                int amount = 5;
-                                float halfRange = TOMathUtils.PiOver3;
+                                int amount = Ultra ? 5 : 3;
+                                float halfRange = Ultra ? TOMathUtils.PiOver3 : TOMathUtils.PiOver6;
                                 EyeofCthulhu_Handler.ShootProjectile(NPC, ProjectileID.BloodNautilusShot, BloodDamage, 20f, amount, halfRange, p => p.timeLeft = 600);
                             }
 
@@ -1305,7 +1295,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                                 Timer2++;
                                 int delay = NextChargeTypeIsHorizontal ? 12 : 4;
                                 if (Timer2 > delay)
-                                    SelectNextAttack();
+                                    SelectNextBehavior();
                             }
                         }
 
@@ -1352,7 +1342,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             NPC.VelocityToRotation(-MathHelper.PiOver2);
 
                         if (Timer2 > 15 && !CheckPhaseChange())
-                            SelectNextAttack();
+                            SelectNextBehavior();
                         break;
                 }
             }
@@ -1381,7 +1371,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             EyeofCthulhu_Handler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
 
                             CheckPhaseChange();
-                            SelectNextAttack();
+                            SelectNextBehavior();
                         }
                     }
                 }
@@ -1424,7 +1414,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
                         case PhaseChangeTime_1To2:
                             CheckPhaseChange();
-                            SelectNextAttack();
+                            SelectNextBehavior();
                             break;
                     }
                 }
@@ -1569,11 +1559,11 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     EyeSpin();
                     break;
                 default:
-                    SelectNextAttack();
+                    SelectNextBehavior();
                     break;
             }
 
-            void SelectNextAttack()
+            void SelectNextBehavior()
             {
                 CurrentAttackPhase = 0;
                 Timer1 = 0;
@@ -1629,7 +1619,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         LastRapidCharge();
                         break;
                     default:
-                        SelectNextAttack();
+                        SelectNextBehavior();
                         break;
                 }
 
@@ -1657,7 +1647,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         if (Timer2 >= timer2GateValue)
                         {
                             CheckPhaseChange();
-                            SelectNextAttack();
+                            SelectNextBehavior();
                         }
                     }
                 }
@@ -1706,11 +1696,11 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             NPC.damage = SetDamage;
                             SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
                             SpawnChargeParticle();
-                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, 30f), -MathHelper.PiOver2);
+                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Phase3ArenaCenter, 30f), -MathHelper.PiOver2);
                             NPC.damage = SetDamage;
 
                             int projectileAmountOver4 = 3;
-                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Target, 13.5f);
+                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Phase3ArenaCenter, 13.5f);
                             EyeofCthulhu_Handler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 120);
                             EyeofCthulhu_Handler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
 
@@ -1752,7 +1742,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             StopMovement();
                             switch (Timer1)
                             {
-                                case 100: //进入传送冲刺阶段
+                                case 75: //进入传送冲刺阶段
                                     Timer1 = 0;
                                     CurrentAttackPhase = 2;
                                     break;
@@ -1779,11 +1769,11 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             CheckPhaseChange();
                             SoundEngine.PlaySound(SoundID.ForceRoarPitched, NPC.Center);
                             SpawnChargeParticle();
-                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, 40f), -MathHelper.PiOver2);
+                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Phase3ArenaCenter, 40f), -MathHelper.PiOver2);
                             NPC.damage = SetDamage;
 
                             int projectileAmountOver4 = 2;
-                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Target, 13.5f);
+                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Phase3ArenaCenter, 13.5f);
                             EyeofCthulhu_Handler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 90);
                             EyeofCthulhu_Handler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
 
@@ -1812,7 +1802,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
                             NPC.damage = ReducedSetDamage;
                             StopMovement();
-                            int teleportDuration = 15;
+                            int teleportDuration = 10;
                             Vector2 destination = ArenaProjectile.Center + new PolarVector2(ArenaModProjectile.Radius + 200f, ArenaModProjectile.GetEyeRotation(usedIndex));
                             TeleportTo(destination, Timer1, teleportDuration - 1, 1);
 
@@ -1827,11 +1817,11 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             CheckPhaseChange();
                             SoundEngine.PlaySound(SoundID.ForceRoarPitched, NPC.Center);
                             SpawnChargeParticle();
-                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, 40f), -MathHelper.PiOver2);
+                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Phase3ArenaCenter, 40f), -MathHelper.PiOver2);
                             NPC.damage = SetDamage;
 
                             int projectileAmountOver4 = 2;
-                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Target, 13.5f);
+                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Phase3ArenaCenter, 13.5f);
                             EyeofCthulhu_Handler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 90);
                             EyeofCthulhu_Handler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
 
@@ -1855,7 +1845,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
                             NPC.damage = ReducedSetDamage;
                             StopMovement();
-                            int teleportDuration = 15;
+                            int teleportDuration = 10;
                             Vector2 destination = ArenaProjectile.Center + new PolarVector2(ArenaModProjectile.Radius + 200f, ArenaModProjectile.GetEyeRotation(usedIndex));
                             TeleportTo(destination, Timer1, teleportDuration - 1, 1);
 
@@ -1870,11 +1860,11 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             CheckPhaseChange();
                             SoundEngine.PlaySound(SoundID.ForceRoarPitched, NPC.Center);
                             SpawnChargeParticle();
-                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, 40f), -MathHelper.PiOver2);
+                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Phase3ArenaCenter, 40f), -MathHelper.PiOver2);
                             NPC.damage = SetDamage;
 
                             int projectileAmountOver4 = 2;
-                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Target, 13.5f);
+                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Phase3ArenaCenter, 13.5f);
                             EyeofCthulhu_Handler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 90);
                             EyeofCthulhu_Handler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
 
@@ -1949,7 +1939,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
                                 ShootCircleProjectile(64);
                                 CheckPhaseChange();
-                                SelectNextAttack();
+                                SelectNextBehavior();
                             }
                             break;
                     }
@@ -1981,7 +1971,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                                 SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
                                 ShootCircleProjectile(64);
                                 CheckPhaseChange();
-                                SelectNextAttack();
+                                SelectNextBehavior();
                             }
                             break;
                     }
@@ -2013,7 +2003,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                                 SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
                                 ShootCircleProjectile(64);
                                 CheckPhaseChange();
-                                SelectNextAttack();
+                                SelectNextBehavior();
                             }
                             break;
                     }
@@ -2027,7 +2017,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     {
                         PolarVector2 offset = ArenaModProjectile.GetEyeCenterDirection(UsedEyeIndex1) * (ArenaModProjectile.Radius - 15f) * EyeofCthulhu_Handler.EyeShapeHelper.InnerVelocityMultiplier;
                         float singleRadian = MathHelper.TwoPi / projectileAmount;
-                        Projectile.RotatedProj<BloodOrbProjectile>(projectileAmount, singleRadian, SourceAI, NPC.Center, offset / BloodOrbProjectile.StillTime, BloodDamage, 0f, action: p =>
+                        Projectile.NewProjectilesArc<BloodOrbProjectile>(projectileAmount, singleRadian, SourceAI, NPC.Center, offset / BloodOrbProjectile.StillTime, BloodDamage, 0f, action: p =>
                         {
                             p.VelocityToRotation();
                             BloodOrbProjectile modP = p.GetModProjectile<BloodOrbProjectile>();

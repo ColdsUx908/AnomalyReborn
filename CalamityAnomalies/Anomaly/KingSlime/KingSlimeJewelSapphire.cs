@@ -39,7 +39,7 @@ public class KingSlimeJewelSapphire : CAModNPC, IKingSlimeJewel
         }
     }
 
-    public bool KingSlimeDead
+    public bool MasterDead
     {
         get => AI_Union_2.bits[3];
         set
@@ -56,8 +56,6 @@ public class KingSlimeJewelSapphire : CAModNPC, IKingSlimeJewel
 
     public override void SetDefaults()
     {
-        NPC.aiStyle = -1;
-        AIType = -1;
         NPC.damage = 10;
         NPC.width = 30;
         NPC.height = 30;
@@ -69,24 +67,26 @@ public class KingSlimeJewelSapphire : CAModNPC, IKingSlimeJewel
         NPC.knockBackResist = 0.4f;
         NPC.noGravity = true;
         NPC.noTileCollide = true;
-        NPC.HitSound = KingSlime_Handler.HitSound;
-        NPC.DeathSound = KingSlime_Handler.ShatterSound;
+        NPC.HitSound = JewelHandler.HitSound;
+        NPC.DeathSound = JewelHandler.ShatterSound;
         CalamityNPC.VulnerableToSickness = false;
+
+        NPC.IsImportantBossMinion = true;
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) => NPC.lifeMax = (int)(NPC.lifeMax * balance);
 
     public override void AI()
     {
-        if (KingSlimeDead)
+        if (MasterDead)
         {
-            KingSlime_Handler.Kill(NPC);
+            JewelHandler.Kill(NPC);
             return;
         }
 
         if (!NPC.TryGetMaster(NPCID.KingSlime, out NPC master))
         {
-            KingSlime_Handler.Despawn(NPC);
+            JewelHandler.Despawn(NPC);
             return;
         }
 
@@ -106,14 +106,14 @@ public class KingSlimeJewelSapphire : CAModNPC, IKingSlimeJewel
             HasInitialized = true;
         }
 
-        KingSlime_Handler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.5f, 150f, -150f, 50f, -250f);
+        JewelHandler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.5f, 150f, -150f, 50f, -250f);
 
         NPC.netUpdate = true;
     }
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        KingSlime_Handler.DrawJewel(spriteBatch, screenPos, NPC);
+        JewelHandler.DrawJewel(spriteBatch, screenPos, NPC);
         return false;
     }
 
@@ -121,12 +121,12 @@ public class KingSlimeJewelSapphire : CAModNPC, IKingSlimeJewel
 
     public override bool CheckDead()
     {
-        if (Ultra && !KingSlimeDead)
+        if (Ultra && !MasterDead)
         {
             NPC.life = 1;
             NPC.active = true;
             if (!HasEnteredPhase2)
-                KingSlime_Handler.EnterPhase2(NPC);
+                JewelHandler.EnterPhase2(NPC);
             return false;
         }
         return true;
@@ -134,11 +134,11 @@ public class KingSlimeJewelSapphire : CAModNPC, IKingSlimeJewel
 
     public override void HitEffect(NPC.HitInfo hit)
     {
-        KingSlime_Handler.HitEffect(NPC);
+        JewelHandler.HitEffect(NPC);
     }
 
     public override void OnKill()
     {
-        KingSlime_Handler.OnKill(NPC);
+        JewelHandler.OnKill(NPC);
     }
 }

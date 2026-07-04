@@ -120,7 +120,7 @@ public static class EyeofCthulhu_Handler
 
     public static float MaxArenaRadius => 480f; //30格
 
-    public static int NormalTeleportDuration => 90;
+    public static int NormalTeleportDuration => 60;
     public static int EyeSpinTime => 135;
 
     public static readonly Color ChargeColor = Color.Lerp(Color.Red, Color.White, 0.75f);
@@ -151,10 +151,11 @@ public static class EyeofCthulhu_Handler
         Vector2 projectileCenter = npc.Center + new PolarVector2(offset, npc.rotation + rotationOffset);
         Vector2 originalVelocity = (npc.PlayerTarget.Center - projectileCenter).ToCustomLength(speed);
 
-        if (amount == 1)
-            Projectile.NewProjectileAction(npc.GetSource_FromAI(), projectileCenter, originalVelocity, type, damage, 0f, action: action);
-        else
-            Projectile.RotatedProj(amount, halfRange * 2f / (amount - 1), npc.GetSource_FromAI(), projectileCenter, originalVelocity.RotatedBy(-halfRange), type, damage, 0f, action: action);
+        Projectile.NewProjectilesArc(amount, amount == 1 ? 0f : halfRange * 2f / (amount - 1), npc.GetSource_FromAI(), projectileCenter, originalVelocity, type, damage, 0f, action: p =>
+        {
+            action?.Invoke(p);
+            p.tileCollide = false;
+        });
     }
 
     public static void SpawnOrbParticle(Vector2 center, float velocity, int lifetime, float scale)

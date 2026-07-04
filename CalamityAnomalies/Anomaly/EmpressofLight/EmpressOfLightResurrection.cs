@@ -8,9 +8,9 @@ namespace CalamityAnomalies.Anomaly.EmpressofLight;
 #pragma warning disable IDE0078
 #pragma warning disable IDE0090
 
-public sealed partial class EmpressofLight_Anomaly : AnomalyNPCBehavior
+public sealed partial class EmpressofLight_Anomaly : AnomalyNPCBehavior<EmpressofLight_Anomaly>
 {
-    public static class EmpressOfLightLegacyCalamityAI
+    public static class EmpressOfLightResurrection
     {
         public static readonly ProjectileDamageContainer _hallowBossRainbowStreakDamage = new(100, 160, 210, 270, 270, 300);
         public static int HallowBossRainbowStreakDamage => _hallowBossRainbowStreakDamage.Value;

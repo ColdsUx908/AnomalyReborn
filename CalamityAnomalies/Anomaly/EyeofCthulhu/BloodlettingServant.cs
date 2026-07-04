@@ -71,6 +71,8 @@ public partial class BloodlettingServant : CAModNPC
         CalamityNPC.VulnerableToCold = true;
         CalamityNPC.VulnerableToHeat = true;
         CalamityNPC.VulnerableToSickness = true;
+
+        NPC.IsImportantBossMinion = true;
     }
 
     public override void AI()
@@ -92,7 +94,7 @@ public partial class BloodlettingServant : CAModNPC
 
         NPC.target = master.target; //同步目标
 
-        EyeofCthulhu_Anomaly masterBehavior = EyeofCthulhu_Anomaly.GetNewInstance(master);
+        EyeofCthulhu_Anomaly masterBehavior = EyeofCthulhu_Anomaly.GetInstance(master);
 
         NPC.dontTakeDamage = true;
 

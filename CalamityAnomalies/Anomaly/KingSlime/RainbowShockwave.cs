@@ -17,22 +17,14 @@ public sealed class RainbowShockwave : BaseShockwaveProjectile, IContentLoader
 
     public NPC Master
     {
-        get
-        {
-            int temp = (int)Projectile.ai[0];
-            return temp >= 0 && temp < Main.maxNPCs ? Main.npc[temp] : null;
-        }
-        set => Projectile.ai[0] = value?.whoAmI ?? Main.maxNPCs;
+        get => NPC.TryGetNPC((int)Projectile.ai[0]);
+        set => Projectile.ai[0] = value?.whoAmI ?? -1;
     }
 
     public NPC Jewel
     {
-        get
-        {
-            int temp = (int)Projectile.ai[1];
-            return temp >= 0 && temp < Main.maxNPCs ? Main.npc[temp] : null;
-        }
-        set => Projectile.ai[1] = value?.whoAmI ?? Main.maxNPCs;
+        get => NPC.TryGetNPC((int)Projectile.ai[1]);
+        set => Projectile.ai[1] = value?.whoAmI ?? -1;
     }
 
 

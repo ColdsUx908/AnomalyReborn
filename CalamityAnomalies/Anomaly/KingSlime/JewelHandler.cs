@@ -1,12 +1,14 @@
 ﻿// Developed by ColdsUx
 
+using CalamityAnomalies.Anomaly.QueenSlime;
 using CalamityMod.NPCs.NormalNPCs;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
-public sealed class KingSlime_Handler : IContentLoader
+public sealed class JewelHandler : IContentLoader
 {
     public const string AnomalyKingSlimePath = "CalamityAnomalies/Anomaly/KingSlime/";
+    public const string AnomalyQueenSlimePath = "CalamityAnomalies/Anomaly/QueenSlime/";
 
     [LoadTexture("CalamityMod/NPCs/NormalNPCs/KingSlimeJewelFlash")]
     private static Asset<Texture2D> _flashTexture;
@@ -28,8 +30,12 @@ public sealed class KingSlime_Handler : IContentLoader
     private static Asset<Texture2D> _rainbowShardTexture;
     public static Texture2D RainbowShardTexture => _rainbowShardTexture.Value;
 
+    [LoadTexture(AnomalyQueenSlimePath + "JewelAmethystShards")]
+    private static Asset<Texture2D> _amethystShardTexture;
+    public static Texture2D AmethystShardTexture => _amethystShardTexture.Value;
+
     public static readonly SoundStyle SpawnSound = new(AnomalyKingSlimePath + "JewelSpawn");
-    public static readonly SoundStyle ShatterSound = new(AnomalyKingSlimePath + "JewelShatter"); // TODO 死亡音效
+    public static readonly SoundStyle ShatterSound = new(AnomalyKingSlimePath + "JewelShatter");
     public static readonly SoundStyle ShootSound = new("CalamityMod/Sounds/Custom/RedJewelFire");
     public static readonly SoundStyle DashSoundNormal = new(AnomalyKingSlimePath + "JewelDashNormal");
     public static readonly SoundStyle DashSoundBuff = new(AnomalyKingSlimePath + "JewelDashBuff");
@@ -39,10 +45,9 @@ public sealed class KingSlime_Handler : IContentLoader
     public static Color EmeraldColor => Aroma ? Color.Purple : Color.Lime with { B = 40 };
     public static Color SapphireColor => Aroma ? Color.Yellow : Color.Blue;
     public static Color RainbowColor => Main.DiscoColor;
-    public static Color RubyFinalColor => Aroma ? new(175, 255, 255) : new(255, 175, 175);
-    public static Color EmeraldFinalColor => Aroma ? new(255, 175, 255) : new(175, 255, 175);
-    public static Color SapphireFinalColor => Aroma ? new(255, 255, 175) : new(175, 175, 255);
-    public static Color RainbowFinalColor => Color.Lerp(Main.DiscoColor, Color.White, 0.7f);
+    public static Color AmethystColor => Aroma ? Color.Lime with { B = 40 } : Color.Purple;
+
+    //TODO：针对史莱姆皇后宝石的逻辑
 
     /// <summary>
     /// 获取宝石对应的 <see cref="IKingSlimeJewel"/> 实例。
@@ -53,6 +58,9 @@ public sealed class KingSlime_Handler : IContentLoader
         KingSlimeJewelEmerald emerald => emerald,
         KingSlimeJewelSapphire sapphire => sapphire,
         KingSlimeJewelRainbow rainbow => rainbow,
+
+        QueenSlimeJewelAmethyst amethyst => amethyst,
+
         _ => null
     };
 
@@ -62,6 +70,9 @@ public sealed class KingSlime_Handler : IContentLoader
         KingSlimeJewelEmerald => EmeraldColor,
         KingSlimeJewelSapphire => SapphireColor,
         KingSlimeJewelRainbow => RainbowColor,
+
+        QueenSlimeJewelAmethyst => AmethystColor,
+
         _ => Color.White
     };
 
@@ -71,6 +82,9 @@ public sealed class KingSlime_Handler : IContentLoader
         KingSlimeJewelEmerald => Color.LimeGreen,
         KingSlimeJewelSapphire => Color.CornflowerBlue,
         KingSlimeJewelRainbow => Color.White,
+
+        QueenSlimeJewelAmethyst => Color.MediumPurple,
+
         _ => Color.White
     };
 
@@ -187,9 +201,9 @@ public sealed class KingSlime_Handler : IContentLoader
 
         for (int i = 0; i < amount; i++)
         {
-            ParticleHandler.SpawnParticle(new PointingParticle(jewel.Center, new Vector2(Main.rand.NextFloat(20), 0).RotatedByRandom(MathHelper.TwoPi), false, 10, Main.rand.NextFloat(0.8f, 1.5f), isRainbowJewel ? Color.GetRandomRainbowColor() with { A = 0 } : color));
+            ParticleHandler.SpawnParticle(new PointingParticle(jewel.Center, Main.rand.NextPolarVector2(0f, 20f), false, 10, Main.rand.NextFloat(0.8f, 1.5f), isRainbowJewel ? Color.GetRandomRainbowColor() with { A = 0 } : color));
             if (extraParticle)
-                ParticleHandler.SpawnParticle(new PointingParticle(jewel.Center, new Vector2(Main.rand.NextFloat(10), 0).RotatedByRandom(MathHelper.TwoPi), false, 10, Main.rand.NextFloat(0.8f, 1.5f), isRainbowJewel ? Color.GetRandomRainbowColor() : flashColor));
+                ParticleHandler.SpawnParticle(new PointingParticle(jewel.Center, Main.rand.NextPolarVector2(0f, 10f), false, 10, Main.rand.NextFloat(0.8f, 1.5f), isRainbowJewel ? Color.GetRandomRainbowColor() : flashColor));
         }
     }
 
@@ -263,6 +277,9 @@ public sealed class KingSlime_Handler : IContentLoader
             KingSlimeJewelEmerald => EmeraldShardTexture,
             KingSlimeJewelSapphire => SapphireShardTexture,
             KingSlimeJewelRainbow => RainbowShardTexture,
+
+            QueenSlimeJewelAmethyst => AmethystShardTexture,
+
             _ => null
         };
 

@@ -22,6 +22,8 @@ public sealed class CAPlayer : ModPlayer
         set => field = Math.Max(0, value);
     }
 
+    public bool Minion_VacuousBlack;
+
     public override ModPlayer Clone(Player newEntity)
     {
         CAPlayer clone = (CAPlayer)base.Clone(newEntity);
@@ -42,6 +44,7 @@ public sealed class CAPlayer : ModPlayer
     {
         Debuff_DimensionalRend = false;
         ImmaculateWhite_Timer--;
+        Minion_VacuousBlack = false;
     }
 }
 

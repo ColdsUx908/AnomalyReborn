@@ -137,7 +137,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
             long npcIdentifier = npc.Identifier;
             if (CurrentBars.ContainsKey(npcIdentifier))
                 _validIdentifiers.Add(npcIdentifier);
-            else if (CurrentBars.Count < MaxBars && ((npc.IsBossEnemy && !_exclusiveNPCTypes.Contains(npc.type)) || MinibossHPBarList.Contains(npc.type) || npc.CalamityNPC.CanHaveBossHealthBar))
+            else if (CurrentBars.Count < MaxBars&& ((npc.IsBossEnemy && !_exclusiveNPCTypes.Contains(npc.type)) || MinibossHPBarList.Contains(npc.type) || npc.CalamityNPC.CanHaveBossHealthBar))
                 CurrentBars.Add(npcIdentifier, new BetterBossHPUI(npc));
         }
 

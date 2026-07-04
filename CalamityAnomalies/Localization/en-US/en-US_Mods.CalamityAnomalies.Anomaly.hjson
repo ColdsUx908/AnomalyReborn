@@ -5,11 +5,12 @@ AnomalyMode: {
 		'''
 		[c/AFFFFF:Do you think you are worthy of transcending the gods?]
 		[c/AFFFFF:If you crave a challenge beyond Death or Malice...]
-		[c/FF0000:Then...]
+		[c/00FFFF:Then...]
 		'''
 	Activate: Anomaly is active... are you serious?
 	Deactivate: Anomaly is not active; wise choice.
 	Invalid: Anomaly is only available in TRUE Master difficulty.
+	UltraSuffix: "[c/FF0000:Ultramundane]"
 	UltraInvalid_NotLegendary: Anomaly Ultramundane is only available in TRUE Legendary difficulty.
 	UltraInvalid_Aromaly: You must cook fried rice in such a delicious mode!
 	UltraActivate:
@@ -21,6 +22,13 @@ AnomalyMode: {
 		'''
 		Anomaly Ultramundane is back to normal...
 		Did you try it?
+		'''
+	UltraInfo:
+		'''
+		[c/FF0000:ATTENTION]
+		[c/FF0000:Anomaly Ultramundane is a special difficulty that is only available in TRUE Legendary difficulty.]
+		[c/FF0000:This difficulty is extremely difficult and only suitable for ALIEN players!]
+		[c/FF0000:Please make sure you know what you're doing before enjoying this difficulty!]
 		'''
 
 	Aromaly: {
@@ -52,4 +60,10 @@ EyeofCthulhu: {
 QueenBee: {
 	BeeProjectile.DisplayName: Bee Projectile
 	CombCell.DisplayName: Comb Cell
+}
+
+QueenSlime: {
+	GFBSummon: Queen Slime has cloned itself!
+	QueenSlimeJewelAmethyst.DisplayName: Amethyst Jewel
+	QueenSlimeJewelRainbow.DisplayName: Rainbow Jewel
 }

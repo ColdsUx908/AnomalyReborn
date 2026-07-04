@@ -40,6 +40,12 @@ Contributor: {
 		Tooltip2: 右键点击发射可穿透的纯白之光
 	}
 
+	VacuousBlack: {
+		DisplayName: 纯黑
+		Tooltip: 召唤纯黑之暗，吞噬一切
+	}
+
+	VacuousBlackBuff.Description: 它渴望吞噬一切，甚至连你也不例外。
 	ImmaculateBolt.DisplayName: 纯白之光
 }
 

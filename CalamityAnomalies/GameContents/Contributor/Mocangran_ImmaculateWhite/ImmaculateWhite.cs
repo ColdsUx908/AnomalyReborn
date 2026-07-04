@@ -7,51 +7,85 @@ public sealed class ImmaculateWhite : CALegendaryItem, ILocalizationPrefix
     public const int OriginalUseTime = 100;
 
     #region 传奇
-    public override void LegendaryUpdate()
+    public static void GetPhase(out int phase, out int subPhase)
     {
-        if (NPC.downedMoonlord)//月总
+        if (NPC.downedMoonlord) //月总
         {
-            Phase = 3;
+            phase = 3;
 
             if (NPC.Focus) //万物的焦点
-                SubPhase = 6;
+                subPhase = 6;
             else if (DownedBossSystem_Bridge.downedYharon) //犽戎
-                SubPhase = 5;
+                subPhase = 5;
             else if (DownedBossSystem_Bridge.downedDoG) //神吞
-                SubPhase = 4;
+                subPhase = 4;
             else if (DownedBossSystem_Bridge.downedPolterghast) //幽花
-                SubPhase = 3;
+                subPhase = 3;
             else if (DownedBossSystem_Bridge.downedProvidence) //亵渎天神
-                SubPhase = 2;
+                subPhase = 2;
             else
-                SubPhase = 1;
+                subPhase = 1;
         }
-        else if (Main.hardMode)//肉山
+        else if (Main.hardMode) //肉山
         {
-            Phase = 2;
+            phase = 2;
 
-            if (NPC.downedAncientCultist)//教徒
-                SubPhase = 5;
-            else if (NPC.downedGolemBoss)//石巨人
-                SubPhase = 4;
-            else if (NPC.downedPlantBoss)//世花
-                SubPhase = 3;
-            else if (NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3)//机械三王
-                SubPhase = 2;
+            if (NPC.downedAncientCultist) //教徒
+                subPhase = 5;
+            else if (NPC.downedGolemBoss) //石巨人
+                subPhase = 4;
+            else if (NPC.downedPlantBoss) //世花
+                subPhase = 3;
+            else if (NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3) //机械三王
+                subPhase = 2;
             else
-                SubPhase = 1;
+                subPhase = 1;
         }
         else
         {
-            Phase = 1;
-            if (NPC.downedBoss3)//骷髅王
-                SubPhase = 3;
-            else if (NPC.downedBoss2)//世吞克脑
-                SubPhase = 2;
+            phase = 1;
+            if (NPC.downedBoss3) //骷髅王
+                subPhase = 3;
+            else if (NPC.downedBoss2) //世吞克脑
+                subPhase = 2;
             else
-                SubPhase = 1;
+                subPhase = 1;
         }
     }
+
+    public static float GetDamageMultiplier(int phase, int subPhase)
+    {
+        float multiplier = phase switch
+        {
+            3 => subPhase switch //月后
+            {
+                6 => 300f,    //万物的焦点
+                5 => 50f,     //丛林龙后
+                4 => 27.5f,   //神明吞噬者后
+                3 => 20f,     //噬魂幽花后
+                2 => 17.5f,   //亵渎天神后
+                _ => 13.5f
+            },
+            2 => subPhase switch //肉后
+            {
+                5 => 9f,      //教徒后
+                4 => 7f,      //石巨人后
+                3 => 6f,      //世纪之花后
+                2 => 4f,      //机械三王后
+                _ => 3f
+            },
+            1 => subPhase switch //肉前
+            {
+                3 => 3f,      //骷髅王后
+                2 => 1.5f,    //世界吞噬者/克苏鲁之脑后
+                _ => 1f
+            },
+            _ => 1f
+        };
+        return multiplier;
+    }
+
+    public override void LegendaryUpdate() => GetPhase(out Phase, out SubPhase);
 
     public override void LegendaryUpdate(Player player)
     {
@@ -67,6 +101,7 @@ public sealed class ImmaculateWhite : CALegendaryItem, ILocalizationPrefix
     {
         ItemID.Sets.ItemsThatAllowRepeatedRightClick[Item.type] = true;
     }
+
     public override void SetDefaults()
     {
         Item.width = 22;
@@ -129,33 +164,8 @@ public sealed class ImmaculateWhite : CALegendaryItem, ILocalizationPrefix
     public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
     {
         //莫沧然：ModifyWeaponDamage的加成在词缀的加成之后，可以考虑到时候移植到别的地方。唉唉灾厄起的坏头
-        damage *= Phase switch
-        {
-            3 => SubPhase switch //月后
-            {
-                6 => 300f,    //万物的焦点
-                5 => 50f,     //丛林龙后
-                4 => 27.5f,   //神明吞噬者后
-                3 => 20f,     //噬魂幽花后
-                2 => 17.5f,   //亵渎天神后
-                _ => 13.5f
-            },
-            2 => SubPhase switch //肉后
-            {
-                5 => 9f,      //教徒后
-                4 => 7f,      //石巨人后
-                3 => 6f,      //世纪之花后
-                2 => 4f,      //机械三王后
-                _ => 3f
-            },
-            1 => SubPhase switch //肉前
-            {
-                3 => 3f,      //骷髅王后
-                2 => 1.5f,    //世界吞噬者/克苏鲁之脑后
-                _ => 1f
-            },
-            _ => 1f
-        };
+        float multiplier = GetDamageMultiplier(Phase, SubPhase);
+        damage *= multiplier;
     }
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)

@@ -49,6 +49,24 @@ public static partial class TOExtensions
         /// <returns>当前持有的物品实例。</returns>
         public Item CurrentItem => Main.mouseItem.IsAir ? player.HeldItem : Main.mouseItem;
 
+        /// <summary>
+        /// 获取玩家当前可用的召唤物槽位数量。
+        /// </summary>
+        public float AvailableMinionSlots
+        {
+            get
+            {
+                float totalSlots = player.maxMinions;
+                float usedSlots = 0f;
+                foreach (Projectile proj in Projectile.ActiveProjectiles)
+                {
+                    if (proj.owner == player.whoAmI && proj.minion)
+                        usedSlots += proj.minionSlots;
+                }
+                return totalSlots - usedSlots;
+            }
+        }
+
         /// <inheritdoc cref="Player.AddBuff(int, int, bool, bool)"/>
         /// <summary>
         /// 为玩家添加一个 ModBuff。
@@ -97,6 +115,17 @@ public static partial class TOExtensions
         /// 获取服务器端虚拟玩家（索引为 <see cref="Main.maxPlayers"/>）。
         /// </summary>
         public static Player Server => Main.player[Main.maxPlayers];
+
+        /// <summary>
+        /// 根据传入的索引尝试获取 <see cref="Main.player"/> 数组中对应的玩家实例。
+        /// </summary>
+        /// <param name="index">索引。</param>
+        /// <returns>
+        /// 弹幕实例。
+        /// <br/>若索引越界或等于 <see cref="Main.maxPlayers"/>（对应玩家为服务器端），返回 Server。
+        /// <br/>永不返回 <see langword="null"/>。
+        /// </returns>
+        public static Player TryGetPlayer(int index) => index is >= 0 and < Main.maxPlayers ? Main.player[index] : Player.Server;
 
         /// <summary>
         /// 获取一个迭代器，用于遍历所有激活状态的玩家。

@@ -2,7 +2,7 @@
 
 namespace CalamityAnomalies.Common;
 
-public sealed partial class CASharedData
+public sealed partial class CASharedData : ModSystem
 {
     public static class QuickAccess
     {

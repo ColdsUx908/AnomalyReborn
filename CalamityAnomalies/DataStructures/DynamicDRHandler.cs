@@ -170,7 +170,7 @@ public sealed class TimedDDRHandler : IDynamicDRHandler
             int expectedTime = ExpectedPhaseTime;
             int aiTimer = PhaseTimer;
 
-            if (factor > 0f && expectedTime > 0 && aiTimer < expectedTime && CASharedData.StoryMode && !BossRushEvent_Bridge.BossRushActive)
+            if (factor > 0f && expectedTime > 0 && aiTimer < expectedTime && Story && !BossRushEvent_Bridge.BossRushActive)
             {
                 float lifeCompletion = Utils.GetLerpValue(PhaseStartLifeRatio, PhaseEndLifeRatio, npc.LifeRatio);
                 float timeCompletion = (float)aiTimer / expectedTime;

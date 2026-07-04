@@ -5,7 +5,7 @@ using CalamityMod.Projectiles.Boss;
 
 namespace CalamityAnomalies.Anomaly.QueenBee;
 
-public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
+public sealed partial class QueenBee_Anomaly
 {
     public override bool PreAI()
     {
@@ -109,11 +109,12 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                     Beehell();
                     break;
                 default:
-                    SelectNextAttack();
+                    CheckPhaseChange();
+                    SelectNextBehavior();
                     break;
             }
 
-            void SelectNextAttack()
+            void SelectNextBehavior()
             {
                 Timer1 = 0;
                 Timer2 = 0;
@@ -401,7 +402,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                             if (Math.Abs(NPC.velocity.X) + Math.Abs(NPC.velocity.Y) < chargeDeceleration)
                             {
                                 CheckPhaseChange();
-                                SelectNextAttack();
+                                SelectNextBehavior();
                                 break;
                             }
                         }
@@ -448,7 +449,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                     if (num > numStingerShots)
                     {
                         CheckPhaseChange();
-                        SelectNextAttack();
+                        SelectNextBehavior();
                         return;
                     }
                     else if (num > 0 && NPC.Bottom.Y < Target.Top.Y && Collision.CanHit(stingerSpawnLocation, 1, 1, Target.position, Target.width, Target.height))
@@ -526,7 +527,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                             int amount = (int)MathHelper.Lerp(16, 20, NPC.LostLifeRatio) + num;
                             float speed = Main.rand.NextFloat(12f, 15f) + num * 2f;
                             Vector2 velocity = Main.rand.NextPolarVector2(speed);
-                            Projectile.RotatedProj<BeeProjectile>(amount, MathHelper.TwoPi / amount, SourceAI, NPC.Center, velocity, 10, 0f, action: p =>
+                            Projectile.NewProjectilesArc<BeeProjectile>(amount, MathHelper.TwoPi / amount, SourceAI, NPC.Center, velocity, 10, 0f, action: p =>
                             {
                                 p.velocity *= Main.rand.NextFloat(0.9f, 1.2f);
                                 p.Timer1 += 120;
@@ -541,7 +542,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
                         break;
                     case 3:
                         if (Timer1 >= 50)
-                            SelectNextAttack();
+                            SelectNextBehavior();
                         break;
                 }
             }
@@ -558,11 +559,11 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
             {
                 default:
                     CheckPhaseChange();
-                    SelectNextAttack();
+                    SelectNextBehavior();
                     break;
             }
 
-            void SelectNextAttack()
+            void SelectNextBehavior()
             {
 
             }

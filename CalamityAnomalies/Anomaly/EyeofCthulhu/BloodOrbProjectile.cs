@@ -27,14 +27,14 @@ public class BloodOrbProjectile : CAModProjectile
 
     public NPC Master
     {
-        get => Main.npc[(int)Projectile.ai[1]];
-        set => Projectile.ai[1] = value.whoAmI;
+        get => NPC.TryGetNPC((int)Projectile.ai[1]);
+        set => Projectile.ai[1] = value?.whoAmI ?? -1;
     }
 
     public Projectile ArenaProjectile
     {
-        get => Main.projectile[(int)Projectile.ai[2]];
-        set => Projectile.ai[2] = value.whoAmI;
+        get => Projectile.TryGetProjectile((int)Projectile.ai[2]);
+        set => Projectile.ai[2] = value?.whoAmI ?? -1;
     }
     public bool ArenaProjectileAlive => ArenaProjectile.active && ArenaProjectile.ModProjectile is EyeofCthulhuArena arena && arena.Master == Master;
     public EyeofCthulhuArena ArenaModProjectile => ArenaProjectile.GetModProjectile<EyeofCthulhuArena>();

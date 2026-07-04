@@ -4,7 +4,7 @@ using CalamityMod.Projectiles.Boss;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
-public sealed class JewelProjectile_Anomaly : AnomalyProjectileBehavior<JewelProjectile>
+public sealed class JewelProjectile_Anomaly : AnomalyProjectileBehavior<JewelProjectile, JewelProjectile_Anomaly>
 {
     public override void SetDefaults()
     {

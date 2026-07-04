@@ -53,14 +53,10 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
     public NPC Master
     {
-        get
-        {
-            int temp = (int)Projectile.ai[0];
-            return temp >= 0 && temp < Main.maxNPCs ? Main.npc[temp] : null;
-        }
-        set => Projectile.ai[0] = value.whoAmI;
+        get => NPC.TryGetNPC((int)Projectile.ai[0]);
+        set => Projectile.ai[0] = value?.whoAmI ?? -1;
     }
-    public EyeofCthulhu_Anomaly MasterBehavior => EyeofCthulhu_Anomaly.GetNewInstance(Master);
+    public EyeofCthulhu_Anomaly MasterBehavior => EyeofCthulhu_Anomaly.GetInstance(Master);
 
     public float ArenaRotation
     {

@@ -6,26 +6,26 @@ namespace CalamityAnomalies.Anomaly.KingSlime;
 
 public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
 {
-    public enum Attack : byte
+    public enum Behavior : byte
     {
-        Normal = 0,
-        Triangle = 1,
-        Star = 2,
-        Square = 3,
-        Circle = 4,
+        None = 0,
+        NormalAttack,
+        TriangleAttack,
+        StarAttack,
+        SquareAttack,
+        CircleAttack,
     }
 
     public const float DespawnDistance = 5000f;
-    public static int ShootCooldownTime => 240;
 
-    private static readonly ProjectileDamageContainer _jewelProjectileRainbowDamage = new(40, 60, 90, 120, 90, 120);
+    private static readonly ProjectileDamageContainer _jewelProjectileRainbowDamage = new(40, 60, 90, 120, 120, 150);
     public static int JewelProjectileRainbowDamage => _jewelProjectileRainbowDamage.Value;
 
     public const float MaxProjectileSpeed = 18f;
 
-    public Attack CurrentAttack
+    public Behavior CurrentBehavior
     {
-        get => (Attack)AI_Union_0.byte0;
+        get => (Behavior)AI_Union_0.byte0;
         set
         {
             Union32 union = AI_Union_0;
@@ -67,24 +67,13 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
         }
     }
 
-    public bool KingSlimeDead
+    public bool MasterDead
     {
         get => AI_Union_2.bits[3];
         set
         {
             Union32 union = AI_Union_2;
             union.bits[3] = value;
-            AI_Union_2 = union;
-        }
-    }
-
-    public bool IsAttacking
-    {
-        get => AI_Union_2.bits[4];
-        set
-        {
-            Union32 union = AI_Union_2;
-            union.bits[4] = value;
             AI_Union_2 = union;
         }
     }
@@ -98,8 +87,6 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
 
     public override void SetDefaults()
     {
-        NPC.aiStyle = -1;
-        AIType = -1;
         NPC.damage = 25;
         NPC.width = 28;
         NPC.height = 28;
@@ -111,24 +98,26 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
         NPC.knockBackResist = 0.2f;
         NPC.noGravity = true;
         NPC.noTileCollide = true;
-        NPC.HitSound = KingSlime_Handler.HitSound;
-        NPC.DeathSound = KingSlime_Handler.ShatterSound;
+        NPC.HitSound = JewelHandler.HitSound;
+        NPC.DeathSound = JewelHandler.ShatterSound;
         CalamityNPC.VulnerableToSickness = false;
+
+        NPC.IsImportantBossMinion = true;
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) => NPC.lifeMax = (int)(NPC.lifeMax * balance);
 
     public override void AI()
     {
-        if (KingSlimeDead)
+        if (MasterDead)
         {
-            KingSlime_Handler.Kill(NPC);
+            JewelHandler.Kill(NPC);
             return;
         }
 
         if (!NPC.TryGetMaster(NPCID.KingSlime, out NPC master))
         {
-            KingSlime_Handler.Despawn(NPC);
+            JewelHandler.Despawn(NPC);
             return;
         }
 
@@ -159,94 +148,68 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
 
         if (CanAttack)
         {
-            KingSlime_Handler.Move(NPC, Target.Center, 15f, 15f, 0.175f, 0.125f, 250f, -250f, -250f, -400f);
-            if (!IsAttacking)
-                Timer1++;
-        }
-        else
-        {
-            KingSlime_Handler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.15f, 150f, -150f, 0f, -200f);
-            Timer2 = Math.Max(Timer2 - 1, 0);
-        }
+            JewelHandler.Move(NPC, Target.Center, 15f, 15f, 0.175f, 0.125f, 250f, -250f, -250f, -400f);
 
-        KingSlime_Anomaly masterBehavior = KingSlime_Anomaly.GetNewInstance(master);
-        if (CanAttack && CheckShoot(masterBehavior))
-        {
-            Timer1 = 0;
-            EnterNextAttack(masterBehavior);
-        }
-
-        if (CanAttack)
-        {
-            if (IsAttacking)
+            switch (CurrentBehavior)
             {
-                switch (CurrentAttack)
-                {
-                    case Attack.Normal:
-                        Attack_Normal();
-                        break;
-                    case Attack.Triangle:
-                        Attack_Triangle();
-                        break;
-                    case Attack.Star:
-                        Attack_Star();
-                        break;
-                    case Attack.Square:
-                        Attack_Square();
-                        break;
-                    case Attack.Circle:
-                        Attack_Circle();
-                        break;
-                }
+                case Behavior.NormalAttack:
+                    Attack_Normal();
+                    break;
+                case Behavior.TriangleAttack:
+                    Attack_Triangle();
+                    break;
+                case Behavior.StarAttack:
+                    Attack_Star();
+                    break;
+                case Behavior.SquareAttack:
+                    Attack_Square();
+                    break;
+                case Behavior.CircleAttack:
+                    Attack_Circle();
+                    break;
             }
         }
         else
-            IsAttacking = false;
+        {
+            JewelHandler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.15f, 150f, -150f, 0f, -200f);
+            CurrentBehavior = Behavior.None;
+            Timer1 = 0;
+        }
 
         NPC.netUpdate = true;
 
         return;
 
-        void EnterNextAttack(KingSlime_Anomaly behavior)
-        {
-            CurrentAttack = behavior.CurrentBehavior switch
-            {
-                KingSlime_Anomaly.Behavior.FirstJump => Main.rand.NextBool(2) ? Attack.Triangle : Attack.Star,
-                KingSlime_Anomaly.Behavior.HighJump => Main.rand.NextBool(2) ? Attack.Square : Attack.Circle,
-                _ => Attack.Normal
-            };
-            IsAttacking = true;
-        }
-
         void Attack_Normal()
         {
-            SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
+            SoundEngine.PlaySound(JewelHandler.ShootSound, NPC.Center);
             for (int i = 0; i < 20; i++)
-                KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
-            KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
+                JewelHandler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
+            JewelHandler.SpawnPointingParticle(NPC, 6, true);
 
-            KingSlime_Handler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
+            JewelHandler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
 
             if (TOSharedData.NotClient)
             {
                 int amount = 9;
                 float totalAngle = MathHelper.TwoPi;
                 float singleRadian = totalAngle / amount;
-                Vector2 originalVelocity = (PolarVector2)NPC.GetVelocityTowards(Target, MaxProjectileSpeed * 0.85f);
-                Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, originalVelocity, JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Circle);
+                Vector2 originalVelocity = NPC.GetVelocityTowards(Target, MaxProjectileSpeed * 0.85f);
+                Projectile.NewProjectilesArc<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, originalVelocity, JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Circle);
             }
 
-            IsAttacking = false;
+            CurrentBehavior = Behavior.None;
+            Timer1 = 0;
         }
 
         void Attack_Triangle()
         {
-            SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
+            SoundEngine.PlaySound(JewelHandler.ShootSound, NPC.Center);
             for (int i = 0; i < 20; i++)
-                KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
-            KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
+                JewelHandler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
+            JewelHandler.SpawnPointingParticle(NPC, 6, true);
 
-            KingSlime_Handler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
+            JewelHandler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
 
             if (TOSharedData.NotClient)
             {
@@ -266,17 +229,18 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 }
             }
 
-            IsAttacking = false;
+            CurrentBehavior = Behavior.None;
+            Timer1 = 0;
         }
 
         void Attack_Star()
         {
-            SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
+            SoundEngine.PlaySound(JewelHandler.ShootSound, NPC.Center);
             for (int i = 0; i < 20; i++)
-                KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
-            KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
+                JewelHandler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
+            JewelHandler.SpawnPointingParticle(NPC, 6, true);
 
-            KingSlime_Handler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
+            JewelHandler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
 
             if (TOSharedData.NotClient)
             {
@@ -298,7 +262,8 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 }
             }
 
-            IsAttacking = false;
+            CurrentBehavior = Behavior.None;
+            Timer1 = 0;
         }
 
         void Attack_Square()
@@ -312,18 +277,19 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                 else if (Timer1 == 11)
                 {
                     AttackCore(MathHelper.PiOver4);
-                    IsAttacking = false;
+                    CurrentBehavior = Behavior.None;
+                    Timer1 = 0;
                 }
             }
 
             void AttackCore(float offset = 0f)
             {
-                SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
+                SoundEngine.PlaySound(JewelHandler.ShootSound, NPC.Center);
                 for (int i = 0; i < 20; i++)
-                    KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
-                KingSlime_Handler.SpawnPointingParticle(NPC, 6, true);
+                    JewelHandler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
+                JewelHandler.SpawnPointingParticle(NPC, 6, true);
 
-                KingSlime_Handler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
+                JewelHandler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
 
                 int amount = 32;
                 float totalAngle = MathHelper.TwoPi;
@@ -372,12 +338,12 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                     7 => 10,
                     _ => 0
                 };
-                SoundEngine.PlaySound(KingSlime_Handler.ShootSound, NPC.Center);
+                SoundEngine.PlaySound(JewelHandler.ShootSound, NPC.Center);
                 for (int i = 0; i < orbParticleAmount; i++)
-                    KingSlime_Handler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
-                KingSlime_Handler.SpawnPointingParticle(NPC, pointingParticleAmount, true);
+                    JewelHandler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
+                JewelHandler.SpawnPointingParticle(NPC, pointingParticleAmount, true);
 
-                KingSlime_Handler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
+                JewelHandler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
 
                 if (TOSharedData.NotClient)
                 {
@@ -399,10 +365,10 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
                     switch (attackNum)
                     {
                         case <= 5:
-                            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(MaxProjectileSpeed - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Circle);
+                            Projectile.NewProjectilesArc<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(MaxProjectileSpeed - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = JewelProjectileRainbow.TextureType_Circle);
                             break;
                         case 6 or 7:
-                            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(MaxProjectileSpeed / 2.5f - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f, action: p =>
+                            Projectile.NewProjectilesArc<JewelProjectileRainbow>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(MaxProjectileSpeed / 2.5f - attackNum / 2f, initialRotation), JewelProjectileRainbowDamage, 0f, action: p =>
                             {
                                 p.ai[0] = JewelProjectileRainbow.TextureType_Circle;
                                 p.timeLeft = 450;
@@ -415,20 +381,17 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
             Timer1++;
 
             if (Timer1 > 4 * (totalAttackNum - 1))
-                IsAttacking = false;
+            {
+                CurrentBehavior = Behavior.None;
+                Timer1 = 0;
+            }
         }
     }
-
-    public static bool CheckMasterJump(KingSlime_Anomaly behavior) =>
-        behavior.CurrentBehavior is KingSlime_Anomaly.Behavior.FirstJump or KingSlime_Anomaly.Behavior.NormalJump or KingSlime_Anomaly.Behavior.HighJump or KingSlime_Anomaly.Behavior.RapidJump
-        && behavior.CurrentAttackPhase == 0;
-
-    public static bool CheckShoot(KingSlime_Anomaly behavior) => CheckMasterJump(behavior) && behavior.Timer1 == KingSlime_Anomaly.JumpDelay;
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         DrawRainbowTrail(spriteBatch, screenPos, NPC, NPC.oldPos);
-        KingSlime_Handler.DrawJewel(spriteBatch, screenPos, NPC);
+        JewelHandler.DrawJewel(spriteBatch, screenPos, NPC);
         return false;
     }
 
@@ -453,11 +416,11 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
 
     public override void HitEffect(NPC.HitInfo hit)
     {
-        KingSlime_Handler.HitEffect(NPC);
+        JewelHandler.HitEffect(NPC);
     }
 
     public override void OnKill()
     {
-        KingSlime_Handler.OnKill(NPC);
+        JewelHandler.OnKill(NPC);
     }
 }

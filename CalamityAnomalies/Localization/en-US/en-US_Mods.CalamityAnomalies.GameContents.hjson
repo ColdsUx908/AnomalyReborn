@@ -40,6 +40,12 @@ Contributor: {
 		Tooltip2: Press <right> to shoot piercing immaculate light
 	}
 
+	VacuousBlack: {
+		DisplayName: Vacuous Black
+		Tooltip: Summon vacuous darkness to devour everything
+	}
+
+	VacuousBlackBuff.Description: It desires to devour everything, maybe even you.
 	ImmaculateBolt.DisplayName: Immaculate Bolt
 }
 

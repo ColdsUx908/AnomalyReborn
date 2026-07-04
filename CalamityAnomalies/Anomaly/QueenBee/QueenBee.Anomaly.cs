@@ -2,7 +2,7 @@
 
 namespace CalamityAnomalies.Anomaly.QueenBee;
 
-public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
+public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anomaly>
 {
     #region 数据
     public enum Phase : byte
@@ -197,11 +197,9 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior
     }
     #endregion 数据
 
-    public static QueenBee_Anomaly GetNewInstance(NPC npc) => new() { _entity = npc };
-
     public override int ApplyingType => NPCID.QueenBee;
 
-    public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior method) => method switch
+    public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => type switch
     {
         CalamityLogicType_NPCBehavior.VanillaOverrideAI => false,
         _ => true,

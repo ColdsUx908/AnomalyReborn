@@ -1,4 +1,4 @@
-﻿using CalamityAnomalies.Anomaly.EyeofCthulhu;
+﻿// Developed by ColdsUx
 
 namespace CalamityAnomalies.Anomaly.QueenBee;
 
@@ -14,14 +14,10 @@ public sealed class CombCell : CAModProjectile
 
     public NPC Master
     {
-        get
-        {
-            int temp = (int)Projectile.ai[0];
-            return temp >= 0 && temp < Main.maxNPCs ? Main.npc[temp] : null;
-        }
-        set => Projectile.ai[0] = value.whoAmI;
+        get => NPC.TryGetNPC((int)Projectile.ai[0]);
+        set => Projectile.ai[0] = value?.whoAmI ?? -1;
     }
-    public QueenBee_Anomaly MasterBehavior => QueenBee_Anomaly.GetNewInstance(Master);
+    public QueenBee_Anomaly MasterBehavior => QueenBee_Anomaly.GetInstance(Master);
 
     public Behavior BehaviorType
     {

@@ -293,6 +293,23 @@ public static partial class TOExtensions
         }
 
         /// <summary>
+        /// 获取或设置 NPC 是否为重要的 Boss 仆从（用于 AI 逻辑及某些特殊判定）。
+        /// </summary>
+        public bool IsImportantBossMinion
+        {
+            get => npc.Ocean.OceanAI32[0].bits[1];
+            set
+            {
+                TOGlobalNPC ocean = npc.Ocean;
+                if (ocean.OceanAI32[0].bits[1] != value)
+                {
+                    ocean.OceanAI32[0].bits[1] = value;
+                    ocean.AIChanged32[0] = true;
+                }
+            }
+        }
+
+        /// <summary>
         /// 获取或设置 NPC 的存活时间（用于 AI 逻辑）。
         /// </summary>
         public int ActiveTime
@@ -554,6 +571,17 @@ public static partial class TOExtensions
         public static NPC DummyNPC => Main.npc[Main.maxNPCs];
 
         /// <summary>
+        /// 根据传入的索引尝试获取 <see cref="Main.npc"/> 数组中对应的 NPC 实例。
+        /// </summary>
+        /// <param name="index">索引。</param>
+        /// <returns>
+        /// NPC 实例。
+        /// <br/>若索引越界或等于 <see cref="Main.maxNPCs"/>（对应 NPC 为 Dummy），返回 DummyNPC。
+        /// <br/>永不返回 <see langword="null"/>。
+        /// </returns>
+        public static NPC TryGetNPC(int index) => index >= 0 && index < Main.maxNPCs ? Main.npc[index] : NPC.DummyNPC;
+
+        /// <summary>
         /// 检查是否存在指定 ModNPC 类型的活跃 NPC。
         /// </summary>
         /// <typeparam name="T">继承自 <see cref="ModNPC"/> 的类型。</typeparam>
@@ -714,47 +742,5 @@ public static partial class TOExtensions
         /// <param name="action">生成成功后对 NPC 执行的行为。</param>
         public static void NewNPCAction<T>(IEntitySource source, Vector2 position, int start = 0, Action<NPC> action = null) where T : ModNPC =>
             NewNPCAction(source, position, ModContent.NPCType<T>(), start, action);
-
-        /// <summary>
-        /// 生成一个新的 NPC 到世界中，并在生成后执行一个 <see cref="Action{NPC}"/>，同时返回生成结果和索引。
-        /// </summary>
-        /// <param name="index">输出 NPC 在 <see cref="Main.npc"/> 中的索引。</param>
-        /// <param name="npc">输出 NPC 实例，生成失败时为 <see langword="null"/>。</param>
-        /// <param name="source">生成源。</param>
-        /// <param name="position">生成位置。</param>
-        /// <param name="type">NPC 类型 ID。</param>
-        /// <param name="start">起始索引偏移。</param>
-        /// <param name="action">生成成功后对 NPC 执行的行为。</param>
-        /// <returns>如果生成成功则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
-        public static bool NewNPCActionCheck(out int index, [NotNullWhen(true)] out NPC npc, IEntitySource source, Vector2 position, int type, int start = 0, Action<NPC> action = null)
-        {
-            index = NPC.NewNPC(source, (int)position.X, (int)position.Y, type, start);
-            if (index < Main.maxNPCs)
-            {
-                npc = Main.npc[index];
-                action?.Invoke(npc);
-                NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, index);
-                return true;
-            }
-            else
-            {
-                npc = null;
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 生成一个新的 ModNPC 到世界中，并在生成后执行一个 <see cref="Action{NPC}"/>，同时返回生成结果和索引。
-        /// </summary>
-        /// <typeparam name="T">继承自 <see cref="ModNPC"/> 的类型。</typeparam>
-        /// <param name="index">输出 NPC 索引。</param>
-        /// <param name="npc">输出 NPC 实例。</param>
-        /// <param name="source">生成源。</param>
-        /// <param name="position">生成位置。</param>
-        /// <param name="start">起始索引偏移。</param>
-        /// <param name="action">生成成功后对 NPC 执行的行为。</param>
-        /// <returns>如果生成成功则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
-        public static void NewNPCActionCheck<T>(out int index, [NotNullWhen(true)] out NPC npc, IEntitySource source, Vector2 position, int start = 0, Action<NPC> action = null) where T : ModNPC =>
-            NewNPCActionCheck(out index, out npc, source, position, ModContent.NPCType<T>(), start, action);
     }
 }

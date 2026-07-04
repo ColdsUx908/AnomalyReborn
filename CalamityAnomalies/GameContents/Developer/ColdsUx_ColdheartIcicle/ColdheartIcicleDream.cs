@@ -10,8 +10,8 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IContentLoader
     {
         get => TargetIndex switch
         {
-            >= 300 => Main.npc[TargetIndex - 300],
-            >= 0 => Main.player[TargetIndex],
+            >= 300 => NPC.TryGetNPC(TargetIndex - 300),
+            >= 0 => Player.TryGetPlayer(TargetIndex),
             _ => Projectile.Owner
         };
         set => TargetIndex = value switch
