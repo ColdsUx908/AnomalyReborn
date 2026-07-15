@@ -6,6 +6,8 @@ namespace Transoceanic.DataStructures.Particles;
 
 public class AfterimageParticle : Particle, IContentLoader
 {
+    public bool UseDefaultDraw = true;
+
     public new Texture2D Texture;
     public Rectangle? Frame;
     public float OriginalOpacity = 1f;

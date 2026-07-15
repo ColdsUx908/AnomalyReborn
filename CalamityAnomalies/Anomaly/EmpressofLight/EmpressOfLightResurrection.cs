@@ -8,7 +8,7 @@ namespace CalamityAnomalies.Anomaly.EmpressofLight;
 #pragma warning disable IDE0078
 #pragma warning disable IDE0090
 
-public sealed partial class EmpressofLight_Anomaly : AnomalyNPCBehavior<EmpressofLight_Anomaly>
+public sealed partial class EmpressofLight_Anomaly
 {
     public static class EmpressOfLightResurrection
     {

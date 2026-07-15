@@ -35,16 +35,16 @@ public sealed partial class QueenBee_Anomaly
         {
             case Phase.Initialize:
                 CurrentPhase = Phase.Phase1;
-                CurrentBehavior = Behavior.Phase1_Charge;
+                CurrentBehavior = Behavior.Phase1_NormalCharge;
                 break;
-            case >= Phase.Phase1 and <= Phase.Phase2_3:
-                Phase1And2AI();
+            case >= Phase.Phase1 and <= Phase.Phase1_5:
+                Phase1AI();
                 break;
-            case Phase.PhaseChange_2To3:
-                PhaseChange_2To3();
+            case Phase.PhaseChange_1To2:
+                PhaseChange_1To2();
                 break;
-            case Phase.Phase3 or Phase.Phase3_2:
-                Phase3AI();
+            case Phase.Phase2 or Phase.Phase2_2:
+                Phase2AI();
                 break;
         }
 
@@ -77,36 +77,64 @@ public sealed partial class QueenBee_Anomaly
             Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
 
             float stingerAttackSpeed = 22.5f;
-            float stingerAttackAccel = Phase2_3 ? 0.45f : 0.35f;
+            float stingerAttackAccel = Phase1_2 ? 0.45f : 0.35f;
 
             bool canHitTarget = CanHitTarget();
-            Vector2 hoverDestination = Target.Center - Vector2.UnitY * (!canHitTarget ? 0f : Phase2 ? 400f : Phase1_2 ? 360f : 320f);
+            Vector2 hoverDestination = Target.Center - Vector2.UnitY * (!canHitTarget ? 0f : Phase1_2 ? 400f : Phase1_2 ? 360f : 320f);
             Vector2 idealVelocity = NPC.SafeDirectionTo(hoverDestination) * stingerAttackSpeed;
 
             if (Vector2.Distance(stingerSpawnLocation, hoverDestination) > 40f || !canHitTarget)
                 NPC.SimpleFlyMovement(idealVelocity, stingerAttackAccel);
+
+            NPC.FaceTarget(Target);
+            NPC.spriteDirection = NPC.direction;
         }
 
-        void SpawnCombCell(Vector2 position, Vector2 velocity, int damage, CombCell.Behavior behavior, float finalScale) => Projectile.NewProjectileAction<CombCell>(SourceAI, position, velocity, damage, 0f, action: p =>
+        void SpawnCombCell(Vector2 position, Vector2 velocity, int damage, CombCell.Behavior behavior, float finalScale, Action<Projectile, CombCell> action = null)
         {
-            CombCell modP = p.GetModProjectile<CombCell>();
-            modP.Master = NPC;
-            modP.BehaviorType = behavior;
-            modP.FinalScale = finalScale;
-        });
+            if (TOSharedData.NotClient)
+            {
+                Projectile.NewProjectileAction<CombCell>(SourceAI, position, velocity, damage, 0f, action: p =>
+                {
+                    CombCell modP = p.GetModProjectile<CombCell>();
+                    modP.Master = NPC;
+                    modP.BehaviorType = behavior;
+                    modP.FinalScale = finalScale;
+                    action?.Invoke(p, modP);
+                });
+            }
+        }
 
-        void Phase1And2AI()
+        void SpawnFriendlyBee(Vector2 position, Vector2 velocity, byte behavior, float ai1)
+        {
+            if (TOSharedData.NotClient)
+            {
+                Projectile.NewProjectileAction<FriendlyBee>(SourceAI, position, velocity, 0, 0f, action: p =>
+                {
+                    p.ai[0] = behavior;
+                    p.ai[1] = ai1;
+                });
+            }
+        }
+
+        void Phase1AI()
         {
             switch (CurrentBehavior)
             {
-                case Behavior.Phase1_Charge:
-                    Charge();
+                case Behavior.Phase1_NormalCharge:
+                    NormalCharge();
+                    break;
+                case Behavior.Phase1_DirectCharge:
+                    DirectCharge();
                     break;
                 case Behavior.Phase1_Stinger:
                     Stinger();
                     break;
-                case Behavior.Phase1_Beehell:
-                    Beehell();
+                case Behavior.Phase1_BeeSwarm:
+                    BeeSwarm();
+                    break;
+                case Behavior.Phase1_BeeSwarm2:
+                    BeeSwarm2();
                     break;
                 default:
                     CheckPhaseChange();
@@ -123,14 +151,16 @@ public sealed partial class QueenBee_Anomaly
 
                 switch (CurrentBehavior)
                 {
-                    case Behavior.Phase1_Charge:
+                    case Behavior.Phase1_NormalCharge or Behavior.Phase1_DirectCharge:
                         CurrentAttackCounter++;
-                        int chargeAmount = 4;
+                        int chargeAmount = AttackRandomVariation_Charge ? 6 : 4;
                         if (CurrentAttackCounter >= chargeAmount)
                         {
                             CurrentAttackCounter = 0;
                             SwitchToNext();
                         }
+                        else if (AttackRandomVariation_Charge)
+                            CurrentBehavior = CurrentBehavior == Behavior.Phase1_NormalCharge ? Behavior.Phase1_DirectCharge : Behavior.Phase1_NormalCharge;
                         break;
                     default:
                         SwitchToNext();
@@ -139,173 +169,57 @@ public sealed partial class QueenBee_Anomaly
 
                 void SwitchToNext()
                 {
-                    int attackCycleLength = 4;
                     FinishedBehaviorCounter++;
-                    CurrentBehavior = (FinishedBehaviorCounter % attackCycleLength) switch
-                    {
-                        0 => Behavior.Phase1_Charge,
-                        1 => Behavior.Phase1_Stinger,
-                        2 => Behavior.Phase1_Charge,
-                        3 => Behavior.Phase1_Beehell,
+                    int attackCycleLength;
 
-                        _ => Behavior.Phase1_Charge
-                    };
+                    if (!Phase1_2)
+                    {
+                        attackCycleLength = 4;
+                        CurrentBehavior = (FinishedBehaviorCounter % attackCycleLength) switch
+                        {
+                            0 => Behavior.Phase1_NormalCharge,
+                            1 => Behavior.Phase1_Stinger,
+                            2 => Behavior.Phase1_NormalCharge,
+                            3 => Behavior.Phase1_BeeSwarm,
+
+                            _ => Behavior.Phase1_NormalCharge
+                        };
+                    }
+                    else
+                    {
+                        attackCycleLength = 4;
+                        CurrentBehavior = (FinishedBehaviorCounter % attackCycleLength) switch
+                        {
+                            0 => Behavior.Phase1_NormalCharge,
+                            1 => Behavior.Phase1_Stinger,
+                            2 => Behavior.Phase1_NormalCharge,
+                            3 => FinishedBehaviorCounter is 7 || Main.rand.NextBool() ? Behavior.Phase1_BeeSwarm2 : Behavior.Phase1_BeeSwarm,
+
+                            _ => Behavior.Phase1_NormalCharge
+                        };
+                    }
                 }
             }
 
             bool CheckPhaseChange()
             {
-                if (ShouldEnterPhase3)
+                if (ShouldEnterPhase2)
                 {
-                    CurrentPhase = Phase.PhaseChange_2To3;
+                    CurrentPhase = Phase.PhaseChange_1To2;
                     CurrentBehavior = Behavior.PhaseChange_2To3;
                     return true;
                 }
-                else if (NPC.LifeRatio <= Phase2_3LifeRatio)
-                    CurrentPhase = Phase.Phase2_3;
-                else if (NPC.LifeRatio <= Phase2_2LifeRatio)
-                    CurrentPhase = Phase.Phase2_2;
-                else if (NPC.LifeRatio <= Phase2LifeRatio)
-                    CurrentPhase = Phase.Phase2;
-                else if (NPC.LifeRatio <= Phase1_3LifeRatio)
-                    CurrentPhase = Phase.Phase1_3;
-                else if (NPC.LifeRatio <= Phase1_2LifeRatio)
+                else if (NPC.LifeRatio <= Phase1_2LifeRatio && CurrentPhase == Phase.Phase1)
+                {
                     CurrentPhase = Phase.Phase1_2;
+                    FinishedBehaviorCounter %= 4;
+                }
+
                 return false;
             }
 
-            /*
-            void SpawnBee()
+            void NormalCharge()
             {
-                float acceleration = 0.48f;
-                float speed = 22.5f;
-
-                bool canHitTarget = Collision.CanHit(NPC.Center, 1, 1, Target.position, Target.width, Target.height);
-                float distanceAboveTarget = !canHitTarget ? 0f : 320f;
-                Vector2 hoverDestination = Target.Center - Vector2.UnitY * distanceAboveTarget;
-                Vector2 idealVelocity = NPC.GetVelocityTowards(hoverDestination, speed);
-
-                switch (CurrentAttackPhase)
-                {
-                    case 0: //向玩家移动，准备生成蜜蜂
-                        NPC.damage = 0;
-                        NPC.FaceTarget(Target);
-                        NPC.spriteDirection = NPC.direction;
-
-                        NPC.SimpleFlyMovement(idealVelocity, acceleration);
-
-                        Timer1++;
-                        if ((Vector2.Distance(NPC.Center, hoverDestination) < 400f && canHitTarget) || Timer1 >= 90)
-                        {
-                            CurrentAttackPhase = 1;
-                            Timer1 = 0;
-                        }
-                        break;
-                    case 1:
-                        NPC.damage = 0;
-
-                        Vector2 beeSpawnLocation = new(NPC.Center.X + (Main.rand.Next(20) * NPC.direction), NPC.position.Y + NPC.height * 0.8f);
-                        Vector2 beeSpawnCollisionLocation = new(beeSpawnLocation.X, beeSpawnLocation.Y - 30f);
-
-                        if (Vector2.Distance(beeSpawnLocation, hoverDestination) > 400f || !canHitTarget)
-                            NPC.SimpleFlyMovement(idealVelocity, acceleration);
-                        else
-                            StopMovement(0.85f);
-
-                        NPC.FaceTarget(Target);
-                        NPC.spriteDirection = NPC.direction;
-
-                        // 蜜蜂生成限制
-                        int totalBees = 0;
-                        int totalHornets = 0;
-
-                        foreach (NPC n in NPC.ActiveNPCs)
-                        {
-                            //ai[3] == 1f 表示此为蜂后召唤的仆从蜜蜂或黄蜂
-                            if (n.type is NPCID.Bee or NPCID.BeeSmall && n.ai[3] == 1f)
-                                totalBees++;
-                            else if (n.type is NPCID.LittleHornetHoney or NPCID.HornetHoney or NPCID.BigHornetHoney)
-                                totalHornets++;
-                        }
-
-                        //待重构：将蜜蜂NPC改为蜜蜂弹幕
-                        bool beeLimitReached = totalBees >= beeLimit;
-                        bool hornetLimitReached = totalHornets >= hornetLimit;
-
-                        int beeSpawnTimerIncrement = Player.AlivePlayers.Count(p => NPC.Distance(p.Center) < 1000f) / 2 + 1 + Phase1_2.ToInt();
-                        Timer1 += beeSpawnTimerIncrement;
-
-                        float beeSpawnCheck = 15;
-                        int spawnNum = 3;
-                        if (Timer1 >= beeSpawnCheck)
-                        {
-                            Timer1 = 0;
-                            AttackCounter++;
-
-                            if (AttackCounter > spawnNum || (beeLimitReached && hornetLimitReached))
-                            {
-                                CheckPhaseChange();
-                                SelectNextAttack();
-                                break;
-                            }
-                            else if (Collision.CanHit(beeSpawnLocation, 1, 1, Target.position, Target.width, Target.height))
-                            {
-                                SoundEngine.PlaySound(SoundID.NPCHit18, beeSpawnLocation);
-                                if (TOSharedData.GeneralClient)
-                                {
-                                    int spawnType = Main.rand.NextBool(2) ? NPCID.Bee : NPCID.BeeSmall;
-
-                                    if (Aroma)
-                                    {
-                                        if (Phase1_3)
-                                            spawnType = Main.rand.NextBool(3) ? ModContent.NPCType<PlagueChargerLarge>() : ModContent.NPCType<PlagueCharger>();
-                                        else
-                                            spawnType = NPCID.Hellbat;
-                                    }
-                                    else
-                                    {
-                                        int random = hornetLimitReached ? 0 : beeLimitReached ? Main.rand.Next(6, 12) : Main.rand.Next(12);
-                                        switch (random)
-                                        {
-                                            case 6:
-                                            case 7:
-                                            case 8:
-                                                spawnType = NPCID.LittleHornetHoney;
-                                                break;
-                                            case 9:
-                                            case 10:
-                                                spawnType = NPCID.HornetHoney;
-                                                break;
-                                            case 11:
-                                                spawnType = NPCID.BigHornetHoney;
-                                                break;
-                                        }
-                                    }
-
-                                    NPC.NewNPCAction(SourceAI, beeSpawnLocation, spawnType, action: n =>
-                                    {
-                                        n.velocity = n.GetVelocityTowards(Target.Center, 5f);
-
-                                        if (!Aroma)
-                                        {
-                                            n.ai[2] = 1f; //enrageScale
-                                            n.ai[3] = 1f; //标记之为蜂后召唤的仆从
-                                        }
-                                        n.timeLeft = 600;
-                                        n.netUpdate = true;
-                                    });
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
-            */
-
-            void Charge()
-            {
-                float speed = MathHelper.Lerp(22.5f, 28f, NPC.LostLifeRatio);
-
                 switch (CurrentAttackPhase)
                 {
                     case 0:
@@ -313,17 +227,17 @@ public sealed partial class QueenBee_Anomaly
 
                         float distanceFromTargetX = Math.Abs(NPC.Center.X - Target.Center.X);
                         float distanceFromTargetY = Math.Abs(NPC.Center.Y - Target.Center.Y);
-                        if (distanceFromTargetY < chargeDistanceY && distanceFromTargetX >= chargeDistanceX && distanceFromTargetX <= chargeDistanceX * 2f)
+                        if (distanceFromTargetY <= ChargeDistanceY && distanceFromTargetX >= 50f && distanceFromTargetX <= ChargeDistanceX * 2f)
                         {
                             NPC.damage = NPC.defDamage;
                             IsCharging = true;
                             CurrentAttackPhase = 1;
 
-                            NPC.velocity = NPC.GetVelocityTowards(Target.Center, speed);
+                            NPC.velocity = NPC.GetVelocityTowards(Target.Center, ChargeSpeed);
 
                             NPC.FaceTarget(Target);
                             NPC.spriteDirection = NPC.direction;
-                            SoundEngine.PlaySound(SoundID.Zombie125, NPC.Center);
+                            SoundEngine.PlaySound(ChargeSound, NPC.Center);
                         }
                         else
                         {
@@ -337,9 +251,9 @@ public sealed partial class QueenBee_Anomaly
                             float approachAccelerationX = MathHelper.Lerp(0.9f, 1.2f, NPC.LostLifeRatio) * velocityMultiplier;
                             float approachAccelerationY = MathHelper.Lerp(0.6f, 0.9f, NPC.LostLifeRatio) * velocityMultiplier;
 
-                            if (NPC.Center.Y < Target.Center.Y - chargeDistanceY)
+                            if (NPC.Center.Y < Target.Center.Y - ChargeDistanceY)
                                 NPC.velocity.Y += approachAccelerationY;
-                            else if (NPC.Center.Y > Target.Center.Y + chargeDistanceY)
+                            else if (NPC.Center.Y > Target.Center.Y + ChargeDistanceY)
                                 NPC.velocity.Y -= approachAccelerationY;
                             else
                                 NPC.velocity.Y *= 0.7f;
@@ -349,11 +263,11 @@ public sealed partial class QueenBee_Anomaly
                             if (NPC.velocity.Y > approachVelocityY)
                                 NPC.velocity.Y = approachVelocityY;
 
-                            float distanceXMax = 100f;
-                            float distanceXMin = 20f;
-                            if (distanceFromTargetX > chargeDistanceX + distanceXMax)
+                            float distanceXMax = ChargeDistanceX;
+                            float distanceXMin = ChargeDistanceX * 0.5f;
+                            if (distanceFromTargetX > distanceXMax)
                                 NPC.velocity.X += approachAccelerationX * NPC.direction;
-                            else if (distanceFromTargetX < chargeDistanceX + distanceXMin)
+                            else if (distanceFromTargetX < distanceXMin)
                                 NPC.velocity.X -= approachAccelerationX * NPC.direction;
                             else
                                 NPC.velocity.X *= 0.7f;
@@ -373,9 +287,9 @@ public sealed partial class QueenBee_Anomaly
                         NPC.spriteDirection = NPC.direction;
 
                         int chargeDirection = NPC.Center.X < Target.Center.X ? -1 : 1;
-                        if (NPC.direction == chargeDirection && Math.Abs(NPC.Center.X - Target.Center.X) > chargeDistanceX)
+                        if (NPC.direction == chargeDirection && Math.Abs(NPC.Center.X - Target.Center.X) > ChargeDistanceX * 0.5f)
                             ShouldDecelerate = true;
-                        if (Math.Abs(NPC.Center.Y - Target.Center.Y) > chargeDistanceX * 1.5f)
+                        if (Vector2.Distance(NPC.Center, Target.Center) > ChargeDistanceX * 2f)
                             ShouldDecelerate = true;
 
                         if (ShouldDecelerate)
@@ -387,41 +301,97 @@ public sealed partial class QueenBee_Anomaly
                             IsCharging = false;
                             NPC.velocity *= 0.8f;
 
-                            float chargeDeceleration = 0.2f;
-                            if (Phase1_2)
-                            {
-                                NPC.velocity *= 0.9f;
-                                chargeDeceleration += 0.05f;
-                            }
-                            if (Phase2)
-                            {
-                                NPC.velocity *= 0.8f;
-                                chargeDeceleration += 0.1f;
-                            }
-
-                            if (Math.Abs(NPC.velocity.X) + Math.Abs(NPC.velocity.Y) < chargeDeceleration)
+                            if (NPC.velocity.Length() < (Phase1_2 ? 4f : 0.2f))
                             {
                                 CheckPhaseChange();
                                 SelectNextBehavior();
+                                if (CurrentBehavior is not (Behavior.Phase1_NormalCharge or Behavior.Phase1_DirectCharge) && Main.rand.NextProbability(0.7f))
+                                    AttackRandomVariation_Charge = !AttackRandomVariation_Charge;
                                 break;
                             }
                         }
                         else
                         {
-                            if (NPC.velocity.Length() < speed)
-                                NPC.velocity.X = speed * NPC.direction;
+                            if (NPC.velocity.Length() < ChargeSpeed)
+                                NPC.velocity.X = ChargeSpeed * NPC.direction;
 
                             int accelerateGateValue = 30;
 
                             Timer2++;
                             if (Timer2 > accelerateGateValue) //加速
                             {
-                                float velocityXLimit = speed * 2f;
+                                float velocityXLimit = ChargeSpeed * 2f;
                                 if (Math.Abs(NPC.velocity.X) < velocityXLimit)
                                     NPC.velocity.X *= 1.02f;
                             }
 
                             IsCharging = true;
+                        }
+
+                        break;
+                }
+            }
+
+            void DirectCharge()
+            {
+                switch (CurrentAttackPhase)
+                {
+                    case 0:
+                        ChargeStartDistance = NPC.Center - Target.Center;
+
+                        float speed = ChargeSpeed * Utils.Remap(Vector2.Distance(NPC.Center, Target.Center), ChargeDistanceX, ChargeDistanceX * 2f, 1f, 1.3f);
+                        NPC.damage = NPC.defDamage;
+                        IsCharging = true;
+                        CurrentAttackPhase = 1;
+
+                        Vector2 velocity = NPC.GetVelocityTowards(Target.Center, speed);
+                        NPC.velocity = velocity;
+
+                        NPC.FaceTarget(Target);
+                        NPC.spriteDirection = NPC.direction;
+                        SoundEngine.PlaySound(ChargeSound, NPC.Center);
+
+                        SpawnCombCell(NPC.Center, velocity * 0.4f, StingerDamage, CombCell.Behavior.Beehive, 0.3f);
+                        break;
+                    case 1:
+                        NPC.damage = NPC.defDamage;
+                        NPC.direction = NPC.velocity.X < 0f ? -1 : 1;
+                        NPC.spriteDirection = NPC.direction;
+
+                        Timer1++;
+
+                        Vector2 distance = NPC.Center - Target.Center;
+                        Vector2 chargeStartDistance = ChargeStartDistance;
+                        bool chargeCompleted = chargeStartDistance * distance is ( < 0f, < 0f) && (
+                            (Math.Abs(distance.X) > Math.Abs(chargeStartDistance.X) * 0.5f && Math.Abs(distance.Y) > Math.Abs(chargeStartDistance.Y) * 0.5f)
+                            || distance.Length() > chargeStartDistance.Length());
+
+                        if (Timer1 >= 35 || chargeCompleted)
+                            ShouldDecelerate = true;
+                        else if (!ShouldDecelerate || Timer1 >= 20)
+                        {
+                            float velocityXLimit = ChargeSpeed * 1.5f;
+                            if (NPC.velocity.Length() < velocityXLimit)
+                                NPC.velocity.Modulus *= 1.02f;
+                        }
+
+                        if (ShouldDecelerate)
+                        {
+                            NPC.damage = 0;
+                            float playerLocation = NPC.Center.X - Target.Center.X;
+                            NPC.direction = playerLocation < 0 ? 1 : -1;
+                            NPC.spriteDirection = NPC.direction;
+                            IsCharging = false;
+                            NPC.velocity *= 0.8f;
+
+                            if (NPC.velocity.Length() < 0.2f)
+                            {
+                                CheckPhaseChange();
+                                SelectNextBehavior();
+                                if (CurrentBehavior is not (Behavior.Phase1_NormalCharge or Behavior.Phase1_DirectCharge) && Main.rand.NextProbability(0.7f))
+                                    AttackRandomVariation_Charge = !AttackRandomVariation_Charge;
+                                break;
+                            }
                         }
                         break;
                 }
@@ -430,26 +400,27 @@ public sealed partial class QueenBee_Anomaly
             void Stinger()
             {
                 NPC.damage = 0;
-                float playerLocation = NPC.Center.X - Target.Center.X;
-                NPC.direction = playerLocation < 0 ? 1 : -1;
-                NPC.spriteDirection = NPC.direction;
-
-                Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
 
                 TryMoveAboveTarget();
 
                 Timer1++;
-                int stingerAttackTimer = Phase2_3 ? 24 : Phase1_2 ? 18 : 12;
+                int stingerAttackTimer = AttackRandomVariation_Stinger ? 18 : 12;
 
                 if (Timer1 % stingerAttackTimer == 0)
                 {
-                    int numStingerShots = Phase2_3 ? 7 : Phase1_2 ? 9 : 12;
-                    int num = Timer1 / numStingerShots;
+                    Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
+                    float stingerSpeed = Ultra ? 18f : 15f;
+                    Vector2 stingerVelocity = (Target.Center - stingerSpawnLocation).ToCustomLength(stingerSpeed);
 
-                    if (num > numStingerShots)
+                    int numStingerShots = AttackRandomVariation_Stinger ? 8 : 12;
+                    int num = Timer1 / stingerAttackTimer;
+
+                    if (num >= numStingerShots)
                     {
                         CheckPhaseChange();
                         SelectNextBehavior();
+                        if (Main.rand.NextProbability(0.7f))
+                            AttackRandomVariation_Stinger = !AttackRandomVariation_Stinger;
                         return;
                     }
                     else if (num > 0 && NPC.Bottom.Y < Target.Top.Y && Collision.CanHit(stingerSpawnLocation, 1, 1, Target.position, Target.width, Target.height))
@@ -457,36 +428,32 @@ public sealed partial class QueenBee_Anomaly
                         SoundEngine.PlaySound(SoundID.Item17, stingerSpawnLocation);
                         if (TOSharedData.NotClient)
                         {
-                            float stingerSpeed = Ultra ? 18f : 15f;
-                            Vector2 stingerVelocity = (Target.Center - stingerSpawnLocation).ToCustomLength(stingerSpeed);
-                            int type = Aroma ? (Phase1_3 ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.FlamingWood) : ProjectileID.QueenBeeStinger;
+                            int type = Aroma ? (Phase1_2 ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.FlamingWood) : ProjectileID.QueenBeeStinger;
 
                             Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation, stingerVelocity, type, StingerDamage, 0f, action: p =>
                             {
-                                p.ai[1] = (Aroma && Phase1_3) ? Target.position.Y : 0f;
+                                p.ai[1] = (Aroma && Phase1_2) ? Target.position.Y : 0f;
                                 p.timeLeft = 600;
                             });
 
-                            if (Phase1_2)
+                            if (AttackRandomVariation_Stinger)
                             {
-                                int numExtraStingers = Phase2_3 ? 4 : 2;
+                                int numExtraStingers = 4;
                                 for (int i = 0; i < numExtraStingers; i++)
                                 {
                                     Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation + Main.rand.NextVector2CircularEdge(16f, 16f) * (i + 1), stingerVelocity * MathHelper.Lerp(0.75f, 1f, i / (float)numExtraStingers), type, StingerDamage, 0f, action: p =>
                                     {
+                                        p.ai[1] = (Aroma && Phase1_2) ? Target.position.Y : 0f;
                                         p.timeLeft = 600;
                                     });
                                 }
                             }
-
-                            if (num == numStingerShots) //生成蜂巢
-                                SpawnCombCell(stingerSpawnLocation, stingerVelocity * 0.4f, StingerDamage, CombCell.Behavior.Beehive, 0.2f);
                         }
                     }
                 }
             }
 
-            void Beehell()
+            void BeeSwarm()
             {
                 Timer1++;
 
@@ -502,38 +469,112 @@ public sealed partial class QueenBee_Anomaly
                         }
                         break;
                     case 1:
-                        StopMovement();
+                        StopMovement(0.85f);
+
+                        NPC.FaceTarget(Target);
 
                         switch (Timer1)
                         {
                             case 1:
-                                SpawnCombCell(NPC.Center, Vector2.Zero, 0, CombCell.Behavior.Beehell, 0.95f);
+                                SpawnCombCell(NPC.Center + new Vector2(0f, -30f * NPC.scale), Vector2.Zero, 0, CombCell.Behavior.BeeSwarm, 0.875f * NPC.scale);
                                 break;
-                            case 25:
+                            case 40:
+                                SpawnFriendlyBee(NPC.Center, Vector2.Zero, FriendlyBee.Behavior_SwarmReminder, AttackRandomVariation_Stinger.ToDirectionInt());
+                                break;
+                            case 50:
                                 Timer1 = 0;
                                 CurrentAttackPhase = 2;
                                 break;
                         }
                         break;
                     case 2:
-                        StopMovement(0.9f);
+                        NPC.velocity = Vector2.Zero;
 
                         int adjustedTimer = Timer1 - 1;
-                        int attackTimer = 25;
+                        int attackTimer = 2;
                         if (adjustedTimer % attackTimer == 0)
                         {
                             int num = adjustedTimer / attackTimer;
+                            float spread = MathHelper.ToRadians(Ultra ? 55f : 50f);
 
-                            int amount = (int)MathHelper.Lerp(16, 20, NPC.LostLifeRatio) + num;
-                            float speed = Main.rand.NextFloat(12f, 15f) + num * 2f;
-                            Vector2 velocity = Main.rand.NextPolarVector2(speed);
-                            Projectile.NewProjectilesArc<BeeProjectile>(amount, MathHelper.TwoPi / amount, SourceAI, NPC.Center, velocity, 10, 0f, action: p =>
+                            if (TOSharedData.NotClient)
                             {
-                                p.velocity *= Main.rand.NextFloat(0.9f, 1.2f);
-                                p.Timer1 += 120;
-                            });
+                                for (int i = -1; i <= 1; i += 2)
+                                {
+                                    float speed = Main.rand.NextFloat(9f, 18f);
+                                    Vector2 velocity = new PolarVector2(speed, MathHelper.ToRadians(2f * Math.Max(num - 15, 0) * AttackRandomVariation_Stinger.ToDirectionInt()) + Main.rand.NextFloat(-spread, spread)) * i;
+                                    Projectile.NewProjectileAction<BeeProjectile>(SourceAI, NPC.Center, velocity, BeeDamage, 0f, action: p =>
+                                    {
+                                        p.ai[0] = BeeProjectile.Behavior_Rotate;
+                                        p.ai[1] = Main.rand.NextFloat(0.012f, 0.015f) * (Ultra ? 1.25f : 1f) * Main.rand.NextDirectionInt();
+                                    });
 
-                            if (num >= 4)
+                                    if (Main.rand.NextBool(3))
+                                    {
+                                        velocity *= -1.3f;
+                                        Projectile.NewProjectileAction<BeeProjectile>(SourceAI, NPC.Center, velocity, BeeDamage, 0f, action: p =>
+                                        {
+                                            p.ai[0] = BeeProjectile.Behavior_Rotate;
+                                            p.ai[1] = Main.rand.NextFloat(0.012f, 0.015f) * (Ultra ? 1.25f : 1f) * Main.rand.NextDirectionInt();
+                                        });
+                                    }
+                                }
+                            }
+
+                            if (Phase1_2 && num == 120)
+                            {
+                                Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
+
+                                SoundEngine.PlaySound(SoundID.Item17, stingerSpawnLocation);
+
+                                if (TOSharedData.NotClient)
+                                {
+                                    float stingerSpeed = 15f;
+
+                                    Vector2 projectileVelocity = (Target.Center - stingerSpawnLocation).ToCustomLength(stingerSpeed);
+                                    int type = Aroma ? (Main.rand.NextBool() ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.QueenBeeStinger) : ProjectileID.QueenBeeStinger;
+                                    int numProj = Ultra ? 11 : 7;
+
+                                    float rotation = MathHelper.ToRadians(Ultra ? 90 : 60);
+                                    for (int i = 0; i < numProj; i++)
+                                    {
+                                        Vector2 perturbedSpeed = projectileVelocity.RotatedBy(MathHelper.Lerp(-rotation, rotation, i / (float)(numProj - 1)));
+                                        if (i % 2 != 0)
+                                            perturbedSpeed *= 0.8f;
+
+                                        Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation + perturbedSpeed.ToCustomLength(10f), perturbedSpeed, type, StingerDamage, 0f, action: p =>
+                                        {
+                                            p.ai[1] = Aroma ? Target.position.Y : 0f;
+                                            p.timeLeft = 600;
+
+                                            if (!Aroma)
+                                                p.tileCollide = false;
+                                        });
+                                    }
+                                }
+                            }
+                            else if (Ultra && num >= 30 && num % 5 == 0)
+                            {
+                                Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
+
+                                SoundEngine.PlaySound(SoundID.Item17, stingerSpawnLocation);
+
+                                if (TOSharedData.NotClient)
+                                {
+                                    float stingerSpeed = 15f;
+                                    Vector2 stingerVelocity = (Target.Center - stingerSpawnLocation).ToCustomLength(stingerSpeed);
+
+                                    int type = Aroma ? (Phase1_2 ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.FlamingWood) : ProjectileID.QueenBeeStinger;
+
+                                    Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation, stingerVelocity, type, StingerDamage, 0f, action: p =>
+                                    {
+                                        p.ai[1] = (Aroma && Phase1_2) ? Target.position.Y : 0f;
+                                        p.timeLeft = 600;
+                                    });
+                                }
+                            }
+
+                            if (num >= 120)
                             {
                                 Timer1 = 0;
                                 CurrentAttackPhase = 3;
@@ -541,19 +582,186 @@ public sealed partial class QueenBee_Anomaly
                         }
                         break;
                     case 3:
-                        if (Timer1 >= 50)
+                        if (Timer1 >= 60)
+                        {
+                            SelectNextBehavior();
+                            if (Main.rand.NextProbability(0.7f))
+                                AttackRandomVariation_BeeSwarm = !AttackRandomVariation_BeeSwarm;
+                        }
+                        break;
+                }
+
+                NPC.FaceTarget(Target);
+                NPC.spriteDirection = NPC.direction;
+            }
+
+            void BeeSwarm2()
+            {
+                Timer1++;
+
+                switch (CurrentAttackPhase)
+                {
+                    case 0:
+                        TryMoveAboveTarget();
+
+                        if (Timer1 >= 40 && NPC.Bottom.Y < Target.Top.Y)
+                        {
+                            Timer1 = 0;
+                            CurrentAttackPhase = 1;
+                        }
+                        break;
+                    case 1:
+                        StopMovement(0.85f);
+
+                        NPC.FaceTarget(Target);
+
+                        switch (Timer1)
+                        {
+                            case 1:
+                                SpawnCombCell(NPC.Center, Vector2.Zero, 0, CombCell.Behavior.BeeSwarm2, 0.875f * NPC.scale);
+                                break;
+                            case 75: //生成迷惑性蜂巢和安全蜂巢
+                                int amount = Ultra ? Main.rand.Next(11, 16) : Main.rand.Next(5, 8);
+                                int safeCombCellNumber = Main.rand.Next(amount);
+
+                                if (TOSharedData.NotClient)
+                                {
+                                    PolarVector2 basis0 = new(0f);
+                                    PolarVector2 basis1 = new(TOMathUtils.PiOver3 * 2);
+
+                                    Vector2[] spawnCoordinates = new Vector2[amount];
+                                    int value = Main.rand.Next(6);
+                                    spawnCoordinates[0] = value switch
+                                    {
+                                        0 => new(3, 0),
+                                        1 => new(-3, 0),
+                                        2 => new(0, 3),
+                                        3 => new(0, -3),
+                                        4 => new(3, 3),
+                                        5 => new(-3, -3),
+                                        _ => new(3, 0)
+                                    };
+                                    for (int i = 1; i < amount; i++)
+                                    {
+                                        do spawnCoordinates[i] = new Vector2(Main.rand.Next(-4, 5), Main.rand.Next(-4, 5));
+                                        while (!Check(i));
+                                        
+                                        bool Check(int i)
+                                        {
+                                            Vector2 newValue = spawnCoordinates[i];
+                                            float length = (basis0 * newValue.X + basis1 * newValue.Y).Radius;
+                                            if (length < 2.5f || length > (Ultra ? 5f : 3.3f))
+                                                return false;
+
+                                            for (int j = 0; j < i; j++)
+                                            {
+                                                if (newValue == spawnCoordinates[j])
+                                                    return false;
+                                            }
+
+                                            return true;
+                                        }
+                                    }
+
+                                    float scale = Ultra ? 0.525f : 0.75f;
+
+                                    float radius = CombCell.HexagonRadius * MathF.Sqrt(3); //乘以sqrt(3)，得到内切圆直径，确保六边形各边相接
+                                    radius -= 9.5f; //边框宽度为19像素
+                                    radius *= scale; //缩放
+
+                                    basis0 *= radius;
+                                    basis1 *= radius;
+
+                                    for (int i = 0; i < amount; i++)
+                                    {
+                                        Vector2 spawnCoordinate = spawnCoordinates[i];
+                                        PolarVector2 offset = basis0 * spawnCoordinate.X + basis1 * spawnCoordinate.Y;
+                                        bool safe = i == safeCombCellNumber;
+                                        SpawnCombCell(NPC.Center + new Vector2(0f, -30f * NPC.scale) + offset, Vector2.Zero, 0, safe ? CombCell.Behavior.BeeSwarm2_Safe : CombCell.Behavior.BeeSwarm2_Fake, scale, (p, c) =>
+                                        {
+                                            c.Offset = offset;
+                                            if (safe)
+                                            {
+                                                SafeCombCellOffset = offset;
+                                                SafeCombCell = p;
+                                            }
+                                        });
+                                    }
+                                }
+                                break;
+
+                            case 135:
+                                if (HasSafeCombCell)
+                                {
+                                    Vector2 position = SafeCombCell.Center;
+                                    for (int i = 0; i < 24; i++)
+                                    {
+                                        float speed = Main.rand.NextFloat(7f, 11f);
+                                        Vector2 velocity = new PolarVector2(speed, TOMathUtils.PiOver12 * i).RotatedByRandom(MathHelper.ToRadians(10f));
+                                        SpawnFriendlyBee(position, velocity, FriendlyBee.Behavior_SafeCombCellReminder, 0f);
+                                    }
+                                }
+                                break;
+
+                            case 315:
+                                Timer1 = 0;
+                                CurrentAttackPhase = 2;
+                                break;
+                        }
+                        break;
+                    case 2:
+                        if (!HasSafeCombCell)
+                        {
+                            CurrentAttackPhase = 3;
+                            break;
+                        }
+
+                        NPC.velocity = Vector2.Zero;
+
+                        int adjustedTimer = Timer1 - 1;
+                        int attackTimer = 2;
+                        if (adjustedTimer % attackTimer == 0)
+                        {
+                            int num = adjustedTimer / attackTimer;
+                            float spread = MathHelper.ToRadians(Ultra ? 55f : 50f);
+
+                            if (TOSharedData.NotClient)
+                            {
+                                for (int i = 0; i < 5; i++)
+                                {
+                                    Vector2 velocity = Main.rand.NextPolarVector2(15f, 25f);
+                                    Projectile.NewProjectileAction<KillerBeeSmall>(SourceAI, NPC.Center, velocity, BeeDamage, 0f, action: p =>
+                                    {
+                                        p.ai[0] = SafeCombCell.whoAmI;
+                                        p.ai[1] = Main.rand.NextFloat(0.01f, 0.07f) * Main.rand.NextDirectionInt();
+                                    });
+                                }
+                            }
+
+                            if (num >= 120)
+                            {
+                                Timer1 = 0;
+                                CurrentAttackPhase = 3;
+                            }
+                        }
+                        break;
+                    case 3:
+                        if (Timer1 >= 135)
                             SelectNextBehavior();
                         break;
                 }
+
+                NPC.FaceTarget(Target);
+                NPC.spriteDirection = NPC.direction;
             }
         }
 
-        void PhaseChange_2To3()
+        void PhaseChange_1To2()
         {
 
         }
 
-        void Phase3AI()
+        void Phase2AI()
         {
             switch (CurrentBehavior)
             {
@@ -570,8 +778,8 @@ public sealed partial class QueenBee_Anomaly
 
             void CheckPhaseChange()
             {
-                if (NPC.LifeRatio <= Phase3_2LifeRatio)
-                    CurrentPhase = Phase.Phase3_2;
+                if (NPC.LifeRatio <= Phase2_2LifeRatio)
+                    CurrentPhase = Phase.Phase2_2;
             }
         }
         #endregion 行为函数

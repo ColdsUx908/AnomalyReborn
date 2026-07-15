@@ -465,7 +465,7 @@ public sealed partial class QueenSlime_Anomaly : AnomalyNPCBehavior<QueenSlime_A
             }
         }
 
-        // 核心光球
+        // 水晶核心
         Texture2D coreTexture = TextureAssets.Extra[ExtrasID.QueenSlimeCrystalCore].Value;
         Rectangle coreFrame = coreTexture.Frame();
         Vector2 coreOrigin = coreFrame.Size() * new Vector2(0.5f, 0.5f);

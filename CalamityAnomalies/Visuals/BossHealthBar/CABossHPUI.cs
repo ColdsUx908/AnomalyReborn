@@ -1,271 +1,70 @@
 ﻿// Developed by ColdsUx
 
-using System.Diagnostics.CodeAnalysis;
-using CalamityMod.Events;
 using CalamityMod.NPCs;
-using CalamityMod.NPCs.CeaselessVoid;
-using CalamityMod.NPCs.ExoMechs.Apollo;
-using CalamityMod.NPCs.ExoMechs.Artemis;
-using CalamityMod.NPCs.Ravager;
-using CalamityMod.NPCs.SlimeGod;
-using CalamityMod.UI;
-using Terraria.GameContent.Events;
-using Terraria.GameContent.UI.BigProgressBar;
-using static CalamityAnomalies.Visuals.BetterBossHealthBar;
-using static CalamityMod.UI.BossHealthBarManager;
+using static CalamityAnomalies.Visuals.CABossHealthBar;
 
 namespace CalamityAnomalies.Visuals;
 
 /// <summary>
-/// 改进的Boss血条样式管理器。此类是对灾厄模组 <see cref="BossHealthBarManager"/> 的 Detour 实现，
-/// 用于重定向原有的绘制与更新逻辑，而非从零开始构建全新血条系统，也并非 CalamityAnomalies 自己独立的血条。
-/// 它在灾厄原有 Boss 血条的基础上提供增强的视觉效果、多体节生命合并、异象模式特殊渲染等功能。
-/// </summary>
-public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, IContentLoader, ILocalizationPrefix
-{
-    /// <summary>
-    /// 获取此 UI 元素的本地化前缀，用于查询语言文件中的文本。
-    /// </summary>
-    public string LocalizationPrefix => CASharedData.ModLocalizationPrefix + "UI.BetterBossHealthBar";
-
-    /// <summary>
-    /// 存储被明确排除、不使用 BetterBossHPUI 进行显示的 NPC 类型 ID。
-    /// 例如世界吞噬者的体节、阿尔忒弥斯等。
-    /// </summary>
-    public static readonly HashSet<int> _exclusiveNPCTypes = [];
-
-    /// <summary>
-    /// 用于自定义覆盖 Boss 名称的委托。
-    /// </summary>
-    /// <param name="bar">Boss 血条。</param>
-    /// <param name="overridingName">输出参数，用于提供覆盖名称。</param>
-    /// <returns>返回 <see langword="true"/> 以替代默认 NPC 全名。</returns>
-    public delegate bool BetterOverridingNameFunction(BetterBossHPUI bar, [NotNullWhen(true)] out string overridingName);
-
-    /// <summary>
-    /// 用于自定义或补充血量统计逻辑的委托。返回 <see langword="true"/> 表示拦截了默认的血量计算。
-    /// </summary>
-    /// <param name="bar">Boss 血条。</param>
-    public delegate bool BetterLifeFunction(BetterBossHPUI bar);
-
-    /// <summary>
-    /// 用于在血量条下方额外显示小文本，可完全禁用原始小文本。
-    /// </summary>
-    /// <param name="bar">Boss 血条。</param>
-    /// <param name="text">输出参数，用于提供额外小文本。</param>
-    /// <param name="disableOrig">输出参数，指示是否禁用原始的生命值小文本。</param>
-    /// <returns>返回 <see langword="true"/> 表示拦截了灾厄默认的拓展小文本显示逻辑。</returns>
-    public delegate bool BetterSmallTextFunction(BetterBossHPUI bar, [NotNullWhen(true)] out string text, out bool disableOrig);
-
-    /// <summary>
-    /// 注册的自定义名称覆盖函数列表。
-    /// </summary>
-    public static readonly List<BetterOverridingNameFunction> _overridingNameFunctions = [];
-
-    /// <summary>
-    /// 注册的自定义血量统计函数列表。先匹配到的函数将阻止后续默认计算。
-    /// </summary>
-    public static readonly List<BetterLifeFunction> _lifeFunctions = [];
-
-    /// <summary>
-    /// 注册的额外小文本生成函数列表。
-    /// </summary>
-    public static readonly List<BetterSmallTextFunction> _smallTextFunctions = [];
-
-    /// <summary>
-    /// 鼠标文字字体（用于绘制 Boss 名称）。
-    /// </summary>
-    public static DynamicSpriteFont MouseFont => FontAssets.MouseText?.Value;
-    /// <summary>
-    /// 物品堆叠数字字体（用于额外小文本）。
-    /// </summary>
-    public static DynamicSpriteFont ItemStackFont => FontAssets.ItemStack?.Value;
-
-    /// <summary>
-    /// 最大可同时存在的血条记录数量。
-    /// </summary>
-    public const int MaxBars = 6;
-    /// <summary>
-    /// 最大同时显示的活动 NPC 的血条数量。
-    /// </summary>
-    public const int MaxActiveBars = 4;
-
-    /// <summary>
-    /// 当前活跃的 BetterBossHPUI 实例，以 NPC 的 Identifier 为键。
-    /// </summary>
-    public static readonly Dictionary<long, BetterBossHPUI> CurrentBars = [];
-
-    /// <summary>
-    /// 每帧更新时用于标记当前仍有效的 NPC 标识符，无效的血条将在后续被移除。
-    /// </summary>
-    private static readonly HashSet<long> _validIdentifiers = [];
-
-    /// <summary>
-    /// Detour 绘制方法，替代原有的 BossHealthBarManager.Draw，使用 BetterBossHPUI 进行绘制。
-    /// </summary>
-    public override void Detour_Draw(Orig_Draw orig, BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
-    {
-        int x = Main.screenWidth
-            - (Main.playerInventory || Main.invasionType > 0 || Main.pumpkinMoon || Main.snowMoon || DD2Event.Ongoing || AcidRainEvent.AcidRainEventIsOngoing ? 670 : 420);
-        int y = Main.screenHeight - 25;
-
-        int activeCount = 0;
-
-        foreach (BetterBossHPUI newBar in
-            from pair in CurrentBars
-            let newBar = pair.Value
-            orderby newBar.Valid descending, pair.Key ascending
-            select newBar)
-        {
-            y -= newBar.Height;
-            if (activeCount >= MaxActiveBars && newBar.Valid)
-                continue;
-            newBar.Draw(spriteBatch, ref x, ref y);
-            if (newBar.Valid)
-                activeCount++;
-        }
-    }
-
-    /// <summary>
-    /// Detour 更新方法，替代原有的 BossHealthBarManager.Update，管理 BetterBossHPUI 的生命周期。
-    /// </summary>
-    public override void Detour_Update(Orig_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
-    {
-        _validIdentifiers.Clear();
-        foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(n => !BossExclusionList.Contains(n.type)))
-        {
-            long npcIdentifier = npc.Identifier;
-            if (CurrentBars.ContainsKey(npcIdentifier))
-                _validIdentifiers.Add(npcIdentifier);
-            else if (CurrentBars.Count < MaxBars&& ((npc.IsBossEnemy && !_exclusiveNPCTypes.Contains(npc.type)) || MinibossHPBarList.Contains(npc.type) || npc.CalamityNPC.CanHaveBossHealthBar))
-                CurrentBars.Add(npcIdentifier, new BetterBossHPUI(npc));
-        }
-
-        foreach ((long identifier, BetterBossHPUI newBar) in CurrentBars)
-        {
-            newBar.Update(_validIdentifiers.Contains(identifier));
-            if (newBar.CloseAnimationTimer >= 120)
-                CurrentBars.Remove(identifier);
-        }
-    }
-
-    /// <summary>
-    /// 模组内容加载完成后执行，初始化排除列表、一对多体节关系以及注册各种自定义函数。
-    /// </summary>
-    void IContentLoader.PostSetupContent()
-    {
-        _exclusiveNPCTypes.Add(NPCID.EaterofWorldsBody);
-        _exclusiveNPCTypes.Add(NPCID.EaterofWorldsTail);
-        _exclusiveNPCTypes.Add(ModContent.NPCType<Artemis>());
-
-        MinibossHPBarList.Add(NPCID.LunarTowerVortex);
-        MinibossHPBarList.Add(NPCID.LunarTowerStardust);
-        MinibossHPBarList.Add(NPCID.LunarTowerNebula);
-        MinibossHPBarList.Add(NPCID.LunarTowerSolar);
-        MinibossHPBarList.Add(NPCID.PirateShip);
-        OneToMany[NPCID.SkeletronHead] = [NPCID.SkeletronHand];
-        OneToMany[NPCID.SkeletronPrime] = [NPCID.PrimeSaw, NPCID.PrimeVice, NPCID.PrimeCannon, NPCID.PrimeLaser];
-        OneToMany[NPCID.Golem] = [NPCID.GolemFistLeft, NPCID.GolemFistRight, NPCID.GolemHead, NPCID.GolemHeadFree];
-        OneToMany[NPCID.BrainofCthulhu] = [NPCID.Creeper];
-        OneToMany[NPCID.MartianSaucerCore] = [NPCID.MartianSaucerTurret, NPCID.MartianSaucerCannon];
-        OneToMany[NPCID.PirateShip] = [NPCID.PirateShipCannon];
-        OneToMany[ModContent.NPCType<CeaselessVoid>()] = [ModContent.NPCType<DarkEnergy>()];
-        OneToMany[ModContent.NPCType<RavagerBody>()] =
-        [
-            ModContent.NPCType<RavagerClawRight>(),
-            ModContent.NPCType<RavagerClawLeft>(),
-            ModContent.NPCType<RavagerLegRight>(),
-            ModContent.NPCType<RavagerLegLeft>(),
-            ModContent.NPCType<RavagerHead>()
-        ];
-        OneToMany[ModContent.NPCType<EbonianPaladin>()] = [];
-        OneToMany[ModContent.NPCType<CrimulanPaladin>()] = [];
-
-        //阿波罗
-        _overridingNameFunctions.Add((b, out name) =>
-        {
-            if (b.NPC.ModNPC is Apollo apollo)
-            {
-                name = Language.GetTextValue(CASharedData.CalamityModLocalizationPrefix + "UI.ExoTwinsName" + (apollo.exoMechdusa ? "Hekate" : "Normal"));
-                return true;
-            }
-            name = null;
-            return false;
-        });
-
-        //荷兰飞盗船
-        _lifeFunctions.Add(b =>
-        {
-            NPC npc = b.NPC;
-            if (npc.type == NPCID.PirateShip)
-            {
-                long lifeMax = 0L;
-                long life = 0L;
-                foreach ((long identifier, NPC n) in b.CustomOneToMany)
-                {
-                    if (n.Identifier == identifier && n.active && n.lifeMax > 0)
-                    {
-                        lifeMax += n.lifeMax;
-                        life += n.life;
-                    }
-                }
-                if (b.CombinedNPCMaxLife != 0L && (b.InitialMaxLife == 0L || b.InitialMaxLife < b.CombinedNPCMaxLife))
-                    b.InitialMaxLife = b.CombinedNPCMaxLife;
-                return true;
-            }
-            return false;
-        });
-    }
-
-    /// <summary>
-    /// 模组卸载时清理所有静态数据。
-    /// </summary>
-    void IContentLoader.OnModUnload()
-    {
-        _exclusiveNPCTypes.Clear();
-        _overridingNameFunctions.Clear();
-        _lifeFunctions.Clear();
-        _smallTextFunctions.Clear();
-    }
-
-    /// <summary>
-    /// 世界加载时清空已有的血条记录，开始新的世界。
-    /// </summary>
-    void IContentLoader.OnWorldLoad() => CurrentBars.Clear();
-
-    /// <summary>
-    /// 世界卸载时清空血条记录，避免数据残留。
-    /// </summary>
-    void IContentLoader.OnWorldUnload() => CurrentBars.Clear();
-}
-
-/// <summary>
-/// 改进的Boss血条UI类。继承自灾厄的 <see cref="BossHPUI"/>，在原有基础上强化了视觉效果、
+/// 改进的Boss血条UI类，在原有基础上强化了视觉效果、
 /// 多体节血量合并、异象模式渲染支持等功能。此类不是全新实现，而是对原版的扩展与替换。
 /// </summary>
-public class BetterBossHPUI : BossHPUI
+public class CABossHPUI
 {
-    #region 基类成员隐藏
-#pragma warning disable CA1822 //BossHPUI类中的这几个成员是实例成员，此处保留实例设定
     /// <summary>
-    /// 禁止直接访问基类的 AssociatedNPC，应使用 <see cref="NPC"/> 属性。
+    /// 主色调，用于大型生命百分比文本等主要元素。
     /// </summary>
-    public new NPC AssociatedNPC => throw new InvalidOperationException("BetterBossHPUI.AssociatedNPC should not be used. Use BetterBossHPUI.NPC instead.");
+    public static Color MainColor = new(229, 189, 62);
+
     /// <summary>
-    /// 禁止直接调用基类的无参 Update，应使用 <see cref="Update(bool)"/> 方法。
+    /// 主边框颜色，用于大型文本描边。
     /// </summary>
-    public new void Update() => throw new InvalidOperationException($"BetterBossHPUI.Update() should not be used. Use BetterBossHPUI.Update(bool) instead.");
-    /// <summary>
-    /// 禁止直接调用基类的 Draw 方法，应使用 <see cref="Draw(SpriteBatch, ref int, ref int)"/>。
-    /// </summary>
-    public new void Draw(SpriteBatch spriteBatch, int x, int y) => throw new InvalidOperationException($"BetterBossHPUI.Draw(SpriteBatch, int, int) should not be used. Use BetterBossHPUI.Draw(SpriteBatch, ref int, ref int) instead.");
-#pragma warning restore CA1822
-    #endregion 基类成员隐藏
+    public static Color MainBorderColour = new(197, 127, 46);
 
     /// <summary>
     /// 基础颜色，用于未激怒未强化防御时的血条渲染。
     /// </summary>
     public static readonly Color BaseColor = new(240, 240, 255);
+
+    /// <summary>
+    /// 指示此血条 UI 当前是否有效（对应的 NPC 仍存活且需要显示）。
+    /// </summary>
+    public bool Valid { get; private set; } = true;
+
+    /// <summary>
+    /// 血条开启动画的计时器，控制从无到有的过渡。
+    /// </summary>
+    public int OpenAnimationTimer;
+
+    /// <summary>
+    /// 血条关闭动画的计时器，控制从有到无的过渡。
+    /// </summary>
+    public int CloseAnimationTimer;
+
+    /// <summary>
+    /// 激怒状态过渡计时器，用于平滑颜色变化。
+    /// </summary>
+    public int EnrageTimer;
+
+    /// <summary>
+    /// 防御/伤害减免提升状态过渡计时器。
+    /// </summary>
+    public int IncreasingDefenseOrDRTimer;
+
+    /// <summary>
+    /// 连击伤害显示倒计时，控制白色残影条的持续时长。
+    /// </summary>
+    public int ComboDamageCountdown;
+
+    /// <summary>
+    /// 上一帧的合并生命值，用于检测连续伤害。
+    /// </summary>
+    public long PreviousLife;
+
+    /// <summary>
+    /// 当前连击开始时的合并生命值。
+    /// </summary>
+    public long HealthAtStartOfCombo;
 
     /// <summary>
     /// 是否在 OneToMany 中注册了附属 NPC 类型。
@@ -277,26 +76,10 @@ public class BetterBossHPUI : BossHPUI
     /// </summary>
     public readonly int[] CustomOneToManyIndexes;
 
-    // TODO 这个字典是未完成的。在未来的异象模式中，Boss生成时会绑定自己的所有体节NPC。
     /// <summary>
     /// 当前活跃的附属 NPC 实例，以 Identifier 为键。用于合并血量。
     /// </summary>
     public readonly Dictionary<long, NPC> CustomOneToMany = [];
-
-    /// <summary>
-    /// 是否具有特殊的血量获取需求（通过 <see cref="SpecialHPRequirements"/> 注册的委托）。
-    /// </summary>
-    public readonly bool HasSpecialLifeRequirement;
-
-    /// <summary>
-    /// 自定义血量统计函数，若 <see cref="HasSpecialLifeRequirement"/> 为 <see langword="true"/> 时使用。
-    /// </summary>
-    public readonly NPCSpecialHPGetFunction HPGetFunction;
-
-    /// <summary>
-    /// 指示此血条 UI 当前是否有效（对应的 NPC 仍存活且需要显示）。
-    /// </summary>
-    public bool Valid { get; private set; } = true;
 
     /// <summary>
     /// 此血条关联的主 NPC 实例。
@@ -321,22 +104,27 @@ public class BetterBossHPUI : BossHPUI
     /// <summary>
     /// 获取 NPC 的类型 ID。
     /// </summary>
-    public new int NPCType => NPC.type;
+    public int NPCType => NPC.type;
+
+    /// <summary>
+    /// 记录的初始最大生命值，用于计算生命比例，避免因最大生命值动态变化导致血条比例跳动。
+    /// </summary>
+    public long InitialMaxLife;
 
     /// <summary>
     /// 合并后的当前生命值。
     /// </summary>
-    public new long CombinedNPCLife;
+    public long CombinedNPCLife;
 
     /// <summary>
     /// 合并后的最大生命值。
     /// </summary>
-    public new long CombinedNPCMaxLife;
+    public long CombinedNPCMaxLife;
 
     /// <summary>
     /// 当前生命值比例（0~1），基于 <see cref="InitialMaxLife"/> 计算。
     /// </summary>
-    public new float NPCLifeRatio
+    public float NPCLifeRatio
     {
         get
         {
@@ -355,12 +143,12 @@ public class BetterBossHPUI : BossHPUI
     /// <summary>
     /// 当前 Boss（或附属 NPC）是否处于激怒状态。
     /// </summary>
-    public new bool NPCIsEnraged => Valid && NPC.active && (CalamityNPC.CurrentlyEnraged || (HasOneToMany && CustomOneToMany.Values.Any(n => n.CalamityNPC.CurrentlyEnraged)));
+    public bool NPCIsEnraged => Valid && NPC.active && (CalamityNPC.CurrentlyEnraged || (HasOneToMany && CustomOneToMany.Values.Any(n => n.CalamityNPC.CurrentlyEnraged)));
 
     /// <summary>
     /// 当前 Boss（或附属 NPC）是否正在提升防御/伤害减免。
     /// </summary>
-    public new bool NPCIsIncreasingDefenseOrDR => Valid && NPC.active && (CalamityNPC.CurrentlyIncreasingDefenseOrDR || (HasOneToMany && CustomOneToMany.Values.Any(n => n.CalamityNPC.CurrentlyIncreasingDefenseOrDR)));
+    public bool NPCIsIncreasingDefenseOrDR => Valid && NPC.active && (CalamityNPC.CurrentlyIncreasingDefenseOrDR || (HasOneToMany && CustomOneToMany.Values.Any(n => n.CalamityNPC.CurrentlyIncreasingDefenseOrDR)));
 
     /// <summary>
     /// 血条区域的高度（像素），用于布局排列。
@@ -381,24 +169,15 @@ public class BetterBossHPUI : BossHPUI
     /// 构造 BetterBossHPUI 实例，绑定到指定的 NPC。
     /// </summary>
     /// <param name="npc">要显示血条的 NPC。</param>
-    public BetterBossHPUI(NPC npc) : base(npc.whoAmI, null)
+    public CABossHPUI(NPC npc)
     {
-        NPC = Main.npc[NPCIndex];
+        NPC = npc;
         Identifier = NPC.Identifier;
         AnomalyNPC = NPC.Anomaly;
         CalamityNPC = NPC.CalamityNPC;
 
         HasOneToMany = OneToMany.TryGetValue(NPCType, out int[] value);
         CustomOneToManyIndexes = value;
-
-        foreach ((NPCSpecialHPGetRequirement requirement, NPCSpecialHPGetFunction func) in SpecialHPRequirements)
-        {
-            if (requirement(NPC))
-            {
-                HasSpecialLifeRequirement = true;
-                HPGetFunction = func;
-            }
-        }
     }
 
     /// <summary>
@@ -433,7 +212,7 @@ public class BetterBossHPUI : BossHPUI
                 if (ComboDamageCountdown > 0)
                     ComboDamageCountdown--;
 
-                OpenAnimationTimer = Math.Clamp(OpenAnimationTimer + 1, 0, 120); //由80改为120
+                OpenAnimationTimer = Math.Clamp(OpenAnimationTimer + 1, 0, 120);
 
                 EnrageTimer = Math.Clamp(EnrageTimer + (NPCIsEnraged ? 1 : -4), 0, 120);
                 IncreasingDefenseOrDRTimer = Math.Clamp(IncreasingDefenseOrDRTimer + (NPCIsIncreasingDefenseOrDR ? 1 : -4), 0, 120);
@@ -475,15 +254,6 @@ public class BetterBossHPUI : BossHPUI
                 return;
         }
 
-        foreach ((NPCSpecialHPGetRequirement requirement, NPCSpecialHPGetFunction func) in SpecialHPRequirements)
-        {
-            if (requirement(NPC))
-            {
-                CombinedNPCLife = func(NPC, false);
-                return;
-            }
-        }
-
         long result = NPC.life;
         foreach ((long identifier, NPC npc) in CustomOneToMany)
         {
@@ -507,15 +277,6 @@ public class BetterBossHPUI : BossHPUI
                 return;
         }
 
-        foreach ((NPCSpecialHPGetRequirement requirement, NPCSpecialHPGetFunction func) in SpecialHPRequirements)
-        {
-            if (requirement(NPC))
-            {
-                CombinedNPCMaxLife = func(NPC, true);
-                goto InitialMaxLife;
-            }
-        }
-
         long result = NPC.lifeMax;
         foreach ((long identifier, NPC npc) in CustomOneToMany)
         {
@@ -524,7 +285,6 @@ public class BetterBossHPUI : BossHPUI
         }
         CombinedNPCMaxLife = result;
 
-    InitialMaxLife:
         if (CombinedNPCMaxLife != 0L && (InitialMaxLife == 0L || InitialMaxLife < CombinedNPCMaxLife))
             InitialMaxLife = CombinedNPCMaxLife;
     }
@@ -604,7 +364,6 @@ public class BetterBossHPUI : BossHPUI
         if (PreDraw(spriteBatch, ref x, ref y))
         {
             DrawMainBar(spriteBatch, x, y);
-
             DrawComboBar(spriteBatch, x, y);
 
             (float sin, float cos) = TOMathUtils.TimeWrappingFunction.GetTimeSinCos(0.5f, 1f, 0f, true);
@@ -626,7 +385,6 @@ public class BetterBossHPUI : BossHPUI
 
             DrawSeperatorBar(spriteBatch, x, y, seperatorColor);
 
-            //为了避免NPC名称过长遮挡大生命值数字，二者的绘制顺序在此处被调换了，即先绘制NPC名称，再绘制大生命值数字。
             Color? mainColor;
             if (AnomalyNPC.IsRunningAnomalyAI)
             {
@@ -737,6 +495,10 @@ public class BetterBossHPUI : BossHPUI
     /// <summary>
     /// 绘制连击伤害指示条（白色残影部分）。
     /// </summary>
+    /// <param name="spriteBatch">SpriteBatch。</param>
+    /// <param name="x">X 坐标。</param>
+    /// <param name="y">Y 坐标。</param>
+    /// <param name="newColor">可覆盖的颜色值。</param>
     public void DrawComboBar(SpriteBatch spriteBatch, int x, int y, Color? newColor = null)
     {
         if (ComboDamageCountdown <= 0)
@@ -754,12 +516,15 @@ public class BetterBossHPUI : BossHPUI
     /// <summary>
     /// 绘制分隔条及异象模式下的血量阈值指示器。
     /// </summary>
+    /// <param name="spriteBatch">SpriteBatch。</param>
+    /// <param name="x">X 坐标。</param>
+    /// <param name="y">Y 坐标。</param>
+    /// <param name="newColor">可覆盖的颜色值。</param>
     public void DrawSeperatorBar(SpriteBatch spriteBatch, int x, int y, Color? newColor = null)
     {
         Color color = newColor ?? BaseColor * AnimationCompletionRatio * AnimationCompletionRatio2;
         spriteBatch.Draw(BossSeperatorBar, new Rectangle(x, y + 33, 400, 6), color);
 
-        //绘制血量阈值
         if (!AnomalyNPC.IsRunningAnomalyAI)
             return;
 
@@ -790,6 +555,13 @@ public class BetterBossHPUI : BossHPUI
     /// <summary>
     /// 绘制 NPC 名称，支持自定义名称覆盖、描边及颜色效果。
     /// </summary>
+    /// <param name="spriteBatch">SpriteBatch。</param>
+    /// <param name="x">X 坐标。</param>
+    /// <param name="y">Y 坐标。</param>
+    /// <param name="overrideText">覆盖的文本，为 <see langword="null"/> 时使用默认逻辑。</param>
+    /// <param name="mainColor">可选的主文字颜色。</param>
+    /// <param name="borderColor">可选的描边颜色。</param>
+    /// <param name="borderWidth">描边宽度。</param>
     public void DrawNPCName(SpriteBatch spriteBatch, int x, int y, string overrideText = null, Color? mainColor = null, Color? borderColor = null, float borderWidth = 0f)
     {
         string name = overrideText;
@@ -810,6 +582,10 @@ public class BetterBossHPUI : BossHPUI
     /// <summary>
     /// 绘制大型生命百分比文本。
     /// </summary>
+    /// <param name="spriteBatch">SpriteBatch。</param>
+    /// <param name="x">X 坐标。</param>
+    /// <param name="y">Y 坐标。</param>
+    /// <param name="overrideText">覆盖的文本，为 <see langword="null"/> 时自动生成百分比。</param>
     public void DrawBigLifeText(SpriteBatch spriteBatch, int x, int y, string overrideText = null)
     {
         string bigLifeText = overrideText ?? (NPCLifeRatio == 0f ? "0%" : (NPCLifeRatio * 100f).ToString("N1") + "%");
@@ -820,6 +596,11 @@ public class BetterBossHPUI : BossHPUI
     /// <summary>
     /// 绘制额外小文本（如具体生命数值、附属实体数量等）。
     /// </summary>
+    /// <param name="spriteBatch">SpriteBatch。</param>
+    /// <param name="x">X 坐标。</param>
+    /// <param name="y">Y 坐标。</param>
+    /// <param name="overrideText">完全覆盖的文本，不为 <see langword="null"/> 时跳过所有自定义和默认逻辑。</param>
+    /// <param name="ignoreConfig">是否忽略 <see cref="CABossHealthBar.CanDrawExtraSmallText"/> 配置。</param>
     public void DrawExtraSmallText(SpriteBatch spriteBatch, int x, int y, string overrideText = null, bool ignoreConfig = false)
     {
         if (!ignoreConfig && !CanDrawExtraSmallText)
@@ -831,13 +612,12 @@ public class BetterBossHPUI : BossHPUI
             3 or 7 or 15 => Main.rand.NextFloat(0.4f, 0.5f),
             _ => AnimationCompletionRatio
         };
-        int mainBarWidth = (int)MathHelper.Min(400f * AnimationCompletionRatio, 400f * NPCLifeRatio);
 
         string smallText = "";
         if (overrideText is not null)
         {
             smallText = overrideText;
-            goto Orig;
+            goto Draw;
         }
 
         foreach (BetterSmallTextFunction func in _smallTextFunctions)
@@ -888,80 +668,5 @@ public class BetterBossHPUI : BossHPUI
         }
         TODrawUtils.DrawBorderString(spriteBatch, font, text, baseDrawPosition, mainColor2, borderColor2, scale: scale);
     }
-    #endregion 公共绘制方法
-}
-
-/// <summary>
-/// 血量阈值指示器，用于在异象模式下 Boss 血条上标记关键血量百分比。
-/// </summary>
-public class HPThresholdIndicator
-{
-    /// <summary>
-    /// 获取阈值浮点值（0~1）的委托。返回值代表血量条上的位置比例。
-    /// </summary>
-    /// <param name="indicator">当前指示器实例。</param>
-    /// <param name="npc">关联的 NPC。</param>
-    /// <param name="bar">对应的 BetterBossHPUI。</param>
-    /// <returns>比例值，0~1 之间。</returns>
-    public delegate float HPThresholdIndicatorValueFunction(HPThresholdIndicator indicator, NPC npc, BetterBossHPUI bar);
-
-    /// <summary>
-    /// 自定义更新行为委托。
-    /// </summary>
-    /// <param name="indicator">当前指示器实例。</param>
-    /// <param name="npc">关联的 NPC。</param>
-    /// <param name="bar">对应的 BetterBossHPUI。</param>
-    /// <returns>返回 <see langword="false"/> 表示已处理更新，阻止默认计时逻辑；返回 <see langword="true"/> 则继续默认计时和生命周期控制。</returns>
-    public delegate bool HPThresholdIndicatorUpdateFunction(HPThresholdIndicator indicator, NPC npc, BetterBossHPUI bar);
-
-    /// <summary>
-    /// 自定义绘制行为委托。
-    /// </summary>
-    /// <param name="indicator">当前指示器实例。</param>
-    /// <param name="npc">关联的 NPC。</param>
-    /// <param name="bar">对应的 BetterBossHPUI。</param>
-    /// <param name="spriteBatch">用于绘制的 SpriteBatch。</param>
-    /// <param name="center">指示器中心点的坐标。</param>
-    /// <returns>返回 <see langword="false"/> 表示已处理绘制，阻止默认绘制；返回 <see langword="true"/> 则继续默认绘制逻辑。</returns>
-    public delegate bool HPThresholdIndicatorDrawFunction(HPThresholdIndicator indicator, NPC npc, BetterBossHPUI bar, SpriteBatch spriteBatch, Vector2 center);
-
-    /// <summary>
-    /// 存在计时器，控制指示器的显现动画。
-    /// </summary>
-    public int Timer;
-
-    /// <summary>
-    /// 淡出计时器，在血量低于阈值后开始计时，控制指示器的消失动画。
-    /// </summary>
-    public int EaseOutTimer;
-
-    /// <summary>
-    /// 获取阈值比例的函数。
-    /// </summary>
-    /// <remarks>用法参见 <see cref="HPThresholdIndicatorValueFunction"/>。</remarks>
-    public HPThresholdIndicatorValueFunction ValueFunction;
-
-    /// <summary>
-    /// 自定义更新函数。
-    /// </summary>
-    /// <remarks>用法参见 <see cref="HPThresholdIndicatorUpdateFunction"/>。</remarks>
-    public HPThresholdIndicatorUpdateFunction CustomUpdateFunction;
-
-    /// <summary>
-    /// 自定义绘制函数。
-    /// </summary>
-    /// <remarks>用法参见 <see cref="HPThresholdIndicatorDrawFunction"/>。</remarks>
-    public HPThresholdIndicatorDrawFunction CustomDrawFunction;
-
-    /// <summary>
-    /// 是否为亚阶段指示器。
-    /// <br/>若为 <see langword="true"/>，默认绘制时将使用银色纹理，而非金色纹理。此设定仅影响默认绘制逻辑，不会限制自定义绘制函数的表现形式。
-    /// </summary>
-    public bool IsSubPhaseIndicator;
-
-    /// <summary>
-    /// 获取当前指示器的阈值比例。
-    /// </summary>
-    /// <returns>比例值，0~1。</returns>
-    public float GetValue(NPC npc, BetterBossHPUI bar) => ValueFunction?.Invoke(this, npc, bar) ?? 0f;
+    #endregion
 }

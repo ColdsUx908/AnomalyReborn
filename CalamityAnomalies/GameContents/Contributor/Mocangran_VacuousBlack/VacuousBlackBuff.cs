@@ -1,4 +1,6 @@
-﻿using CalamityAnomalies.GameContents.Base;
+﻿// Developed by ColdsUx
+
+using CalamityAnomalies.GameContents.Base;
 
 namespace CalamityAnomalies.GameContents.Contributor.Mocangran_VacuousBlack;
 

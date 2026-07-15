@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Common.SingleBehaviors;
+﻿// Developed by ColdsUx
+
+namespace CalamityAnomalies.Common.SingleBehaviors;
 
 public sealed class StoryPlayerDamage : CAPlayerBehavior
 {

@@ -1,0 +1,12 @@
+BossHealthBar: {
+	ExtensionName: {
+		Segments: Segments
+		Creepers: Creepers
+		Hands: Hands
+		Arms: Arms
+		Guns: Guns
+		Cannons: Cannons
+		DarkEnergy: Dark Energy
+		BodyParts: Body Parts
+	}
+}

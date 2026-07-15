@@ -304,7 +304,7 @@ public class PublicizerGenerator : IIncrementalGenerator
 
             string name = methodSymbol.Name;
 
-            if (methodSymbol.Parameters.Any(p => p.Type.DeclaredAccessibility != Accessibility.Public))
+            if (methodSymbol.Parameters.Any(p => p.Type.DeclaredAccessibility is not (Accessibility.Public or Accessibility.NotApplicable)))
             {
                 localBuilder.Append($$"""
                     // {{name}}
@@ -505,7 +505,7 @@ public class PublicizerGenerator : IIncrementalGenerator
 
             string name = methodSymbol.Name;
 
-            if (methodSymbol.Parameters.Any(p => p.Type.DeclaredAccessibility != Accessibility.Public))
+            if (methodSymbol.Parameters.Any(p => p.Type.DeclaredAccessibility is not (Accessibility.Public or Accessibility.NotApplicable)))
             {
                 localBuilder.Append($$"""
                     // {{name}}

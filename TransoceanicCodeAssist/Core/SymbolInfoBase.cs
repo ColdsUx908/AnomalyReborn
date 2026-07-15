@@ -480,13 +480,15 @@ internal class MethodSymbolInfoBase : SymbolInfoBase<IMethodSymbol>
             if (param.IsParams)
                 modifier = "params ";
 
+            string defaultValue = HandleDefaultValue(param);
+
             // 原始类型（始终使用 FullyQualifiedFormat）
             string originalType = param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-            paramDeclarations.Add($"{modifier}{originalType} {param.Name}");
+            paramDeclarations.Add($"{modifier}{originalType} {param.Name}{defaultValue}");
 
             // 使用扩展方法：非 public 类型替换为 object，类型参数保留原名
             string fallbackType = param.Type.ToDisplayStringWithObjectForNonPublic(SymbolDisplayFormat.FullyQualifiedFormat, out _);
-            paramDeclarationsWithObjectForNonPublic.Add($"{(fallbackType == "object" ? "" : modifier)}{fallbackType} {param.Name}");
+            paramDeclarationsWithObjectForNonPublic.Add($"{(fallbackType == "object" ? "" : modifier)}{fallbackType} {param.Name}{defaultValue}");
 
             paramNames.Add(param.Name);
             paramNamesForCall.Add(modifier2 + param.Name);
@@ -496,6 +498,22 @@ internal class MethodSymbolInfoBase : SymbolInfoBase<IMethodSymbol>
         ParameterDeclarationsWithObjectForNonPublic = [.. paramDeclarationsWithObjectForNonPublic];
         ParameterNames = [.. paramNames];
         ParameterNamesForCall = [.. paramNamesForCall];
+
+        string HandleDefaultValue(IParameterSymbol param)
+        {
+            if (!param.HasExplicitDefaultValue)
+                return "";
+
+            // 保护机制：自定义值类型（非内置、非枚举的结构体）使用 default 关键字
+            if (param.Type.IsValueType
+                && param.Type.TypeKind == TypeKind.Struct
+                && param.Type.SpecialType == SpecialType.None)
+            {
+                return " = default";
+            }
+
+            return " = " + SymbolDisplay.FormatPrimitive(param.ExplicitDefaultValue, true, false);
+        }
     }
 
     /// <summary>
@@ -505,7 +523,7 @@ internal class MethodSymbolInfoBase : SymbolInfoBase<IMethodSymbol>
     /// 示例：<c>public void MyMethod(int param);</c>
     /// </summary>
     /// <returns>方法声明字符串；如果无效则返回 <see cref="string.Empty"/>。</returns>
-    public string GenerateDeclaration()
+    public string GenerateDeclaration(bool partial = true)
     {
         if (!Valid)
             return string.Empty;
@@ -522,7 +540,8 @@ internal class MethodSymbolInfoBase : SymbolInfoBase<IMethodSymbol>
         else if (Symbol.IsVirtual && !Symbol.IsSealed)
             modifiers.Add("virtual");
 
-        modifiers.Add("partial"); //始终添加partial关键字，避免问题
+        if (partial)
+            modifiers.Add("partial"); //添加partial关键字，避免问题
 
         string parametersString = string.Join(", ", ParameterDeclarationsWithObjectForNonPublic);
 

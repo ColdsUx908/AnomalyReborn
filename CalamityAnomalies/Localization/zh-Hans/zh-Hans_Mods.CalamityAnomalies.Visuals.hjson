@@ -1,0 +1,12 @@
+BossHealthBar: {
+	ExtensionName: {
+		Segments: 体节
+		Creepers: 飞眼怪
+		Hands: 手
+		Arms: 肢体
+		Guns: 枪械
+		Cannons: 大炮
+		DarkEnergy: 暗能量
+		BodyParts: 身体部位
+	}
+}

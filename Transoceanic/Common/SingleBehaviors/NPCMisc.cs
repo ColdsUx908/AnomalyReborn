@@ -28,7 +28,10 @@ public sealed class NPCMisc : TOGlobalNPCBehavior
     public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         foreach (AfterimageParticle afterimage in npc.Ocean.Afterimages)
-            afterimage.Draw(spriteBatch);
+        {
+            if (afterimage.UseDefaultDraw)
+                afterimage.Draw(spriteBatch);
+        }
 
         return true;
     }

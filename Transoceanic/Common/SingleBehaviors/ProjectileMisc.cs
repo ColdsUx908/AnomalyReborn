@@ -28,7 +28,10 @@ public sealed class ProjectileMisc : TOGlobalProjectileBehavior
     {
         SpriteBatch spriteBatch = Main.spriteBatch;
         foreach (AfterimageParticle afterimage in projectile.Ocean.Afterimages)
-            afterimage.Draw(spriteBatch);
+        {
+            if (afterimage.UseDefaultDraw)
+                afterimage.Draw(spriteBatch);
+        }
 
         return true;
     }

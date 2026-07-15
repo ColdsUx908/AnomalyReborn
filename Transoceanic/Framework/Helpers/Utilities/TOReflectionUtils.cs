@@ -316,6 +316,21 @@ public static class TOReflectionUtils
         .Select(member => (member, attribute: member.Attribute<TAttribute>(inherit))).Where(pair => pair.attribute is not null);
 
     /// <summary>
+    /// 获取所有被指定特性修饰的成员及对应特性实例。检索范围为指定的 Mod。
+    /// </summary>
+    /// <typeparam name="TMember">要检索的成员类型（如 <see cref="FieldInfo"/>、<see cref="PropertyInfo"/> 等）。</typeparam>
+    /// <typeparam name="TAttribute">要检索的特性类型。</typeparam>
+    /// <param name="mod">要检索的 Mod。</param>
+    /// <param name="inherit">是否搜索继承链上的特性。</param>
+    /// <returns>包含成员信息与特性实例的元组枚举。</returns>
+    /// <remarks>使用此方法的加载器应在 <see cref="Mod.PostSetupContent"/> 中调用。</remarks>
+    public static IEnumerable<(TMember member, TAttribute attribute)> GetMembersWithAttribute<TMember, TAttribute>(Mod mod, bool inherit = true)
+        where TMember : MemberInfo
+        where TAttribute : Attribute =>
+        AssemblyManager.GetLoadableTypes(mod.Code).SelectMany(type => type.GetMembers(UniversalBindingFlags)).OfType<TMember>()
+        .Select(member => (member, attribute: member.Attribute<TAttribute>(inherit))).Where(pair => pair.attribute is not null);
+
+    /// <summary>
     /// 设置结构体实例中的字段值（通过装箱拆箱方式，解决结构体字段反射赋值问题）。
     /// </summary>
     /// <typeparam name="T">结构体类型。</typeparam>

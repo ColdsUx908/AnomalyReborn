@@ -18,7 +18,11 @@ public static partial class TOExtensions
         {
             int index = Gore.NewGore(source, position, velocity, type);
             if (index < Main.maxGore)
-                action?.Invoke(Main.gore[index]);
+            {
+                Gore gore = Main.gore[index];
+                gore.position -= gore.AABBRectangle.Size() / 2f;
+                action?.Invoke(gore);
+            }
         }
 
         /// <summary>
@@ -42,7 +46,7 @@ public static partial class TOExtensions
         public static void NewGorePerfectAction(IEntitySource source, Vector2 position, int type, Action<Gore> action = null) =>
             NewGoreAction(source, position, Vector2.Zero, type, g =>
             {
-                g.position = position;
+                g.position = position - g.AABBRectangle.Size() / 2f;
                 g.velocity = Vector2.Zero;
                 action?.Invoke(g);
             });

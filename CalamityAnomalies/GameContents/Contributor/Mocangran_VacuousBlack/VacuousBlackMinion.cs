@@ -1,4 +1,6 @@
-﻿using CalamityAnomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
+﻿// Developed by ColdsUx
+
+using CalamityAnomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
 
 namespace CalamityAnomalies.GameContents.Contributor.Mocangran_VacuousBlack;
 

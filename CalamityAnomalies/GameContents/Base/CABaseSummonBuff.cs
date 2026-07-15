@@ -1,4 +1,6 @@
-﻿using CalamityMod.Buffs.Summon;
+﻿// Developed by ColdsUx
+
+using CalamityMod.Buffs.Summon;
 
 namespace CalamityAnomalies.GameContents.Base;
 

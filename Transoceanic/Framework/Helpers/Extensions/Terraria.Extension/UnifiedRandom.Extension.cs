@@ -33,5 +33,11 @@ public static partial class TOExtensions
         /// <param name="probability">概率值（0~1）。</param>
         /// <returns>如果随机数小于概率则返回 <see langword="true"/>，否则返回 <see langword="false"/>。</returns>
         public bool NextProbability(float probability) => rand.NextFloat() < probability;
+
+        /// <summary>
+        /// 返回一个代表随机方向的整数值，值为 -1 或 1。
+        /// </summary>
+        /// <returns>代表随机方向的整数值，值为 -1 或 1。</returns>
+        public int NextDirectionInt() => rand.NextBool().ToDirectionInt();
     }
 }

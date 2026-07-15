@@ -5,7 +5,7 @@ using CalamityMod.Dusts;
 
 namespace CalamityAnomalies.Anomaly.QueenSlime;
 
-partial class QueenSlime_Anomaly
+public sealed partial class QueenSlime_Anomaly
 {
     public override bool PreAI()
     {

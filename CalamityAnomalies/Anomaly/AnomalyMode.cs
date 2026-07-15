@@ -322,7 +322,7 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, null, null, null, null, Main.UIScaleMatrix);
 
             Texture2D bloomTex = ModContent.Request<Texture2D>("CalamityMod/UI/ModeIndicator/BloomFlare").Value;
-            float opacity = !_hasCheckedItOutYet ? 1f : 1f * GlowFadeTime / (float)GlowFadeAnimLength;
+            float opacity = !_hasCheckedItOutYet ? 1f : 1f * GlowFadeTime / GlowFadeAnimLength;
             float scale = 0.4f + (float)Math.Sin(Main.GlobalTimeWrappedHourly) * 0.05f;
             float rot = Main.GlobalTimeWrappedHourly * 0.5f;
 
@@ -378,10 +378,10 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
             if (!Main.mouseItem.IsAir)
                 textboxStart.X += 34;
 
-            if (textboxStart.X + regexedBoxSize.X + 4f > (float)Main.screenWidth)
+            if (textboxStart.X + regexedBoxSize.X + 4f > Main.screenWidth)
                 textboxStart.X = Main.screenWidth - regexedBoxSize.X - 4f;
 
-            if (textboxStart.Y + regexedBoxSize.Y + 4f > (float)Main.screenHeight)
+            if (textboxStart.Y + regexedBoxSize.Y + 4f > Main.screenHeight)
                 textboxStart.Y = Main.screenHeight - regexedBoxSize.Y - 4f;
 
             //It'd be great to be able to add a background to it but i don't think i know how to get the position of the text for that.

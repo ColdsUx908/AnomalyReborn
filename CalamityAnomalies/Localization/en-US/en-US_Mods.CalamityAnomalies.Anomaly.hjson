@@ -60,6 +60,9 @@ EyeofCthulhu: {
 QueenBee: {
 	BeeProjectile.DisplayName: Bee Projectile
 	CombCell.DisplayName: Comb Cell
+	FriendlyBee.DisplayName: Friendly Bee
+	KillerBeeSmall.DisplayName: Small Killer Bee
+	HugeStinger.DisplayName: Huge Stinger
 }
 
 QueenSlime: {

@@ -4,14 +4,17 @@ namespace CalamityAnomalies.Anomaly.QueenBee;
 
 public sealed class BeeProjectile : CAModProjectile
 {
-    public const byte Behavior_HomeIn = 1;
+    public const byte Behavior_Accelerate = 1;
+    public const byte Behavior_HomeIn = 2;
+    public const byte Behavior_Rotate = 3;
 
     /* 数组使用约定
      * 
      * Projectile.ai
      * [0] 行为类型（默认值0表示无行为，直线运动）
      * [1] 特殊数据：
-     *   若行为类型为1（追踪），表示追踪目标玩家的索引
+     *   若行为类型为2（追踪），表示追踪目标玩家的索引
+     *   若行为类型为3（旋转），表示旋转的角速度（单位：弧度/帧）
      */
 
     public override string LocalizationCategory => "Anomaly.QueenBee";
@@ -41,9 +44,18 @@ public sealed class BeeProjectile : CAModProjectile
         }
 
         Projectile.spriteDirection = (Projectile.velocity.X >= 0f).ToDirectionInt();
+        Projectile.rotation = Projectile.velocity.X * 0.03f;
 
         switch ((byte)Projectile.ai[0])
         {
+            case Behavior_Accelerate:
+                if (Timer1 == 120)
+                    Projectile.Kill();
+                else if (Timer1 <= 10)
+                    Projectile.velocity *= 1.41f; //1.41^10 ≈ 31.06
+
+                break;
+
             case Behavior_HomeIn:
                 switch (Timer1)
                 {
@@ -74,10 +86,17 @@ public sealed class BeeProjectile : CAModProjectile
                 Projectile.velocity *= 1.008f;
                 break;
 
+            case Behavior_Rotate:
+                if (Timer1 is >= 30 and <= 90)
+                    Projectile.velocity.Rotation += Projectile.ai[1];
+                break;
+
             default:
                 if (Timer1 >= 240)
                     Projectile.velocity *= 1.005f;
                 break;
         }
+
+        Projectile.tileCollide = Timer1 >= 100;
     }
 }

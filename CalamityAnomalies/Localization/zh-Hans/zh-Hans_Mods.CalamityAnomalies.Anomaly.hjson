@@ -60,6 +60,9 @@ EyeofCthulhu: {
 QueenBee: {
 	BeeProjectile.DisplayName: 蜜蜂
 	CombCell.DisplayName: 蜂巢单元
+	FriendlyBee.DisplayName: 友好蜜蜂
+	KillerBeeSmall.DisplayName: 小杀人蜂
+	HugeStinger.DisplayName: 巨型毒刺
 }
 
 QueenSlime: {
