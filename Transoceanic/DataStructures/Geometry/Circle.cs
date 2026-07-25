@@ -52,7 +52,7 @@ public struct Circle : IEquatable<Circle>, ICollidableWithRectangle
     /// </returns>
     public override readonly string ToString() => $"Circle {{ Center: {Center}, Radius: {Radius} }}";
 
-    public readonly bool Collides(Rectangle other) => TOMathUtils.Geometry.FloatRectangleVCircleCollision(other, this);
+    public readonly bool Collides(Rectangle other) => TOMathUtils.Collision.FloatRectangleVCircleCollision(other, this);
 
     /// <summary>
     /// 单位圆，中心在原点（<see cref="Vector2.Zero"/>），半径为 <c>1</c>。

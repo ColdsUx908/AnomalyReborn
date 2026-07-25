@@ -52,6 +52,7 @@ public class BloodOrbProjectile : CAModProjectile
         Projectile.scale = 0.6f;
         Projectile.hostile = true;
         Projectile.ignoreWater = true;
+        Projectile.tileCollide = false;
         CooldownSlot = ImmunityCooldownID.Bosses;
     }
 

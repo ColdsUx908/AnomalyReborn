@@ -66,7 +66,7 @@ public struct Hexagon : IEquatable<Hexagon>, ICollidableWithRectangle
             hex[i] = Center + new PolarVector2(CircumRadius, angle);
         }
 
-        ReadOnlySpan<Vector2> rect = [ other.TopLeft(), other.TopRight(), other.BottomLeft(), other.BottomRight() ];
+        ReadOnlySpan<Vector2> rect = [other.TopLeft(), other.TopRight(), other.BottomLeft(), other.BottomRight()];
 
         //测试矩形对齐轴
         if (!TOMathUtils.Geometry.OverlapOnAxis(Vector2.UnitX, hex, rect))

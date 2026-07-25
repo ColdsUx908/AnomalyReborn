@@ -35,7 +35,7 @@ public static partial class TOExtensions
         /// </summary>
         /// <param name="center">要获取光照的中心位置。</param>
         /// <returns>乘法混合后的颜色。</returns>
-        public void MultiplyWithWorldLight(Vector2 center) => color =  color.MultiplyRGBA(Lighting.GetColor(center.ToTileCoordinates()));
+        public void MultiplyWithWorldLight(Vector2 center) => color = color.MultiplyRGBA(Lighting.GetColor(center.ToTileCoordinates()));
     }
 
     extension(Color)

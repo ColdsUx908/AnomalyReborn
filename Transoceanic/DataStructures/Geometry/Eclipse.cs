@@ -98,6 +98,6 @@ public struct Ellipse : IEquatable<Ellipse>, ICollidableWithRectangle
     public readonly bool Collides(Rectangle other)
     {
         Parallelogram localParallelogram = ((Parallelogram)(FloatRectangle)other).WorldToLocal(LocalCoordinateSystem);
-        return TOMathUtils.Geometry.ParallelogramVCircleCollision(localParallelogram, Circle.Unit);
+        return TOMathUtils.Collision.ParallelogramVCircleCollision(localParallelogram, Circle.Unit);
     }
 }

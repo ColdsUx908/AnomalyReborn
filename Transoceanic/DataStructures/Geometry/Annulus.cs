@@ -79,5 +79,5 @@ public struct Annulus : IEquatable<Annulus>, ICollidableWithRectangle
     /// <returns>如果矩形被圆包含（根据参数定义），则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public readonly bool CircleContains(FloatRectangle rectangle, bool intersect, bool useOuterRadius) => (intersect ? TOMathUtils.Geometry.MinDistanceFromTo(rectangle, Center) : TOMathUtils.Geometry.MaxDistanceFromTo(rectangle, Center)) < (useOuterRadius ? OuterRadius : InnerRadius);
 
-    public readonly bool Collides(Rectangle other) => TOMathUtils.Geometry.FloatRectangleVAnnulusCollision(other, this);
+    public readonly bool Collides(Rectangle other) => TOMathUtils.Collision.FloatRectangleVAnnulusCollision(other, this);
 }

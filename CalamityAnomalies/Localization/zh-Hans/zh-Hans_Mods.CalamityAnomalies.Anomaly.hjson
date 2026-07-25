@@ -63,6 +63,7 @@ QueenBee: {
 	FriendlyBee.DisplayName: 友好蜜蜂
 	KillerBeeSmall.DisplayName: 小杀人蜂
 	HugeStinger.DisplayName: 巨型毒刺
+	BeeShockwave.DisplayName: 蜜蜂冲击波
 }
 
 QueenSlime: {

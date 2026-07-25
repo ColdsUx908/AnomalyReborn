@@ -1,7 +1,6 @@
 ﻿// Developed by ColdsUx
 
 using CalamityAnomalies.DataStructures;
-using CalamityMod.Dusts;
 using CalamityMod.NPCs.NormalNPCs;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;

@@ -178,8 +178,16 @@ public static class EyeofCthulhu_Handler
                 float rotationOffset = i * singleRadian;
                 Vector2 velocity = EyeShapeHelper.GetVector(originalVelocity, rotationOffset);
                 Vector2 velocity2 = innerVector.RotatedBy(rotationOffset);
-                Projectile.NewProjectileAction(npc.GetSource_FromAI(), npc.Center, velocity, type, damage, 0f, action: action);
-                Projectile.NewProjectileAction(npc.GetSource_FromAI(), npc.Center, velocity2, type, damage, 0f, action: action);
+                Projectile.NewProjectileAction(npc.GetSource_FromAI(), npc.Center, velocity, type, damage, 0f, action: p =>
+                {
+                    action?.Invoke(p);
+                    p.tileCollide = false;
+                });
+                Projectile.NewProjectileAction(npc.GetSource_FromAI(), npc.Center, velocity2, type, damage, 0f, action: p =>
+                {
+                    action?.Invoke(p);
+                    p.tileCollide = false;
+                });
             }
         }
     }

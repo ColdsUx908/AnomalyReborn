@@ -1,7 +1,6 @@
 ﻿// Developed by ColdsUx
 
 using CalamityAnomalies.DataStructures;
-using CalamityMod.Dusts;
 
 namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
 
@@ -70,6 +69,9 @@ public sealed partial class EyeofCthulhu_Anomaly : AnomalyNPCBehavior<EyeofCthul
     public static float Phase2_3LifeRatio => Ultra ? Phase2_3LifeRatio_Ultra : Phase2_3LifeRatio_Anomaly;
     public static float Phase3LifeRatio => Ultra ? Phase3LifeRatio_Ultra : Phase3LifeRatio_Anomaly;
     public static float Phase3_2LifeRatio => Ultra ? Phase3_2LifeRatio_Ultra : Phase3_2LifeRatio_Anomaly;
+
+    public static readonly SoundStyle Roar = SoundID.Roar with { MaxInstances = 0 };
+    public static readonly SoundStyle ForceRoar = SoundID.ForceRoarPitched with { MaxInstances = 0 };
 
     private static readonly ProjectileDamageContainer _bloodDamage = new(30, 60, 75, 90, 120, 150);
     public static int BloodDamage => _bloodDamage.Value;
@@ -219,7 +221,7 @@ public sealed partial class EyeofCthulhu_Anomaly : AnomalyNPCBehavior<EyeofCthul
         }
     }
 
-    public float Phase3ColorRatio
+    public float Phase3ChangeRatio
     {
         get => AnomalyNPC.AnomalyAI32[6].f;
         set
@@ -420,7 +422,7 @@ public sealed partial class EyeofCthulhu_Anomaly : AnomalyNPCBehavior<EyeofCthul
      *   [3].i ServantSpawnCounter
      *   [4].i AttackCounter
      *   [5].i AttackCounter2
-     *   [6].f Phase3ColorRatio
+     *   [6].f Phase3ChangeRatio
      *   [7].
      *       byte0 UsedEyeIndex1
      *       byte1 UsedEyeIndex2
@@ -494,8 +496,8 @@ public sealed partial class EyeofCthulhu_Anomaly : AnomalyNPCBehavior<EyeofCthul
 
     public override Color? GetAlpha(Color drawColor)
     {
-        if (Phase3ColorRatio > 0f)
-            return Color.Lerp(drawColor, Phase3Color, Phase3ColorRatio * 0.6f) with { A = NPC.GraphicAlpha };
+        if (Phase3ChangeRatio > 0f)
+            return Color.Lerp(drawColor, Phase3Color, Phase3ChangeRatio * 0.6f) with { A = NPC.GraphicAlpha };
 
         return null;
     }

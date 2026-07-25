@@ -5,7 +5,7 @@ using CalamityMod.NPCs.NormalNPCs;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
-public sealed class JewelHandler : IContentLoader
+public static class JewelHandler
 {
     public const string AnomalyKingSlimePath = "CalamityAnomalies/Anomaly/KingSlime/";
     public const string AnomalyQueenSlimePath = "CalamityAnomalies/Anomaly/QueenSlime/";

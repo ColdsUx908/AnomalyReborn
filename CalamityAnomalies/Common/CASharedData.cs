@@ -69,7 +69,7 @@ public sealed partial class CASharedData : ModSystem
 
             if (TOSharedData.NotClient)
             {
-                string key = AnomalyLocalizationPrefix + "AnomalyMode." + (Main.zenithWorld ? "Aromaly." : "") + (value ? "Activate" : "Deactivate") ;
+                string key = AnomalyLocalizationPrefix + "AnomalyMode." + (Main.zenithWorld ? "Aromaly." : "") + (value ? "Activate" : "Deactivate");
                 Color color = Main.zenithWorld ? AromalyColor : MainColor;
                 TOLocalizationUtils.ChatLocalizedText(key, color);
             }

@@ -63,6 +63,7 @@ QueenBee: {
 	FriendlyBee.DisplayName: Friendly Bee
 	KillerBeeSmall.DisplayName: Small Killer Bee
 	HugeStinger.DisplayName: Huge Stinger
+	BeeShockwave.DisplayName: Bee Shockwave
 }
 
 QueenSlime: {

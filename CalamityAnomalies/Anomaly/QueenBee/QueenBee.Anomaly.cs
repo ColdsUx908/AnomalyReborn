@@ -32,10 +32,16 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
         Phase1_BeeSwarm,
         Phase1_BeeSwarm2,
 
-        PhaseChange_2To3,
+        PhaseChange_1To2,
+
+        Phase2_BeeSwarm3,
+        Phase2_Stinger,
     }
 
+    public const string AnomalyQueenBeePath = "CalamityAnomalies/Anomaly/QueenBee/";
+
     public const float DespawnDistance = 8000f;
+    public const float DespawnDistance2 = 1200f;
 
     public const float Phase1_2LifeRatio_Anomaly = 0.5f;
     public const float Phase1_2LifeRatio_Ultra = 0.55f;
@@ -48,14 +54,17 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
     public static float Phase2LifeRatio => Ultra ? Phase2LifeRatio_Ultra : Phase2LifeRatio_Anomaly;
     public static float Phase2_2LifeRatio => Ultra ? Phase2_2LifeRatio_Ultra : Phase2_2LifeRatio_Anomaly;
 
+    public static float OwnedCombCellScaleMultiplier => 0.875f;
+
     public static SoundStyle ChargeSound = SoundID.Zombie125 with { MaxInstances = 0 };
+    public static SoundStyle HugeStingerShootSound = new(AnomalyQueenBeePath + "HugeStingerShoot") { MaxInstances = 0 };
 
     public static ProjectileDamageContainer _beeDamage = new(40, 72, 96, 132, 96, 132);
     public static int BeeDamage => _beeDamage.Value;
 
     public float ChargeSpeed => MathHelper.Lerp(22.5f, 28f, NPC.LostLifeRatio);
 
-    public static float ChargeDistanceX => 800f;
+    public float ChargeDistanceX => MathHelper.Lerp(Ultra ? 500f : 600f, Ultra ? 400f : 480f, NPC.LostLifeRatio);
     public static float ChargeDistanceY => 25f;
 
     public static ProjectileDamageContainer _stingerDamage = new(40, 72, 96, 132, 96, 132);
@@ -97,36 +106,6 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
         }
     }
 
-    public Behavior LastBehavior
-    {
-        get
-        {
-            Union32 union = AI_Union_0;
-            return (Behavior)union.byte2;
-        }
-        set
-        {
-            Union32 union = AI_Union_0;
-            union.byte2 = (byte)value;
-            AI_Union_0 = union;
-        }
-    }
-
-    public Behavior LastBehavior2
-    {
-        get
-        {
-            Union32 union = AI_Union_0;
-            return (Behavior)union.byte3;
-        }
-        set
-        {
-            Union32 union = AI_Union_0;
-            union.byte3 = (byte)value;
-            AI_Union_0 = union;
-        }
-    }
-
     public int CurrentAttackPhase
     {
         get => (int)NPC.ai[1];
@@ -135,8 +114,8 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
 
     public int FinishedBehaviorCounter
     {
-        get => (int)NPC.ai[3];
-        set => NPC.ai[3] = value;
+        get => (int)NPC.ai[2];
+        set => NPC.ai[2] = value;
     }
 
     public bool IsCharging
@@ -204,36 +183,47 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
         }
     }
 
-    public int SafeCombCellNumber
+    public Projectile OwnedCombCell
     {
-        get => AnomalyNPC.AnomalyAI32[1].i;
+        get => Projectile.TryGetProjectile(AnomalyNPC.AnomalyAI32[1].i);
         set
         {
-            if (AnomalyNPC.AnomalyAI32[1].i != value)
+            int temp = value?.whoAmI ?? -1;
+            if (AnomalyNPC.AnomalyAI32[1].i != temp)
             {
-                AnomalyNPC.AnomalyAI32[1].i = value;
+                AnomalyNPC.AnomalyAI32[1].i = temp;
                 AnomalyNPC.AIChanged32[1] = true;
             }
         }
     }
+    public bool OwnCombCell => OwnedCombCell.active && OwnedCombCell.ModProjectile is CombCell combCell;
+    public CombCell ModOwnedCombCell => OwnedCombCell.GetModProjectile<CombCell>();
 
     public Projectile SafeCombCell
     {
-        get => Projectile.TryGetProjectile(SafeCombCellNumber);
-        set => SafeCombCellNumber = value?.whoAmI ?? -1;
+        get => Projectile.TryGetProjectile(AnomalyNPC.AnomalyAI32[2].i);
+        set
+        {
+            int temp = value?.whoAmI ?? -1;
+            if (AnomalyNPC.AnomalyAI32[2].i != temp)
+            {
+                AnomalyNPC.AnomalyAI32[2].i = temp;
+                AnomalyNPC.AIChanged32[2] = true;
+            }
+        }
     }
-    public bool HasSafeCombCell => SafeCombCellNumber >= 0 && SafeCombCell.active && SafeCombCell.ModProjectile is CombCell combCell && combCell.BehaviorType == CombCell.Behavior.BeeSwarm2_Safe;
-    public CombCell ModCombCell => SafeCombCell.GetModProjectile<CombCell>();
+    public bool HasSafeCombCell => SafeCombCell.active && SafeCombCell.ModProjectile is CombCell combCell && combCell.BehaviorType == CombCell.Behavior.BeeSwarm2_Safe;
+    public CombCell ModSafeCombCell => SafeCombCell.GetModProjectile<CombCell>();
 
     public int CurrentAttackCounter
     {
-        get => AnomalyNPC.AnomalyAI32[4].i;
+        get => AnomalyNPC.AnomalyAI32[3].i;
         set
         {
-            if (AnomalyNPC.AnomalyAI32[4].i != value)
+            if (AnomalyNPC.AnomalyAI32[3].i != value)
             {
-                AnomalyNPC.AnomalyAI32[4].i = value;
-                AnomalyNPC.AIChanged32[4] = true;
+                AnomalyNPC.AnomalyAI32[3].i = value;
+                AnomalyNPC.AIChanged32[3] = true;
             }
         }
     }
@@ -251,18 +241,29 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
         }
     }
 
-    public Vector2 SafeCombCellOffset
-    {
-        get => AnomalyNPC.AnomalyAI64[1].GetValue<Vector2>();
-        set
-        {
-            if (AnomalyNPC.AnomalyAI64[1].GetValue<Vector2>() != value)
-            {
-                AnomalyNPC.AnomalyAI64[1].SetValue(value);
-                AnomalyNPC.AIChanged64[1] = true;
-            }
-        }
-    }
+    /* 数组使用说明
+     * 
+     * NPC.ai
+     *   [0]. (Union)
+     *       byte0 CurrentPhase
+     *       byte1 CurrentBehavior
+     *   [1] CurrentAttackPhase
+     *   [2] FinishedBehaviorCounter
+     * 
+     * AnomalyAI32
+     *   [0].
+     *       bits[0] IsCharging
+     *       bits[1] ShouldDecelerate
+     *       bits[2] AttackRandomVariation_Charge
+     *       bits[3] AttackRandomVariation_Stinger
+     *       bits[4] AttackRandomVariation_BeeSwarm
+     *   [1].i OwnedCombCell
+     *   [2].i SafeCombCell
+     *   [3].i CurrentAttackCounter
+     * 
+     * AnomalyAI64
+     *   [0] (Vector2) ChargeStartDistance
+     */
     #endregion 数据
 
     public override int ApplyingType => NPCID.QueenBee;
@@ -277,8 +278,14 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
     {
         AttackRandomVariation_BeeSwarm = Main.rand.NextBool();
 
+        AnomalyNPC.DynamicDRHandler = new TimedDDRHandler(
+            new TimedDDRHandler.SingleDDRHandler(1f, Phase2LifeRatio, null, n => GetInstance(n).CurrentPhase >= Phase.PhaseChange_1To2, 60),
+            new TimedDDRHandler.SingleDDRHandler(0.5f, 0f, n => GetInstance(n).Phase2, null, 30)
+        );
+
         NPC.AddAnomalyHPIndicator(Phase1_2LifeRatio_Anomaly, Phase1_2LifeRatio_Ultra, true);
         NPC.AddAnomalyHPIndicator(Phase2LifeRatio_Anomaly, Phase2LifeRatio_Ultra);
+        NPC.AddAnomalyHPIndicator(Phase2_2LifeRatio_Anomaly, Phase2_2LifeRatio_Ultra, true, n => GetInstance(n).Phase2);
     }
 
     public override void FindFrame(int frameHeight)
@@ -302,5 +309,24 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
             frameNum += 4;
 
         NPC.frame.Y = frameNum * frameHeight;
+    }
+
+    public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
+    {
+        if (Ultra && !Phase2)
+            modifiers.SetMaxDamage((int)(NPC.life - NPC.lifeMax * Phase2LifeRatio));
+    }
+
+    public override bool CheckDead()
+    {
+        if (Ultra && !Phase2 && !NPC.downedQueenBee)
+        {
+            NPC.life = 1;
+            NPC.active = true;
+            NPC.netUpdate = true;
+            return false;
+        }
+
+        return true;
     }
 }

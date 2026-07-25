@@ -1,7 +1,5 @@
 ﻿// Developed by ColdsUx
 
-using Microsoft.Xna.Framework.Input;
-
 namespace CalamityAnomalies.GameContents.Developer.ColdsUx_ColdheartIcicle;
 
 public sealed class ColdheartIcicle : CALegendaryItem

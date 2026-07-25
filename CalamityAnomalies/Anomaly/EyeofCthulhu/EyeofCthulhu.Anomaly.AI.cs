@@ -125,7 +125,11 @@ public sealed partial class EyeofCthulhu_Anomaly
                 }
 
                 float radian = MathHelper.ToRadians(15);
-                Projectile.NewProjectilesArc(3, radian, SourceAI, NPC.Center, servantVelocity * 3f, Main.rand.NextBool(3) ? ProjectileID.BloodNautilusShot : ModContent.ProjectileType<BloodOrbProjectile>(), BloodDamage, 0f, action: p => p.timeLeft = Main.rand.Next(180, 240));
+                Projectile.NewProjectilesArc(3, radian, SourceAI, NPC.Center, servantVelocity * 3f, Main.rand.NextBool(3) ? ProjectileID.BloodNautilusShot : ModContent.ProjectileType<BloodOrbProjectile>(), BloodDamage, 0f, action: p =>
+                {
+                    p.timeLeft = Main.rand.Next(180, 240);
+                    p.tileCollide = false;
+                });
             }
         }
 
@@ -358,7 +362,7 @@ public sealed partial class EyeofCthulhu_Anomaly
             {
                 case PhaseChangeGateValue_1To2_2:
                     SoundEngine.PlaySound(SoundID.NPCHit1, NPC.Center);
-                    SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
+                    SoundEngine.PlaySound(Roar, NPC.Center);
 
                     for (int phase2Gore = 0; phase2Gore < 2; phase2Gore++)
                     {
@@ -653,7 +657,7 @@ public sealed partial class EyeofCthulhu_Anomaly
                     case 0:
                         NPC.damage = SetDamage;
 
-                        SoundEngine.PlaySound(SoundID.ForceRoarPitched, NPC.Center);
+                        SoundEngine.PlaySound(ForceRoar, NPC.Center);
 
                         float baseChargeSpeed = 33f;
                         float speedBoost = 12f * (Phase2_2LifeRatio - NPC.LifeRatio);
@@ -929,7 +933,7 @@ public sealed partial class EyeofCthulhu_Anomaly
                     {
                         case PhaseChangeGateValue_1To2_2:
                             SoundEngine.PlaySound(SoundID.NPCHit1, NPC.Center);
-                            SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
+                            SoundEngine.PlaySound(Roar, NPC.Center);
 
                             for (int phase2Gore = 0; phase2Gore < 2; phase2Gore++)
                             {
@@ -984,7 +988,7 @@ public sealed partial class EyeofCthulhu_Anomaly
             Dust.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.Blood, new Vector2(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-6f, 6f)));
 
             if (Timer1 >= PhaseChangeGateValue_2To3_1) //改变颜色
-                Phase3ColorRatio += 0.025f;
+                Phase3ChangeRatio += 0.025f;
 
             if (Timer1 is > 0 and <= PhaseChangeGateValue_2To3_2) //移动竞技场中心
                 Phase3ArenaCenter = Vector2.SmootherStep(Phase3ArenaCenter, Target.Center, TOMathUtils.Interpolation.ExponentialEaseIn(Timer1 * 1.5f / PhaseChangeGateValue_2To3_2, 4f));
@@ -1026,7 +1030,7 @@ public sealed partial class EyeofCthulhu_Anomaly
 
                 case PhaseChangeGateValue_2To3_2:
                     SoundEngine.PlaySound(SoundID.NPCHit1, NPC.Center);
-                    SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
+                    SoundEngine.PlaySound(Roar, NPC.Center);
 
                     for (int i = 0; i < 20; i++)
                         Dust.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.Blood, new Vector2(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-6f, 6f)));
@@ -1236,7 +1240,7 @@ public sealed partial class EyeofCthulhu_Anomaly
                         case 2: //冲刺初始化
                             CheckPhaseChange();
                             NPC.damage = SetDamage;
-                            SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
+                            SoundEngine.PlaySound(Roar, NPC.Center);
                             SpawnChargeParticle();
                             NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Phase3ArenaCenter, 30f), -MathHelper.PiOver2);
                             NPC.damage = SetDamage;
@@ -1309,7 +1313,7 @@ public sealed partial class EyeofCthulhu_Anomaly
 
                         case 3: //冲刺初始化
                             CheckPhaseChange();
-                            SoundEngine.PlaySound(SoundID.ForceRoarPitched, NPC.Center);
+                            SoundEngine.PlaySound(ForceRoar, NPC.Center);
                             SpawnChargeParticle();
                             NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Phase3ArenaCenter, 40f), -MathHelper.PiOver2);
                             NPC.damage = SetDamage;
@@ -1357,7 +1361,7 @@ public sealed partial class EyeofCthulhu_Anomaly
 
                         case 1: //冲刺初始化
                             CheckPhaseChange();
-                            SoundEngine.PlaySound(SoundID.ForceRoarPitched, NPC.Center);
+                            SoundEngine.PlaySound(ForceRoar, NPC.Center);
                             SpawnChargeParticle();
                             NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Phase3ArenaCenter, 40f), -MathHelper.PiOver2);
                             NPC.damage = SetDamage;
@@ -1400,12 +1404,12 @@ public sealed partial class EyeofCthulhu_Anomaly
 
                         case 1: //冲刺初始化
                             CheckPhaseChange();
-                            SoundEngine.PlaySound(SoundID.ForceRoarPitched, NPC.Center);
+                            SoundEngine.PlaySound(ForceRoar, NPC.Center);
                             SpawnChargeParticle();
                             NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Phase3ArenaCenter, 40f), -MathHelper.PiOver2);
                             NPC.damage = SetDamage;
 
-                            int projectileAmountOver4 = 2;
+                            int projectileAmountOver4 = 3;
                             Vector2 projectileVelocity = NPC.GetVelocityTowards(Phase3ArenaCenter, 13.5f);
                             EyeofCthulhu_Handler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 90);
                             EyeofCthulhu_Handler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
@@ -1474,7 +1478,7 @@ public sealed partial class EyeofCthulhu_Anomaly
                             SpawnSquashDust();
                             if (Timer1 == EyeofCthulhu_Handler.EyeSpinTime)
                             {
-                                SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
+                                SoundEngine.PlaySound(Roar, NPC.Center);
 
                                 for (int i = 0; i < 100; i++)
                                     ParticleHandler.SpawnParticle(new OrbParticle(NPC.Center, Main.rand.NextPolarVector2(10f, 20f), Main.rand.Next(30, 40), Main.rand.NextFloat(1.2f, 1.6f), Color.Lerp(Color.Red, EyeofCthulhu_Handler.ChargeColor, Main.rand.NextFloat(0.5f - NPC.LifeRatio, 0.8f - NPC.LifeRatio))));
@@ -1510,7 +1514,7 @@ public sealed partial class EyeofCthulhu_Anomaly
                             }
                             else if (Timer1 == EyeofCthulhu_Handler.EyeSpinTime)
                             {
-                                SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
+                                SoundEngine.PlaySound(Roar, NPC.Center);
                                 ShootCircleProjectile(64);
                                 CheckPhaseChange();
                                 SelectNextBehavior();
@@ -1542,7 +1546,7 @@ public sealed partial class EyeofCthulhu_Anomaly
                             }
                             else if (Timer1 == EyeofCthulhu_Handler.EyeSpinTime)
                             {
-                                SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
+                                SoundEngine.PlaySound(Roar, NPC.Center);
                                 ShootCircleProjectile(64);
                                 CheckPhaseChange();
                                 SelectNextBehavior();

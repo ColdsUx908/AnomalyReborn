@@ -7,6 +7,7 @@ public sealed class BeeProjectile : CAModProjectile
     public const byte Behavior_Accelerate = 1;
     public const byte Behavior_HomeIn = 2;
     public const byte Behavior_Rotate = 3;
+    public const byte Behavior_KilledByHoney = 4;
 
     /* 数组使用约定
      * 
@@ -15,6 +16,8 @@ public sealed class BeeProjectile : CAModProjectile
      * [1] 特殊数据：
      *   若行为类型为2（追踪），表示追踪目标玩家的索引
      *   若行为类型为3（旋转），表示旋转的角速度（单位：弧度/帧）
+     * [2] 特殊数据：
+     *   若行为类型为3（旋转），表示旋转的角速度加速时间（单位：帧）
      */
 
     public override string LocalizationCategory => "Anomaly.QueenBee";
@@ -88,7 +91,24 @@ public sealed class BeeProjectile : CAModProjectile
 
             case Behavior_Rotate:
                 if (Timer1 is >= 30 and <= 90)
-                    Projectile.velocity.Rotation += Projectile.ai[1];
+                {
+                    float rotationSpeed = Projectile.ai[1];
+                    if (Projectile.ai[2] != 0f && Timer1 <= 30 + Projectile.ai[2])
+                        rotationSpeed *= (Timer1 - 30) / Projectile.ai[2];
+                    Projectile.velocity.Rotation += rotationSpeed;
+                }
+
+                break;
+
+            case Behavior_KilledByHoney:
+                if (Projectile.honeyWet)
+                    Projectile.Kill();
+
+                if (Timer1 >= 40)
+                {
+                    Projectile.ai[0] = Behavior_Rotate;
+                    Timer1 = 30;
+                }
                 break;
 
             default:

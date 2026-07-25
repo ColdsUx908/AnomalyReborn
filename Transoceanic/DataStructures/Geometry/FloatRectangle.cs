@@ -100,7 +100,7 @@ public struct FloatRectangle : IEquatable<FloatRectangle>, ICollidableWithRectan
     /// <param name="width">矩形的宽度。</param>
     /// <param name="height">矩形的高度。</param>
     /// <returns>根据中心点生成的 <see cref="FloatRectangle"/>。</returns>
-    public static FloatRectangle FromCenter(Vector2 center, float width, float height) => new(new Vector2(center.X - width / 2, center.Y - height / 2), width, height);
+    public static FloatRectangle FromCenter(Vector2 center, float width, float height) => new(new Vector2(center.X - width / 2f, center.Y - height / 2f), width, height);
 
     /// <summary>
     /// 根据一个内部点及其到矩形四边的距离创建一个新的 <see cref="FloatRectangle"/> 实例。
@@ -154,6 +154,6 @@ public struct FloatRectangle : IEquatable<FloatRectangle>, ICollidableWithRectan
     /// <returns>如果点在矩形内（含边界），则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public readonly bool Contains(Vector2 point) => point.X >= Left && point.X <= Right && point.Y >= Top && point.Y <= Bottom;
 
-    public readonly bool Collides(Rectangle other) => Collides((FloatRectangle)other);
+    public readonly bool Collides(Rectangle other) => Left < other.Right && Right > other.Left && Top < other.Bottom && Bottom > other.Top;
     public readonly bool Collides(FloatRectangle other) => Left < other.Right && Right > other.Left && Top < other.Bottom && Bottom > other.Top;
 }

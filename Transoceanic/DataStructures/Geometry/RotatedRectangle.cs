@@ -147,6 +147,29 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>, ICollidableWithRe
     }
 
     /// <summary>
+    /// 获取旋转后矩形的轴对齐包围盒 (Axis-Aligned Bounding Box)。
+    /// </summary>
+    /// <remarks>
+    /// 包围盒是能够完全包含旋转后矩形的最小轴对齐矩形，其边平行于坐标轴。
+    /// </remarks>
+    public readonly FloatRectangle AABB
+    {
+        get
+        {
+            float width = Source.Width;
+            float height = Source.Height;
+            (float sin, float cos) = MathF.SinCos(Rotation);
+
+            // 计算半宽度和半高度在全局 X、Y 轴上的投影绝对值之和，得到包围盒的半尺寸
+            float extentX = MathF.Abs(cos * width) + MathF.Abs(-sin * height);
+            float extentY = MathF.Abs(sin * width) + MathF.Abs(cos * height);
+
+            Vector2 center = Center;
+            return FloatRectangle.FromCenter(center, extentX, extentY);
+        }
+    }
+
+    /// <summary>
     /// 判断指定的点是否位于当前旋转矩形内部（包含边界）。
     /// </summary>
     /// <param name="point">要测试的点坐标。</param>
@@ -199,6 +222,6 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>, ICollidableWithRe
     }
 
     public readonly bool Collides(Rectangle other) => Collides((FloatRectangle)other);
-    public readonly bool Collides(FloatRectangle other) => TOMathUtils.Geometry.RotatedRectangleVFloatRectangleCollision(this, other);
-    public readonly bool Collides(Circle other) => TOMathUtils.Geometry.RotatedRectangleVCircleCollision(this, other);
+    public readonly bool Collides(FloatRectangle other) => TOMathUtils.Collision.RotatedRectangleVFloatRectangleCollision(this, other);
+    public readonly bool Collides(Circle other) => TOMathUtils.Collision.RotatedRectangleVCircleCollision(this, other);
 }

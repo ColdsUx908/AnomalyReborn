@@ -207,7 +207,7 @@ public sealed partial class DukeFishron_Anomaly : AnomalyNPCBehavior<DukeFishron
                     frame.Y = frameHeight * specialFrame2;
             }
         }
-        
+
         // 鲨卷风行为（仅 Phase1/2）或初始化阶段
         if ((isPhase1Or2 && CurrentBehavior == Behavior.Sharknado) || CurrentPhase == Phase.Initialize)
         {

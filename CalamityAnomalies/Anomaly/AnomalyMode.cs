@@ -341,7 +341,12 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
         if (menuOpenTransitionTime > 0 || menuOpen)
             ManageHexIcons(spriteBatch, out extraDescText);
 
-        //TODO: 对于异象模式，不绘制锁，而是绘制特殊的锁定材质
+        //对于异象模式，不绘制锁，而是绘制特殊的锁定材质
+        if (locked && GetCurrentDifficulty is AnomalyMode && Ultra) //TODO: 目前只有异象超凡有锁定材质
+        {
+            indicatorTexture = CATextures.AnomalyUltraIndicator_Locked;
+            locked = false;
+        }
 
         //Draw the indicator itself.
         spriteBatch.Draw(indicatorTexture, DrawCenter, null, Color.White, 0f, indicatorTexture.Size() * 0.5f, MainIconScale, SpriteEffects.None, 0f);

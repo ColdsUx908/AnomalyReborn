@@ -133,12 +133,6 @@ public sealed class ImmaculateWhite : CALegendaryItem, ILocalizationPrefix
     public override bool AltFunctionUse(Player player) => NPC.downedEmpressOfLight;
     public override bool ConsumeItem(Player player) => false;
 
-    public override bool CanRightClick() => Main.keyState.PressingShift() && Phase >= 3;
-
-    public override void RightClick(Player player)
-    {
-    }
-
     public override bool CanConsumeAmmo(Item ammo, Player player) => false; //召唤弓本身不消耗弹药
 
     public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)

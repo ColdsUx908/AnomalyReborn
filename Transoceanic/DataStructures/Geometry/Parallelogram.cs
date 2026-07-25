@@ -117,5 +117,5 @@ public struct Parallelogram : IEquatable<Parallelogram>, ICoordinateTransformabl
         localSystem.LocalToWorld(VectorA, false),
         localSystem.LocalToWorld(VectorB, false));
 
-    public readonly bool Collides(Rectangle other) => TOMathUtils.Geometry.ParallelogramVFloatRectangleCollision(this, other);
+    public readonly bool Collides(Rectangle other) => TOMathUtils.Collision.ParallelogramVFloatRectangleCollision(this, other);
 }

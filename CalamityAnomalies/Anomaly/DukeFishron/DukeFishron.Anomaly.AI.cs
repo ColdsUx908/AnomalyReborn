@@ -33,7 +33,7 @@ public sealed partial class DukeFishron_Anomaly
             Behavior.Charge => 0f,
             Behavior.Bubble when Phase2 => 0f,
             Behavior.PhaseChange_1To2 or Behavior.PhaseChange_2To3 or Behavior.Sharknado => 0.02f,
-            _ => 0.06f
+            _ => 0.04f
         };
 
         Vector2 rotationVector = Target.Center - NPC.Center;
@@ -260,6 +260,8 @@ public sealed partial class DukeFishron_Anomaly
 
             void Idle()
             {
+                NPC.damage = 0;
+
                 switch (CurrentAttackPhaseForIdle)
                 {
                     case 0:
@@ -301,14 +303,14 @@ public sealed partial class DukeFishron_Anomaly
 
                             NPC.spriteDirection = -NPC.direction;
                         }
-
-                        NPC.damage = 0;
                         break;
                 }
             }
 
             void Charge()
             {
+                NPC.damage = NPC.defDamage;
+
                 switch (CurrentAttackPhase)
                 {
                     case 0:
@@ -319,11 +321,10 @@ public sealed partial class DukeFishron_Anomaly
                         if (playerFaceDirection != 0)
                         {
                             NPC.direction = playerFaceDirection;
+                            NPC.spriteDirection = -NPC.direction;
 
                             if (NPC.spriteDirection == 1)
                                 NPC.rotation += MathHelper.Pi;
-
-                            NPC.spriteDirection = -NPC.direction;
                         }
                         goto case 1;
                     case 1:

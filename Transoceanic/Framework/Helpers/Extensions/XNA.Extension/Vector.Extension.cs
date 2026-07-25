@@ -161,7 +161,7 @@ public static partial class TOExtensions
         /// <param name="amount">插值比率，范围 [0, 1]。0 对应第一个向量，1 对应最后一个向量。</param>
         /// <returns>插值后的向量。</returns>
         /// <exception cref="ArgumentException">当 <paramref name="vectors"/> 为 <see langword="null"/> 或空列表时抛出。</exception>
-        public static Vector2 LerpMany(List<Vector2> vectors, float amount)
+        public static Vector2 LerpMany(IList<Vector2> vectors, float amount)
         {
             ArgumentException.ThrowIfNullOrEmpty(vectors);
 
