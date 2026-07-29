@@ -76,8 +76,8 @@ public sealed partial class CASharedData : ModSystem
             if (value)
                 AnomalyModeHandler.CheckAnomalyUltra();
 
-            CASynchronization.SyncAnomalyMode();
             OnAnomalyModeToggled?.Invoke(value);
+            CASynchronization.SyncAnomalyMode();
         }
     }
     public static event Action<bool> OnAnomalyModeToggled;

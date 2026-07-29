@@ -1,14 +1,12 @@
 ﻿// Developed by ColdsUx
 
-using CalamityMod.Projectiles.Boss;
-
 namespace CalamityAnomalies.Anomaly.QueenBee;
 
 public sealed partial class QueenBee_Anomaly
 {
     public override bool PreAI()
     {
-        float despawnDistance = OwnCombCell ? DespawnDistance2 : DespawnDistance;
+        float despawnDistance = DespawnDistance;
         if (CurrentBehavior == Behavior.Despawn || !NPC.TargetClosestIfInvalid(true, despawnDistance))
         {
             CurrentBehavior = Behavior.Despawn;
@@ -18,7 +16,7 @@ public sealed partial class QueenBee_Anomaly
 
             if (NPC.timeLeft > 10)
                 NPC.timeLeft = 10;
-
+            NPC.spriteDirection = -NPC.direction;
             Timer5++;
             if (Timer5 >= 15)
             {
@@ -30,6 +28,8 @@ public sealed partial class QueenBee_Anomaly
         }
         else if (Timer5 > 0)
             Timer5--;
+
+        CalamityNPC.CurrentlyEnraged = false;
 
         switch (CurrentPhase)
         {
@@ -64,17 +64,17 @@ public sealed partial class QueenBee_Anomaly
                 NPC.velocity.Y = 0f;
         }
 
-        Vector2 GetStingerSpawnLocation() => new(NPC.Center.X + (Main.rand.Next(20) * NPC.direction), NPC.position.Y + NPC.height * 0.8f);
+        Vector2 GetStingerShootLocation() => new(NPC.Center.X + (Main.rand.Next(20) * NPC.direction), NPC.position.Y + NPC.height * 0.8f);
 
         bool CanHitTarget()
         {
-            Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
+            Vector2 stingerSpawnLocation = GetStingerShootLocation();
             return Collision.CanHit(new Vector2(stingerSpawnLocation.X, stingerSpawnLocation.Y - 30f), 1, 1, Target.position, Target.width, Target.height);
         }
 
         void TryMoveAboveTarget(bool higher = false)
         {
-            Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
+            Vector2 stingerSpawnLocation = GetStingerShootLocation();
 
             float moveSpeed = Phase2_2 ? 28f : Ultra ? 25f : 22.5f;
             float moveAcceleration = Phase2_2 ? 0.6f : Phase2 ? 0.5f : Phase1_2 ? 0.45f : 0.35f;
@@ -126,6 +126,37 @@ public sealed partial class QueenBee_Anomaly
             }
         }
 
+        void ShootStingerAction(Projectile p)
+        {
+            p.ai[1] = (Aroma && Phase1_2) ? Target.position.Y : 0f;
+            p.timeLeft = 600;
+            p.tileCollide = false;
+            p.extraUpdates = 0;
+        };
+
+        void HandleEnrage()
+        {
+            if (NPC.Distance(Target.Center) > EnrageDistance)
+            {
+                CalamityNPC.CurrentlyEnraged = true;
+                if (!HasBeenEnraged)
+                {
+                    HasBeenEnraged = true;
+                    SoundEngine.PlaySound(SoundID.ForceRoarPitched, NPC.Center);
+                }
+
+                for (int i = 0; i < 3; i++)
+                {
+                    Vector2 velocity = Main.rand.NextPolarVector2(25f, 35f);
+                    Projectile.NewProjectileAction<KillerBeeSmall>(SourceAI, NPC.Center, velocity, BeeDamage, 0f, action: p =>
+                    {
+                        p.ai[0] = -1;
+                        p.ai[1] = Main.rand.NextFloat(0.02f, 0.1f) * Main.rand.NextDirectionInt();
+                    });
+                }
+            }
+        }
+
         void Phase1AI()
         {
             switch (CurrentBehavior)
@@ -157,6 +188,7 @@ public sealed partial class QueenBee_Anomaly
                 Timer2 = 0;
                 CurrentAttackPhase = 0;
                 ShouldDecelerate = false;
+                HasBeenEnraged = false;
 
                 switch (CurrentBehavior)
                 {
@@ -422,7 +454,7 @@ public sealed partial class QueenBee_Anomaly
 
                 if (Timer1 % stingerAttackTimer == 0)
                 {
-                    Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
+                    Vector2 stingerSpawnLocation = GetStingerShootLocation();
                     float stingerSpeed = Ultra ? 18f : 15f;
                     Vector2 stingerVelocity = (Target.Center - stingerSpawnLocation).ToCustomLength(stingerSpeed);
 
@@ -434,25 +466,15 @@ public sealed partial class QueenBee_Anomaly
                         SoundEngine.PlaySound(SoundID.Item17, stingerSpawnLocation);
                         if (TOSharedData.NotClient)
                         {
-                            int type = Aroma ? (Phase1_2 ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.FlamingWood) : ProjectileID.QueenBeeStinger;
+                            int type = StingerProjectileType;
 
-                            Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation, stingerVelocity, type, StingerDamage, 0f, action: p =>
-                            {
-                                p.ai[1] = (Aroma && Phase1_2) ? Target.position.Y : 0f;
-                                p.timeLeft = 600;
-                            });
+                            Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation, stingerVelocity, type, StingerDamage, 0f, action: ShootStingerAction);
 
                             if (AttackRandomVariation_Stinger)
                             {
                                 int numExtraStingers = 4;
                                 for (int i = 0; i < numExtraStingers; i++)
-                                {
-                                    Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation + Main.rand.NextVector2CircularEdge(16f, 16f) * (i + 1), stingerVelocity * MathHelper.Lerp(0.75f, 1f, i / (float)numExtraStingers), type, StingerDamage, 0f, action: p =>
-                                    {
-                                        p.ai[1] = (Aroma && Phase1_2) ? Target.position.Y : 0f;
-                                        p.timeLeft = 600;
-                                    });
-                                }
+                                    Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation + Main.rand.NextVector2CircularEdge(16f, 16f) * (i + 1), stingerVelocity * MathHelper.Lerp(0.75f, 1f, i / (float)numExtraStingers), type, StingerDamage, 0f, action: ShootStingerAction);
                             }
                         }
                     }
@@ -471,7 +493,12 @@ public sealed partial class QueenBee_Anomaly
 
             void BeeSwarm()
             {
+                HandleEnrage();
+
                 Timer1++;
+
+                NPC.FaceTarget(Target);
+                NPC.spriteDirection = NPC.direction;
 
                 switch (CurrentAttackPhase)
                 {
@@ -540,7 +567,7 @@ public sealed partial class QueenBee_Anomaly
 
                             if (Phase1_2 && num == 120)
                             {
-                                Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
+                                Vector2 stingerSpawnLocation = GetStingerShootLocation();
 
                                 SoundEngine.PlaySound(SoundID.Item17, stingerSpawnLocation);
 
@@ -549,7 +576,7 @@ public sealed partial class QueenBee_Anomaly
                                     float stingerSpeed = 15f;
 
                                     Vector2 projectileVelocity = (Target.Center - stingerSpawnLocation).ToCustomLength(stingerSpeed);
-                                    int type = Aroma ? (Main.rand.NextBool() ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.QueenBeeStinger) : ProjectileID.QueenBeeStinger;
+                                    int type = StingerProjectileType;
                                     int numProj = Ultra ? 11 : 7;
 
                                     float rotation = MathHelper.ToRadians(Ultra ? 90 : 60);
@@ -559,20 +586,13 @@ public sealed partial class QueenBee_Anomaly
                                         if (i % 2 != 0)
                                             perturbedSpeed *= 0.8f;
 
-                                        Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation + perturbedSpeed.ToCustomLength(10f), perturbedSpeed, type, StingerDamage, 0f, action: p =>
-                                        {
-                                            p.ai[1] = Aroma ? Target.position.Y : 0f;
-                                            p.timeLeft = 600;
-
-                                            if (!Aroma)
-                                                p.tileCollide = false;
-                                        });
+                                        Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation + perturbedSpeed.ToCustomLength(10f), perturbedSpeed, type, StingerDamage, 0f, action: ShootStingerAction);
                                     }
                                 }
                             }
                             else if (Ultra && num >= 30 && num % 5 == 0)
                             {
-                                Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
+                                Vector2 stingerSpawnLocation = GetStingerShootLocation();
 
                                 SoundEngine.PlaySound(SoundID.Item17, stingerSpawnLocation);
 
@@ -581,13 +601,9 @@ public sealed partial class QueenBee_Anomaly
                                     float stingerSpeed = 15f;
                                     Vector2 stingerVelocity = (Target.Center - stingerSpawnLocation).ToCustomLength(stingerSpeed);
 
-                                    int type = Aroma ? (Phase1_2 ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.FlamingWood) : ProjectileID.QueenBeeStinger;
+                                    int type = StingerProjectileType;
 
-                                    Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation, stingerVelocity, type, StingerDamage, 0f, action: p =>
-                                    {
-                                        p.ai[1] = (Aroma && Phase1_2) ? Target.position.Y : 0f;
-                                        p.timeLeft = 600;
-                                    });
+                                    Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation, stingerVelocity, type, StingerDamage, 0f, action: ShootStingerAction);
                                 }
                             }
 
@@ -608,14 +624,16 @@ public sealed partial class QueenBee_Anomaly
                         }
                         break;
                 }
-
-                NPC.FaceTarget(Target);
-                NPC.spriteDirection = NPC.direction;
             }
 
             void BeeSwarm2()
             {
+                HandleEnrage();
+
                 Timer1++;
+
+                NPC.FaceTarget(Target);
+                NPC.spriteDirection = NPC.direction;
 
                 switch (CurrentAttackPhase)
                 {
@@ -702,10 +720,7 @@ public sealed partial class QueenBee_Anomaly
                                         {
                                             c.Offset = offset;
                                             if (safe)
-                                            {
-                                                SafeCombCellOffset = offset;
                                                 SafeCombCell = p;
-                                            }
                                         });
                                     }
                                 }
@@ -777,15 +792,15 @@ public sealed partial class QueenBee_Anomaly
                         }
                         break;
                 }
-
-                NPC.FaceTarget(Target);
-                NPC.spriteDirection = NPC.direction;
             }
         }
 
         void PhaseChange_1To2()
         {
             Timer1++;
+
+            NPC.FaceTarget(Target);
+            NPC.spriteDirection = NPC.direction;
 
             switch (CurrentAttackPhase)
             {
@@ -884,6 +899,7 @@ public sealed partial class QueenBee_Anomaly
                 Timer2 = 0;
                 CurrentAttackPhase = 0;
                 ShouldDecelerate = false;
+                HasBeenEnraged = false;
 
                 SwitchToNext();
 
@@ -910,7 +926,12 @@ public sealed partial class QueenBee_Anomaly
 
             void BeeSwarm3()
             {
+                HandleEnrage();
+
                 Timer1++;
+
+                NPC.FaceTarget(Target);
+                NPC.spriteDirection = NPC.direction;
 
                 switch (CurrentAttackPhase)
                 {
@@ -955,6 +976,8 @@ public sealed partial class QueenBee_Anomaly
                                 CurrentAttackPhase = 2;
                                 break;
                         }
+
+                        CheckPhaseChange();
                         break;
                     case 2:
                         NPC.velocity = Vector2.Zero;
@@ -966,7 +989,12 @@ public sealed partial class QueenBee_Anomaly
                             int num = adjustedTimer / attackTimer;
                             int attackAmount = Phase2_2 ? 7 : 5;
 
-                            if (num <= attackAmount - 1 && TOSharedData.NotClient)
+                            if (num >= attackAmount)
+                            {
+                                Timer1 = 0;
+                                CurrentAttackPhase = 3;
+                            }
+                            else if (TOSharedData.NotClient)
                             {
                                 int amount = 100;
                                 Projectile.NewProjectilesArc<BeeProjectile>(amount, MathHelper.TwoPi / amount, SourceAI, NPC.Center, NPC.GetVelocityTowards(Target.Center, 15f), BeeDamage, 0f, action: p =>
@@ -979,16 +1007,10 @@ public sealed partial class QueenBee_Anomaly
                                     p.velocity.Rotation += Main.rand.NextFloat(-0.03f, 0.03f);
                                 });
                             }
-
-                            if (num >= attackAmount + 1)
-                            {
-                                Timer1 = 0;
-                                CurrentAttackPhase = 3;
-                            }
                         }
                         break;
                     case 3:
-                        if (Timer1 >= 45)
+                        if (Timer1 >= 135)
                         {
                             CheckPhaseChange();
                             SelectNextBehavior();
@@ -1011,7 +1033,7 @@ public sealed partial class QueenBee_Anomaly
 
                         if (Timer1 % stingerAttackTimer == 0)
                         {
-                            Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
+                            Vector2 stingerSpawnLocation = GetStingerShootLocation();
                             float stingerSpeed = 22f;
                             Vector2 stingerVelocity = (Target.Center - stingerSpawnLocation).ToCustomLength(stingerSpeed);
 
@@ -1027,16 +1049,15 @@ public sealed partial class QueenBee_Anomaly
 
                             if (num >= numStingerShots)
                             {
+                                CheckPhaseChange();
+
                                 if (Phase2_2)
                                 {
                                     CurrentAttackPhase = 1;
                                     Timer1 = 0;
                                 }
                                 else
-                                {
-                                    CheckPhaseChange();
                                     SelectNextBehavior();
-                                }
                             }
                         }
                         break;
@@ -1047,7 +1068,7 @@ public sealed partial class QueenBee_Anomaly
 
                         if (Timer1 % stingerAttackTimer2 == 0)
                         {
-                            Vector2 stingerSpawnLocation = GetStingerSpawnLocation();
+                            Vector2 stingerSpawnLocation = GetStingerShootLocation();
                             float stingerSpeed = 18f;
                             Vector2 stingerVelocity = (Target.Center - stingerSpawnLocation).ToCustomLength(stingerSpeed);
 
@@ -1070,12 +1091,7 @@ public sealed partial class QueenBee_Anomaly
                                         if (i % 2 != 0)
                                             perturbedSpeed *= 0.8f;
 
-                                        Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation + perturbedSpeed.ToCustomLength(10f), perturbedSpeed, type, StingerDamage, 0f, action: p =>
-                                        {
-                                            p.timeLeft = 600;
-                                            if (!Aroma)
-                                                p.tileCollide = false;
-                                        });
+                                        Projectile.NewProjectileAction(SourceAI, stingerSpawnLocation + perturbedSpeed.ToCustomLength(10f), perturbedSpeed, type, StingerDamage, 0f, action: p => p.timeLeft = 600);
                                     }
                                 }
                             }

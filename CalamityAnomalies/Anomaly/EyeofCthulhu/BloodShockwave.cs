@@ -16,7 +16,7 @@ public sealed class BloodShockwave : BaseShockwaveProjectile, IContentLoader
 
     public NPC Master
     {
-        get => NPC.TryGetNPC((int)Projectile.ai[0]);
+        get => NPC.GetNPCFromIndex((int)Projectile.ai[0]);
         set => Projectile.ai[0] = value?.whoAmI ?? -1;
     }
 

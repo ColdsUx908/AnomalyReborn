@@ -27,9 +27,9 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
         set => CASharedData.Anomaly = value;
     }
 
-    public override Asset<Texture2D> Texture => Ultra ? CATextures._anomalyUltraIndicator : CATextures._anomalyModeIndicator;
-    public override Asset<Texture2D> OutlineTexture => Ultra ? CATextures._anomalyUltraIndicator_Border : CATextures._anomalyModeIndicator_Border;
-    public override Asset<Texture2D> TextureDisabled => Ultra ? CATextures._anomalyUltraIndicator_Off : CATextures._anomalyModeIndicator_Off;
+    public override Asset<Texture2D> Texture => Ultra ? CATextures._anomalyUltraIndicator : CATextures._anomalyIndicator;
+    public override Asset<Texture2D> OutlineTexture => Ultra ? CATextures._anomalyUltraIndicator_Border : CATextures._anomalyIndicator_Border;
+    public override Asset<Texture2D> TextureDisabled => Ultra ? CATextures._anomalyUltraIndicator_Off : CATextures._anomalyIndicator_Off;
 
     public override SoundStyle ActivationSound => Main.zenithWorld ? CASounds.AromalyActivate : SupremeCalamitas.BulletHellEndSound;
 
@@ -97,6 +97,7 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
         if (TOSharedData.NotClient)
             TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Invalid", Color.Red);
         CASharedData.Anomaly = false;
+        CASynchronization.SyncAnomalyMode();
     }
 
     public static void DisableUltra()
@@ -342,9 +343,9 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
             ManageHexIcons(spriteBatch, out extraDescText);
 
         //对于异象模式，不绘制锁，而是绘制特殊的锁定材质
-        if (locked && GetCurrentDifficulty is AnomalyMode && Ultra) //TODO: 目前只有异象超凡有锁定材质
+        if (locked && GetCurrentDifficulty is AnomalyMode)
         {
-            indicatorTexture = CATextures.AnomalyUltraIndicator_Locked;
+            indicatorTexture = Ultra ? CATextures.AnomalyUltraIndicator_Locked : CATextures.AnomalyIndicator_Locked;
             locked = false;
         }
 

@@ -129,7 +129,7 @@ public sealed partial class KingSlime_Anomaly : AnomalyNPCBehavior<KingSlime_Ano
     /// </summary>
     public NPC JewelRuby
     {
-        get => NPC.TryGetNPC(AnomalyNPC.AnomalyAI32[1].byte0);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte0);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
@@ -161,7 +161,7 @@ public sealed partial class KingSlime_Anomaly : AnomalyNPCBehavior<KingSlime_Ano
     /// </summary>
     public NPC JewelEmerald
     {
-        get => NPC.TryGetNPC(AnomalyNPC.AnomalyAI32[1].byte1);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte1);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
@@ -193,7 +193,7 @@ public sealed partial class KingSlime_Anomaly : AnomalyNPCBehavior<KingSlime_Ano
     /// </summary>
     public NPC JewelSapphire
     {
-        get => NPC.TryGetNPC(AnomalyNPC.AnomalyAI32[1].byte2);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte2);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
@@ -226,7 +226,7 @@ public sealed partial class KingSlime_Anomaly : AnomalyNPCBehavior<KingSlime_Ano
     /// </summary>
     public NPC JewelRainbow
     {
-        get => NPC.TryGetNPC(AnomalyNPC.AnomalyAI32[1].byte3);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte3);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);

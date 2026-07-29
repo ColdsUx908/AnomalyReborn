@@ -372,8 +372,12 @@ public class CABossHPUI
             if (AnomalyNPC.IsRunningAnomalyAI)
             {
                 seperatorColor = Color.Lerp(BaseColor, Color.Lerp(CASharedData.GetGradientColor(0.25f), CASharedData.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin), Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f));
+                if (Aroma)
+                    seperatorColor = Color.Lerp(seperatorColor, CASharedData.AromalyColor, sin);
                 if (IncreasingDefenseOrDRTimer > 0)
                     seperatorColor = Color.Lerp(seperatorColor, Color.LightGray * 0.7f, Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 0.6f));
+                if (EnrageTimer > 0)
+                    seperatorColor = Color.Lerp(seperatorColor, Color.Red * 0.6f, Math.Clamp(EnrageTimer / 80f, 0f, 0.4f));
             }
             else if (EnrageTimer > 0)
                 seperatorColor = Color.Lerp(BaseColor, Color.Red * 0.5f, Math.Clamp(EnrageTimer / 80f, 0f, 1f));
@@ -389,10 +393,12 @@ public class CABossHPUI
             if (AnomalyNPC.IsRunningAnomalyAI)
             {
                 mainColor = Color.Lerp(CASharedData.GetGradientColor(0.1f), CASharedData.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * cos * 0.8f);
+                if (Aroma)
+                    mainColor = Color.Lerp(seperatorColor, CASharedData.AromalyColor, sin);
                 if (IncreasingDefenseOrDRTimer > 0)
                     mainColor = Color.Lerp(mainColor.Value, Color.LightGray * 0.7f, Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 0.6f));
                 if (EnrageTimer > 0)
-                    mainColor = Color.Lerp(mainColor.Value, Color.Red * 0.6f, Math.Clamp(EnrageTimer / 80f, 0f, 0.6f));
+                    mainColor = Color.Lerp(mainColor.Value, Color.Red * 0.6f, Math.Clamp(EnrageTimer / 80f, 0f, 0.4f));
             }
             else if (EnrageTimer > 0)
                 mainColor = Color.Red * 0.6f;
@@ -406,10 +412,12 @@ public class CABossHPUI
             if (AnomalyNPC.IsRunningAnomalyAI)
             {
                 borderColor = Color.Lerp(CASharedData.GetGradientColor(0.1f), CASharedData.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin * 0.8f);
+                if (Aroma)
+                    borderColor = Color.Lerp(seperatorColor, CASharedData.AromalyColor, sin);
                 if (IncreasingDefenseOrDRTimer > 0)
                     borderColor = Color.Lerp(borderColor.Value, Color.LightGray * 0.2f, Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 0.6f));
                 if (EnrageTimer > 0)
-                    borderColor = Color.Lerp(borderColor.Value, Color.Gray * 0.2f, Math.Clamp(EnrageTimer / 80f, 0f, 0.6f));
+                    borderColor = Color.Lerp(borderColor.Value, Color.Red * 0.6f, Math.Clamp(EnrageTimer / 80f, 0f, 0.4f));
             }
             else if (EnrageTimer > 0 || IncreasingDefenseOrDRTimer > 0)
                 borderColor = Color.Black * 0.2f;

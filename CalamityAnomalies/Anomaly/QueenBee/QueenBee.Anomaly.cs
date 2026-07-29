@@ -1,6 +1,7 @@
 ﻿// Developed by ColdsUx
 
 using CalamityAnomalies.DataStructures;
+using CalamityMod.Projectiles.Boss;
 
 namespace CalamityAnomalies.Anomaly.QueenBee;
 
@@ -41,7 +42,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
     public const string AnomalyQueenBeePath = "CalamityAnomalies/Anomaly/QueenBee/";
 
     public const float DespawnDistance = 8000f;
-    public const float DespawnDistance2 = 1200f;
+    public const float EnrageDistance = 1000f;
 
     public const float Phase1_2LifeRatio_Anomaly = 0.5f;
     public const float Phase1_2LifeRatio_Ultra = 0.55f;
@@ -66,6 +67,8 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
 
     public float ChargeDistanceX => MathHelper.Lerp(Ultra ? 500f : 600f, Ultra ? 400f : 480f, NPC.LostLifeRatio);
     public static float ChargeDistanceY => 25f;
+
+    public int StingerProjectileType => Aroma ? (Phase1_2 ? ModContent.ProjectileType<PlagueStingerGoliathV2>() : ProjectileID.FlamingWood) : ProjectileID.QueenBeeStinger;
 
     public static ProjectileDamageContainer _stingerDamage = new(40, 72, 96, 132, 96, 132);
     public static int StingerDamage => _stingerDamage.Value;
@@ -144,7 +147,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
         }
     }
 
-    public bool AttackRandomVariation_Charge
+    public bool HasBeenEnraged
     {
         get => AnomalyNPC.AnomalyAI32[0].bits[2];
         set
@@ -157,7 +160,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
         }
     }
 
-    public bool AttackRandomVariation_Stinger
+    public bool AttackRandomVariation_Charge
     {
         get => AnomalyNPC.AnomalyAI32[0].bits[3];
         set
@@ -170,7 +173,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
         }
     }
 
-    public bool AttackRandomVariation_BeeSwarm
+    public bool AttackRandomVariation_Stinger
     {
         get => AnomalyNPC.AnomalyAI32[0].bits[4];
         set
@@ -183,9 +186,22 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
         }
     }
 
+    public bool AttackRandomVariation_BeeSwarm
+    {
+        get => AnomalyNPC.AnomalyAI32[0].bits[5];
+        set
+        {
+            if (AnomalyNPC.AnomalyAI32[0].bits[5] != value)
+            {
+                AnomalyNPC.AnomalyAI32[0].bits[5] = value;
+                AnomalyNPC.AIChanged32[0] = true;
+            }
+        }
+    }
+
     public Projectile OwnedCombCell
     {
-        get => Projectile.TryGetProjectile(AnomalyNPC.AnomalyAI32[1].i);
+        get => Projectile.GetProjectileFromIndex(AnomalyNPC.AnomalyAI32[1].i);
         set
         {
             int temp = value?.whoAmI ?? -1;
@@ -201,7 +217,7 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
 
     public Projectile SafeCombCell
     {
-        get => Projectile.TryGetProjectile(AnomalyNPC.AnomalyAI32[2].i);
+        get => Projectile.GetProjectileFromIndex(AnomalyNPC.AnomalyAI32[2].i);
         set
         {
             int temp = value?.whoAmI ?? -1;
@@ -271,11 +287,14 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
     public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => type switch
     {
         CalamityLogicType_NPCBehavior.VanillaOverrideAI => false,
+        CalamityLogicType_NPCBehavior.GetAlpha => false,
         _ => true,
     };
 
     public override void SetDefaults()
     {
+        NPC.lifeMax = 5000;
+
         AttackRandomVariation_BeeSwarm = Main.rand.NextBool();
 
         AnomalyNPC.DynamicDRHandler = new TimedDDRHandler(
@@ -309,6 +328,14 @@ public sealed partial class QueenBee_Anomaly : AnomalyNPCBehavior<QueenBee_Anoma
             frameNum += 4;
 
         NPC.frame.Y = frameNum * frameHeight;
+    }
+
+    public override Color? GetAlpha(Color drawColor)
+    {
+        if (Aroma)
+            return (Phase1_2 ? Color.Lime : Color.Red) with { A = NPC.GraphicAlpha };
+
+        return null;
     }
 
     public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)

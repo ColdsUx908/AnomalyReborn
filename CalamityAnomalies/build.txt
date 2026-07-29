@@ -1,6 +1,6 @@
 displayName = Calamity Anomalies [c/FFA500:Reborn]
 author = ColdsUx
-version = 0.1.3.3
+version = 0.1.4
 hideResources = true
 modReferences = CalamityMod, Transoceanic
 sortAfter = CalamityMod, Transoceanic, Luminance

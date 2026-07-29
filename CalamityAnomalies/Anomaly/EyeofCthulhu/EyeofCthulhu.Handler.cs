@@ -120,7 +120,7 @@ public static class EyeofCthulhu_Handler
 
     public static float MaxArenaRadius => 480f; //30格
 
-    public static int NormalTeleportDuration => 60;
+    public static int NormalTeleportDuration => 80;
     public static int EyeSpinTime => 135;
 
     public static readonly Color ChargeColor = Color.Lerp(Color.Red, Color.White, 0.75f);

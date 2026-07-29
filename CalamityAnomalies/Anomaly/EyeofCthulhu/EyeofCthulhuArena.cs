@@ -53,7 +53,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
     public NPC Master
     {
-        get => NPC.TryGetNPC((int)Projectile.ai[0]);
+        get => NPC.GetNPCFromIndex((int)Projectile.ai[0]);
         set => Projectile.ai[0] = value?.whoAmI ?? -1;
     }
     public EyeofCthulhu_Anomaly MasterBehavior => EyeofCthulhu_Anomaly.GetInstance(Master);
@@ -663,10 +663,11 @@ public sealed class EyeofCthulhuArena_Player : CAPlayerBehavior
 
         foreach (Projectile projectile in Projectile.ActiveProjectiles)
         {
+
             if (projectile.ModProjectile is EyeofCthulhuArena arena && arena.IsActivated)
             {
                 success = true;
-                float scaleMultiplier = 0.008f;
+                float scaleMultiplier = 0.0082f;
                 EnhancedDarknessSystem_Bridge.AddLightSource(projectile.Center, BloomParticle.BloomCircleLarge, scale: arena.Radius * scaleMultiplier);
                 EnhancedDarknessSystem_Bridge.AddLightSource(scale: 2f, opacity: MathHelper.Clamp(Main.LocalPlayer.Distance(projectile.Center) / 640f, 0, 1));
             }

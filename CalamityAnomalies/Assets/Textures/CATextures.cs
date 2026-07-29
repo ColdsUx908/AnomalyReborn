@@ -44,17 +44,21 @@ public sealed class CATextures
     internal static Asset<Texture2D> _scale2;
     public static Texture2D Scale2 => _scale2?.Value;
 
-    [LoadTexture(TexturePathPrefix + "UI/AnomalyModeIndicator")]
-    internal static Asset<Texture2D> _anomalyModeIndicator;
-    public static Texture2D AnomalyModeIndicator => _anomalyModeIndicator?.Value;
+    [LoadTexture(TexturePathPrefix + "UI/AnomalyIndicator")]
+    internal static Asset<Texture2D> _anomalyIndicator;
+    public static Texture2D AnomalyIndicator => _anomalyIndicator?.Value;
 
-    [LoadTexture(TexturePathPrefix + "UI/AnomalyModeIndicator_Off")]
-    internal static Asset<Texture2D> _anomalyModeIndicator_Off;
-    public static Texture2D AnomalyModeIndicator_Off => _anomalyModeIndicator_Off?.Value;
+    [LoadTexture(TexturePathPrefix + "UI/AnomalyIndicator_Off")]
+    internal static Asset<Texture2D> _anomalyIndicator_Off;
+    public static Texture2D AnomalyIndicator_Off => _anomalyIndicator_Off?.Value;
 
-    [LoadTexture(TexturePathPrefix + "UI/AnomalyModeIndicator_Border")]
-    internal static Asset<Texture2D> _anomalyModeIndicator_Border;
-    public static Texture2D AnomalyModeIndicator_Border => _anomalyModeIndicator_Border?.Value;
+    [LoadTexture(TexturePathPrefix + "UI/AnomalyIndicator_Border")]
+    internal static Asset<Texture2D> _anomalyIndicator_Border;
+    public static Texture2D AnomalyIndicator_Border => _anomalyIndicator_Border?.Value;
+
+    [LoadTexture(TexturePathPrefix + "UI/AnomalyIndicator_Locked")]
+    internal static Asset<Texture2D> _anomalyIndicator_Locked;
+    public static Texture2D AnomalyIndicator_Locked => _anomalyIndicator_Locked?.Value;
 
     [LoadTexture(TexturePathPrefix + "UI/AnomalyUltraIndicator")]
     internal static Asset<Texture2D> _anomalyUltraIndicator;

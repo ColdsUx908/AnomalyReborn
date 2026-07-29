@@ -10,6 +10,9 @@ public sealed partial class QueenBee_Handler
 
         void IContentLoader.PostSetupContent()
         {
+            if (Main.dedServ)
+                return;
+
             _combCellGores = new ModGore[3][];
             for (int i = 0; i < _combCellGores.Length; i++)
             {
@@ -39,6 +42,9 @@ public sealed partial class QueenBee_Handler
 
     public static void SpawnGores(CombCell cell)
     {
+        if (Main.dedServ)
+            return;
+
         Projectile projectile = cell.Projectile;
 
         int index = Main.rand.Next(0, 3);

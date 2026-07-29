@@ -579,7 +579,27 @@ public static partial class TOExtensions
         /// <br/>若索引越界或等于 <see cref="Main.maxNPCs"/>（对应 NPC 为 Dummy），返回 DummyNPC。
         /// <br/>永不返回 <see langword="null"/>。
         /// </returns>
-        public static NPC TryGetNPC(int index) => index >= 0 && index < Main.maxNPCs ? Main.npc[index] : NPC.DummyNPC;
+        public static NPC GetNPCFromIndex(int index) => index >= 0 && index < Main.maxNPCs ? Main.npc[index] : NPC.DummyNPC;
+
+        /// <summary>
+        /// 尝试根据传入的索引获取 <see cref="Main.npc"/> 数组中对应的 NPC 实例。
+        /// </summary>
+        /// <param name="index">索引。</param>
+        /// <param name="npc">输出参数，返回对应的 NPC 实例。</param>
+        /// <returns>如果索引有效且对应 NPC 存在，返回 <see langword="true"/>；否则返回 <see langword="false"/>。</returns>
+        public static bool TryGetNPCFromIndex(int index, [NotNullWhen(true)] out NPC npc)
+        {
+            if (index >= 0 && index < Main.maxNPCs)
+            {
+                npc = Main.npc[index];
+                return true;
+            }
+            else
+            {
+                npc = NPC.DummyNPC;
+                return false;
+            }
+        }
 
         /// <summary>
         /// 检查是否存在指定 ModNPC 类型的活跃 NPC。

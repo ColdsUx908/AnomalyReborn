@@ -1,5 +1,7 @@
 ﻿// Developed by ColdsUx
 
+using CalamityMod.NPCs.PlagueEnemies;
+
 namespace CalamityAnomalies.Anomaly.QueenBee;
 
 public sealed class CombCell : CAModProjectile
@@ -29,7 +31,7 @@ public sealed class CombCell : CAModProjectile
 
     public NPC Master
     {
-        get => NPC.TryGetNPC((int)Projectile.ai[0]);
+        get => NPC.GetNPCFromIndex((int)Projectile.ai[0]);
         set => Projectile.ai[0] = value?.whoAmI ?? -1;
     }
     public QueenBee_Anomaly MasterBehavior => QueenBee_Anomaly.GetInstance(Master);
@@ -253,7 +255,7 @@ public sealed class CombCell : CAModProjectile
             {
                 case 0:
                     HasContactDamage = true;
-                    if (masterBehavior.CurrentAttackPhase >= 3 || masterBehavior.CurrentBehavior != QueenBee_Anomaly.Behavior.Phase2_BeeSwarm3)
+                    if ((masterBehavior.CurrentAttackPhase >= 3 && masterBehavior.Timer1 >= 90) || masterBehavior.CurrentBehavior != QueenBee_Anomaly.Behavior.Phase2_BeeSwarm3)
                     {
                         Projectile.Kill();
                         break;
@@ -263,7 +265,7 @@ public sealed class CombCell : CAModProjectile
                     break;
                 case 1:
                     HasContactDamage = true;
-                    if (masterBehavior.CurrentAttackPhase >= 3 || masterBehavior.CurrentBehavior != QueenBee_Anomaly.Behavior.Phase2_BeeSwarm3)
+                    if ((masterBehavior.CurrentAttackPhase >= 3 && masterBehavior.Timer1 >= 90) || masterBehavior.CurrentBehavior != QueenBee_Anomaly.Behavior.Phase2_BeeSwarm3)
                     {
                         Projectile.Kill();
                         break;
@@ -298,6 +300,16 @@ public sealed class CombCell : CAModProjectile
     public override void OnKill(int timeLeft)
     {
         QueenBee_Handler.SpawnGores(this);
+
+        if (Aroma)
+        {
+            int amount = Main.rand.Next(1, 4);
+            for (int i = 0; i < amount; i++)
+            {
+                int spawnType = MasterBehavior.Phase1_2 ? (Main.rand.NextBool(3) ? ModContent.NPCType<PlagueChargerLarge>() : ModContent.NPCType<PlagueCharger>()) : NPCID.Hellbat;
+                NPC.NewNPCAction(SourceAI, Projectile.Center, spawnType, action: n => n.velocity = Main.rand.NextPolarVector2(5f));
+            }
+        }
     }
 
     #region 绘制与碰撞
@@ -326,6 +338,14 @@ public sealed class CombCell : CAModProjectile
 
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Hexagon(Projectile.Center, HexagonRadius * Projectile.scale, Projectile.rotation + TOMathUtils.PiOver6).Collides(targetHitbox);
 
+    public override Color? GetAlpha(Color lightColor)
+    {
+        if (Aroma)
+            return (MasterBehavior.Phase1_2 ? Color.Lime : Color.Red) with { A = Master.GraphicAlpha };
+
+        return null;
+    }
+
     public override bool PreDraw(ref Color lightColor)
     {
         float innerOpacityMultiplier = BehaviorType switch
@@ -342,7 +362,7 @@ public sealed class CombCell : CAModProjectile
             _ => 1f
         };
 
-        DrawCell(Main.spriteBatch, Projectile.Center, Projectile.scale, Projectile.rotation, Color.White * Projectile.Opacity, innerOpacityMultiplier);
+        DrawCell(Main.spriteBatch, Projectile.Center, Projectile.scale, Projectile.rotation, Projectile.GetAlpha(Lighting.GetColor(Projectile.Center.ToTileCoordinates())) * Projectile.Opacity, innerOpacityMultiplier);
         return false;
     }
 

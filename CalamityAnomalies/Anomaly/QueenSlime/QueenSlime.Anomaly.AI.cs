@@ -234,10 +234,10 @@ public sealed partial class QueenSlime_Anomaly
 
             if (NPC.timeLeft > 10)
             {
-                if (!Collision.CanHit(NPC, Main.player[NPC.target]))
+                if (!Collision.CanHit(NPC, Target))
                 {
                     bool flyToSolidTilesAboveTarget = false;
-                    Vector2 center = Main.player[NPC.target].Center;
+                    Vector2 center = Target.Center;
                     for (int i = 0; i < 16; i++)
                     {
                         float tileDistanceAboveTarget = 16 * i;
@@ -254,7 +254,7 @@ public sealed partial class QueenSlime_Anomaly
                         desiredVelocity = center - NPC.Center;
                 }
                 else
-                    desiredVelocity = Main.player[NPC.target].Center + new Vector2(0f, -flyDistanceY) - NPC.Center;
+                    desiredVelocity = Target.Center + new Vector2(0f, -flyDistanceY) - NPC.Center;
             }
             else
                 desiredVelocity = NPC.Center + new Vector2(500f * NPC.direction, -flyDistanceY) - NPC.Center;
@@ -288,6 +288,12 @@ public sealed partial class QueenSlime_Anomaly
 
             if (NPC.rotation < -0.5f)
                 NPC.rotation = -0.5f;
+        }
+
+        void SpawnOrbParticles(int amount, float maxSpeed)
+        {
+            for (int i = 0; i < amount; i++)
+                ParticleHandler.SpawnParticle(new OrbParticle(NPC.Center, Main.rand.NextPolarVector2(maxSpeed * 0.5f, maxSpeed), Main.rand.Next(20, 30), Main.rand.NextFloat(0.4f, 0.85f), Color.Lerp(Color.Purple, Color.HotPink, Main.rand.NextFloat(0.5f)), lifeEndRatio: 0.925f));
         }
 
         #region 一阶段
@@ -405,6 +411,7 @@ public sealed partial class QueenSlime_Anomaly
                             if (highJump) //凝胶弹幕
                             {
                                 SoundEngine.PlaySound(SoundID.Item155, NPC.Center);
+                                SpawnOrbParticles(20, 10f);
 
                                 if (TOSharedData.NotClient)
                                 {
@@ -414,12 +421,12 @@ public sealed partial class QueenSlime_Anomaly
                                     for (int i = 0; i < outerAmount; i++)
                                     {
                                         float rotation = Utils.Remap(i, 0, outerAmount - 1, -TOMathUtils.PiOver24, TOMathUtils.PiOver24 - MathHelper.Pi) + Main.rand.NextFloat(-0.05f, 0.05f);
-                                        Projectile.NewProjectileAction(SourceAI, NPC.Center, new PolarVector2(Main.rand.NextFloat(10f, 12f), rotation), ProjectileID.QueenSlimeGelAttack, GelDamage, 0f);
+                                        Projectile.NewProjectileAction(SourceAI, NPC.Center, new PolarVector2(Main.rand.NextFloat(10f, 12f), rotation), GelProjectileType, GelDamage, 0f);
                                     }
                                     for (int i = 0; i < innerAmount; i++)
                                     {
                                         float rotation = Utils.Remap(i, 0, innerAmount - 1, -TOMathUtils.PiOver12, TOMathUtils.PiOver12 - MathHelper.Pi) + Main.rand.NextFloat(-0.05f, 0.05f);
-                                        Projectile.NewProjectileAction(SourceAI, NPC.Center, new PolarVector2(Main.rand.NextFloat(6f, 9.5f), rotation), ProjectileID.QueenSlimeGelAttack, GelDamage, 0f);
+                                        Projectile.NewProjectileAction(SourceAI, NPC.Center, new PolarVector2(Main.rand.NextFloat(6f, 9.5f), rotation), GelProjectileType, GelDamage, 0f);
                                     }
                                 }
 
@@ -539,6 +546,7 @@ public sealed partial class QueenSlime_Anomaly
                             //将凝胶弹幕合并至此
 
                             SoundEngine.PlaySound(SoundID.Item155, NPC.Center);
+                            SpawnOrbParticles(20, 10f);
 
                             if (TOSharedData.NotClient)
                             {
@@ -548,12 +556,12 @@ public sealed partial class QueenSlime_Anomaly
                                 for (int i = 0; i < outerAmount; i++)
                                 {
                                     float rotation = Utils.Remap(i, 0, outerAmount - 1, -TOMathUtils.PiOver24, TOMathUtils.PiOver24 - MathHelper.Pi) + Main.rand.NextFloat(-0.05f, 0.05f);
-                                    Projectile.NewProjectileAction(SourceAI, NPC.Center, new PolarVector2(Main.rand.NextFloat(11f, 14f), rotation), ProjectileID.QueenSlimeGelAttack, GelDamage, 0f);
+                                    Projectile.NewProjectileAction(SourceAI, NPC.Center, new PolarVector2(Main.rand.NextFloat(11f, 14f), rotation), GelProjectileType, GelDamage, 0f);
                                 }
                                 for (int i = 0; i < innerAmount; i++)
                                 {
                                     float rotation = Utils.Remap(i, 0, innerAmount - 1, -TOMathUtils.PiOver12, TOMathUtils.PiOver12 - MathHelper.Pi) + Main.rand.NextFloat(-0.05f, 0.05f);
-                                    Projectile.NewProjectileAction(SourceAI, NPC.Center, new PolarVector2(Main.rand.NextFloat(7f, 10.5f), rotation), ProjectileID.QueenSlimeGelAttack, GelDamage, 0f);
+                                    Projectile.NewProjectileAction(SourceAI, NPC.Center, new PolarVector2(Main.rand.NextFloat(7f, 10.5f), rotation), GelProjectileType, GelDamage, 0f);
                                 }
                             }
                         }
@@ -592,6 +600,7 @@ public sealed partial class QueenSlime_Anomaly
                         if (NPC.velocity.Y == 0f)
                         {
                             SoundEngine.PlaySound(SoundID.Item167, NPC.Center);
+                            SpawnOrbParticles(20, 10f);
 
                             for (int i = 0; i < 20; i++)
                             {
@@ -715,6 +724,7 @@ public sealed partial class QueenSlime_Anomaly
                                     if (NPC.velocity.Y == 0f || Math.Abs(NPC.Center.Y - TeleportDestination.Y) >= 2400f) //下落距离过长时同样结束下落
                                     {
                                         SoundEngine.PlaySound(SoundID.Item167, NPC.Center);
+                                        SpawnOrbParticles(20, 10f);
 
                                         if (TOSharedData.NotClient)
                                         {
@@ -874,6 +884,7 @@ public sealed partial class QueenSlime_Anomaly
                 if (Timer1 >= 90)
                 {
                     SoundEngine.PlaySound(SoundID.Item155, NPC.Center);
+                    SpawnOrbParticles(30, 12.5f);
 
                     if (TOSharedData.NotClient)
                     {
@@ -881,15 +892,15 @@ public sealed partial class QueenSlime_Anomaly
                         float radian = MathHelper.ToRadians(Ultra ? 300f : 200f);
                         float singleRadian = radian / (amount - 1);
                         float speed = Ultra ? 12f : 10f;
-                        Projectile.NewProjectilesArc(amount, singleRadian, SourceAI, NPC.Center, new Vector2(0f, -speed), ProjectileID.QueenSlimeGelAttack, GelDamage, 0f);
+                        Projectile.NewProjectilesArc(amount, singleRadian, SourceAI, NPC.Center, new Vector2(0f, -speed), GelProjectileType, GelDamage, 0f);
 
                         for (int j = -1; j <= 1; j += 2)
                         {
                             Vector2 direction = new PolarVector2(MathHelper.ToRadians(Main.rand.NextFloat(10) * j));
-                            const int max = 12;
-                            for (int i = 0; i < max; i++)
+                            int spikeAmount = 12;
+                            for (int i = 0; i < spikeAmount; i++)
                             {
-                                Vector2 velocity = Main.rand.NextFloat(10f, 30f) * j * direction.RotatedBy(MathHelper.PiOver4 * 0.8f / max * i * -j);
+                                Vector2 velocity = Main.rand.NextFloat(10f, 30f) * j * direction.RotatedBy(MathHelper.PiOver4 * 0.8f / spikeAmount * i * -j);
                                 Projectile.NewProjectileAction(SourceAI, NPC.Center, velocity, ProjectileID.QueenSlimeMinionBlueSpike, SpikeDamage, 0f, action: SpawnSpikeAction_Scaled);
                             }
                         }

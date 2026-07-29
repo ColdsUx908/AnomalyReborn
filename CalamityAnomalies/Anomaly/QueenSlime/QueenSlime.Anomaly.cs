@@ -59,6 +59,8 @@ public sealed partial class QueenSlime_Anomaly : AnomalyNPCBehavior<QueenSlime_A
     public static float Phase2_2LifeRatio => Ultra ? Phase2_2LifeRatio_Ultra : Phase2_2LifeRatio_Anomaly;
     public static float Phase3LifeRatio => Ultra ? Phase3LifeRatio_Ultra : Phase3LifeRatio_Anomaly;
 
+    public static int GelProjectileType => Aroma ? ProjectileID.BouncyBoulder : ProjectileID.QueenSlimeGelAttack;
+
     private static readonly ProjectileDamageContainer _gelDamage = new(80, 120, 150, 210, 150, 210);
     public static int GelDamage => _gelDamage.Value;
 
@@ -158,7 +160,7 @@ public sealed partial class QueenSlime_Anomaly : AnomalyNPCBehavior<QueenSlime_A
     /// </summary>
     public NPC JewelAmethyst
     {
-        get => NPC.TryGetNPC(AnomalyNPC.AnomalyAI32[1].byte0);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte0);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
@@ -190,7 +192,7 @@ public sealed partial class QueenSlime_Anomaly : AnomalyNPCBehavior<QueenSlime_A
     /// </summary>
     public NPC JewelRainbow
     {
-        get => NPC.TryGetNPC(AnomalyNPC.AnomalyAI32[1].byte1);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte1);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);

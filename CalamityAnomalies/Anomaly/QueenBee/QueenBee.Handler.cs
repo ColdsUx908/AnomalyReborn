@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Anomaly.QueenBee;
+﻿// Developed by ColdsUx
+
+namespace CalamityAnomalies.Anomaly.QueenBee;
 
 public sealed partial class QueenBee_Handler
 {
@@ -29,8 +31,7 @@ public sealed partial class QueenBee_Handler
 
             foreach (int cellIndex in HoneyWetCombCells)
             {
-                Projectile projectile = Projectile.TryGetProjectile(cellIndex);
-                if (projectile.active && projectile.TryGetModProjectile(out CombCell cell))
+                if (Projectile.TryGetProjectileFromIndex(cellIndex, out Projectile projectile) && projectile.active && projectile.TryGetModProjectile(out CombCell cell))
                 {
                     if (cell.HitBox.Collides(hitbox))
                     {

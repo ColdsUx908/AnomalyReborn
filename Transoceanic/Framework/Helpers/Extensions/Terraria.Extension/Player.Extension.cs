@@ -125,7 +125,27 @@ public static partial class TOExtensions
         /// <br/>若索引越界或等于 <see cref="Main.maxPlayers"/>（对应玩家为服务器端），返回 Server。
         /// <br/>永不返回 <see langword="null"/>。
         /// </returns>
-        public static Player TryGetPlayer(int index) => index is >= 0 and < Main.maxPlayers ? Main.player[index] : Player.Server;
+        public static Player GetPlayerFromIndex(int index) => index is >= 0 and < Main.maxPlayers ? Main.player[index] : Player.Server;
+
+        /// <summary>
+        /// 尝试根据传入的索引获取 <see cref="Main.player"/> 数组中对应的玩家实例。
+        /// </summary>
+        /// <param name="index">索引。</param>
+        /// <param name="player">输出参数，返回对应的玩家实例。</param>
+        /// <returns>如果索引有效且对应玩家存在，返回 <see langword="true"/>；否则返回 <see langword="false"/>。</returns>
+        public static bool TryGetPlayerFromIndex(int index, out Player player)
+        {
+            if (index is >= 0 and < Main.maxPlayers)
+            {
+                player = Main.player[index];
+                return true;
+            }
+            else
+            {
+                player = Player.Server;
+                return false;
+            }
+        }
 
         /// <summary>
         /// 获取一个迭代器，用于遍历所有激活状态的玩家。

@@ -27,13 +27,13 @@ public class BloodOrbProjectile : CAModProjectile
 
     public NPC Master
     {
-        get => NPC.TryGetNPC((int)Projectile.ai[1]);
+        get => NPC.GetNPCFromIndex((int)Projectile.ai[1]);
         set => Projectile.ai[1] = value?.whoAmI ?? -1;
     }
 
     public Projectile ArenaProjectile
     {
-        get => Projectile.TryGetProjectile((int)Projectile.ai[2]);
+        get => Projectile.GetProjectileFromIndex((int)Projectile.ai[2]);
         set => Projectile.ai[2] = value?.whoAmI ?? -1;
     }
     public bool ArenaProjectileAlive => ArenaProjectile.active && ArenaProjectile.ModProjectile is EyeofCthulhuArena arena && arena.Master == Master;
@@ -120,7 +120,7 @@ public class BloodOrbProjectile : CAModProjectile
         }
     }
 
-    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(Projectile.Center, 24f * Projectile.scale).Collides(targetHitbox);
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(Projectile.Center, 27f * Projectile.scale).Collides(targetHitbox);
 
     public override void OnHitPlayer(Player target, Player.HurtInfo info)
     {

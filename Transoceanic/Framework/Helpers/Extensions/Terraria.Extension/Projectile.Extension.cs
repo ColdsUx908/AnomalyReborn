@@ -268,7 +268,27 @@ public static partial class TOExtensions
         /// <br/>若索引越界或等于 <see cref="Main.maxProjectiles"/>（对应弹幕为 Dummy），返回 DummyProjectile。
         /// <br/>永不返回 <see langword="null"/>。
         /// </returns>
-        public static Projectile TryGetProjectile(int index) => index >= 0 && index < Main.maxProjectiles ? Main.projectile[index] : Projectile.DummyProjectile;
+        public static Projectile GetProjectileFromIndex(int index) => index >= 0 && index < Main.maxProjectiles ? Main.projectile[index] : Projectile.DummyProjectile;
+
+        /// <summary>
+        /// 尝试根据传入的索引获取 <see cref="Main.projectile"/> 数组中对应的弹幕实例。
+        /// </summary>
+        /// <param name="index">索引。</param>
+        /// <param name="projectile">输出参数，返回对应的弹幕实例。</param>
+        /// <returns>如果索引有效且对应弹幕存在，返回 <see langword="true"/>；否则返回 <see langword="false"/>。</returns>
+        public static bool TryGetProjectileFromIndex(int index, [NotNullWhen(true)] out Projectile projectile)
+        {
+            if (index >= 0 && index < Main.maxProjectiles)
+            {
+                projectile = Main.projectile[index];
+                return true;
+            }
+            else
+            {
+                projectile = Projectile.DummyProjectile;
+                return false;
+            }
+        }
 
         /// <summary>
         /// 获取一个迭代器，用于遍历所有激活状态的弹幕。

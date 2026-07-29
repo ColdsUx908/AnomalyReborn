@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Anomaly.DukeFishron;
+﻿// Developed by ColdsUx
+
+namespace CalamityAnomalies.Anomaly.DukeFishron;
 
 public sealed class DetonatingBubble_Anomaly : AnomalyNPCBehavior<DetonatingBubble_Anomaly>
 {

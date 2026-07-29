@@ -1,5 +1,5 @@
 CAServerConfig: {
-	DisplayName: 服务器设置
+	DisplayName: 服务端配置
 
 	Contents: {
 		Label: 启用模组内容
@@ -8,7 +8,7 @@ CAServerConfig: {
 }
 
 CAClientConfig: {
-	DisplayName: 客户端设置
+	DisplayName: 客户端配置
 
 	AuxiliaryVisualEffects: {
 		Label: 辅助视觉效果

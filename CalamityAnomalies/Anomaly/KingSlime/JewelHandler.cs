@@ -180,17 +180,17 @@ public static class JewelHandler
     /// 宝石粒子生成通用逻辑。
     /// </summary>
     /// <param name="jewel">宝石。</param>
-    /// <param name="velocity">粒子速度大小。</param>
+    /// <param name="speed">粒子速度大小。</param>
     /// <param name="lifetime">粒子存在时长。</param>
     /// <param name="scale">粒子大小。</param>
-    public static void SpawnOrbParticle(NPC jewel, float velocity, int lifetime, float scale)
+    public static void SpawnOrbParticle(NPC jewel, float speed, int lifetime, float scale)
     {
         Color color = jewel.ModNPC switch
         {
             KingSlimeJewelRainbow => Color.GetRandomRainbowColor(),
             _ => GetColor(jewel)
         };
-        ParticleHandler.SpawnParticle(new OrbParticle(jewel.Center, Main.rand.NextPolarVector2(velocity), lifetime, scale, color, lifeEndRatio: 0.925f));
+        ParticleHandler.SpawnParticle(new OrbParticle(jewel.Center, Main.rand.NextPolarVector2(speed), lifetime, scale, color, lifeEndRatio: 0.925f));
     }
 
     public static void SpawnPointingParticle(NPC jewel, int amount, bool extraParticle)
@@ -199,7 +199,7 @@ public static class JewelHandler
         Color color = GetColor(jewel);
         Color flashColor = GetFlashColor(jewel);
 
-        for (int i = 0; i < amount; i++)
+        for ( int i = 0; i < amount; i++)
         {
             ParticleHandler.SpawnParticle(new PointingParticle(jewel.Center, Main.rand.NextPolarVector2(0f, 20f), false, 10, Main.rand.NextFloat(0.8f, 1.5f), isRainbowJewel ? Color.GetRandomRainbowColor() with { A = 0 } : color));
             if (extraParticle)

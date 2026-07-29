@@ -70,6 +70,8 @@ public sealed partial class EyeofCthulhu_Anomaly : AnomalyNPCBehavior<EyeofCthul
     public static float Phase3LifeRatio => Ultra ? Phase3LifeRatio_Ultra : Phase3LifeRatio_Anomaly;
     public static float Phase3_2LifeRatio => Ultra ? Phase3_2LifeRatio_Ultra : Phase3_2LifeRatio_Anomaly;
 
+    public static float TeleportOffset => 150f;
+
     public static readonly SoundStyle Roar = SoundID.Roar with { MaxInstances = 0 };
     public static readonly SoundStyle ForceRoar = SoundID.ForceRoarPitched with { MaxInstances = 0 };
 
@@ -95,7 +97,8 @@ public sealed partial class EyeofCthulhu_Anomaly : AnomalyNPCBehavior<EyeofCthul
     public float ActualRotation => NPC.rotation + MathHelper.PiOver2;
     public Vector2 DrawOffset => -new PolarVector2(24f, ActualRotation);
 
-    public int RapidChargeTime => Phase2_3 ? 11 : 15;
+    public int RapidChargeTime => Ultra ? (Phase2_3 ? 11 : 13) : (Phase2_3 ? 12 : 15);
+
     public int HorizontalChargeTime => Phase2_3 ? 30 : 35;
 
     public static readonly UnaryFunctionWithDomain PhaseChange_1To2_RotationSpeedFunction = UnaryFunctionWithDomain.Piecewise(
@@ -323,7 +326,7 @@ public sealed partial class EyeofCthulhu_Anomaly : AnomalyNPCBehavior<EyeofCthul
     /// </summary>
     public NPC ServantLeft
     {
-        get => NPC.TryGetNPC(AnomalyNPC.AnomalyAI32[1].byte0);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte0);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
@@ -354,7 +357,7 @@ public sealed partial class EyeofCthulhu_Anomaly : AnomalyNPCBehavior<EyeofCthul
     /// </summary>
     public NPC ServantRight
     {
-        get => NPC.TryGetNPC(AnomalyNPC.AnomalyAI32[1].byte1);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte1);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
@@ -385,7 +388,7 @@ public sealed partial class EyeofCthulhu_Anomaly : AnomalyNPCBehavior<EyeofCthul
     /// </summary>
     public Projectile ArenaProjectile
     {
-        get => Projectile.TryGetProjectile(AnomalyNPC.AnomalyAI32[2].i);
+        get => Projectile.GetProjectileFromIndex(AnomalyNPC.AnomalyAI32[2].i);
         set
         {
             int temp = value?.whoAmI ?? -1;
@@ -450,6 +453,9 @@ public sealed partial class EyeofCthulhu_Anomaly : AnomalyNPCBehavior<EyeofCthul
 
     public override void SetDefaults()
     {
+        NPC.lifeMax = 3620;
+        NPC.ApplyCalamityBossHealthBoost();
+
         ServantLeft = NPC.DummyNPC;
         ServantRight = NPC.DummyNPC;
         ArenaProjectile = Projectile.DummyProjectile;
@@ -516,9 +522,9 @@ public sealed partial class EyeofCthulhu_Anomaly : AnomalyNPCBehavior<EyeofCthul
         if (!Ultra)
             return;
 
-        if (Phase3) //在竞技场内获得20%易伤，否则获得85%减伤
+        if (Phase3) //在竞技场内获得10%易伤，否则获得85%减伤
         {
-            float damageMultiplier = IsInPhase3Arena ? 1.2f : 0.15f;
+            float damageMultiplier = IsInPhase3Arena ? 1.1f : 0.15f;
             modifiers.SourceDamage *= damageMultiplier;
         }
         else if (InvalidPhase2)

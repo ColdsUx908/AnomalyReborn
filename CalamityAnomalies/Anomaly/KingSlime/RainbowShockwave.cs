@@ -17,13 +17,13 @@ public sealed class RainbowShockwave : BaseShockwaveProjectile, IContentLoader
 
     public NPC Master
     {
-        get => NPC.TryGetNPC((int)Projectile.ai[0]);
+        get => NPC.GetNPCFromIndex((int)Projectile.ai[0]);
         set => Projectile.ai[0] = value?.whoAmI ?? -1;
     }
 
     public NPC Jewel
     {
-        get => NPC.TryGetNPC((int)Projectile.ai[1]);
+        get => NPC.GetNPCFromIndex((int)Projectile.ai[1]);
         set => Projectile.ai[1] = value?.whoAmI ?? -1;
     }
 

@@ -40,8 +40,7 @@ public sealed class KillerBeeSmall : CAModProjectile
         Projectile.rotation = Projectile.velocity.X * -0.02f;
 
         int index = (int)Projectile.ai[0];
-        Projectile safeCombCell = Projectile.TryGetProjectile(index);
-        if (safeCombCell.active && safeCombCell.ModProjectile is CombCell combCell && combCell.BehaviorType == CombCell.Behavior.BeeSwarm2_Safe)
+        if (Projectile.TryGetProjectileFromIndex(index, out Projectile safeCombCell) && safeCombCell.active && safeCombCell.ModProjectile is CombCell combCell && combCell.BehaviorType == CombCell.Behavior.BeeSwarm2_Safe)
         {
             Hexagon hitBox = combCell.HitBox;
             hitBox.CircumRadius *= 1.1f;
@@ -63,8 +62,7 @@ public sealed class KillerBeeSmall : CAModProjectile
     public override bool CanHitPlayer(Player target)
     {
         int index = (int)Projectile.ai[0];
-        Projectile safeCombCell = Projectile.TryGetProjectile(index);
-        if (safeCombCell.active && safeCombCell.ModProjectile is CombCell combCell && combCell.BehaviorType == CombCell.Behavior.BeeSwarm2_Safe && combCell.HitBox.Collides(Projectile.Hitbox))
+        if (Projectile.TryGetProjectileFromIndex(index, out Projectile safeCombCell) && safeCombCell.active && safeCombCell.ModProjectile is CombCell combCell && combCell.BehaviorType == CombCell.Behavior.BeeSwarm2_Safe && combCell.HitBox.Collides(Projectile.Hitbox))
             return false;
 
         return true;

@@ -218,8 +218,8 @@ public sealed class TOSharedData : ModSystem, ITOLoader
         }
         else if (BossTimer > 0)
         {
-            BossTimer = 0;
             OnBossChallengeEnd?.Invoke();
+            BossTimer = 0;
         }
     }
 
