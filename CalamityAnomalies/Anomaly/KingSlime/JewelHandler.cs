@@ -1,7 +1,6 @@
 ﻿// Developed by ColdsUx
 
 using CalamityAnomalies.Anomaly.QueenSlime;
-using CalamityMod.NPCs.NormalNPCs;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
@@ -10,33 +9,29 @@ public static class JewelHandler
     public const string AnomalyKingSlimePath = "CalamityAnomalies/Anomaly/KingSlime/";
     public const string AnomalyQueenSlimePath = "CalamityAnomalies/Anomaly/QueenSlime/";
 
-    [LoadTexture("CalamityMod/NPCs/NormalNPCs/KingSlimeJewelFlash")]
-    private static Asset<Texture2D> _flashTexture;
-    public static Texture2D FlashTexture => _flashTexture.Value;
-
-    [LoadTexture("CalamityMod/Particles/KingSlimeRubyShards")]
+    [LoadTexture(AnomalyKingSlimePath + "RubyJewelShards")]
     private static Asset<Texture2D> _rubyShardTexture;
     public static Texture2D RubyShardTexture => _rubyShardTexture.Value;
 
-    [LoadTexture(AnomalyKingSlimePath + "JewelEmeraldShards")]
+    [LoadTexture(AnomalyKingSlimePath + "EmeraldJewelShards")]
     private static Asset<Texture2D> _emeraldShardTexture;
     public static Texture2D EmeraldShardTexture => _emeraldShardTexture.Value;
 
-    [LoadTexture(AnomalyKingSlimePath + "JewelSapphireShards")]
+    [LoadTexture(AnomalyKingSlimePath + "SapphireJewelShards")]
     private static Asset<Texture2D> _sapphireShardTexture;
     public static Texture2D SapphireShardTexture => _sapphireShardTexture.Value;
 
-    [LoadTexture(AnomalyKingSlimePath + "JewelRainbowShards")]
+    [LoadTexture(AnomalyKingSlimePath + "RainbowJewelShards")]
     private static Asset<Texture2D> _rainbowShardTexture;
     public static Texture2D RainbowShardTexture => _rainbowShardTexture.Value;
 
-    [LoadTexture(AnomalyQueenSlimePath + "JewelAmethystShards")]
+    [LoadTexture(AnomalyQueenSlimePath + "AmethystJewelShards")]
     private static Asset<Texture2D> _amethystShardTexture;
     public static Texture2D AmethystShardTexture => _amethystShardTexture.Value;
 
     public static readonly SoundStyle SpawnSound = new(AnomalyKingSlimePath + "JewelSpawn");
     public static readonly SoundStyle ShatterSound = new(AnomalyKingSlimePath + "JewelShatter");
-    public static readonly SoundStyle ShootSound = new("CalamityMod/Sounds/Custom/RedJewelFire");
+    public static readonly SoundStyle ShootSound = new(AnomalyKingSlimePath + "JewelShoot");
     public static readonly SoundStyle DashSoundNormal = new(AnomalyKingSlimePath + "JewelDashNormal");
     public static readonly SoundStyle DashSoundBuff = new(AnomalyKingSlimePath + "JewelDashBuff");
     public static readonly SoundStyle HitSound = new(AnomalyKingSlimePath + "JewelHit", 3) { Volume = 0.6f };
@@ -52,38 +47,38 @@ public static class JewelHandler
     /// <summary>
     /// 获取宝石对应的 <see cref="IKingSlimeJewel"/> 实例。
     /// </summary>
-    public static IKingSlimeJewel GetKingSlimeJewel(NPC jewel) => jewel.ModNPC switch
+    public static JewelNPC GetKingSlimeJewel(NPC jewel) => jewel.ModNPC switch
     {
-        KingSlimeJewelRuby => new KingSlimeJewelRuby_Anomaly() { _entity = jewel },
-        KingSlimeJewelEmerald emerald => emerald,
-        KingSlimeJewelSapphire sapphire => sapphire,
-        KingSlimeJewelRainbow rainbow => rainbow,
+        RubyJewel ruby => ruby,
+        EmeraldJewel emerald => emerald,
+        SapphireJewel sapphire => sapphire,
+        RainbowJewel rainbow => rainbow,
 
-        QueenSlimeJewelAmethyst amethyst => amethyst,
+        AmethystJewel amethyst => amethyst,
 
         _ => null
     };
 
     public static Color GetColor(NPC jewel) => jewel.ModNPC switch
     {
-        KingSlimeJewelRuby => RubyColor,
-        KingSlimeJewelEmerald => EmeraldColor,
-        KingSlimeJewelSapphire => SapphireColor,
-        KingSlimeJewelRainbow => RainbowColor,
+        RubyJewel => RubyColor,
+        EmeraldJewel => EmeraldColor,
+        SapphireJewel => SapphireColor,
+        RainbowJewel => RainbowColor,
 
-        QueenSlimeJewelAmethyst => AmethystColor,
+        AmethystJewel => AmethystColor,
 
         _ => Color.White
     };
 
     public static Color GetFlashColor(NPC jewel) => jewel.ModNPC switch
     {
-        KingSlimeJewelRuby => Color.Pink,
-        KingSlimeJewelEmerald => Color.LimeGreen,
-        KingSlimeJewelSapphire => Color.CornflowerBlue,
-        KingSlimeJewelRainbow => Color.White,
+        RubyJewel => Color.Pink,
+        EmeraldJewel => Color.LimeGreen,
+        SapphireJewel => Color.CornflowerBlue,
+        RainbowJewel => Color.White,
 
-        QueenSlimeJewelAmethyst => Color.MediumPurple,
+        AmethystJewel => Color.MediumPurple,
 
         _ => Color.White
     };
@@ -169,7 +164,7 @@ public static class JewelHandler
     /// <param name="ratio">插值比例。<br/>决定闪烁效果强度。</param>
     public static void DrawJewel(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel)
     {
-        bool isRainbowJewel = jewel.ModNPC is KingSlimeJewelRainbow;
+        bool isRainbowJewel = jewel.ModNPC is RainbowJewel;
         Color jewelColor = GetColor(jewel);
         if (isRainbowJewel)
             TODrawUtils.DrawBorderTextureFromCenter(spriteBatch, jewel.Texture, jewel.Center - screenPos, null, jewelColor, jewel.rotation, jewel.scale, borderWidth: 3f + TOMathUtils.TimeWrappingFunction.GetTimeSin(1f, unsigned: true));
@@ -187,7 +182,7 @@ public static class JewelHandler
     {
         Color color = jewel.ModNPC switch
         {
-            KingSlimeJewelRainbow => Color.GetRandomRainbowColor(),
+            RainbowJewel => Color.GetRandomRainbowColor(),
             _ => GetColor(jewel)
         };
         ParticleHandler.SpawnParticle(new OrbParticle(jewel.Center, Main.rand.NextPolarVector2(speed), lifetime, scale, color, lifeEndRatio: 0.925f));
@@ -195,7 +190,7 @@ public static class JewelHandler
 
     public static void SpawnPointingParticle(NPC jewel, int amount, bool extraParticle)
     {
-        bool isRainbowJewel = jewel.ModNPC is KingSlimeJewelRainbow;
+        bool isRainbowJewel = jewel.ModNPC is RainbowJewel;
         Color color = GetColor(jewel);
         Color flashColor = GetFlashColor(jewel);
 
@@ -268,17 +263,17 @@ public static class JewelHandler
 
     public static void OnKill(NPC jewel)
     {
-        bool isRainbowJewel = jewel.ModNPC is KingSlimeJewelRainbow;
+        bool isRainbowJewel = jewel.ModNPC is RainbowJewel;
         SpawnPointingParticle(jewel, 6, true);
 
         Texture2D shardTexture = jewel.ModNPC switch
         {
-            KingSlimeJewelRuby => RubyShardTexture,
-            KingSlimeJewelEmerald => EmeraldShardTexture,
-            KingSlimeJewelSapphire => SapphireShardTexture,
-            KingSlimeJewelRainbow => RainbowShardTexture,
+            RubyJewel => RubyShardTexture,
+            EmeraldJewel => EmeraldShardTexture,
+            SapphireJewel => SapphireShardTexture,
+            RainbowJewel => RainbowShardTexture,
 
-            QueenSlimeJewelAmethyst => AmethystShardTexture,
+            AmethystJewel => AmethystShardTexture,
 
             _ => null
         };

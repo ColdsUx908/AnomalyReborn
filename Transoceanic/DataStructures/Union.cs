@@ -77,7 +77,7 @@ public struct Union32
 /// 表示一个 64 位（8 字节）的联合体结构，允许以多种类型（double, long, 位域等）安全地访问同一内存区域。
 /// </summary>
 /// <remarks>
-/// 该结构通过 <see cref="System.Runtime.InteropServices.LayoutKind.Explicit"/> 使所有字段共享相同的内存起始地址。
+/// 该结构通过 <see cref="LayoutKind.Explicit"/> 使所有字段共享相同的内存起始地址。
 /// 静态构造函数会在运行时验证结构大小是否为 8 字节，若不符则抛出异常，确保平台兼容性。
 /// </remarks>
 [StructLayout(LayoutKind.Explicit)]

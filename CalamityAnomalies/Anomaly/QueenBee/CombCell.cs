@@ -34,7 +34,7 @@ public sealed class CombCell : CAModProjectile
         get => NPC.GetNPCFromIndex((int)Projectile.ai[0]);
         set => Projectile.ai[0] = value?.whoAmI ?? -1;
     }
-    public QueenBee_Anomaly MasterBehavior => QueenBee_Anomaly.GetInstance(Master);
+    public QueenBee MasterBehavior => QueenBee.GetInstance(Master);
 
     public Behavior BehaviorType
     {
@@ -186,7 +186,7 @@ public sealed class CombCell : CAModProjectile
                 {
                     float speed = Main.rand.NextFloat(10f, 15f);
                     Vector2 velocity = PolarVector2.UnitClocks[i].RotatedByRandom(MathHelper.ToRadians(10f)) * speed;
-                    Projectile.NewProjectileAction<BeeProjectile>(SourceAI, Projectile.Center, velocity, QueenBee_Anomaly.BeeDamage, 0f);
+                    Projectile.NewProjectileAction<BeeProjectile>(SourceAI, Projectile.Center, velocity, QueenBee.BeeDamage, 0f);
                 }
 
                 Projectile.Kill();
@@ -203,8 +203,8 @@ public sealed class CombCell : CAModProjectile
             if (Master is null || !Master.active || Master.type != NPCID.QueenBee)
                 Projectile.Kill();
 
-            QueenBee_Anomaly masterBehavior = MasterBehavior;
-            if (masterBehavior.CurrentAttackPhase >= 3 || masterBehavior.CurrentBehavior != QueenBee_Anomaly.Behavior.Phase1_BeeSwarm)
+            QueenBee masterBehavior = MasterBehavior;
+            if (masterBehavior.CurrentAttackPhase >= 3 || masterBehavior.CurrentBehavior != QueenBee.Behavior.Phase1_BeeSwarm)
                 Projectile.Kill();
         }
 
@@ -217,17 +217,17 @@ public sealed class CombCell : CAModProjectile
             if (Master is null || !Master.active || Master.type != NPCID.QueenBee)
                 Projectile.Kill();
 
-            QueenBee_Anomaly masterBehavior = MasterBehavior;
+            QueenBee masterBehavior = MasterBehavior;
             switch (type)
             {
                 case 0:
                     HasContactDamage = true;
-                    if (masterBehavior.CurrentAttackPhase >= 3 || masterBehavior.CurrentBehavior != QueenBee_Anomaly.Behavior.Phase1_BeeSwarm2)
+                    if (masterBehavior.CurrentAttackPhase >= 3 || masterBehavior.CurrentBehavior != QueenBee.Behavior.Phase1_BeeSwarm2)
                         Projectile.Kill();
                     break;
                 case 1:
                     HasContactDamage = false;
-                    if (masterBehavior.CurrentAttackPhase >= 3 || masterBehavior.CurrentBehavior != QueenBee_Anomaly.Behavior.Phase1_BeeSwarm2 || (masterBehavior.CurrentAttackPhase == 1 && masterBehavior.Timer1 >= 300))
+                    if (masterBehavior.CurrentAttackPhase >= 3 || masterBehavior.CurrentBehavior != QueenBee.Behavior.Phase1_BeeSwarm2 || (masterBehavior.CurrentAttackPhase == 1 && masterBehavior.Timer1 >= 300))
                         Projectile.Kill();
                     break;
                 case 2:
@@ -239,7 +239,7 @@ public sealed class CombCell : CAModProjectile
                         if (Timer2 >= 75)
                             Projectile.Kill();
                     }
-                    else if (masterBehavior.CurrentAttackPhase >= 3 || masterBehavior.CurrentBehavior != QueenBee_Anomaly.Behavior.Phase1_BeeSwarm2)
+                    else if (masterBehavior.CurrentAttackPhase >= 3 || masterBehavior.CurrentBehavior != QueenBee.Behavior.Phase1_BeeSwarm2)
                         Timer2++;
                     break;
             }
@@ -250,12 +250,12 @@ public sealed class CombCell : CAModProjectile
             if (Master is null || !Master.active || Master.type != NPCID.QueenBee)
                 Projectile.Kill();
 
-            QueenBee_Anomaly masterBehavior = MasterBehavior;
+            QueenBee masterBehavior = MasterBehavior;
             switch (type)
             {
                 case 0:
                     HasContactDamage = true;
-                    if ((masterBehavior.CurrentAttackPhase >= 3 && masterBehavior.Timer1 >= 90) || masterBehavior.CurrentBehavior != QueenBee_Anomaly.Behavior.Phase2_BeeSwarm3)
+                    if ((masterBehavior.CurrentAttackPhase >= 3 && masterBehavior.Timer1 >= 90) || masterBehavior.CurrentBehavior != QueenBee.Behavior.Phase2_BeeSwarm3)
                     {
                         Projectile.Kill();
                         break;
@@ -265,7 +265,7 @@ public sealed class CombCell : CAModProjectile
                     break;
                 case 1:
                     HasContactDamage = true;
-                    if ((masterBehavior.CurrentAttackPhase >= 3 && masterBehavior.Timer1 >= 90) || masterBehavior.CurrentBehavior != QueenBee_Anomaly.Behavior.Phase2_BeeSwarm3)
+                    if ((masterBehavior.CurrentAttackPhase >= 3 && masterBehavior.Timer1 >= 90) || masterBehavior.CurrentBehavior != QueenBee.Behavior.Phase2_BeeSwarm3)
                     {
                         Projectile.Kill();
                         break;
@@ -290,9 +290,9 @@ public sealed class CombCell : CAModProjectile
 
             if (Master is null || !Master.active || Master.type != NPCID.QueenBee)
                 Projectile.Kill();
-            QueenBee_Anomaly masterBehavior = MasterBehavior;
+            QueenBee masterBehavior = MasterBehavior;
 
-            if (masterBehavior.CurrentPhase != QueenBee_Anomaly.Phase.PhaseChange_1To2)
+            if (masterBehavior.CurrentPhase != QueenBee.Phase.PhaseChange_1To2)
                 Projectile.Kill();
         }
     }

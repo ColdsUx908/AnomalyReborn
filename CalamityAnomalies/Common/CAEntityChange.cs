@@ -23,13 +23,13 @@ public abstract class CAGlobalNPCBehavior : GlobalNPCBehavior
     /// <summary>
     /// 在更新灾厄的Boss血条之前调用。
     /// </summary>
-    /// <returns>返回 <see langword="false"/> 以阻止默认的更新血条方法运行（除对 <see cref="CABossHPUI.Valid"/> 属性的更新之外）。默认返回 <see langword="true"/>。</returns>
-    public virtual bool PreUpdateCalBossBar(NPC npc, CABossHPUI newBar, bool hasSingle) => true;
+    /// <returns>返回 <see langword="false"/> 以阻止默认的更新血条方法运行（除对 <see cref="BossHealthBar.Valid"/> 属性的更新之外）。默认返回 <see langword="true"/>。</returns>
+    public virtual bool PreUpdateCalBossBar(NPC npc, BossHealthBar newBar, bool hasSingle) => true;
 
     /// <summary>
     /// 在更新灾厄的Boss血条之后调用。
     /// </summary>
-    public virtual void PostUpdateCalBossBar(NPC npc, CABossHPUI newBar, bool hasSingle) { }
+    public virtual void PostUpdateCalBossBar(NPC npc, BossHealthBar newBar, bool hasSingle) { }
 
     /// <summary>
     /// 在绘制灾厄的Boss血条之前调用。
@@ -37,14 +37,14 @@ public abstract class CAGlobalNPCBehavior : GlobalNPCBehavior
     /// <param name="x">绘制位置左上角的X坐标。</param>
     /// <param name="y">绘制位置左上角的Y坐标。</param>
     /// <returns>返回 <see langword="false"/> 以阻止默认的绘制血条方法运行。默认返回 <see langword="true"/>。</returns>
-    public virtual bool PreDrawCalBossBar(NPC npc, CABossHPUI newBar, SpriteBatch spriteBatch, ref int x, ref int y, bool hasSingle) => true;
+    public virtual bool PreDrawCalBossBar(NPC npc, BossHealthBar newBar, SpriteBatch spriteBatch, ref int x, ref int y, bool hasSingle) => true;
 
     /// <summary>
     /// 在绘制灾厄的Boss血条之后调用。
     /// </summary>
     /// <param name="x">绘制位置左上角的X坐标。</param>
     /// <param name="y">绘制位置左上角的Y坐标。</param>
-    public virtual void PostDrawCalBossBar(NPC npc, CABossHPUI newBar, SpriteBatch spriteBatch, int x, int y, bool hasSingle) { }
+    public virtual void PostDrawCalBossBar(NPC npc, BossHealthBar newBar, SpriteBatch spriteBatch, int x, int y, bool hasSingle) { }
 }
 
 public abstract class CAGlobalProjectileBehavior : GlobalProjectileBehavior
@@ -96,13 +96,13 @@ public abstract class CASingleNPCBehavior : SingleNPCBehavior
     /// <summary>
     /// 在更新灾厄的Boss血条之前调用。
     /// </summary>
-    /// <returns>返回 <see langword="false"/> 以阻止默认的更新血条方法运行（除对 <see cref="CABossHPUI.Valid"/> 属性的更新之外）。默认返回 <see langword="true"/>。</returns>
-    public virtual bool PreUpdateCalBossBar(CABossHPUI newBar) => true;
+    /// <returns>返回 <see langword="false"/> 以阻止默认的更新血条方法运行（除对 <see cref="BossHealthBar.Valid"/> 属性的更新之外）。默认返回 <see langword="true"/>。</returns>
+    public virtual bool PreUpdateCalBossBar(BossHealthBar newBar) => true;
 
     /// <summary>
     /// 在更新灾厄的Boss血条之后调用。
     /// </summary>
-    public virtual void PostUpdateCalBossBar(CABossHPUI newBar) { }
+    public virtual void PostUpdateCalBossBar(BossHealthBar newBar) { }
 
     /// <summary>
     /// 在绘制灾厄的Boss血条之前调用。
@@ -110,14 +110,14 @@ public abstract class CASingleNPCBehavior : SingleNPCBehavior
     /// <param name="x">绘制位置左上角的X坐标。</param>
     /// <param name="y">绘制位置左上角的Y坐标。</param>
     /// <returns>返回 <see langword="false"/> 以阻止默认的绘制血条方法运行。默认返回 <see langword="true"/>。</returns>
-    public virtual bool PreDrawCalBossBar(CABossHPUI newBar, SpriteBatch spriteBatch, ref int x, ref int y) => true;
+    public virtual bool PreDrawCalBossBar(BossHealthBar newBar, SpriteBatch spriteBatch, ref int x, ref int y) => true;
 
     /// <summary>
     /// 在绘制灾厄的Boss血条之后调用。
     /// </summary>
     /// <param name="x">绘制位置左上角的X坐标。</param>
     /// <param name="y">绘制位置左上角的Y坐标。</param>
-    public virtual void PostDrawCalBossBar(CABossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
+    public virtual void PostDrawCalBossBar(BossHealthBar newBar, SpriteBatch spriteBatch, int x, int y) { }
 }
 
 public abstract class CASingleNPCBehavior<T> : CASingleNPCBehavior where T : ModNPC

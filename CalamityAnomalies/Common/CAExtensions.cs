@@ -26,9 +26,9 @@ public static class CAExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetBehavior(out CASingleNPCBehavior npcBehavior, [CallerMemberName] string methodName = null) => CAEntityChangeHelper.NPCBehaviors.TryGetBehavior(npc, methodName, out npcBehavior);
 
-        public bool TryGetBossBar([NotNullWhen(true)] out CABossHPUI bar)
+        public bool TryGetBossBar([NotNullWhen(true)] out BossHealthBar bar)
         {
-            if (CABossHealthBar.CurrentBars.TryGetValue(npc.Identifier, out CABossHPUI foundBar) && foundBar.Valid)
+            if (BossHealthBarStyle.CurrentBars.TryGetValue(npc.Identifier, out BossHealthBar foundBar) && foundBar.Valid)
             {
                 bar = foundBar;
                 return true;

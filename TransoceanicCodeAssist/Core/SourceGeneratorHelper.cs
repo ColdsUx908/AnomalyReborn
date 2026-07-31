@@ -52,7 +52,7 @@ internal static class SourceGeneratorHelper
     /// 可用于后续筛选出 <see langword="partial"/> 类型等。
     /// </summary>
     /// <param name="context">增量生成器初始化上下文。</param>
-    /// <returns>提供 <see cref="Microsoft.CodeAnalysis.CSharp.Syntax.TypeDeclarationSyntax"/> 节点的增量值序列。</returns>
+    /// <returns>提供 <see cref="TypeDeclarationSyntax"/> 节点的增量值序列。</returns>
     public static IncrementalValuesProvider<TypeDeclarationSyntax> GetTypeDeclarations(IncrementalGeneratorInitializationContext context) =>
         context.SyntaxProvider.CreateSyntaxProvider(
             predicate: (node, _) => node is TypeDeclarationSyntax,
@@ -88,7 +88,7 @@ internal static class SourceGeneratorHelper
     /// 获取解决方案中所有方法声明语法的增量值提供程序。
     /// </summary>
     /// <param name="context">增量生成器初始化上下文。</param>
-    /// <returns>提供 <see cref="Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax"/> 节点的增量值序列。</returns>
+    /// <returns>提供 <see cref="MethodDeclarationSyntax"/> 节点的增量值序列。</returns>
     public static IncrementalValuesProvider<MethodDeclarationSyntax> GetMethodDeclarations(IncrementalGeneratorInitializationContext context) =>
         context.SyntaxProvider.CreateSyntaxProvider(
             predicate: (node, _) => node is MethodDeclarationSyntax,
@@ -124,7 +124,7 @@ internal static class SourceGeneratorHelper
     /// 获取解决方案中所有属性声明语法的增量值提供程序。
     /// </summary>
     /// <param name="context">增量生成器初始化上下文。</param>
-    /// <returns>提供 <see cref="Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax"/> 节点的增量值序列。</returns>
+    /// <returns>提供 <see cref="PropertyDeclarationSyntax"/> 节点的增量值序列。</returns>
     public static IncrementalValuesProvider<PropertyDeclarationSyntax> GetPropertyDeclarations(IncrementalGeneratorInitializationContext context) =>
     context.SyntaxProvider.CreateSyntaxProvider(
         predicate: (node, _) => node is PropertyDeclarationSyntax,

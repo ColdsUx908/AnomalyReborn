@@ -263,7 +263,7 @@ public abstract class TypeDetour<T> : ITODetourProvider
     /// <inheritdoc cref="ITODetourProvider.ApplyDetour" path="/summary"/>
     /// <para>
     /// 默认实现为空操作。如果需要重载方法，应使用 <c>Detour_{methodName}__{paramNames}</c> 格式的方法名来定义委托方法，
-    /// 该命名规则由 <see cref="TODetourHandler.EvaluateDetourName(System.Reflection.MethodInfo, out string)"/> 解析。
+    /// 该命名规则由 <see cref="TODetourHandler.EvaluateDetourName(MethodInfo, out string)"/> 解析。
     /// </para>
     /// </remarks>
     public virtual void ApplyDetour() { }
@@ -274,7 +274,7 @@ public abstract class TypeDetour<T> : ITODetourProvider
     /// <typeparam name="TDelegate">委托类型，必须与目标方法签名匹配。</typeparam>
     /// <param name="detour">
     /// 表示 Detour 逻辑的委托实例。该委托必须是一个由当前类型定义的具名方法，
-    /// 且其方法名必须符合 <see cref="TODetourHandler.EvaluateDetourName(System.Reflection.MethodInfo, out string)"/> 的解析规则
+    /// 且其方法名必须符合 <see cref="TODetourHandler.EvaluateDetourName(MethodInfo, out string)"/> 的解析规则
     /// （通常为 <c>Detour_{方法名}__{参数类型简短名}</c> 格式）。
     /// </param>
     /// <param name="hasThis">

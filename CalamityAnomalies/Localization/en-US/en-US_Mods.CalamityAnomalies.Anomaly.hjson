@@ -40,13 +40,15 @@ AnomalyMode: {
 
 KingSlime: {
 	GFBSummon: King Slime has cloned itself!
-	KingSlimeJewelEmerald.DisplayName: Emerald Jewel
-	KingSlimeJewelSapphire.DisplayName: Sapphire Jewel
-	KingSlimeJewelRainbow.DisplayName: Rainbow Jewel
-	KingSlimeJewelEmeraldShadow.DisplayName: Emerald Jewel Shadow
-	RainbowShockwave.DisplayName: Rainbow Shockwave
-	JewelProjectileRainbow.DisplayName: Rainbow Bolt
+	RubyJewel.DisplayName: Ruby Jewel
+	EmeraldJewel.DisplayName: Emerald Jewel
+	SapphireJewel.DisplayName: Sapphire Jewel
+	RainbowJewel.DisplayName: Rainbow Jewel
 	SlimeGel.DisplayName: Slime Gel
+	RubyJewelProjectile.DisplayName: Ruby Bolt
+	EmeraldJewelShadow.DisplayName: Emerald Jewel Shadow
+	RainbowShockwave.DisplayName: Rainbow Shockwave
+	RainbowJewelProjectile.DisplayName: Rainbow Bolt
 }
 
 EyeofCthulhu: {
@@ -68,6 +70,5 @@ QueenBee: {
 
 QueenSlime: {
 	GFBSummon: Queen Slime has cloned itself!
-	QueenSlimeJewelAmethyst.DisplayName: Amethyst Jewel
-	QueenSlimeJewelRainbow.DisplayName: Rainbow Jewel
+	AmethystJewel.DisplayName: Amethyst Jewel
 }

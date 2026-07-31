@@ -41,7 +41,7 @@ public sealed class HugeStinger : CAModProjectile
             for (int i = 0; i < amount; i++)
             {
                 Vector2 vector = Main.rand.NextPolarVector2(8f, 11f);
-                Projectile.NewProjectileAction(SourceAI, Projectile.Center, vector, ProjectileID.QueenBeeStinger, QueenBee_Anomaly.BeeDamage, 0f, action: p =>
+                Projectile.NewProjectileAction(SourceAI, Projectile.Center, vector, ProjectileID.QueenBeeStinger, QueenBee.BeeDamage, 0f, action: p =>
                 {
                     p.timeLeft = 300;
                     //p.tileCollide = false;

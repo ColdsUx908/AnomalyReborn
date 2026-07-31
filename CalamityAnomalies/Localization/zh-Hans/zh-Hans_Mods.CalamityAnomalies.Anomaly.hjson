@@ -40,13 +40,15 @@ AnomalyMode: {
 
 KingSlime: {
 	GFBSummon: 史莱姆王克隆了自己！
-	KingSlimeJewelEmerald.DisplayName: 王冠翡翠
-	KingSlimeJewelSapphire.DisplayName: 王冠蓝玉
-	KingSlimeJewelRainbow.DisplayName: 王冠彩虹宝石
-	KingSlimeJewelEmeraldShadow.DisplayName: 王冠翡翠幻影
-	RainbowShockwave.DisplayName: 彩虹冲击波
-	JewelProjectileRainbow.DisplayName: 彩虹弹幕
+	RubyJewel.DisplayName: 王冠红玉
+	EmeraldJewel.DisplayName: 王冠翡翠
+	SapphireJewel.DisplayName: 王冠蓝玉
+	RainbowJewel.DisplayName: 王冠彩虹宝石
 	SlimeGel.DisplayName: 史莱姆凝胶
+	RubyJewelProjectile.DisplayName: 红玉弹幕
+	EmeraldJewelShadow.DisplayName: 翡翠幻影
+	RainbowShockwave.DisplayName: 彩虹冲击波
+	RainbowJewelProjectile.DisplayName: 彩虹弹幕
 }
 
 EyeofCthulhu: {
@@ -68,6 +70,5 @@ QueenBee: {
 
 QueenSlime: {
 	GFBSummon: 史莱姆皇后克隆了自己！
-	QueenSlimeJewelAmethyst.DisplayName: 王冠紫晶
-	QueenSlimeJewelRainbow.DisplayName: 王冠彩虹宝石
+	AmethystJewel.DisplayName: 王冠紫晶
 }

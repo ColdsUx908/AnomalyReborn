@@ -94,7 +94,7 @@ public partial class BloodlettingServant : CAModNPC
 
         NPC.target = master.target; //同步目标
 
-        EyeofCthulhu_Anomaly masterBehavior = EyeofCthulhu_Anomaly.GetInstance(master);
+        EyeofCthulhu masterBehavior = EyeofCthulhu.GetInstance(master);
 
         NPC.dontTakeDamage = true;
 
@@ -114,7 +114,7 @@ public partial class BloodlettingServant : CAModNPC
 
         //更新位置和旋转
 
-        if (masterBehavior.CurrentPhase is >= EyeofCthulhu_Anomaly.Phase.PhaseChange_1To2 and <= EyeofCthulhu_Anomaly.Phase.Phase2_3)
+        if (masterBehavior.CurrentPhase is >= EyeofCthulhu.Phase.PhaseChange_1To2 and <= EyeofCthulhu.Phase.Phase2_3)
             MiscAI_Phase2();
 
         Lighting.AddLight(NPC.Center, 0.8f, 0f, 0f);
@@ -166,7 +166,7 @@ public partial class BloodlettingServant : CAModNPC
         {
             float projectileSpeed = 12.5f;
             int amount = Ultra ? 3 : 1;
-            EyeofCthulhu_Handler.ShootProjectile(NPC, ProjectileID.BloodShot, EyeofCthulhu_Anomaly.BloodDamage, projectileSpeed, amount, MathHelper.ToRadians(15f), p => p.timeLeft = 300);
+            EyeofCthulhu_Handler.ShootProjectile(NPC, ProjectileID.BloodShot, EyeofCthulhu.BloodDamage, projectileSpeed, amount, MathHelper.ToRadians(15f), p => p.timeLeft = 300);
 
             MasterCommandReceiver = BehaviorCommand_Servant.None;
             NPC.netUpdate = true;
@@ -201,7 +201,7 @@ public partial class BloodlettingServant : CAModNPC
             }
 
             float timer = masterBehavior.Timer1;
-            ArenaRadius = MathHelper.Lerp(MaxFollowDistance, EyeofCthulhu_Handler.MaxArenaRadius, TOMathUtils.Interpolation.ExponentialEaseInOut(timer / EyeofCthulhu_Anomaly.PhaseChangeGateValue_2To3_1, 4f));
+            ArenaRadius = MathHelper.Lerp(MaxFollowDistance, EyeofCthulhu_Handler.MaxArenaRadius, TOMathUtils.Interpolation.ExponentialEaseInOut(timer / EyeofCthulhu.PhaseChangeGateValue_2To3_1, 4f));
 
             float newPositionRotation = PositionRotation;
             float targetPositionRotation = Place == ServantPlace.Left ? MathHelper.Pi : 0f;
@@ -210,9 +210,9 @@ public partial class BloodlettingServant : CAModNPC
 
             Vector2 offset = new Vector2(ArenaRadius, 0f).RotatedBy(PositionRotation);
             Vector2 destination = masterBehavior.Phase3ArenaCenter + offset;
-            NPC.Center = Vector2.SmootherStep(NPC.Center, destination, Math.Clamp(timer / EyeofCthulhu_Anomaly.PhaseChangeGateValue_2To3_1, 0f, 1f));
+            NPC.Center = Vector2.SmootherStep(NPC.Center, destination, Math.Clamp(timer / EyeofCthulhu.PhaseChangeGateValue_2To3_1, 0f, 1f));
 
-            float targetRotation = Place == ServantPlace.Left ^ timer > EyeofCthulhu_Anomaly.PhaseChangeGateValue_2To3_1 ? 0f : MathHelper.Pi;
+            float targetRotation = Place == ServantPlace.Left ^ timer > EyeofCthulhu.PhaseChangeGateValue_2To3_1 ? 0f : MathHelper.Pi;
             EyeofCthulhu_Handler.UpdateRotation(ref NPC.rotation, targetRotation, 0.3f * TOMathUtils.Interpolation.CubicEaseInOut(masterBehavior.Timer1 / 10f));
         }
     }

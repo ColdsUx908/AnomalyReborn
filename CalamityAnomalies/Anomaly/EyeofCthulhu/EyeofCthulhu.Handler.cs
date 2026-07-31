@@ -142,7 +142,7 @@ public static class EyeofCthulhu_Handler
         if (amount <= 0)
             return;
 
-        float offset = npc.type == NPCID.EyeofCthulhu ? EyeofCthulhu_Anomaly.ProjectileOffset
+        float offset = npc.type == NPCID.EyeofCthulhu ? EyeofCthulhu.ProjectileOffset
             : npc.ModNPC is BloodlettingServant ? BloodlettingServant.ProjectileOffset
             : 0f;
         float rotationOffset = npc.type == NPCID.EyeofCthulhu ? MathHelper.PiOver2

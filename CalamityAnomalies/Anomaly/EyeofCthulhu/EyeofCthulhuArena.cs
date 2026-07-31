@@ -56,7 +56,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
         get => NPC.GetNPCFromIndex((int)Projectile.ai[0]);
         set => Projectile.ai[0] = value?.whoAmI ?? -1;
     }
-    public EyeofCthulhu_Anomaly MasterBehavior => EyeofCthulhu_Anomaly.GetInstance(Master);
+    public EyeofCthulhu MasterBehavior => EyeofCthulhu.GetInstance(Master);
 
     public float ArenaRotation
     {
@@ -162,7 +162,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
         if (Master is null || !Master.active || Master.type != NPCID.EyeofCthulhu)
             Projectile.Kill();
 
-        EyeofCthulhu_Anomaly masterBehavior = MasterBehavior;
+        EyeofCthulhu masterBehavior = MasterBehavior;
         Projectile.Center = masterBehavior.Phase3ArenaCenter;
         Projectile.timeLeft = 100;
 
@@ -175,7 +175,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                 case 0:
                     ChangeRotationSpeedTo(0.25f, 10);
                     break;
-                case EyeofCthulhu_Anomaly.PhaseChangeGateValue_2To3_1 - 10:
+                case EyeofCthulhu.PhaseChangeGateValue_2To3_1 - 10:
                     ChangeRotationSpeedTo(NormalRotationSpeed, 10);
                     break;
             }
@@ -294,7 +294,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                     break;
             }
 
-            if (masterBehavior.CurrentBehavior != EyeofCthulhu_Anomaly.Behavior.Phase3_Charge)
+            if (masterBehavior.CurrentBehavior != EyeofCthulhu.Behavior.Phase3_Charge)
             {
                 ChangeArenaRadiusTo(EyeofCthulhu_Handler.MaxArenaRadius, 15);
                 MasterCommandReceiver = BehaviorCommand_Arena.None;
@@ -440,7 +440,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
                             Vector2 velocity = (destination - offsetCenter) / BloodOrbProjectile.StillTime;
 
-                            Projectile.NewProjectileAction<BloodOrbProjectile>(SourceAI, offsetCenter, velocity, EyeofCthulhu_Anomaly.BloodDamage, 0f, action: p =>
+                            Projectile.NewProjectileAction<BloodOrbProjectile>(SourceAI, offsetCenter, velocity, EyeofCthulhu.BloodDamage, 0f, action: p =>
                             {
                                 p.VelocityToRotation();
                                 p.timeLeft = 120;
@@ -465,7 +465,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
                                 Vector2 velocity2 = (destination2 - offsetCenter) / BloodOrbProjectile.StillTime;
 
-                                Projectile.NewProjectileAction<BloodOrbProjectile>(SourceAI, offsetCenter, velocity2, EyeofCthulhu_Anomaly.BloodDamage, 0f, action: p =>
+                                Projectile.NewProjectileAction<BloodOrbProjectile>(SourceAI, offsetCenter, velocity2, EyeofCthulhu.BloodDamage, 0f, action: p =>
                                 {
                                     p.VelocityToRotation();
                                     p.timeLeft = 120;
@@ -502,11 +502,11 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
         if (Master is null || !Master.active || Master.type != NPCID.EyeofCthulhu)
             return false;
 
-        EyeofCthulhu_Anomaly masterBehavior = MasterBehavior;
+        EyeofCthulhu masterBehavior = MasterBehavior;
         SpriteBatch spriteBatch = Main.spriteBatch;
 
         #region 绘制旋转攻击预警粒子
-        if (masterBehavior.CurrentBehavior == EyeofCthulhu_Anomaly.Behavior.Phase3_EyeSpin && masterBehavior.CurrentAttackPhase == 1)
+        if (masterBehavior.CurrentBehavior == EyeofCthulhu.Behavior.Phase3_EyeSpin && masterBehavior.CurrentAttackPhase == 1)
         {
             //逐渐睁开的眼睛
 
@@ -637,7 +637,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
         return false;
     }
 
-    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => Timer1 > EyeofCthulhu_Anomaly.PhaseChangeGateValue_2To3_1 && base.Colliding(projHitbox, targetHitbox) == true;
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => Timer1 > EyeofCthulhu.PhaseChangeGateValue_2To3_1 && base.Colliding(projHitbox, targetHitbox) == true;
 
     public override void SendExtraAI(BinaryWriter writer)
     {

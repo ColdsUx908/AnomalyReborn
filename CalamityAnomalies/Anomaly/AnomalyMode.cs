@@ -97,7 +97,6 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
         if (TOSharedData.NotClient)
             TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Invalid", Color.Red);
         CASharedData.Anomaly = false;
-        CASynchronization.SyncAnomalyMode();
     }
 
     public static void DisableUltra()
