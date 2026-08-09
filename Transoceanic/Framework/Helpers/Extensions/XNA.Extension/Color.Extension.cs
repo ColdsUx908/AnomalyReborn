@@ -9,7 +9,7 @@ public static partial class TOExtensions
         /// <summary>
         /// 用于生成彩虹色插值的预设颜色列表，包含红、绿、蓝、红四个颜色节点。
         /// </summary>
-        public static readonly List<Color> _rainbowColors = [Color.Red, Color.Lime, Color.Blue, Color.Red];
+        public static readonly List<Color> _RainbowColors = [Color.Red, Color.Lime, Color.Blue, Color.Red];
     }
 
     extension(Color color)
@@ -43,7 +43,7 @@ public static partial class TOExtensions
         /// <summary>
         /// 获取用于彩虹色插值的预设颜色列表。
         /// </summary>
-        public static List<Color> RainbowColors => Color_Extension._rainbowColors;
+        public static List<Color> RainbowColors => Color_Extension._RainbowColors;
 
         /// <summary>
         /// 在彩虹色列表的整个范围内随机插值，获取一个随机彩虹色。

@@ -75,15 +75,15 @@ public sealed class TOGlobalNPC : GlobalNPC, ITOLoader
     /// <summary>
     /// 标识符分配器。
     /// </summary>
-    private static long _identifierAllocator;
+    private static long _IdentifierAllocator;
 
-    private long? _identifier;
+    private long? _Identifier;
 
     /// <summary>
     /// NPC的标识符。
     /// <br/>不同步。
     /// </summary>
-    public long Identifier => _identifier ??= ++_identifierAllocator;
+    public long Identifier => _Identifier ??= ++_IdentifierAllocator;
 
     /// <summary>
     /// NPC生成时 <see cref="TOMain.GameTimer"/> 的值。
@@ -141,9 +141,9 @@ public sealed class TOGlobalNPC : GlobalNPC, ITOLoader
         TONetUtils.ReadChangedAI64(binaryReader, OceanAI64);
     }
 
-    void ITOLoader.Load() => _identifierAllocator = 0;
+    void ITOLoader.Load() => _IdentifierAllocator = 0;
 
-    void ITOLoader.Unload() => _identifierAllocator = 0;
+    void ITOLoader.Unload() => _IdentifierAllocator = 0;
 }
 
 public sealed class TOGlobalProjectile : GlobalProjectile

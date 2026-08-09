@@ -7,13 +7,13 @@ namespace Transoceanic.DataStructures;
 /// </summary>
 public struct BitArray32 : IEquatable<BitArray32>
 {
-    private int _value;
+    private int _Value;
 
     /// <summary>
     /// 使用指定的 32 位整数值初始化 <see cref="BitArray32"/> 的新实例。
     /// </summary>
     /// <param name="value">用于初始化位数组的整数值。</param>
-    public BitArray32(int value) => _value = value;
+    public BitArray32(int value) => _Value = value;
 
     /// <summary>
     /// 初始化 <see cref="BitArray32"/> 的新实例，并将所有位设置为 0。
@@ -27,8 +27,8 @@ public struct BitArray32 : IEquatable<BitArray32>
     /// <returns>如果指定位为 1，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public bool this[int index]
     {
-        readonly get => TOMathUtils.BitOperation.GetBit(_value, index);
-        set => TOMathUtils.BitOperation.SetBit(ref _value, index, value);
+        readonly get => TOMathUtils.BitOperation.GetBit(_Value, index);
+        set => TOMathUtils.BitOperation.SetBit(ref _Value, index, value);
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ public struct BitArray32 : IEquatable<BitArray32>
     /// </summary>
     /// <param name="other">要与当前实例进行比较的 <see cref="BitArray32"/>。</param>
     /// <returns>如果两个实例的内部值相等，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
-    public readonly bool Equals(BitArray32 other) => _value == other._value;
+    public readonly bool Equals(BitArray32 other) => _Value == other._Value;
 
     /// <summary>
     /// 指示当前实例是否等于指定对象。
@@ -56,7 +56,7 @@ public struct BitArray32 : IEquatable<BitArray32>
     /// <returns>如果 <paramref name="obj"/> 是 <see cref="BitArray32"/> 且其内部值与当前实例相同，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public override readonly bool Equals(object obj) => obj is BitArray32 other && Equals(other);
 
-    public override readonly int GetHashCode() => _value.GetHashCode();
+    public override readonly int GetHashCode() => _Value.GetHashCode();
     public static bool operator ==(BitArray32 left, BitArray32 right) => left.Equals(right);
     public static bool operator !=(BitArray32 left, BitArray32 right) => !(left == right);
 
@@ -64,7 +64,7 @@ public struct BitArray32 : IEquatable<BitArray32>
     /// 返回当前位数组的字符串表示形式，以 32 位二进制格式显示。
     /// </summary>
     /// <returns>形如 "BitArray32 { 32位二进制字符串 }" 的字符串。</returns>
-    public override readonly string ToString() => $"BitArray32 {{ {Convert.ToString(_value, 2).PadLeft(32, '0')} }}";
+    public override readonly string ToString() => $"BitArray32 {{ {Convert.ToString(_Value, 2).PadLeft(32, '0')} }}";
 }
 
 /// <summary>
@@ -72,13 +72,13 @@ public struct BitArray32 : IEquatable<BitArray32>
 /// </summary>
 public struct BitArray64 : IEquatable<BitArray64>
 {
-    private long _value;
+    private long _Value;
 
     /// <summary>
     /// 使用指定的 64 位整数值初始化 <see cref="BitArray64"/> 的新实例。
     /// </summary>
     /// <param name="value">用于初始化位数组的整数值。</param>
-    public BitArray64(int value) => _value = value;
+    public BitArray64(int value) => _Value = value;
 
     /// <summary>
     /// 初始化 <see cref="BitArray64"/> 的新实例，并将所有位设置为 0。
@@ -92,8 +92,8 @@ public struct BitArray64 : IEquatable<BitArray64>
     /// <returns>如果指定位为 1，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public bool this[int index]
     {
-        readonly get => TOMathUtils.BitOperation.GetBit(_value, index);
-        set => TOMathUtils.BitOperation.SetBit(ref _value, index, value);
+        readonly get => TOMathUtils.BitOperation.GetBit(_Value, index);
+        set => TOMathUtils.BitOperation.SetBit(ref _Value, index, value);
     }
 
     /// <summary>
@@ -112,7 +112,7 @@ public struct BitArray64 : IEquatable<BitArray64>
     /// </summary>
     /// <param name="other">要与当前实例进行比较的 <see cref="BitArray64"/>。</param>
     /// <returns>如果两个实例的内部值相等，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
-    public readonly bool Equals(BitArray64 other) => _value == other._value;
+    public readonly bool Equals(BitArray64 other) => _Value == other._Value;
 
     /// <summary>
     /// 指示当前实例是否等于指定对象。
@@ -121,7 +121,7 @@ public struct BitArray64 : IEquatable<BitArray64>
     /// <returns>如果 <paramref name="obj"/> 是 <see cref="BitArray64"/> 且其内部值与当前实例相同，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public override readonly bool Equals(object obj) => obj is BitArray64 other && Equals(other);
 
-    public override readonly int GetHashCode() => _value.GetHashCode();
+    public override readonly int GetHashCode() => _Value.GetHashCode();
     public static bool operator ==(BitArray64 left, BitArray64 right) => left.Equals(right);
     public static bool operator !=(BitArray64 left, BitArray64 right) => !(left == right);
 
@@ -129,7 +129,7 @@ public struct BitArray64 : IEquatable<BitArray64>
     /// 返回当前位数组的字符串表示形式，以 64 位二进制格式显示。
     /// </summary>
     /// <returns>形如 "BitArray64 { 64位二进制字符串 }" 的字符串。</returns>
-    public override readonly string ToString() => $"BitArray64 {{ {Convert.ToString(_value, 2).PadLeft(64, '0')} }}";
+    public override readonly string ToString() => $"BitArray64 {{ {Convert.ToString(_Value, 2).PadLeft(64, '0')} }}";
 }
 
 /// <summary>
@@ -137,13 +137,13 @@ public struct BitArray64 : IEquatable<BitArray64>
 /// </summary>
 public struct BitArray128 : IEquatable<BitArray128>
 {
-    private Int128 _value;
+    private Int128 _Value;
 
     /// <summary>
     /// 使用指定的 128 位整数值初始化 <see cref="BitArray128"/> 的新实例。
     /// </summary>
     /// <param name="value">用于初始化位数组的 <see cref="Int128"/> 值。</param>
-    public BitArray128(Int128 value) => _value = value;
+    public BitArray128(Int128 value) => _Value = value;
 
     /// <summary>
     /// 使用由高 64 位和低 64 位组成的值初始化 <see cref="BitArray128"/> 的新实例。
@@ -164,8 +164,8 @@ public struct BitArray128 : IEquatable<BitArray128>
     /// <returns>如果指定位为 1，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public bool this[int index]
     {
-        readonly get => TOMathUtils.BitOperation.GetBit(_value, index);
-        set => TOMathUtils.BitOperation.SetBit(ref _value, index, value);
+        readonly get => TOMathUtils.BitOperation.GetBit(_Value, index);
+        set => TOMathUtils.BitOperation.SetBit(ref _Value, index, value);
     }
 
     /// <summary>
@@ -184,7 +184,7 @@ public struct BitArray128 : IEquatable<BitArray128>
     /// </summary>
     /// <param name="other">要与当前实例进行比较的 <see cref="BitArray128"/>。</param>
     /// <returns>如果两个实例的内部值相等，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
-    public readonly bool Equals(BitArray128 other) => _value == other._value;
+    public readonly bool Equals(BitArray128 other) => _Value == other._Value;
 
     /// <summary>
     /// 指示当前实例是否等于指定对象。
@@ -193,7 +193,7 @@ public struct BitArray128 : IEquatable<BitArray128>
     /// <returns>如果 <paramref name="obj"/> 是 <see cref="BitArray128"/> 且其内部值与当前实例相同，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public override readonly bool Equals(object obj) => obj is BitArray128 other && Equals(other);
 
-    public override readonly int GetHashCode() => _value.GetHashCode();
+    public override readonly int GetHashCode() => _Value.GetHashCode();
     public static bool operator ==(BitArray128 left, BitArray128 right) => left.Equals(right);
     public static bool operator !=(BitArray128 left, BitArray128 right) => !(left == right);
 
@@ -201,7 +201,7 @@ public struct BitArray128 : IEquatable<BitArray128>
     /// 返回当前位数组的字符串表示形式，以两组 64 位二进制格式显示。
     /// </summary>
     /// <returns>形如 "BitArray128 { 高64位二进制 低64位二进制 }" 的字符串。</returns>
-    public override readonly string ToString() => $"BitArray128 {{ {Convert.ToString((long)(_value >> 64), 2).PadLeft(64, '0')} {Convert.ToString((long)_value, 2).PadLeft(64, '0')} }}";
+    public override readonly string ToString() => $"BitArray128 {{ {Convert.ToString((long)(_Value >> 64), 2).PadLeft(64, '0')} {Convert.ToString((long)_Value, 2).PadLeft(64, '0')} }}";
 }
 
 /// <summary>
@@ -209,7 +209,7 @@ public struct BitArray128 : IEquatable<BitArray128>
 /// </summary>
 public class BitArray
 {
-    private readonly uint[] _value;
+    private readonly uint[] _Value;
 
     /// <summary>
     /// 获取位数组的总位数。
@@ -230,14 +230,14 @@ public class BitArray
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
         Length = length;
-        _value = new uint[ArrayLength];
+        _Value = new uint[ArrayLength];
     }
 
     /// <summary>
     /// 使用现有的 <see cref="uint"/> 数组初始化 <see cref="BitArray"/> 类的新实例。
     /// </summary>
     /// <param name="value">包含位数据的无符号整数数组。数组的每个元素提供 32 位，数组长度将决定总位数（<c>value.Length * 32</c>）。</param>
-    public BitArray(uint[] value) : this(value.Length * 32) => _value = value;
+    public BitArray(uint[] value) : this(value.Length * 32) => _Value = value;
 
     /// <summary>
     /// 获取或设置指定索引处的位值。
@@ -254,7 +254,7 @@ public class BitArray
 
             int arrayIndex = index / 32;
             int bitIndex = index % 32;
-            return TOMathUtils.BitOperation.GetBit(_value[arrayIndex], bitIndex);
+            return TOMathUtils.BitOperation.GetBit(_Value[arrayIndex], bitIndex);
         }
         set
         {
@@ -263,7 +263,7 @@ public class BitArray
 
             int arrayIndex = index / 32;
             int bitIndex = index % 32;
-            TOMathUtils.BitOperation.SetBit(ref _value[arrayIndex], bitIndex, value);
+            TOMathUtils.BitOperation.SetBit(ref _Value[arrayIndex], bitIndex, value);
         }
     }
 

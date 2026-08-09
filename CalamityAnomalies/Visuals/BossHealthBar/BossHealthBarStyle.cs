@@ -115,31 +115,6 @@ public class BossHealthBarStyle : ModBossBarStyle, IContentLoader, ILocalization
     /// </summary>
     public const int MaxActiveBars = 4;
 
-    private static Asset<DynamicSpriteFont> _hpBarFont;
-    private static Asset<Texture2D> _bossMainHPBar;
-    private static Asset<Texture2D> _bossComboHPBar;
-    private static Asset<Texture2D> _bossSeperatorBar;
-
-    /// <summary>
-    /// 血条百分比数字所用字体。
-    /// </summary>
-    public static DynamicSpriteFont HPBarFont => _hpBarFont.Value;
-
-    /// <summary>
-    /// 主血量条纹理。
-    /// </summary>
-    public static Texture2D BossMainHPBar => _bossMainHPBar.Value;
-
-    /// <summary>
-    /// 连击伤害残影条纹理。
-    /// </summary>
-    public static Texture2D BossComboHPBar => _bossComboHPBar.Value;
-
-    /// <summary>
-    /// 血量分隔条纹理。
-    /// </summary>
-    public static Texture2D BossSeperatorBar => _bossSeperatorBar.Value;
-
     /// <summary>
     /// 一对多映射，将主体 NPC 类型映射到其附属 NPC 类型数组，用于合并血量。
     /// </summary>
@@ -267,11 +242,6 @@ public class BossHealthBarStyle : ModBossBarStyle, IContentLoader, ILocalization
     /// </summary>
     void IContentLoader.PostSetupContent()
     {
-        _bossMainHPBar = ModContent.Request<Texture2D>(Path + "BossHPMainBar");
-        _bossComboHPBar = ModContent.Request<Texture2D>(Path + "BossHPComboBar");
-        _bossSeperatorBar = ModContent.Request<Texture2D>(Path + "BossHPSeperatorBar");
-        _hpBarFont = ModContent.Request<DynamicSpriteFont>(Path + "HPBarFont");
-
         OneToMany = new Dictionary<int, int[]>()
         {
             [NPCID.EaterofWorldsHead] = [NPCID.EaterofWorldsHead, NPCID.EaterofWorldsBody, NPCID.EaterofWorldsTail],
@@ -507,11 +477,6 @@ public class BossHealthBarStyle : ModBossBarStyle, IContentLoader, ILocalization
     /// </summary>
     void IContentLoader.OnModUnload()
     {
-        _bossMainHPBar = null;
-        _bossComboHPBar = null;
-        _bossSeperatorBar = null;
-        _hpBarFont = null;
-
         OverridingNameFunctions.Clear();
         LifeFunctions.Clear();
         SmallTextFunctions.Clear();

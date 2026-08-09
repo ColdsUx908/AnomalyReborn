@@ -38,8 +38,8 @@ public readonly ref struct TOIterator<T> where T : class
     /// </summary>
     public static TOIterator<T> Empty => new([], MatchNone);
 
-    private readonly ReadOnlySpan<T> _span;
-    private readonly Func<T, bool> _match;
+    private readonly ReadOnlySpan<T> _Span;
+    private readonly Func<T, bool> _Match;
 
     /// <summary>
     /// 使用指定的源范围与筛选条件初始化 <see cref="TOIterator{T}"/> 的新实例。
@@ -48,8 +48,8 @@ public readonly ref struct TOIterator<T> where T : class
     /// <param name="match">用于筛选元素的谓词委托。仅当该委托返回 <see langword="true"/> 时元素才会被迭代器返回。</param>
     public TOIterator(ReadOnlySpan<T> span, Func<T, bool> match)
     {
-        _span = span;
-        _match = match;
+        _Span = span;
+        _Match = match;
     }
 
     /// <summary>
@@ -63,8 +63,8 @@ public readonly ref struct TOIterator<T> where T : class
     /// </summary>
     public ref struct Enumerator
     {
-        private ReadOnlySpan<T>.Enumerator _enumerator;
-        private readonly Func<T, bool> _match;
+        private ReadOnlySpan<T>.Enumerator _Enumerator;
+        private readonly Func<T, bool> _Match;
 
         /// <summary>
         /// 初始化 <see cref="Enumerator"/> 的新实例。
@@ -72,14 +72,14 @@ public readonly ref struct TOIterator<T> where T : class
         /// <param name="iterator">父级 <see cref="TOIterator{T}"/> 实例，包含源数据与筛选条件。</param>
         public Enumerator(TOIterator<T> iterator)
         {
-            _enumerator = iterator._span.GetEnumerator();
-            _match = iterator._match;
+            _Enumerator = iterator._Span.GetEnumerator();
+            _Match = iterator._Match;
         }
 
         /// <summary>
         /// 获取当前迭代位置的元素（只读引用）。
         /// </summary>
-        public ref readonly T Current => ref _enumerator.Current;
+        public ref readonly T Current => ref _Enumerator.Current;
 
         /// <summary>
         /// 将枚举器推进到下一个满足筛选条件的元素。
@@ -88,9 +88,9 @@ public readonly ref struct TOIterator<T> where T : class
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-            while (_enumerator.MoveNext())
+            while (_Enumerator.MoveNext())
             {
-                if (_match(Current))
+                if (_Match(Current))
                     return true;
             }
             return false;
@@ -267,9 +267,9 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
     /// </summary>
     public static TOExclusiveIterator<T> Empty => new([], MatchNone, new HashSet<T>());
 
-    private readonly ReadOnlySpan<T> _span;
-    private readonly Func<T, bool> _match;
-    private readonly HashSet<T> _exclusions;
+    private readonly ReadOnlySpan<T> _Span;
+    private readonly Func<T, bool> _Match;
+    private readonly HashSet<T> _Exclusions;
 
     /// <summary>
     /// 使用指定的源范围、筛选条件与排除集合初始化 <see cref="TOExclusiveIterator{T}"/> 的新实例。
@@ -279,9 +279,9 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
     /// <param name="exceptions">包含应被忽略的对象实例的哈希集合。集合中的对象将不会出现在迭代结果中。</param>
     public TOExclusiveIterator(ReadOnlySpan<T> span, Func<T, bool> match, HashSet<T> exceptions)
     {
-        _span = span;
-        _match = match;
-        _exclusions = exceptions;
+        _Span = span;
+        _Match = match;
+        _Exclusions = exceptions;
     }
 
     /// <summary>
@@ -292,9 +292,9 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
     /// <param name="exceptions">应被忽略的对象实例列表。这些对象将不会出现在迭代结果中。</param>
     public TOExclusiveIterator(ReadOnlySpan<T> span, Func<T, bool> match, params ReadOnlySpan<T> exceptions)
     {
-        _span = span;
-        _match = match;
-        _exclusions = [.. exceptions];
+        _Span = span;
+        _Match = match;
+        _Exclusions = [.. exceptions];
     }
 
     /// <summary>
@@ -308,9 +308,9 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
     /// </summary>
     public ref struct Enumerator
     {
-        private ReadOnlySpan<T>.Enumerator _enumerator;
-        private readonly Func<T, bool> _match;
-        private readonly HashSet<T> _exceptions;
+        private ReadOnlySpan<T>.Enumerator _Enumerator;
+        private readonly Func<T, bool> _Match;
+        private readonly HashSet<T> _Exceptions;
 
         /// <summary>
         /// 初始化 <see cref="Enumerator"/> 的新实例。
@@ -318,15 +318,15 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
         /// <param name="iterator">父级 <see cref="TOExclusiveIterator{T}"/> 实例，包含源数据、筛选条件及排除列表。</param>
         public Enumerator(TOExclusiveIterator<T> iterator)
         {
-            _enumerator = iterator._span.GetEnumerator();
-            _match = iterator._match;
-            _exceptions = iterator._exclusions;
+            _Enumerator = iterator._Span.GetEnumerator();
+            _Match = iterator._Match;
+            _Exceptions = iterator._Exclusions;
         }
 
         /// <summary>
         /// 获取当前迭代位置的元素（只读引用）。
         /// </summary>
-        public ref readonly T Current => ref _enumerator.Current;
+        public ref readonly T Current => ref _Enumerator.Current;
 
         /// <summary>
         /// 将枚举器推进到下一个满足筛选条件且未被排除的元素。
@@ -335,9 +335,9 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
-            while (_enumerator.MoveNext())
+            while (_Enumerator.MoveNext())
             {
-                if (_match(Current) && !_exceptions.Contains(Current))
+                if (_Match(Current) && !_Exceptions.Contains(Current))
                     return true;
             }
             return false;

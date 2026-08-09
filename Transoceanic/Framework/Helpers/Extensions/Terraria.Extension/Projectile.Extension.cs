@@ -240,9 +240,10 @@ public static partial class TOExtensions
         /// <param name="lifetime">残影存活时间（帧数）。</param>
         /// <param name="color">残影颜色。</param>
         /// <param name="frame">可选的源矩形区域。</param>
-        /// <param name="drawOffset">可选的绘制偏移量。</param>
-        public void SpawnAfterimage(int lifetime, Color color, Rectangle? frame = null, Vector2? drawOffset = null) =>
-            projectile.Ocean.Afterimages.Add(new AfterimageParticle(projectile.Texture, frame, projectile.Center, lifetime, projectile.rotation, projectile.scale, color, projectile.Opacity, drawOffset));
+        /// <param name="drawOffset">绘制偏移量（可选）。</param>
+        /// <param name="useDefaultDraw">是否使用默认绘制方法（可选），默认为 <see langword="true"/>。</param>
+        public void SpawnAfterimage(int lifetime, Color color, Rectangle? frame = null, Vector2? drawOffset = null, bool useDefaultDraw = true) =>
+            projectile.Ocean.Afterimages.Add(new AfterimageParticle(projectile.Texture, frame, projectile.Center, lifetime, projectile.rotation, projectile.scale, color, projectile.Opacity, drawOffset) { UseDefaultDraw = useDefaultDraw });
 
         /// <summary>
         /// 添加一个自定义的残影粒子到弹幕的全局数据中。

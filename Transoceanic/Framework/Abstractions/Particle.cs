@@ -106,8 +106,8 @@ public abstract class Particle
     /// </summary>
     public Particle()
     {
-        Type = ParticleHandler._particleTypes[GetType()];
-        Asset = ParticleHandler._particleCache[Type].TemplateInstance.Asset;
+        Type = ParticleHandler._ParticleTypes[GetType()];
+        Asset = ParticleHandler._ParticleCache[Type].TemplateInstance.Asset;
     }
 
     /// <summary>

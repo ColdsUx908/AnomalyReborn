@@ -8,8 +8,8 @@ public class PulseRing : Particle
     public override BlendState DrawBlendState => BlendState.Additive;
 
     [LoadTexture(ParticleHandler.BaseParticleTexturePath + "HollowCircleHardEdgeHD")]
-    private static Asset<Texture2D> _textureAssetHD;
-    public static Texture2D TextureHD => _textureAssetHD?.Value;
+    private static Asset<Texture2D> _TextureAssetHD;
+    public static Texture2D TextureHD => _TextureAssetHD?.Value;
 
     public const float TextureRadius = 78f;
     public const float TextureRadiusHD = 740f;

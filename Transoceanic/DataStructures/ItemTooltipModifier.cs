@@ -15,17 +15,17 @@ public class ItemTooltipDictionary
     /// <summary>
     /// 与此字典关联的 <see cref="Item"/> 实例。
     /// </summary>
-    public readonly Item _item;
+    public readonly Item _Item;
 
     /// <summary>
     /// 当前存储的所有提示行列表。
     /// </summary>
-    public readonly List<TooltipLine> _tooltips;
+    public readonly List<TooltipLine> _Tooltips;
 
     /// <summary>
     /// 以 (Mod, Name) 组合为键的快速查找字典，值为该提示行在 <see cref="_tooltips"/> 中的索引及行的引用。
     /// </summary>
-    public Dictionary<(string Mod, string Name), (int Index, TooltipLine Line)> _dictionary;
+    public Dictionary<(string Mod, string Name), (int Index, TooltipLine Line)> _Dictionary;
 
     /// <summary>
     /// 初始化 <see cref="ItemTooltipDictionary"/> 的新实例，并基于传入的提示行列表构建内部索引字典。
@@ -34,8 +34,8 @@ public class ItemTooltipDictionary
     /// <param name="tooltips">需要管理的提示行列表。</param>
     public ItemTooltipDictionary(Item item, List<TooltipLine> tooltips)
     {
-        _item = item;
-        _tooltips = tooltips;
+        _Item = item;
+        _Tooltips = tooltips;
         UpdateDictionary();
     }
 
@@ -44,11 +44,11 @@ public class ItemTooltipDictionary
     /// </summary>
     public void UpdateDictionary()
     {
-        _dictionary = [];
-        for (int i = 0; i < _tooltips.Count; i++)
+        _Dictionary = [];
+        for (int i = 0; i < _Tooltips.Count; i++)
         {
-            TooltipLine line = _tooltips[i];
-            _dictionary[(line.Mod, line.Name)] = (i, line);
+            TooltipLine line = _Tooltips[i];
+            _Dictionary[(line.Mod, line.Name)] = (i, line);
         }
     }
 
@@ -62,7 +62,7 @@ public class ItemTooltipDictionary
     /// <returns>如果找到对应的提示行，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public bool TryGet(string mod, string name, out int index, out TooltipLine line)
     {
-        if (_dictionary.TryGetValue((mod ?? "Terraria", name), out (int Index, TooltipLine Line) value))
+        if (_Dictionary.TryGetValue((mod ?? "Terraria", name), out (int Index, TooltipLine Line) value))
         {
             (index, line) = value;
             return true;
@@ -83,7 +83,7 @@ public partial class ItemTooltipModifier : ItemTooltipDictionary
     /// 用于匹配标准工具提示行名称（如 "Tooltip0"、"Tooltip1"）的正则表达式。
     /// </summary>
     /// <inheritdoc cref="GetTooltipRegex"/>
-    public static readonly Regex _tooltipRegex = GetTooltipRegex();
+    public static readonly Regex _TooltipRegex = GetTooltipRegex();
 
     /// <summary>
     /// 生成匹配 "Tooltip" 后跟数字的正则表达式。模式为 <c>^Tooltip(\d+)$</c>。

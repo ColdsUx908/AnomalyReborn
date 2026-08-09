@@ -19,7 +19,7 @@ namespace Transoceanic.DataStructures;
 /// </remarks>
 public struct HysteresisBoolean : IEquatable<HysteresisBoolean>
 {
-    private int _value;
+    private int _Value;
 
     /// <summary>
     /// 使用指定的初始内部计数值初始化 <see cref="HysteresisBoolean"/> 结构。
@@ -28,7 +28,7 @@ public struct HysteresisBoolean : IEquatable<HysteresisBoolean>
     /// 内部计数器的初始值。建议使用 0（表示 <see langword="false"/>）或 2（表示 <see langword="true"/>），
     /// 其他值将影响后续属性设置的行为，但 <see cref="Value"/> 属性仅以 <c>> 0</c> 作为判断依据。
     /// </param>
-    public HysteresisBoolean(int value) => _value = value;
+    public HysteresisBoolean(int value) => _Value = value;
 
     /// <summary>
     /// 获取或设置当前的布尔状态，带有滞后特性。
@@ -43,15 +43,15 @@ public struct HysteresisBoolean : IEquatable<HysteresisBoolean>
     /// </value>
     public bool Value
     {
-        readonly get => _value > 0;
-        set => _value = Math.Clamp(_value + (value ? 2 : -1), 0, 2);
+        readonly get => _Value > 0;
+        set => _Value = Math.Clamp(_Value + (value ? 2 : -1), 0, 2);
     }
 
     public static implicit operator bool(HysteresisBoolean guaranteedBoolean) => guaranteedBoolean.Value;
 
-    public readonly bool Equals(HysteresisBoolean other) => _value == other._value;
+    public readonly bool Equals(HysteresisBoolean other) => _Value == other._Value;
     public override readonly bool Equals(object obj) => obj is HysteresisBoolean other && Equals(other);
     public static bool operator ==(HysteresisBoolean left, HysteresisBoolean right) => left.Equals(right);
     public static bool operator !=(HysteresisBoolean left, HysteresisBoolean right) => !(left == right);
-    public override readonly int GetHashCode() => _value.GetHashCode();
+    public override readonly int GetHashCode() => _Value.GetHashCode();
 }

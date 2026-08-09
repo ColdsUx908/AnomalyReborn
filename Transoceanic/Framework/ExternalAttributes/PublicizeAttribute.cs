@@ -20,7 +20,7 @@ namespace Transoceanic.Framework.ExternalAttributes;
 /// 生成的代码仅依赖 <c>System.Reflection</c>，不改变原始类型的访问性。
 /// 
 /// <example>
-/// <para/>下面的示例演示如何公开类 <c>ExampleHelper</c>（定义有私有字段 <c>private int _counter</c>）的私有成员。
+/// <para/>下面的示例演示如何公开类 <c>ExampleHelper</c>（定义有私有字段 <c>private int _Counter</c>）的私有成员。
 /// <code>
 /// [Publicize(typeof(ExampleHelper))]
 /// public partial class ExampleHelper_Publicizer(object Source) : InstancedPublicizer(Source); //应用特性，指定目标类型

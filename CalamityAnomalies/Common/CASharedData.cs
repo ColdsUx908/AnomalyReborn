@@ -1,6 +1,6 @@
 ﻿// Developed by ColdsUx
 
-using CalamityAnomalies.Anomaly;
+using CalamityAnomalies.Anomaly.Mode;
 
 namespace CalamityAnomalies.Common;
 

@@ -552,8 +552,9 @@ public static partial class TOExtensions
         /// <param name="color">残影颜色。</param>
         /// <param name="drawOffset">绘制偏移量（可选）。</param>
         /// <param name="affectedByLight">残影是否受光照影响（可选），默认为 <see langword="true"/>，即受光照影响。</param>
-        public void SpawnAfterimage(int lifetime, Color color, Vector2? drawOffset = null, bool affectedByLight = true) =>
-            npc.Ocean.Afterimages.Add(new AfterimageParticle(npc.Texture, npc.frame, npc.Center, lifetime, npc.rotation, npc.scale, color, npc.Opacity, drawOffset, affectedByLight));
+        /// <param name="useDefaultDraw">是否使用默认绘制方法（可选），默认为 <see langword="true"/>。</param>
+        public void SpawnAfterimage(int lifetime, Color color, Vector2? drawOffset = null, bool affectedByLight = true, bool useDefaultDraw = true) =>
+            npc.Ocean.Afterimages.Add(new AfterimageParticle(npc.Texture, npc.frame, npc.Center, lifetime, npc.rotation, npc.scale, color, npc.Opacity, drawOffset, affectedByLight) { UseDefaultDraw = useDefaultDraw });
 
         /// <summary>
         /// 添加一个自定义的残影粒子到 NPC 的全局数据中。

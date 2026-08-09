@@ -10,9 +10,9 @@ namespace Transoceanic.DataStructures;
 /// </summary>
 public sealed class CustomDropRuleCondition : IItemDropRuleCondition
 {
-    private readonly Func<DropAttemptInfo, bool> _canDrop;
-    private readonly Func<bool> _canShowItemDropInUI;
-    private readonly Func<string> _getConditionDescription;
+    private readonly Func<DropAttemptInfo, bool> _CanDrop;
+    private readonly Func<bool> _CanShowItemDropInUI;
+    private readonly Func<string> _GetConditionDescription;
 
     /// <summary>
     /// 初始化 <see cref="CustomDropRuleCondition"/> 类的新实例。
@@ -34,17 +34,17 @@ public sealed class CustomDropRuleCondition : IItemDropRuleCondition
         Func<bool> canShowItemDropInUI = null,
         Func<string> getConditionDescription = null)
     {
-        _canDrop = canDrop;
-        _canShowItemDropInUI = canShowItemDropInUI;
-        _getConditionDescription = getConditionDescription;
+        _CanDrop = canDrop;
+        _CanShowItemDropInUI = canShowItemDropInUI;
+        _GetConditionDescription = getConditionDescription;
     }
 
     /// <inheritdoc/>
-    public bool CanDrop(DropAttemptInfo info) => _canDrop?.Invoke(info) ?? false;
+    public bool CanDrop(DropAttemptInfo info) => _CanDrop?.Invoke(info) ?? false;
 
     /// <inheritdoc/>
-    public bool CanShowItemDropInUI() => _canShowItemDropInUI?.Invoke() ?? false;
+    public bool CanShowItemDropInUI() => _CanShowItemDropInUI?.Invoke() ?? false;
 
     /// <inheritdoc/>
-    public string GetConditionDescription() => _getConditionDescription?.Invoke() ?? "";
+    public string GetConditionDescription() => _GetConditionDescription?.Invoke() ?? "";
 }

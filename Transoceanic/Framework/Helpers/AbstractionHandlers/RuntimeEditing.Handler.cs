@@ -30,7 +30,7 @@ public sealed partial class TODetourHandler : IContentLoader
     /// </remarks>
     public sealed class DetourSet : IEnumerable<Hook>
     {
-        private readonly Dictionary<Type, Dictionary<MethodBase, List<Hook>>> _data = [];
+        private readonly Dictionary<Type, Dictionary<MethodBase, List<Hook>>> _Data = [];
 
         /// <summary>
         /// 向集合中添加一个钩子。
@@ -41,12 +41,12 @@ public sealed partial class TODetourHandler : IContentLoader
         {
             ArgumentNullException.ThrowIfNull(hook);
             Type targetType = hook.Source.DeclaringType;
-            if (!_data.ContainsKey(targetType))
-                _data[targetType] = [];
-            if (_data[targetType].TryGetValue(hook.Source, out List<Hook> value))
+            if (!_Data.ContainsKey(targetType))
+                _Data[targetType] = [];
+            if (_Data[targetType].TryGetValue(hook.Source, out List<Hook> value))
                 value.Add(hook);
             else
-                _data[targetType][hook.Source] = [hook];
+                _Data[targetType][hook.Source] = [hook];
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ public sealed partial class TODetourHandler : IContentLoader
         {
             ArgumentNullException.ThrowIfNull(hook);
             Type targetType = hook.Source.DeclaringType;
-            if (!_data.TryGetValue(targetType, out Dictionary<MethodBase, List<Hook>> methodHooks))
+            if (!_Data.TryGetValue(targetType, out Dictionary<MethodBase, List<Hook>> methodHooks))
                 return false;
             foreach ((MethodBase source, List<Hook> hooks) in methodHooks)
             {
@@ -74,7 +74,7 @@ public sealed partial class TODetourHandler : IContentLoader
                     if (hooks.Count == 0)
                         methodHooks.Remove(source);
                     if (methodHooks.Count == 0)
-                        _data.Remove(targetType);
+                        _Data.Remove(targetType);
                     return true;
                 }
             }
@@ -89,7 +89,7 @@ public sealed partial class TODetourHandler : IContentLoader
         public void RemoveAll(Func<Hook, bool> match)
         {
             ArgumentNullException.ThrowIfNull(match);
-            foreach ((Type sourceType, Dictionary<MethodBase, List<Hook>> methodHooks) in _data)
+            foreach ((Type sourceType, Dictionary<MethodBase, List<Hook>> methodHooks) in _Data)
             {
                 foreach ((MethodBase source, List<Hook> hooks) in methodHooks)
                 {
@@ -104,7 +104,7 @@ public sealed partial class TODetourHandler : IContentLoader
                     if (hooks.Count == 0)
                         methodHooks.Remove(source);
                     if (methodHooks.Count == 0)
-                        _data.Remove(sourceType);
+                        _Data.Remove(sourceType);
                 }
             }
         }
@@ -117,7 +117,7 @@ public sealed partial class TODetourHandler : IContentLoader
         /// </remarks>
         public void Clear()
         {
-            foreach (Dictionary<MethodBase, List<Hook>> methodHooks in _data.Values)
+            foreach (Dictionary<MethodBase, List<Hook>> methodHooks in _Data.Values)
             {
                 foreach (List<Hook> hooks in methodHooks.Values)
                 {
@@ -127,7 +127,7 @@ public sealed partial class TODetourHandler : IContentLoader
                 }
                 methodHooks.Clear();
             }
-            _data.Clear();
+            _Data.Clear();
         }
 
         /// <summary>
@@ -143,7 +143,7 @@ public sealed partial class TODetourHandler : IContentLoader
         public bool TryGetHooks(MethodBase targetMethod, out List<Hook> hooks)
         {
             ArgumentNullException.ThrowIfNull(targetMethod);
-            foreach (Dictionary<MethodBase, List<Hook>> methodHooks in _data.Values)
+            foreach (Dictionary<MethodBase, List<Hook>> methodHooks in _Data.Values)
             {
                 if (methodHooks.TryGetValue(targetMethod, out hooks) && hooks.Count > 0)
                     return true;
@@ -158,7 +158,7 @@ public sealed partial class TODetourHandler : IContentLoader
         /// <returns>可用于循环访问集合的 <see cref="IEnumerator{Hook}"/>。</returns>
         public IEnumerator<Hook> GetEnumerator()
         {
-            foreach (Dictionary<MethodBase, List<Hook>> methodHooks in _data.Values)
+            foreach (Dictionary<MethodBase, List<Hook>> methodHooks in _Data.Values)
             {
                 foreach (List<Hook> hooks in methodHooks.Values)
                 {
@@ -234,7 +234,7 @@ public sealed partial class TODetourHandler : IContentLoader
     /// <remarks>
     /// 匹配模式：<c>Detour_{methodName}[__{paramName}]</c>。
     /// </remarks>
-    private static readonly Regex _defaultDetourNameRegex = GetDefaultDetourNameRegex();
+    private static readonly Regex _DefaultDetourNameRegex = GetDefaultDetourNameRegex();
     [GeneratedRegex("""^Detour_(?<methodName>[\S]*?)(?:__[\S]*)?$""")]
     private static partial Regex GetDefaultDetourNameRegex();
 
@@ -244,7 +244,7 @@ public sealed partial class TODetourHandler : IContentLoader
     /// <remarks>
     /// 匹配模式：<c>Detour_{typeName}__{methodName}[__{paramName}]</c>。
     /// </remarks>
-    private static readonly Regex _defaultDetourNameRegex2 = GetDefaultDetourNameRegex2();
+    private static readonly Regex _DefaultDetourNameRegex2 = GetDefaultDetourNameRegex2();
     [GeneratedRegex("""^Detour_(?<typeName>[\S]*?)__(?<methodName>[\S]*?)(?:__[\S]*)?$""")]
     private static partial Regex GetDefaultDetourNameRegex2();
 
@@ -265,7 +265,7 @@ public sealed partial class TODetourHandler : IContentLoader
     public static bool EvaluateDetourName(MethodInfo detour, [NotNullWhen(true)] out string sourceName)
     {
         string prefix = detour.Attribute<CustomDetourPrefixAttribute>()?.Prefix;
-        Match match = string.IsNullOrEmpty(prefix) ? _defaultDetourNameRegex.Match(detour.Name) : Regex.Match(detour.Name, string.Format(Pattern, prefix));
+        Match match = string.IsNullOrEmpty(prefix) ? _DefaultDetourNameRegex.Match(detour.Name) : Regex.Match(detour.Name, string.Format(Pattern, prefix));
         if (match.Success)
         {
             sourceName = match.Groups["methodName"].Value;
@@ -293,7 +293,7 @@ public sealed partial class TODetourHandler : IContentLoader
     public static bool EvaluateTypedDetourName(MethodInfo detour, [NotNullWhen(true)] out string sourceTypeName, [NotNullWhen(true)] out string sourceMethodName)
     {
         string prefix = detour.Attribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
-        Match match = string.IsNullOrEmpty(prefix) ? _defaultDetourNameRegex2.Match(detour.Name) : Regex.Match(detour.Name, string.Format(Pattern2, prefix));
+        Match match = string.IsNullOrEmpty(prefix) ? _DefaultDetourNameRegex2.Match(detour.Name) : Regex.Match(detour.Name, string.Format(Pattern2, prefix));
         if (match.Success)
         {
             sourceTypeName = match.Groups["typeName"].Value;
@@ -614,7 +614,7 @@ public sealed partial class TOILEditingHandler : IContentLoader
     /// <remarks>
     /// 匹配模式：<c>IL_{methodName}[__{paramName}]</c>。
     /// </remarks>
-    private static readonly Regex _defaultManipulatorNameRegex = GetDefaultManipulatorNameRegex();
+    private static readonly Regex _DefaultManipulatorNameRegex = GetDefaultManipulatorNameRegex();
     [GeneratedRegex("""^IL_(?<methodName>[\S]*)$""")]
     private static partial Regex GetDefaultManipulatorNameRegex();
 
@@ -635,7 +635,7 @@ public sealed partial class TOILEditingHandler : IContentLoader
     public static bool EvaluateManipulatorName(MethodInfo manipMethod, [NotNullWhen(true)] out string sourceName)
     {
         string prefix = manipMethod.Attribute<CustomManipulatorPrefixAttribute>()?.Prefix;
-        Match match = string.IsNullOrEmpty(prefix) ? _defaultManipulatorNameRegex.Match(manipMethod.Name) : Regex.Match(manipMethod.Name, string.Format(Pattern, prefix));
+        Match match = string.IsNullOrEmpty(prefix) ? _DefaultManipulatorNameRegex.Match(manipMethod.Name) : Regex.Match(manipMethod.Name, string.Format(Pattern, prefix));
         if (match.Success)
         {
             sourceName = match.Groups["methodName"].Value;

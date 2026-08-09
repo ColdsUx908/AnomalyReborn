@@ -16,7 +16,7 @@ public class UnaryFunctionWithDomainBase<R>
     /// <summary>
     /// 函数实现。
     /// </summary>
-    public readonly Func<float, R> _function;
+    public readonly Func<float, R> _Function;
 
     /// <summary>
     /// 创建一个带定义域的一元函数。
@@ -26,7 +26,7 @@ public class UnaryFunctionWithDomainBase<R>
     /// <exception cref="ArgumentNullException">当函数为null时抛出。</exception>
     public UnaryFunctionWithDomainBase(Func<float, R> function, MathInterval? domain = null)
     {
-        _function = function ?? throw new ArgumentNullException(nameof(function));
+        _Function = function ?? throw new ArgumentNullException(nameof(function));
         Domain = domain ?? MathInterval.AllReals;
     }
 
@@ -47,7 +47,7 @@ public class UnaryFunctionWithDomainBase<R>
 
         try
         {
-            result = _function(x);
+            result = _Function(x);
             return true;
         }
         catch
@@ -69,7 +69,7 @@ public class UnaryFunctionWithDomainBase<R>
         if (Domain.IsEmpty || !Domain.Contains(x))
             throw new ArgumentOutOfRangeException(nameof(x), $"值{x}不在函数定义域{Domain}内");
 
-        return _function(x);
+        return _Function(x);
     }
 
     /// <summary>
@@ -77,9 +77,9 @@ public class UnaryFunctionWithDomainBase<R>
     /// </summary>
     /// <param name="other">要比较的函数。</param>
     /// <returns>如果定义域和函数值都相同则返回true。</returns>
-    public bool Equals(UnaryFunctionWithDomainBase<R> other) => Domain == other.Domain && _function == other._function;
+    public bool Equals(UnaryFunctionWithDomainBase<R> other) => Domain == other.Domain && _Function == other._Function;
     public override bool Equals(object obj) => obj is UnaryFunctionWithDomainBase<R> other && Equals(other);
-    public override int GetHashCode() => HashCode.Combine(_function, Domain);
+    public override int GetHashCode() => HashCode.Combine(_Function, Domain);
     public static bool operator ==(UnaryFunctionWithDomainBase<R> left, UnaryFunctionWithDomainBase<R> right) => left.Equals(right);
     public static bool operator !=(UnaryFunctionWithDomainBase<R> left, UnaryFunctionWithDomainBase<R> right) => !(left == right);
 
@@ -160,7 +160,7 @@ public sealed class UnaryFunctionWithDomain : UnaryFunctionWithDomainBase<float>
 
         // 计算复合函数的定义域：inner的值域必须在outer的定义域内
         // 简化处理：返回inner的定义域，但运行时检查
-        return new UnaryFunctionWithDomain(x => _function(inner.Process(x)), inner.Domain);
+        return new UnaryFunctionWithDomain(x => _Function(inner.Process(x)), inner.Domain);
     }
 
     // 预定义函数（保持原有的静态属性和方法）

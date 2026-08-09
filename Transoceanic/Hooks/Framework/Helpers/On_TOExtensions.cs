@@ -18,7 +18,7 @@ public sealed class On_TOExtensions : IContentLoader
     /// 内部存储 <see cref="get_IsBossEnemy"/> 事件的所有处理程序委托的列表。
     /// 该字段在内容加载完成和模组卸载时会被自动重置为空列表。
     /// </summary>
-    private static List<Func<NPC, bool>> _handler_get_IsBossEnemy = [];
+    private static List<Func<NPC, bool>> _Handler_get_IsBossEnemy = [];
     #endregion Handler
 
     #region Event
@@ -32,8 +32,8 @@ public sealed class On_TOExtensions : IContentLoader
     /// </remarks>
     public static event Func<NPC, bool> get_IsBossEnemy
     {
-        add => _handler_get_IsBossEnemy.Add(value);
-        remove => _handler_get_IsBossEnemy.Remove(value);
+        add => _Handler_get_IsBossEnemy.Add(value);
+        remove => _Handler_get_IsBossEnemy.Remove(value);
     }
     #endregion Event
 
@@ -48,10 +48,10 @@ public sealed class On_TOExtensions : IContentLoader
     /// </returns>
     internal static bool Impl_get_IsBossEnemy(NPC npc)
     {
-        if (_handler_get_IsBossEnemy.Count == 0)
+        if (_Handler_get_IsBossEnemy.Count == 0)
             return false;
 
-        foreach (Func<NPC, bool> handler in _handler_get_IsBossEnemy)
+        foreach (Func<NPC, bool> handler in _Handler_get_IsBossEnemy)
         {
             if (handler(npc))
                 return true;

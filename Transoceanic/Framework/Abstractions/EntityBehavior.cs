@@ -57,7 +57,7 @@ public abstract class EntityBehavior<TEntity> : IEntityBehavior where TEntity : 
     /// <br/>如果直接实例化行为类，则需要手动为此字段赋值，否则在行为方法中访问此字段会导致 <see cref="NullReferenceException"/> 异常。
     /// <br/>如果确需要在外部对此字段赋值，请务必谨慎。
     /// </remarks>
-    public TEntity _entity;
+    public TEntity _Entity;
 
     /// <summary>
     /// 获取行为所属的 <see cref="Terraria.ModLoader.Mod"/> 实例。
@@ -157,9 +157,9 @@ public abstract class SingleEntityBehavior<TEntity> : EntityBehavior<TEntity> wh
 #region General Behavior
 public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
 {
-    public Player Player { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity; }
+    public Player Player { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity; }
 
-    public TOPlayer OceanPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Ocean; }
+    public TOPlayer OceanPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Ocean; }
 
     #region 虚成员
     /// <inheritdoc cref="ModPlayer.Initialize"/>
@@ -1353,9 +1353,9 @@ public abstract class TOGlobalItemBehavior : GlobalItemBehavior
 #region Single Behavior
 public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
 {
-    public NPC NPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity; }
+    public NPC NPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity; }
 
-    public TOGlobalNPC OceanNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Ocean; }
+    public TOGlobalNPC OceanNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Ocean; }
 
     public Player Target => NPC.PlayerTarget;
 
@@ -1682,9 +1682,9 @@ public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
 
 public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile>
 {
-    public Projectile Projectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity; }
+    public Projectile Projectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity; }
 
-    public TOGlobalProjectile OceanProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Ocean; }
+    public TOGlobalProjectile OceanProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Ocean; }
 
     public Player Owner => Projectile.Owner;
 
@@ -1864,9 +1864,9 @@ public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile
 
 public abstract class SingleItemBehavior : SingleEntityBehavior<Item>
 {
-    public Item Item { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity; }
+    public Item Item { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity; }
 
-    public TOGlobalItem OceanItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Ocean; }
+    public TOGlobalItem OceanItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Ocean; }
 
     #region 虚成员
     #region Defaults
@@ -2171,7 +2171,7 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
     #region Defaults
     public override void SetStaticDefaults()
     {
-        foreach (SimpleEntityBehaviorSet<NPC, TNPCBehavior> simpleSet in BehaviorSet._data.Values)
+        foreach (SimpleEntityBehaviorSet<NPC, TNPCBehavior> simpleSet in BehaviorSet._Data.Values)
         {
             foreach (TNPCBehavior npcBehavior in simpleSet.Enumerate())
                 npcBehavior.SetStaticDefaults();
@@ -2765,7 +2765,7 @@ public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : Glo
     #region Defaults
     public override void SetStaticDefaults()
     {
-        foreach (SimpleEntityBehaviorSet<Projectile, TProjectileBehavior> simpleSet in BehaviorSet._data.Values)
+        foreach (SimpleEntityBehaviorSet<Projectile, TProjectileBehavior> simpleSet in BehaviorSet._Data.Values)
         {
             foreach (TProjectileBehavior projectileBehavior in simpleSet.Enumerate())
                 projectileBehavior.SetStaticDefaults();
@@ -3078,7 +3078,7 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
     #region Defaults
     public override void SetStaticDefaults()
     {
-        foreach (SimpleEntityBehaviorSet<Item, TItemBehavior> simpleSet in BehaviorSet._data.Values)
+        foreach (SimpleEntityBehaviorSet<Item, TItemBehavior> simpleSet in BehaviorSet._Data.Values)
         {
             foreach (TItemBehavior itemBehavior in simpleSet.Enumerate())
                 itemBehavior.SetStaticDefaults();
@@ -3093,7 +3093,7 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
 
     public override void AddRecipes()
     {
-        foreach (SimpleEntityBehaviorSet<Item, TItemBehavior> simpleSet in BehaviorSet._data.Values)
+        foreach (SimpleEntityBehaviorSet<Item, TItemBehavior> simpleSet in BehaviorSet._Data.Values)
         {
             foreach (TItemBehavior itemBehavior in simpleSet.Enumerate())
                 itemBehavior.AddRecipes();

@@ -8,8 +8,57 @@ namespace CalamityAnomalies.Visuals;
 /// <summary>
 /// Boss血条类。
 /// </summary>
-public class BossHealthBar
+public class BossHealthBar : IContentLoader
 {
+    internal static Asset<DynamicSpriteFont> _BigLifeFont;
+    internal static Asset<Texture2D> _MainBar;
+    internal static Asset<Texture2D> _ComboBar;
+    internal static Asset<Texture2D> _SeperatorBar;
+    internal static Asset<Texture2D> _PhaseIndicator;
+    internal static Asset<Texture2D> _SubPhaseIndicator;
+    internal static Asset<Texture2D> _PhaseIndicatorBorder;
+    internal static Asset<Texture2D> _SubPhaseIndicatorBorder;
+
+    /// <summary>
+    /// 血条百分比数字所用字体。
+    /// </summary>
+    public static DynamicSpriteFont BigLifeFont => _BigLifeFont.Value;
+
+    /// <summary>
+    /// 主血量条纹理。
+    /// </summary>
+    public static Texture2D MainBar => _MainBar.Value;
+
+    /// <summary>
+    /// 连击伤害残影条纹理。
+    /// </summary>
+    public static Texture2D ComboBar => _ComboBar.Value;
+
+    /// <summary>
+    /// 血量分隔条纹理。
+    /// </summary>
+    public static Texture2D SeperatorBar => _SeperatorBar.Value;
+
+    /// <summary>
+    /// 阶段血量阈值指示器纹理。
+    /// </summary>
+    public static Texture2D PhaseIndicator => _PhaseIndicator?.Value;
+
+    /// <summary>
+    /// 亚阶段血量阈值指示器纹理。
+    /// </summary>
+    public static Texture2D SubPhaseIndicator => _SubPhaseIndicator?.Value;
+
+    /// <summary>
+    /// 阶段血量阈值指示器边框纹理。
+    /// </summary>
+    public static Texture2D PhaseIndicatorBorder => _PhaseIndicatorBorder?.Value;
+
+    /// <summary>
+    /// 亚阶段血量阈值指示器边框纹理。
+    /// </summary>
+    public static Texture2D SubPhaseIndicatorBorder => _SubPhaseIndicatorBorder?.Value;
+
     /// <summary>
     /// 主色调，用于大型生命百分比文本等主要元素。
     /// </summary>
@@ -496,7 +545,7 @@ public class BossHealthBar
     {
         int mainBarWidth = (int)MathHelper.Min(400f * AnimationCompletionRatio, 400f * NPCLifeRatio);
         Color color = newColor ?? Color.White * AnimationCompletionRatio * AnimationCompletionRatio2;
-        spriteBatch.Draw(BossMainHPBar, new Rectangle(x, y + 43, mainBarWidth, BossMainHPBar.Height), color);
+        spriteBatch.Draw(MainBar, new Rectangle(x, y + 43, mainBarWidth, MainBar.Height), color);
     }
 
     /// <summary>
@@ -517,7 +566,7 @@ public class BossHealthBar
             comboHPBarWidth = comboHPBarWidth * ComboDamageCountdown / 6;
         Color color = newColor ?? Color.White * AnimationCompletionRatio * AnimationCompletionRatio2;
 
-        spriteBatch.Draw(BossComboHPBar, new Rectangle(x + mainBarWidth, y + 43, comboHPBarWidth, BossComboHPBar.Height), color);
+        spriteBatch.Draw(ComboBar, new Rectangle(x + mainBarWidth, y + 43, comboHPBarWidth, ComboBar.Height), color);
     }
 
     /// <summary>
@@ -530,7 +579,7 @@ public class BossHealthBar
     public void DrawSeperatorBar(SpriteBatch spriteBatch, int x, int y, Color? newColor = null)
     {
         Color color = newColor ?? BaseColor * AnimationCompletionRatio * AnimationCompletionRatio2;
-        spriteBatch.Draw(BossSeperatorBar, new Rectangle(x, y + 33, 400, 6), color);
+        spriteBatch.Draw(SeperatorBar, new Rectangle(x, y + 33, 400, 6), color);
 
         if (!AnomalyNPC.IsRunningAnomalyAI)
             return;
@@ -552,8 +601,8 @@ public class BossHealthBar
             float borderIntensity = Utils.Remap(NPC.LifeRatio - value, 0.07f, 0.02f, 0.5f, 1f, true);
             float thresholdAnimationCompletion = Math.Clamp(indicator.Timer / 60f, 0f, 1f) * (1f - Math.Clamp(indicator.EaseOutTimer / 60f, 0f, 1f));
 
-            Texture2D borderTexture = indicator.IsSubPhaseIndicator ? CATextures.HPThresholdIndicator_SubBorder : CATextures.HPThresholdIndicator_Border;
-            Texture2D texture = indicator.IsSubPhaseIndicator ? CATextures.HPThresholdIndicator_Sub : CATextures.HPThresholdIndicator;
+            Texture2D borderTexture = indicator.IsSubPhaseIndicator ? SubPhaseIndicatorBorder : PhaseIndicatorBorder;
+            Texture2D texture = indicator.IsSubPhaseIndicator ? SubPhaseIndicator : PhaseIndicator;
             spriteBatch.DrawFromCenter(borderTexture, center, null, color * thresholdAnimationCompletion, scale: borderIntensity * 0.5f);
             spriteBatch.DrawFromCenter(texture, center, null, Color.White * AnimationCompletionRatio * AnimationCompletionRatio2 * thresholdAnimationCompletion, scale: 0.5f);
         }
@@ -596,8 +645,8 @@ public class BossHealthBar
     public void DrawBigLifeText(SpriteBatch spriteBatch, int x, int y, string overrideText = null)
     {
         string bigLifeText = overrideText ?? (NPCLifeRatio == 0f ? "0%" : (NPCLifeRatio * 100f).ToString("N1") + "%");
-        Vector2 bigLifeTextSize = HPBarFont.MeasureString(bigLifeText);
-        TODrawUtils.DrawBorderString(spriteBatch, HPBarFont, bigLifeText, new Vector2(x, y + 34 - bigLifeTextSize.Y), MainColor * AnimationCompletionRatio2, MainBorderColor * 0.25f * AnimationCompletionRatio2);
+        Vector2 bigLifeTextSize = BigLifeFont.MeasureString(bigLifeText);
+        TODrawUtils.DrawBorderString(spriteBatch, BigLifeFont, bigLifeText, new Vector2(x, y + 34 - bigLifeTextSize.Y), MainColor * AnimationCompletionRatio2, MainBorderColor * 0.25f * AnimationCompletionRatio2);
     }
 
     /// <summary>
@@ -672,4 +721,31 @@ public class BossHealthBar
         TODrawUtils.DrawBorderString(spriteBatch, font, text, baseDrawPosition, mainColor2, borderColor2, scale: scale);
     }
     #endregion
+
+    void IContentLoader.PostSetupContent()
+    {
+        AssetRepository assets = CAMain.Instance.Assets;
+        const string Path = "Visuals/BossHealthBar/";
+
+        _BigLifeFont = assets.Request<DynamicSpriteFont>(Path + "BigLifeFont");
+        _MainBar = assets.Request<Texture2D>(Path + "MainBar");
+        _ComboBar = assets.Request<Texture2D>(Path + "ComboBar");
+        _SeperatorBar = assets.Request<Texture2D>(Path + "SeperatorBar");
+        _PhaseIndicator = assets.Request<Texture2D>(Path + "PhaseIndicator");
+        _SubPhaseIndicator = assets.Request<Texture2D>(Path + "SubPhaseIndicator");
+        _PhaseIndicatorBorder = assets.Request<Texture2D>(Path + "PhaseIndicatorBorder");
+        _SubPhaseIndicatorBorder = assets.Request<Texture2D>(Path + "SubPhaseIndicatorBorder");
+    }
+
+    void IContentLoader.OnModUnload()
+    {
+        _BigLifeFont = null;
+        _MainBar = null;
+        _ComboBar = null;
+        _SeperatorBar = null;
+        _PhaseIndicator = null;
+        _SubPhaseIndicator = null;
+        _PhaseIndicatorBorder = null;
+        _SubPhaseIndicatorBorder = null;
+    }
 }

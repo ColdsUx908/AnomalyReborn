@@ -102,17 +102,18 @@ public readonly struct WeightedItem<T> : IEquatable<WeightedItem<T>>, IComparabl
 /// <typeparam name="T">袋中元素的类型。</typeparam>
 public class WeightedBag<T>
 {
-    private readonly List<WeightedItem<T>> _items = [];
-    private float _totalWeight;
+    private readonly List<WeightedItem<T>> _Items = [];
+    private float _TotalWeight;
+
     /// <summary>
     /// 标记是否需要重新计算总权重。
     /// </summary>
-    private bool _isDirty = true;
+    private bool _IsDirty;
 
     /// <summary>
     /// 获取当前袋中元素的数量。
     /// </summary>
-    public int Count => _items.Count;
+    public int Count => _Items.Count;
 
     /// <summary>
     /// 获取袋中所有元素的总权重。
@@ -121,15 +122,15 @@ public class WeightedBag<T>
     {
         get
         {
-            if (_isDirty)
+            if (_IsDirty)
             {
-                _totalWeight = 0f;
-                foreach (WeightedItem<T> item in _items)
-                    _totalWeight += item.Weight;
-                _isDirty = false;
+                _TotalWeight = 0f;
+                foreach (WeightedItem<T> item in _Items)
+                    _TotalWeight += item.Weight;
+                _IsDirty = false;
             }
 
-            return _totalWeight;
+            return _TotalWeight;
         }
     }
 
@@ -155,8 +156,8 @@ public class WeightedBag<T>
         if (weight <= 0)
             throw new ArgumentException("权重必须为正数", nameof(weight));
 
-        _items.Add(new WeightedItem<T>(item, weight));
-        _isDirty = true;
+        _Items.Add(new WeightedItem<T>(item, weight));
+        _IsDirty = true;
     }
 
     /// <summary>
@@ -165,8 +166,8 @@ public class WeightedBag<T>
     /// <param name="weightedItem">要添加的加权项。</param>
     public void Add(WeightedItem<T> weightedItem)
     {
-        _items.Add(weightedItem);
-        _isDirty = true;
+        _Items.Add(weightedItem);
+        _IsDirty = true;
     }
 
     /// <summary>
@@ -175,8 +176,8 @@ public class WeightedBag<T>
     /// <param name="items">要添加的加权项集合。</param>
     public void AddRange(IEnumerable<WeightedItem<T>> items)
     {
-        _items.AddRange(items);
-        _isDirty = true;
+        _Items.AddRange(items);
+        _IsDirty = true;
     }
 
     /// <summary>
@@ -184,9 +185,9 @@ public class WeightedBag<T>
     /// </summary>
     public void Clear()
     {
-        _items.Clear();
-        _totalWeight = 0;
-        _isDirty = false;
+        _Items.Clear();
+        _TotalWeight = 0;
+        _IsDirty = false;
     }
 
     /// <summary>
@@ -195,11 +196,11 @@ public class WeightedBag<T>
     /// <returns>抽取到的元素；如果袋为空，则返回 <typeparamref name="T"/> 的默认值。</returns>
     public T Pick()
     {
-        if (_items.Count == 0)
+        if (_Items.Count == 0)
             return default;
 
-        if (_items.Count == 1)
-            return _items[0].Item;
+        if (_Items.Count == 1)
+            return _Items[0].Item;
 
         float totalWeight = TotalWeight;
 
@@ -207,7 +208,7 @@ public class WeightedBag<T>
 
         //遍历元素，找到随机数落入的区间
         float cumulativeWeight = 0f;
-        foreach (WeightedItem<T> weightedItem in _items)
+        foreach (WeightedItem<T> weightedItem in _Items)
         {
             cumulativeWeight += weightedItem.Weight;
             if (randomValue < cumulativeWeight)
@@ -215,7 +216,7 @@ public class WeightedBag<T>
         }
 
         //理论上不应执行到这里，但为了安全，返回最后一个元素
-        return _items[^1].Item;
+        return _Items[^1].Item;
     }
 
     /// <summary>
@@ -225,7 +226,7 @@ public class WeightedBag<T>
     /// <returns>如果袋不为空且成功抽取，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public bool TryPick(out T item)
     {
-        if (_items.Count == 0)
+        if (_Items.Count == 0)
         {
             item = default;
             return false;
@@ -260,7 +261,7 @@ public class WeightedBag<T>
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(count);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(count, Count);
 
-        List<(WeightedItem<T> item, int index)> itemsWithIndices = [.. _items.Select((item, index) => (item, index))];
+        List<(WeightedItem<T> item, int index)> itemsWithIndices = [.. _Items.Select((item, index) => (item, index))];
         List<T> results = [];
         float totalWeight = itemsWithIndices.Sum(x => x.item.Weight);
 

@@ -14,7 +14,7 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
 
     /// <summary>
     /// 粒子数量限制。
-    /// <br/>当 <see cref="_particles"/> 中的粒子数量达到该值时，除非新生成的粒子被标记为重要粒子，否则将不会被生成。
+    /// <br/>当 <see cref="_Particles"/> 中的粒子数量达到该值时，除非新生成的粒子被标记为重要粒子，否则将不会被生成。
     /// </summary>
     public static int ParticleLimit { get; set; } = 5000;
 
@@ -23,7 +23,7 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
     /// </summary>
     internal sealed record ParticleDataCache
     {
-        public static int _nextID = 0;
+        public static int _NextID = 0;
 
         public readonly Type Type;
         public readonly Particle TemplateInstance;
@@ -33,7 +33,7 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         {
             Type = type;
             TemplateInstance = templateInstance;
-            ID = _nextID++;
+            ID = _NextID++;
             if (templateInstance.AutoLoadTexture)
             {
                 string texturePath = templateInstance.TexturePath != "" ? templateInstance.TexturePath : type.Namespace.Replace('.', '/') + "/" + type.Name;
@@ -50,28 +50,28 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         /// <returns>对应的缓存数据。</returns>
         public static ParticleDataCache Create(Type type, Particle templateInstance)
         {
-            if (_particleTypes.TryGetValue(type, out int existingId) && _particleCache.TryGetValue(existingId, out ParticleDataCache existingCache))
+            if (_ParticleTypes.TryGetValue(type, out int existingId) && _ParticleCache.TryGetValue(existingId, out ParticleDataCache existingCache))
                 return existingCache;
 
             ParticleDataCache newCache = new(type, templateInstance);
 
-            _particleCache[newCache.ID] = newCache;
-            _particleTypes[type] = newCache.ID;
+            _ParticleCache[newCache.ID] = newCache;
+            _ParticleTypes[type] = newCache.ID;
 
             return newCache;
         }
     }
 
-    internal static Dictionary<int, ParticleDataCache> _particleCache;
-    internal static Dictionary<Type, int> _particleTypes;
+    internal static Dictionary<int, ParticleDataCache> _ParticleCache;
+    internal static Dictionary<Type, int> _ParticleTypes;
 
-    private static List<Particle> _particles;
-    private static List<Particle> _particlesToKill;
+    private static List<Particle> _Particles;
+    private static List<Particle> _ParticlesToKill;
 
-    private static List<Particle> _particlesToDraw_AlphaBlend;
-    private static List<Particle> _particlesToDraw_NonPremultiplied;
-    private static List<Particle> _particlesToDraw_Additive;
-    private static List<Particle> _particlesToDraw_Opaque;
+    private static List<Particle> _ParticlesToDraw_AlphaBlend;
+    private static List<Particle> _ParticlesToDraw_NonPremultiplied;
+    private static List<Particle> _ParticlesToDraw_Additive;
+    private static List<Particle> _ParticlesToDraw_Opaque;
 
     /// <summary>
     /// 绘制所有活跃粒子。根据不同混合状态分组绘制以减少渲染状态切换。
@@ -82,61 +82,61 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         if (Main.dedServ)
             return;
 
-        if (_particles.Count == 0)
+        if (_Particles.Count == 0)
             return;
 
         //提前分类粒子以减少spriteBatch状态切换次数
-        foreach (Particle particle in _particles)
+        foreach (Particle particle in _Particles)
         {
             if (particle is null)
                 continue;
 
             BlendState blendState = particle.DrawBlendState;
             if (blendState == BlendState.AlphaBlend)
-                _particlesToDraw_AlphaBlend.Add(particle);
+                _ParticlesToDraw_AlphaBlend.Add(particle);
             else if (blendState == BlendState.NonPremultiplied)
-                _particlesToDraw_NonPremultiplied.Add(particle);
+                _ParticlesToDraw_NonPremultiplied.Add(particle);
             else if (blendState == BlendState.Additive)
-                _particlesToDraw_Additive.Add(particle);
+                _ParticlesToDraw_Additive.Add(particle);
             else if (blendState == BlendState.Opaque)
-                _particlesToDraw_Opaque.Add(particle);
+                _ParticlesToDraw_Opaque.Add(particle);
         }
 
-        if (_particlesToDraw_AlphaBlend.Count > 0)
+        if (_ParticlesToDraw_AlphaBlend.Count > 0)
         {
             EnterDrawRegion_AlphaBlend(spriteBatch);
 
-            foreach (Particle particle in _particlesToDraw_AlphaBlend)
+            foreach (Particle particle in _ParticlesToDraw_AlphaBlend)
                 DrawParticle(spriteBatch, particle);
         }
 
-        if (_particlesToDraw_NonPremultiplied.Count > 0)
+        if (_ParticlesToDraw_NonPremultiplied.Count > 0)
         {
             EnterDrawRegion_NonPremultiplied(spriteBatch);
 
-            foreach (Particle particle in _particlesToDraw_NonPremultiplied)
+            foreach (Particle particle in _ParticlesToDraw_NonPremultiplied)
                 DrawParticle(spriteBatch, particle);
         }
 
-        if (_particlesToDraw_Additive.Count > 0)
+        if (_ParticlesToDraw_Additive.Count > 0)
         {
             EnterDrawRegion_Additive(spriteBatch);
 
-            foreach (Particle particle in _particlesToDraw_Additive)
+            foreach (Particle particle in _ParticlesToDraw_Additive)
                 DrawParticle(spriteBatch, particle);
         }
 
-        if (_particlesToDraw_Opaque.Count > 0)
+        if (_ParticlesToDraw_Opaque.Count > 0)
         {
             EnterDrawRegion_Opaque(spriteBatch);
 
-            foreach (Particle particle in _particlesToDraw_Opaque)
+            foreach (Particle particle in _ParticlesToDraw_Opaque)
                 DrawParticle(spriteBatch, particle);
         }
 
-        _particlesToDraw_AlphaBlend.Clear();
-        _particlesToDraw_NonPremultiplied.Clear();
-        _particlesToDraw_Additive.Clear();
+        _ParticlesToDraw_AlphaBlend.Clear();
+        _ParticlesToDraw_NonPremultiplied.Clear();
+        _ParticlesToDraw_Additive.Clear();
 
         ExitParticleDrawRegion(spriteBatch);
 
@@ -221,15 +221,15 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         if (Main.dedServ)
             return;
 
-        foreach (Particle particle in _particles)
+        foreach (Particle particle in _Particles)
         {
             if (particle is null)
                 continue;
             UpdateParticle(particle);
         }
 
-        _particles.RemoveAll(particle => particle is null || (particle.Timer >= particle.Lifetime && particle.AutoKillByLifeTime) || _particlesToKill.Contains(particle));
-        _particlesToKill.Clear();
+        _Particles.RemoveAll(particle => particle is null || (particle.Timer >= particle.Lifetime && particle.AutoKillByLifeTime) || _ParticlesToKill.Contains(particle));
+        _ParticlesToKill.Clear();
     }
 
     internal static void UpdateParticle(Particle particle)
@@ -242,16 +242,16 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
 
     void IContentLoader.PostSetupContent()
     {
-        _particleCache = [];
-        _particleTypes = [];
-        _particles = [];
-        _particlesToKill = [];
-        _particlesToDraw_AlphaBlend = [];
-        _particlesToDraw_NonPremultiplied = [];
-        _particlesToDraw_Additive = [];
-        _particlesToDraw_Opaque = [];
+        _ParticleCache = [];
+        _ParticleTypes = [];
+        _Particles = [];
+        _ParticlesToKill = [];
+        _ParticlesToDraw_AlphaBlend = [];
+        _ParticlesToDraw_NonPremultiplied = [];
+        _ParticlesToDraw_Additive = [];
+        _ParticlesToDraw_Opaque = [];
 
-        ParticleDataCache._nextID = 0;
+        ParticleDataCache._NextID = 0;
 
         foreach ((Type type, Particle instance) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<Particle>(true))
             ParticleDataCache.Create(type, instance);
@@ -266,50 +266,50 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
 
     void IContentLoader.OnModUnload()
     {
-        ParticleDataCache._nextID = 0;
+        ParticleDataCache._NextID = 0;
 
-        _particleCache = null;
-        _particleTypes = null;
-        _particles = null;
-        _particlesToKill = null;
-        _particlesToDraw_AlphaBlend = null;
-        _particlesToDraw_NonPremultiplied = null;
-        _particlesToDraw_Additive = null;
-        _particlesToDraw_Opaque = null;
+        _ParticleCache = null;
+        _ParticleTypes = null;
+        _Particles = null;
+        _ParticlesToKill = null;
+        _ParticlesToDraw_AlphaBlend = null;
+        _ParticlesToDraw_NonPremultiplied = null;
+        _ParticlesToDraw_Additive = null;
+        _ParticlesToDraw_Opaque = null;
     }
 
     /// <summary>
-    /// 向 <see cref="_particles"/> 中添加一个粒子实例以生成该粒子。
+    /// 向 <see cref="_Particles"/> 中添加一个粒子实例以生成该粒子。
     /// </summary>
     public static void SpawnParticle(Particle particle) => SpawnParticle_Inner(particle, false);
 
     /// <summary>
-    /// 尝试向 <see cref="_particles"/> 中添加一个粒子实例以生成该粒子。
+    /// 尝试向 <see cref="_Particles"/> 中添加一个粒子实例以生成该粒子。
     /// </summary>
     public static bool TrySpawnParticle(Particle particle) => SpawnParticle_Inner(particle, false);
 
     /// <summary>
-    /// 向 <see cref="_particles"/> 中添加一组粒子实例以生成这些粒子。
+    /// 向 <see cref="_Particles"/> 中添加一组粒子实例以生成这些粒子。
     /// <br/>若需生成由多个粒子组成的效果，而不希望在粒子数量过多时生成部分粒子而破坏效果完整性，请使用该方法并将 <paramref name="onlySpawnWhenSpaceEnough"/> 设置为 true。
     /// </summary>
     public static void SpawnParticles(List<Particle> particles, bool onlySpawnWhenSpaceEnough) => SpawnParticles_Inner(particles, false, onlySpawnWhenSpaceEnough);
 
     /// <summary>
-    /// 尝试向 <see cref="_particles"/> 中添加一组粒子实例以生成这些粒子。
+    /// 尝试向 <see cref="_Particles"/> 中添加一组粒子实例以生成这些粒子。
     /// <br/>若需生成由多个粒子组成的效果，而不希望在粒子数量过多时生成部分粒子而破坏效果完整性，请使用该方法并将 <paramref name="onlySpawnWhenSpaceEnough"/> 设置为 true。
     /// </summary>
     public static bool TrySpawnParticles(List<Particle> particles, bool onlySpawnWhenSpaceEnough) => SpawnParticles_Inner(particles, false, onlySpawnWhenSpaceEnough);
 
     private static bool SpawnParticle_Inner(Particle particle, bool forceSpawn)
     {
-        if (Main.gamePaused || Main.dedServ || _particles is null)
+        if (Main.gamePaused || Main.dedServ || _Particles is null)
             return false;
 
-        if (_particles.Count >= ParticleLimit && !particle.Important && !forceSpawn)
+        if (_Particles.Count >= ParticleLimit && !particle.Important && !forceSpawn)
             return false;
 
         if (particle.PreSpawn())
-            _particles.Add(particle);
+            _Particles.Add(particle);
         particle.PostSpawn();
 
         return true;
@@ -317,17 +317,17 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
 
     private static bool SpawnParticles_Inner(List<Particle> particles, bool forceSpawn, bool onlySpawnWhenSpaceEnough)
     {
-        if (Main.gamePaused || Main.dedServ || _particles is null)
+        if (Main.gamePaused || Main.dedServ || _Particles is null)
             return false;
 
         int newParticlesCount = particles.Count;
-        if (!forceSpawn && onlySpawnWhenSpaceEnough && _particles.Count + newParticlesCount > ParticleLimit)
+        if (!forceSpawn && onlySpawnWhenSpaceEnough && _Particles.Count + newParticlesCount > ParticleLimit)
             return false;
 
         foreach (Particle particle in particles)
         {
             if (particle.PreSpawn())
-                _particles.Add(particle);
+                _Particles.Add(particle);
             particle.PostSpawn();
         }
 
@@ -342,16 +342,16 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         if (Main.dedServ)
             return;
 
-        _particlesToKill.Add(particle);
+        _ParticlesToKill.Add(particle);
     }
 
     /// <summary>
     /// 获取指定粒子类型的模板实例。
     /// </summary>
-    public static T GetTemplateInstance<T>() where T : Particle => (T)_particleCache[_particleTypes[typeof(T)]].TemplateInstance;
+    public static T GetTemplateInstance<T>() where T : Particle => (T)_ParticleCache[_ParticleTypes[typeof(T)]].TemplateInstance;
 
     /// <summary>
     /// 获取指定粒子类型的纹理。
     /// </summary>
-    public static Texture2D GetTexture<T>() where T : Particle => _particleCache[_particleTypes[typeof(T)]].TemplateInstance.Texture;
+    public static Texture2D GetTexture<T>() where T : Particle => _ParticleCache[_ParticleTypes[typeof(T)]].TemplateInstance.Texture;
 }

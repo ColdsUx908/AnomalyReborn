@@ -200,7 +200,7 @@ public sealed class ColdheartIcicle : CALegendaryItem
     {
         CAItemTooltipModifier modifier = new(Item, tooltips);
 
-        int index = modifier._nextCATooltipIndex;
+        int index = modifier._NextCATooltipIndex;
         AddDeveloperItemIdentifier(tooltips, index);
         AddLegendaryItemIdentifier(tooltips, ++index);
 

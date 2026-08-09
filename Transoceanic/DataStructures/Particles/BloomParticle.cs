@@ -5,8 +5,8 @@ namespace Transoceanic.DataStructures.Particles;
 public class BloomParticle : Particle
 {
     [LoadTexture(ParticleHandler.BaseParticleTexturePath + "BloomCircleLarge")]
-    private static Asset<Texture2D> _bloomCircleLarge;
-    public static Texture2D BloomCircleLarge => _bloomCircleLarge.Value;
+    private static Asset<Texture2D> _BloomCircleLarge;
+    public static Texture2D BloomCircleLarge => _BloomCircleLarge.Value;
 
     public const float BloomCircleRadius = 50f;
     public const float BloomCircleLargeRadius = 125f;

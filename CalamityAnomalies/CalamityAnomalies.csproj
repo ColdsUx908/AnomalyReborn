@@ -24,5 +24,8 @@
             <HintPath>..\..\CalamityMod\CalamityMod.dll</HintPath>
         </Reference>
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Assets\Textures\UI\" />
+    </ItemGroup>
 
 </Project>

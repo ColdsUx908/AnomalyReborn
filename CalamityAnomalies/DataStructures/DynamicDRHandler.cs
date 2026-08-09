@@ -19,7 +19,7 @@ public sealed class CombinedDDRHandler : IDynamicDRHandler
     /// <summary>
     /// 存储所有待处理的动态伤害减免处理器集合。
     /// </summary>
-    public List<IDynamicDRHandler> _handlers;
+    public List<IDynamicDRHandler> _Handlers;
 
     /// <summary>
     /// 初始化组合处理器，并扁平化所有嵌套的 <see cref="CombinedDDRHandler"/>。
@@ -28,7 +28,7 @@ public sealed class CombinedDDRHandler : IDynamicDRHandler
     /// 则会将其内部的处理器展开并加入当前列表，以避免多层嵌套。</param>
     public CombinedDDRHandler(params IDynamicDRHandler[] handlers)
     {
-        _handlers = [];
+        _Handlers = [];
         FlattenAndAdd(handlers);
     }
 
@@ -42,9 +42,9 @@ public sealed class CombinedDDRHandler : IDynamicDRHandler
         foreach (IDynamicDRHandler handler in handlers)
         {
             if (handler is CombinedDDRHandler combined) //递归处理
-                FlattenAndAdd(combined._handlers);
+                FlattenAndAdd(combined._Handlers);
             else
-                _handlers.Add(handler);
+                _Handlers.Add(handler);
         }
     }
 
@@ -54,7 +54,7 @@ public sealed class CombinedDDRHandler : IDynamicDRHandler
     /// <param name="npc">目标 NPC 实例。</param>
     public void Update(NPC npc)
     {
-        foreach (IDynamicDRHandler handler in _handlers)
+        foreach (IDynamicDRHandler handler in _Handlers)
             handler.Update(npc);
     }
 
@@ -68,7 +68,7 @@ public sealed class CombinedDDRHandler : IDynamicDRHandler
     {
         float total = 0f;
 
-        foreach (IDynamicDRHandler handler in _handlers)
+        foreach (IDynamicDRHandler handler in _Handlers)
             total += handler.GetCurrentDDR(npc);
 
         return Math.Clamp(total, 0f, 1f);

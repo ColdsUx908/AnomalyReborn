@@ -12,8 +12,8 @@ public abstract class CAPlayerBehavior : PlayerBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAPlayer AnomalyPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }
-    public CalamityPlayer CalamityPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.CalamityPlayer; }
+    public CAPlayer AnomalyPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Anomaly; }
+    public CalamityPlayer CalamityPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.CalamityPlayer; }
 }
 
 public abstract class CAGlobalNPCBehavior : GlobalNPCBehavior
@@ -84,8 +84,8 @@ public abstract class CASingleNPCBehavior : SingleNPCBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAGlobalNPC AnomalyNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }
-    public CalamityGlobalNPC CalamityNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.CalamityNPC; }
+    public CAGlobalNPC AnomalyNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Anomaly; }
+    public CalamityGlobalNPC CalamityNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.CalamityNPC; }
 
     /// <summary>
     /// 是否允许灾厄的相关逻辑执行。
@@ -124,7 +124,7 @@ public abstract class CASingleNPCBehavior<T> : CASingleNPCBehavior where T : Mod
 {
     public static readonly Type Type = typeof(T);
 
-    public T ModNPC => _entity.GetModNPC<T>();
+    public T ModNPC => _Entity.GetModNPC<T>();
 
     public override int ApplyingType => ModContent.NPCType<T>();
 }
@@ -135,7 +135,7 @@ public abstract class AnomalyNPCBehavior<TBehavior> : CASingleNPCBehavior where 
 
     public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
 
-    public static TBehavior GetInstance(NPC npc) => new() { _entity = npc };
+    public static TBehavior GetInstance(NPC npc) => new() { _Entity = npc };
 }
 
 public abstract class AnomalyNPCBehavior<TModNPC, TBehavior> : CASingleNPCBehavior<TModNPC>
@@ -146,7 +146,7 @@ public abstract class AnomalyNPCBehavior<TModNPC, TBehavior> : CASingleNPCBehavi
 
     public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
 
-    public static TBehavior GetInstance(NPC npc) => new() { _entity = npc };
+    public static TBehavior GetInstance(NPC npc) => new() { _Entity = npc };
 }
 
 public enum CalamityLogicType_ProjectileBehavior
@@ -160,8 +160,8 @@ public abstract class CASingleProjectileBehavior : SingleProjectileBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAGlobalProjectile AnomalyProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }
-    public CalamityGlobalProjectile CalamityProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.CalamityProjectile; }
+    public CAGlobalProjectile AnomalyProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Anomaly; }
+    public CalamityGlobalProjectile CalamityProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.CalamityProjectile; }
 
     /// <summary>
     /// 是否允许灾厄的相关逻辑执行。
@@ -180,7 +180,7 @@ public abstract class CASingleProjectileBehavior<T> : CASingleProjectileBehavior
 {
     public static readonly Type Type = typeof(T);
 
-    public T ModProjectile => _entity.GetModProjectile<T>();
+    public T ModProjectile => _Entity.GetModProjectile<T>();
 
     public override int ApplyingType => ModContent.ProjectileType<T>();
 }
@@ -191,7 +191,7 @@ public abstract class AnomalyProjectileBehavior<TBehavior> : CASingleProjectileB
 
     public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
 
-    public static TBehavior GetInstance(Projectile projectile) => new() { _entity = projectile };
+    public static TBehavior GetInstance(Projectile projectile) => new() { _Entity = projectile };
 }
 
 public abstract class AnomalyProjectileBehavior<TModProjectile, TBehavior> : CASingleProjectileBehavior<TModProjectile>
@@ -202,15 +202,15 @@ public abstract class AnomalyProjectileBehavior<TModProjectile, TBehavior> : CAS
 
     public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
 
-    public static TBehavior GetInstance(Projectile projectile) => new() { _entity = projectile };
+    public static TBehavior GetInstance(Projectile projectile) => new() { _Entity = projectile };
 }
 
 public abstract class CASingleItemBehavior : SingleItemBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.Anomaly; }
-    public CalamityGlobalItem CalamityItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _entity.CalamityItem; }
+    public CAGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Anomaly; }
+    public CalamityGlobalItem CalamityItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.CalamityItem; }
 
     /// <summary>
     /// 编辑受击NPC的DR。
@@ -223,7 +223,7 @@ public abstract class CASingleItemBehavior<T> : CASingleItemBehavior where T : M
 {
     public static readonly Type Type = typeof(T);
 
-    public T ModItem => _entity.GetModItem<T>();
+    public T ModItem => _Entity.GetModItem<T>();
 
     public override int ApplyingType => ModContent.ItemType<T>();
 }

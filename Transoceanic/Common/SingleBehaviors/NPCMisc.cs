@@ -22,7 +22,7 @@ public sealed class NPCMisc : TOGlobalNPCBehavior
 
         foreach (AfterimageParticle afterimage in ocean.Afterimages)
             ParticleHandler.UpdateParticle(afterimage);
-        ocean.Afterimages.RemoveAll(a => a.Timer >= a.Lifetime);
+        ocean.Afterimages.RemoveAll(a => a.Timer > a.Lifetime);
     }
 
     public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)

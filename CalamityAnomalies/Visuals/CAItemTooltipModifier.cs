@@ -17,22 +17,22 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
     /// <summary>
     /// （保留字段）指向关联的 <see cref="ItemTooltipDictionary"/> 实例，当前未使用。
     /// </summary>
-    public ItemTooltipDictionary _tooltipDictionary;
+    public ItemTooltipDictionary _TooltipDictionary;
 
     /// <summary>
     /// 下一个可用的 CA 提示行序号（用于命名）。
     /// </summary>
-    public int _nextCATooltipNum;
+    public int _NextCATooltipNum;
 
     /// <summary>
     /// 下一个 CA 提示行应当插入的列表索引位置。
     /// </summary>
-    public int _nextCATooltipIndex;
+    public int _NextCATooltipIndex;
 
     /// <summary>
     /// 获取一个值，该值指示当前实例是否处于有效状态（即已成功定位到插入位置）。
     /// </summary>
-    public bool Valid => _nextCATooltipIndex != -1;
+    public bool Valid => _NextCATooltipIndex != -1;
 
     /// <summary>
     /// 初始化 <see cref="CAItemTooltipModifier"/> 的新实例，并立即执行一次状态更新。
@@ -44,27 +44,27 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
     /// <summary>
     /// 扫描当前提示行列表，确定下一个 CA 提示行的插入位置和序号。
     /// 从列表末尾向前遍历，寻找最近的 "CATooltip" 或标准 "Tooltip" 行作为定位锚点。
-    /// 若未找到任何锚点，则 <see cref="_nextCATooltipIndex"/> 被设置为 -1。
+    /// 若未找到任何锚点，则 <see cref="_NextCATooltipIndex"/> 被设置为 -1。
     /// </summary>
     public void UpdateCA()
     {
-        for (int i = _tooltips.Count - 1; i >= 0; i--)
+        for (int i = _Tooltips.Count - 1; i >= 0; i--)
         {
-            TooltipLine line = _tooltips[i];
+            TooltipLine line = _Tooltips[i];
             if (line.Mod == CASharedData.ModName && line.Name.StartsWith(CATooltip) && int.TryParse(line.Name[CATooltip.Length..], out int index))
             {
-                _nextCATooltipIndex = i + 1;
-                _nextCATooltipNum = index + 1;
+                _NextCATooltipIndex = i + 1;
+                _NextCATooltipNum = index + 1;
                 return;
             }
             if (line.Name.StartsWith(Tooltip))
             {
-                _nextCATooltipIndex = i + 1;
-                _nextCATooltipNum = 0;
+                _NextCATooltipIndex = i + 1;
+                _NextCATooltipNum = 0;
                 return;
             }
         }
-        _nextCATooltipIndex = -1;
+        _NextCATooltipIndex = -1;
         return;
     }
 
@@ -125,7 +125,7 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
     public CAItemTooltipModifier ClearAllCATooltips()
     {
-        _tooltips.RemoveAll(line => line.Mod == CASharedData.ModName && line.Name.StartsWith(CATooltip));
+        _Tooltips.RemoveAll(line => line.Mod == CASharedData.ModName && line.Name.StartsWith(CATooltip));
         return this;
     }
 
@@ -139,9 +139,9 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
     {
         if (Valid)
         {
-            _tooltips.Insert(_nextCATooltipIndex, CAUtils.CreateNewTooltipLine(_nextCATooltipNum, text));
-            _nextCATooltipIndex++;
-            _nextCATooltipNum++;
+            _Tooltips.Insert(_NextCATooltipIndex, CAUtils.CreateNewTooltipLine(_NextCATooltipNum, text));
+            _NextCATooltipIndex++;
+            _NextCATooltipNum++;
         }
         return this;
     }
@@ -157,9 +157,9 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
     {
         if (Valid)
         {
-            _tooltips.Insert(_nextCATooltipIndex, CAUtils.CreateNewTooltipLine(_nextCATooltipNum, text, color));
-            _nextCATooltipIndex++;
-            _nextCATooltipNum++;
+            _Tooltips.Insert(_NextCATooltipIndex, CAUtils.CreateNewTooltipLine(_NextCATooltipNum, text, color));
+            _NextCATooltipIndex++;
+            _NextCATooltipNum++;
         }
         return this;
     }
@@ -174,48 +174,48 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
     {
         if (Valid)
         {
-            _tooltips.Insert(_nextCATooltipIndex, CAUtils.CreateNewTooltipLine(_nextCATooltipNum, action));
-            _nextCATooltipIndex++;
-            _nextCATooltipNum++;
+            _Tooltips.Insert(_NextCATooltipIndex, CAUtils.CreateNewTooltipLine(_NextCATooltipNum, action));
+            _NextCATooltipIndex++;
+            _NextCATooltipNum++;
         }
         return this;
     }
 
     /// <summary>
     /// 通过本地化提供程序获取默认文本，并添加一个具有默认颜色的 CA 提示行。
-    /// 文本键名格式为 "CATooltip{_nextCATooltipIndex}"。
+    /// 文本键名格式为 "CATooltip{_NextCATooltipIndex}"。
     /// </summary>
     /// <param name="localizationPrefixProvider">提供本地化键前缀的实例。</param>
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
-    public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_nextCATooltipIndex}"));
+    public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_NextCATooltipIndex}"));
 
     /// <summary>
     /// 通过本地化提供程序获取格式化后的默认文本，并添加一个具有默认颜色的 CA 提示行。
-    /// 文本键名格式为 "CATooltip{_nextCATooltipIndex}"。
+    /// 文本键名格式为 "CATooltip{_NextCATooltipIndex}"。
     /// </summary>
     /// <param name="localizationPrefixProvider">提供本地化键前缀的实例。</param>
     /// <param name="args">用于格式化本地化字符串的参数。</param>
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
-    public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, params object[] args) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_nextCATooltipIndex}", args));
+    public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, params object[] args) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_NextCATooltipIndex}", args));
 
     /// <summary>
     /// 通过本地化提供程序获取默认文本，并以指定颜色添加一个 CA 提示行。
-    /// 文本键名格式为 "CATooltip{_nextCATooltipIndex}"。
+    /// 文本键名格式为 "CATooltip{_NextCATooltipIndex}"。
     /// </summary>
     /// <param name="localizationPrefixProvider">提供本地化键前缀的实例。</param>
     /// <param name="newColor">提示行的覆盖颜色。</param>
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
-    public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, Color newColor) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_nextCATooltipIndex}"), newColor);
+    public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, Color newColor) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_NextCATooltipIndex}"), newColor);
 
     /// <summary>
     /// 通过本地化提供程序获取格式化后的默认文本，并以指定颜色添加一个 CA 提示行。
-    /// 文本键名格式为 "CATooltip{_nextCATooltipNum}"。
+    /// 文本键名格式为 "CATooltip{_NextCATooltipNum}"。
     /// </summary>
     /// <param name="localizationPrefixProvider">提供本地化键前缀的实例。</param>
     /// <param name="newColor">提示行的覆盖颜色。</param>
     /// <param name="args">用于格式化本地化字符串的参数。</param>
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
-    public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, Color newColor, params object[] args) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_nextCATooltipNum}", args), newColor);
+    public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, Color newColor, params object[] args) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_NextCATooltipNum}", args), newColor);
 
     /// <summary>
     /// 使用模组定义的渐变色（强度 0.25f）添加一个 CA 提示行。
@@ -238,20 +238,20 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
 
     /// <summary>
     /// 通过本地化提供程序获取默认文本，并使用模组渐变色添加一个 CA 提示行。
-    /// 文本键名格式为 "CATooltip{_nextCATooltipIndex}"。
+    /// 文本键名格式为 "CATooltip{_NextCATooltipIndex}"。
     /// </summary>
     /// <param name="localizationPrefixProvider">提供本地化键前缀的实例。</param>
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
-    public CAItemTooltipModifier AddCATweakTooltipDefault(ILocalizationPrefix localizationPrefixProvider) => AddCATweakTooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_nextCATooltipIndex}"));
+    public CAItemTooltipModifier AddCATweakTooltipDefault(ILocalizationPrefix localizationPrefixProvider) => AddCATweakTooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_NextCATooltipIndex}"));
 
     /// <summary>
     /// 通过本地化提供程序获取格式化后的默认文本，并使用模组渐变色添加一个 CA 提示行。
-    /// 文本键名格式为 "CATooltip{_nextCATooltipIndex}"。
+    /// 文本键名格式为 "CATooltip{_NextCATooltipIndex}"。
     /// </summary>
     /// <param name="localizationPrefixProvider">提供本地化键前缀的实例。</param>
     /// <param name="args">用于格式化本地化字符串的参数。</param>
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
-    public CAItemTooltipModifier AddCATweakTooltipDefault(ILocalizationPrefix localizationPrefixProvider, params object[] args) => AddCATweakTooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_nextCATooltipIndex}", args));
+    public CAItemTooltipModifier AddCATweakTooltipDefault(ILocalizationPrefix localizationPrefixProvider, params object[] args) => AddCATweakTooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_NextCATooltipIndex}", args));
 
     /// <summary>
     /// 添加一条提示玩家按住 Shift 以展开详细信息的灰色提示行。

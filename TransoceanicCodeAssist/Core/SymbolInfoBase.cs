@@ -311,7 +311,7 @@ internal class FieldSymbolInfoBase : SymbolInfoBase<IFieldSymbol>
 
     /// <summary>
     /// 生成字段自身的声明字符串（不包含外层类型或命名空间）。
-    /// 例如：<c>private int _field;</c>
+    /// 例如：<c>private int _Field;</c>
     /// </summary>
     /// <returns>如果信息有效，则为字段声明字符串；否则为 <see cref="string.Empty"/>。</returns>
     public string GenerateDeclaration()

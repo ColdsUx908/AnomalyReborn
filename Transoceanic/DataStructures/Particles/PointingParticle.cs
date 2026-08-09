@@ -4,11 +4,11 @@ namespace Transoceanic.DataStructures.Particles;
 
 public class PointingParticle : Particle
 {
-    public override BlendState DrawBlendState => _useAdditiveBlend ? BlendState.Additive : BlendState.AlphaBlend;
+    public override BlendState DrawBlendState => _UseAdditiveBlend ? BlendState.Additive : BlendState.AlphaBlend;
 
     public Color InitialColor;
     public bool AffectedByGravity;
-    public bool _useAdditiveBlend = true;
+    public bool _UseAdditiveBlend = true;
 
     public PointingParticle(Vector2 center, Vector2 velocity, bool affectedByGravity, int lifetime, float scale, Color color, bool useAddativeBlend = true, bool affectedByLight = false)
     {
@@ -18,7 +18,7 @@ public class PointingParticle : Particle
         Scale = scale;
         Lifetime = lifetime;
         Color = InitialColor = color;
-        _useAdditiveBlend = useAddativeBlend;
+        _UseAdditiveBlend = useAddativeBlend;
         AffectedByLight = affectedByLight;
     }
 
