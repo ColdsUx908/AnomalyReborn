@@ -1,6 +1,5 @@
 ﻿// Developed by ColdsUx
 
-using Anomalies.Bosses.EyeofCthulhu;
 using Anomalies.GameContents.Base;
 
 namespace Anomalies.Bosses.EyeofCthulhu;
@@ -142,7 +141,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
     #endregion 交互方法
 
     public override string Texture => TOTextures.InvisibleTexturePath;
-    public override string LocalizationCategory => "Anomaly.EyeofCthulhu";
+    public override string LocalizationCategory => "Bosses.EyeofCthulhu";
 
     public override void SetDefaults()
     {

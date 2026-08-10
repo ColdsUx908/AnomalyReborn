@@ -6,8 +6,8 @@ namespace Anomalies.Bosses.KingSlime;
 
 public static class JewelHandler
 {
-    public const string AnomalyKingSlimePath = AnomalySharedData.AnomalyPath + "Bosses/KingSlime/";
-    public const string AnomalyQueenSlimePath = AnomalySharedData.AnomalyPath + "Bosses/QueenSlime/";
+    public const string AnomalyKingSlimePath = AnomalySharedData.ModPath + "Bosses/KingSlime/";
+    public const string AnomalyQueenSlimePath = AnomalySharedData.ModPath + "Bosses/QueenSlime/";
 
     [LoadTexture(AnomalyKingSlimePath + "RubyJewelShards")]
     private static Asset<Texture2D> _RubyShardTexture;
@@ -194,7 +194,7 @@ public static class JewelHandler
         Color color = GetColor(jewel);
         Color flashColor = GetFlashColor(jewel);
 
-        for ( int i = 0; i < amount; i++)
+        for (int i = 0; i < amount; i++)
         {
             ParticleHandler.SpawnParticle(new PointingParticle(jewel.Center, Main.rand.NextPolarVector2(0f, 20f), false, 10, Main.rand.NextFloat(0.8f, 1.5f), isRainbowJewel ? Color.GetRandomRainbowColor() with { A = 0 } : color));
             if (extraParticle)

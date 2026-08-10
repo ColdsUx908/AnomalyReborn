@@ -132,7 +132,8 @@ public sealed partial class QueenBee
             p.timeLeft = 600;
             p.tileCollide = false;
             p.extraUpdates = 0;
-        };
+        }
+        ;
 
         void HandleEnrage()
         {

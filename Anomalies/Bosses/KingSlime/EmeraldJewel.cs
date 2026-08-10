@@ -30,7 +30,7 @@ public sealed class EmeraldJewel : JewelNPC
         }
     }
 
-    public override string LocalizationCategory => "Anomaly.KingSlime";
+    public override string LocalizationCategory => "Bosses.KingSlime";
 
     public override void SetStaticDefaults() => NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, new NPCID.Sets.NPCBestiaryDrawModifiers() { Hide = true });
 
@@ -42,7 +42,7 @@ public sealed class EmeraldJewel : JewelNPC
         NPC.defense = 15;
 
         NPC.lifeMax = 250;
-        NPC.ApplyCalamityBossHealthBoost();
+        BridgeUtils.ApplyCalamityHealthBoost(NPC);
 
         NPC.knockBackResist = 0.4f;
         NPC.noGravity = true;

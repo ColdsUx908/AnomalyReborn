@@ -101,7 +101,7 @@ public static class EyeofCthulhu_Handler
         public static float InnerParticleScaleMultiplier => 0.85f;
     }
 
-    public const string AnomalyEyeofCthulhuPath = AnomalySharedData.AnomalyPath + "Bosses/EyeofCthulhu/";
+    public const string AnomalyEyeofCthulhuPath = AnomalySharedData.ModPath + "Bosses/EyeofCthulhu/";
 
     [LoadTexture(AnomalyEyeofCthulhuPath + "BloodOrb")]
 

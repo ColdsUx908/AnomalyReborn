@@ -18,7 +18,7 @@ public sealed class BeeShockwave : BaseShockwaveProjectile, IContentLoader
         set => Projectile.ai[0] = value?.whoAmI ?? -1;
     }
 
-    public override string LocalizationCategory => "Anomaly.QueenBee";
+    public override string LocalizationCategory => "Bosses.QueenBee";
 
     public override bool? CanHitNPC(NPC target) => base.CanHitNPC(target) == true && target.Master == Master;
 

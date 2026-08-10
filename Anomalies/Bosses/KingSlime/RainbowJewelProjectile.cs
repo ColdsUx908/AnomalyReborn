@@ -4,7 +4,7 @@ namespace Anomalies.Bosses.KingSlime;
 
 public class RainbowJewelProjectile : AnomalyModProjectile
 {
-    public override string LocalizationCategory => "Anomaly.KingSlime";
+    public override string LocalizationCategory => "Bosses.KingSlime";
 
     public override string Texture => JewelHandler.AnomalyKingSlimePath + "RainbowJewelProjectile_Triangle";
 

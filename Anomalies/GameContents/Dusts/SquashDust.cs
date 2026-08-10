@@ -1,4 +1,6 @@
-﻿namespace Anomalies.GameContents.Dusts;
+﻿// Developed by ColdsUx
+
+namespace Anomalies.GameContents.Dusts;
 
 public class SquashDust : ModDust
 {

@@ -22,7 +22,7 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
     public override Asset<Texture2D> OutlineTexture => Ultra ? AnomalyModeHandler._UltraIndicator_Border : AnomalyModeHandler._Indicator_Border;
     public override Asset<Texture2D> TextureDisabled => Ultra ? AnomalyModeHandler._UltraIndicator_Off : AnomalyModeHandler._Indicator_Off;
 
-    public override SoundStyle ActivationSound => Main.zenithWorld ? AnomalySounds.AromalyActivate : AnomalyModeHandler.ActivationSound;
+    public override SoundStyle ActivationSound => Main.zenithWorld ? AnomalyModeHandler.AromalyActivationSound : AnomalyModeHandler.ActivationSound;
 
     public override int BackBoneGameModeID => GameModeID.Master;
 

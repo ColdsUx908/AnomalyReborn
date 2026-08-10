@@ -13,7 +13,7 @@ public sealed class SlimeGel : AnomalyModProjectile
      * [1] 是否启用彩虹色（大于 0 时启用）
      */
 
-    public override string LocalizationCategory => "Anomaly.KingSlime";
+    public override string LocalizationCategory => "Bosses.KingSlime";
 
     [LoadTextureWithCalamityStyle(JewelHandler.AnomalyKingSlimePath + "SlimeGel")]
     private static TextureAssetWithCalamityStyle _Texture;

@@ -4,7 +4,7 @@ namespace Anomalies.Bosses.KingSlime;
 
 public sealed class EmeraldJewelShadow : AnomalyModProjectile
 {
-    public override string LocalizationCategory => "Anomaly.KingSlime";
+    public override string LocalizationCategory => "Bosses.KingSlime";
     public override string Texture => JewelHandler.AnomalyKingSlimePath + "EmeraldJewel";
 
     public override void SetDefaults()

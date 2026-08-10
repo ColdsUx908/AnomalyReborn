@@ -17,10 +17,10 @@ public sealed class AnomalyNPCMisc : AnomalyGlobalNPCBehavior
     {
         AnomalyGlobalNPC anomalyNPC = npc.Anomaly;
 
-        if ( AnomalySharedData.Anomaly)
+        if (AnomalySharedData.Anomaly)
         {
             anomalyNPC.AnomalyAITimer++;
-            if ( AnomalySharedData.AnomalyUltramundane)
+            if (AnomalySharedData.AnomalyUltramundane)
             {
                 anomalyNPC.AnomalyUltraAITimer++;
                 anomalyNPC.AnomalyUltraBarTimer = Math.Clamp(anomalyNPC.AnomalyUltraBarTimer + 1, 0, 120);

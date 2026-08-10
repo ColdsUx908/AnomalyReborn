@@ -450,8 +450,8 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public override void SetDefaults()
     {
-        NPC.lifeMax = 3620;
-        NPC.ApplyCalamityBossHealthBoost();
+        NPC.lifeMax = CalamityEnabled ? 3620 : 2715;
+        BridgeUtils.ApplyCalamityHealthBoost(NPC);
 
         ServantLeft = NPC.DummyNPC;
         ServantRight = NPC.DummyNPC;

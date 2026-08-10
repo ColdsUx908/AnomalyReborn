@@ -288,7 +288,7 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
     }
     #endregion 数据
 
-    public string LocalizationPrefix => AnomalySharedData.AnomalyLocalizationPrefix + "QueenSlime";
+    public string LocalizationPrefix => AnomalySharedData.BossLocalizationPrefix + "QueenSlime";
 
     public override int ApplyingType => NPCID.QueenSlimeBoss;
 

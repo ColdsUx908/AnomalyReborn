@@ -20,7 +20,7 @@ public sealed class BeeProjectile : AnomalyModProjectile
      *   若行为类型为3（旋转），表示旋转的角速度加速时间（单位：帧）
      */
 
-    public override string LocalizationCategory => "Anomaly.QueenBee";
+    public override string LocalizationCategory => "Bosses.QueenBee";
 
     public override string Texture => TOAssetUtils.FormatVanillaProjectileTexturePath(ProjectileID.GiantBee);
 

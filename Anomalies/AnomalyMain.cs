@@ -31,7 +31,6 @@ global using Transoceanic.DataStructures.Geometry;
 global using Transoceanic.DataStructures.Particles;
 global using Transoceanic.Framework;
 global using Transoceanic.Framework.Abstractions;
-//global using Transoceanic.Framework.ExternalAttributes;
 global using Transoceanic.Framework.Helpers;
 global using static Anomalies.Common.AnomalySharedData.QuickAccess;
 
@@ -57,7 +56,7 @@ public sealed class AnomalyMain : Mod
             Instance = this;
 
             foreach (IAnomalyLoader loader in
-                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IAnomalyLoader>( AnomalySharedData.Assembly)
+                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IAnomalyLoader>(AnomalySharedData.Assembly)
                 orderby pair.Type.GetMethod(nameof(IAnomalyLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                 select pair.Instance)
             {
@@ -79,7 +78,7 @@ public sealed class AnomalyMain : Mod
             if (Loaded)
             {
                 foreach (IAnomalyLoader loader in (
-                    from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IAnomalyLoader>( AnomalySharedData.Assembly)
+                    from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IAnomalyLoader>(AnomalySharedData.Assembly)
                     orderby pair.Type.GetMethod(nameof(IAnomalyLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                     select pair.Instance).Reverse())
                 {

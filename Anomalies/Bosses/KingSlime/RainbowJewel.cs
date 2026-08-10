@@ -33,7 +33,7 @@ public sealed class RainbowJewel : JewelNPC
         }
     }
 
-    public override string LocalizationCategory => "Anomaly.KingSlime";
+    public override string LocalizationCategory => "Bosses.KingSlime";
 
     public override void SetStaticDefaults()
     {
@@ -48,7 +48,7 @@ public sealed class RainbowJewel : JewelNPC
         NPC.defense = 10;
 
         NPC.lifeMax = 700;
-        NPC.ApplyCalamityBossHealthBoost();
+        BridgeUtils.ApplyCalamityHealthBoost(NPC);
 
         NPC.knockBackResist = 0.2f;
         NPC.noGravity = true;

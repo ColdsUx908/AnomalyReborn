@@ -51,7 +51,7 @@ public sealed class AnomalyItemTooltipModifier : ItemTooltipModifier
         for (int i = _Tooltips.Count - 1; i >= 0; i--)
         {
             TooltipLine line = _Tooltips[i];
-            if (line.Mod == AnomalySharedData.ModName && line.Name.StartsWith( AnomalyTooltip) && int.TryParse(line.Name[ AnomalyTooltip.Length..], out int index))
+            if (line.Mod == AnomalySharedData.ModName && line.Name.StartsWith(AnomalyTooltip) && int.TryParse(line.Name[AnomalyTooltip.Length..], out int index))
             {
                 _NextCATooltipIndex = i + 1;
                 _NextCATooltipNum = index + 1;
@@ -125,7 +125,7 @@ public sealed class AnomalyItemTooltipModifier : ItemTooltipModifier
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
     public AnomalyItemTooltipModifier ClearAllCATooltips()
     {
-        _Tooltips.RemoveAll(line => line.Mod == AnomalySharedData.ModName && line.Name.StartsWith( AnomalyTooltip));
+        _Tooltips.RemoveAll(line => line.Mod == AnomalySharedData.ModName && line.Name.StartsWith(AnomalyTooltip));
         return this;
     }
 
@@ -187,7 +187,7 @@ public sealed class AnomalyItemTooltipModifier : ItemTooltipModifier
     /// </summary>
     /// <param name="localizationPrefixProvider">提供本地化键前缀的实例。</param>
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
-    public AnomalyItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{ AnomalyTooltip}{_NextCATooltipIndex}"));
+    public AnomalyItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{AnomalyTooltip}{_NextCATooltipIndex}"));
 
     /// <summary>
     /// 通过本地化提供程序获取格式化后的默认文本，并添加一个具有默认颜色的 Anomaly 提示行。
@@ -196,7 +196,7 @@ public sealed class AnomalyItemTooltipModifier : ItemTooltipModifier
     /// <param name="localizationPrefixProvider">提供本地化键前缀的实例。</param>
     /// <param name="args">用于格式化本地化字符串的参数。</param>
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
-    public AnomalyItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, params object[] args) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{ AnomalyTooltip}{_NextCATooltipIndex}", args));
+    public AnomalyItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, params object[] args) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{AnomalyTooltip}{_NextCATooltipIndex}", args));
 
     /// <summary>
     /// 通过本地化提供程序获取默认文本，并以指定颜色添加一个 Anomaly 提示行。
@@ -205,7 +205,7 @@ public sealed class AnomalyItemTooltipModifier : ItemTooltipModifier
     /// <param name="localizationPrefixProvider">提供本地化键前缀的实例。</param>
     /// <param name="newColor">提示行的覆盖颜色。</param>
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
-    public AnomalyItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, Color newColor) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{ AnomalyTooltip}{_NextCATooltipIndex}"), newColor);
+    public AnomalyItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, Color newColor) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{AnomalyTooltip}{_NextCATooltipIndex}"), newColor);
 
     /// <summary>
     /// 通过本地化提供程序获取格式化后的默认文本，并以指定颜色添加一个 Anomaly 提示行。
@@ -215,7 +215,7 @@ public sealed class AnomalyItemTooltipModifier : ItemTooltipModifier
     /// <param name="newColor">提示行的覆盖颜色。</param>
     /// <param name="args">用于格式化本地化字符串的参数。</param>
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
-    public AnomalyItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, Color newColor, params object[] args) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{ AnomalyTooltip}{_NextCATooltipNum}", args), newColor);
+    public AnomalyItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, Color newColor, params object[] args) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{AnomalyTooltip}{_NextCATooltipNum}", args), newColor);
 
     /// <summary>
     /// 使用模组定义的渐变色（强度 0.25f）添加一个 Anomaly 提示行。
@@ -242,7 +242,7 @@ public sealed class AnomalyItemTooltipModifier : ItemTooltipModifier
     /// </summary>
     /// <param name="localizationPrefixProvider">提供本地化键前缀的实例。</param>
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
-    public AnomalyItemTooltipModifier AddCATweakTooltipDefault(ILocalizationPrefix localizationPrefixProvider) => AddCATweakTooltip(localizationPrefixProvider.GetTextValue($"{ AnomalyTooltip}{_NextCATooltipIndex}"));
+    public AnomalyItemTooltipModifier AddCATweakTooltipDefault(ILocalizationPrefix localizationPrefixProvider) => AddCATweakTooltip(localizationPrefixProvider.GetTextValue($"{AnomalyTooltip}{_NextCATooltipIndex}"));
 
     /// <summary>
     /// 通过本地化提供程序获取格式化后的默认文本，并使用模组渐变色添加一个 Anomaly 提示行。
@@ -251,12 +251,12 @@ public sealed class AnomalyItemTooltipModifier : ItemTooltipModifier
     /// <param name="localizationPrefixProvider">提供本地化键前缀的实例。</param>
     /// <param name="args">用于格式化本地化字符串的参数。</param>
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
-    public AnomalyItemTooltipModifier AddCATweakTooltipDefault(ILocalizationPrefix localizationPrefixProvider, params object[] args) => AddCATweakTooltip(localizationPrefixProvider.GetTextValue($"{ AnomalyTooltip}{_NextCATooltipIndex}", args));
+    public AnomalyItemTooltipModifier AddCATweakTooltipDefault(ILocalizationPrefix localizationPrefixProvider, params object[] args) => AddCATweakTooltip(localizationPrefixProvider.GetTextValue($"{AnomalyTooltip}{_NextCATooltipIndex}", args));
 
     /// <summary>
     /// 添加一条提示玩家按住 Shift 以展开详细信息的灰色提示行。
     /// 该行文本来自 Calamity Mod 的本地化键 "Misc.ShiftToExpand"。
     /// </summary>
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
-    public AnomalyItemTooltipModifier AddExpendedDisplayLine() => AddCATooltip(Language.GetTextValue( AnomalySharedData.CalamityModLocalizationPrefix + "Misc.ShiftToExpand"), new Color(0xBE, 0xBE, 0xBE));
+    public AnomalyItemTooltipModifier AddExpendedDisplayLine() => AddCATooltip(Language.GetTextValue(AnomalySharedData.CalamityModLocalizationPrefix + "Misc.ShiftToExpand"), new Color(0xBE, 0xBE, 0xBE));
 }

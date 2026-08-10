@@ -1,14 +1,61 @@
-CAServerConfig: {
-	DisplayName: Server Settings
+AnomalyServerConfig: {
+	DisplayName: Server Config
+	Denied: You have no permission to change this config.
+	Headers.BaseBoosts: Base Stat Boosts
 
-	Contents: {
-		Label: Enable Mod Content
-		Tooltip: Enable or disable the content provided by the Anomalies mod.
+	FasterBaseSpeed: {
+		Label: "[i:HermesBoots] Increase Base Movement Speed"
+		Tooltip:
+			'''
+			Increases the player's base movement speed substantially by always giving them +50% movement speed.
+			Anomalies is balanced around this setting being enabled.
+			If Calamity is enabled, consider using Calamity config instead.
+			'''
+	}
+
+	FasterJumpSpeed: {
+		Label: "[i:FrogLeg] Increase Base Jump Speed"
+		Tooltip:
+			'''
+			Slightly increases the player's base jump speed.
+			Anomalies is balanced around this setting being enabled.
+			If Calamity is enabled, consider using Calamity config instead.
+			'''
+	}
+
+	FasterRopeClimbSpeed: {
+		Label: "[i:Rope] Increase Rope Climb Speed"
+		Tooltip:
+			'''
+			Increases the player's rope climb speed substantially by increasing acceleration and deceleration while on a rope.
+			Anomalies is balanced around this setting being enabled.
+			If Calamity is enabled, consider using Calamity config instead.
+			'''
+	}
+
+	FasterTilePlacement: {
+		Label: "[i:ArchitectGizmoPack] Increase Base Building Speed"
+		Tooltip:
+			'''
+			Substantially increases how rapidly the player can place tiles and walls.
+			This config stacks with the Brick Layer, Portable Cement Mixer and other accessories.
+			If Calamity is enabled, consider using Calamity config instead.
+			'''
+	}
+
+	AllBaseBoosts: {
+		Label: Enable All Base Stat Boosts
+		Tooltip:
+			'''
+			Enables all base stat boosts.
+			Anomalies is balanced around this setting being enabled.
+			If Calamity is enabled, consider using Calamity config instead.
+			'''
 	}
 }
 
-CAClientConfig: {
-	DisplayName: Client Settings
+AnomalyClientConfig: {
+	DisplayName: Client Config
 
 	AuxiliaryVisualEffects: {
 		Label: Auxiliary Visual Effects
@@ -17,22 +64,10 @@ CAClientConfig: {
 
 	UseCalamityStyleTextures: {
 		Label: Use Calamity-Style Textures
-		Tooltip: Replace certain textures in the mod with versions that are more consistent with the art style of the Calamity Mod.
+		Tooltip:
+			'''
+			Replace certain textures in the mod with versions that are more consistent with the art style of the Calamity Mod.
+			It is recommended to use this in conjunction with Calamity Texture Pack.
+			'''
 	}
 }
-
-AnomalyClientConfig: {
-	DisplayName: Anomaly Client Config
-
-	AuxiliaryVisualEffects: {
-		Label: Auxiliary Visual Effects
-		Tooltip: ""
-	}
-
-	UseCalamityStyleTextures: {
-		Label: Use Calamity Style Textures
-		Tooltip: ""
-	}
-}
-
-AnomalyServerConfig.DisplayName: Anomaly Server Config

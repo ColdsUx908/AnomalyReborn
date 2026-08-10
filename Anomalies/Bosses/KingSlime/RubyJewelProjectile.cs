@@ -4,7 +4,7 @@ namespace Anomalies.Bosses.KingSlime;
 
 public class RubyJewelProjectile : AnomalyModProjectile
 {
-    public override string LocalizationCategory => "Anomaly.KingSlime";
+    public override string LocalizationCategory => "Bosses.KingSlime";
 
     public override void SetDefaults()
     {

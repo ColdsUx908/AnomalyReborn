@@ -11,7 +11,7 @@ public sealed class KillerBeeSmall : AnomalyModProjectile
      * [1] 旋转的角速度（单位：弧度/帧）
      */
 
-    public override string LocalizationCategory => "Anomaly.QueenBee";
+    public override string LocalizationCategory => "Bosses.QueenBee";
 
     public override void SetStaticDefaults() => Main.projFrames[Projectile.type] = 4;
 

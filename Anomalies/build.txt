@@ -1,6 +1,6 @@
 displayName = Anomalies [c/FFA500:Reborn]
 author = ColdsUx
-version = 0.1.4
+version = 0.2
 hideResources = true
 modReferences = Transoceanic
 weakReferences = CalamityMod

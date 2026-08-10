@@ -7,11 +7,12 @@ namespace Anomalies.Common;
 public sealed partial class AnomalySharedData : ModSystem
 {
     public const string ModLocalizationPrefix = "Mods.Anomalies.";
-    public const string AnomalyLocalizationPrefix = ModLocalizationPrefix + "Anomaly.";
+    public const string BossLocalizationPrefix = ModLocalizationPrefix + "Bosses.";
     public const string TweakLocalizationPrefix = ModLocalizationPrefix + "Tweaks.";
     public const string CalamityModLocalizationPrefix = "Mods.CalamityMod.";
-    public const string AnomalyTexturePath = "Anomalies/Assets/Textures/";
-    public const string AnomalyPath = "Anomalies/";
+
+    public const string ModPath = "Anomalies/";
+    public const string ModTexturePath = "Anomalies/Assets/Textures/";
 
     public static readonly Color MainColor = Color.HotPink;
 
@@ -69,7 +70,7 @@ public sealed partial class AnomalySharedData : ModSystem
 
             if (TOSharedData.NotClient)
             {
-                string key = AnomalyLocalizationPrefix + "AnomalyMode." + (Main.zenithWorld ? "Aromaly." : "") + (value ? "Activate" : "Deactivate");
+                string key = ModLocalizationPrefix + "AnomalyMode." + (Main.zenithWorld ? "Aromaly." : "") + (value ? "Activate" : "Deactivate");
                 Color color = Main.zenithWorld ? AromalyColor : MainColor;
                 TOLocalizationUtils.ChatLocalizedText(key, color);
             }
@@ -95,7 +96,7 @@ public sealed partial class AnomalySharedData : ModSystem
 
             field = value;
             if (TOSharedData.NotClient)
-                TOLocalizationUtils.ChatLocalizedText(AnomalyLocalizationPrefix + "AnomalyMode." + (value ? "UltraActivate" : "UltraDeactivate"), Color.Red);
+                TOLocalizationUtils.ChatLocalizedText(ModLocalizationPrefix + "AnomalyMode." + (value ? "UltraActivate" : "UltraDeactivate"), Color.Red);
 
             OnAnomalyUltramundaneToggled?.Invoke(value);
         }

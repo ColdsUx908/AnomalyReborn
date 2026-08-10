@@ -14,13 +14,12 @@ using static CalamityMod.UI.ModeIndicator.ModeIndicatorUI;
 
 namespace Anomalies.AnomalyMode;
 
-
 public sealed class AnomalyModeHandler : ModSystem, IContentLoader
 {
     public const string LocalizationPrefix = AnomalySharedData.ModLocalizationPrefix + "AnomalyMode.";
 
     #region 资产
-    public const string Path = AnomalySharedData.AnomalyPath + "AnomalyMode/";
+    public const string Path = AnomalySharedData.ModPath + "AnomalyMode/";
 
     [LoadTexture(Path + "Indicator")]
     internal static Asset<Texture2D> _Indicator;
@@ -54,7 +53,8 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
     internal static Asset<Texture2D> _UltraIndicator_Locked;
     public static Texture2D UltraIndicator_Locked => _UltraIndicator_Locked?.Value;
 
-    public static readonly SoundStyle ActivationSound = new(Path + "AvtivationSound");
+    public static readonly SoundStyle ActivationSound = new(Path + "Activation");
+    public static readonly SoundStyle AromalyActivationSound = new(Path + "AromalyActivation") { Volume = 0.6f };
     #endregion 资产
 
     #region 世界内难度管理
@@ -132,10 +132,30 @@ public sealed class AnomalyModeHandler : ModSystem, IContentLoader
             DisableUltra();
     }
     #endregion 世界内难度管理
+
+    void IContentLoader.PostSetupContent()
+    {
+        //世界难度显示（渐变色）
+        On_AWorldListItem.GetDifficulty += On_AWorldListItem_GetDifficulty;
+
+        void On_AWorldListItem_GetDifficulty(On_AWorldListItem.orig_GetDifficulty orig, AWorldListItem self, out string expertText, out Color gameModeColor)
+        {
+            orig(self, out expertText, out gameModeColor);
+
+            if (gameModeColor == Main.creativeModeColor)
+                return;
+
+            if (self.Data.TryGetHeaderData<AnomalySharedData>(out TagCompound tag) && tag.GetBool("Anomaly"))
+            {
+                expertText = Language.GetTextValue(LocalizationPrefix + "Name");
+                gameModeColor = AnomalySharedData.IdentifierColor;
+            }
+        }
+    }
 }
 
 [ExtendsFromMod(CalamityModName)]
-public sealed class AnomalyModeHandler_Calamity : ModSystem, IContentLoader
+public sealed class AnomalyModeHandler_Calamity : IContentLoader
 {
     #region Detour
     public delegate void Orig_CalculateDifficultyData();
@@ -447,31 +467,12 @@ public sealed class AnomalyModeHandler_Calamity : ModSystem, IContentLoader
 
     void IContentLoader.PostSetupContent()
     {
-        //Difficulties.Add(AnomalyMode.Instance = new());
-        //CalculateDifficultyData();
-
-        //世界难度显示（渐变色）
-        On_AWorldListItem.GetDifficulty += On_AWorldListItem_GetDifficulty;
-
-        void On_AWorldListItem_GetDifficulty(On_AWorldListItem.orig_GetDifficulty orig, AWorldListItem self, out string expertText, out Color gameModeColor)
-        {
-            orig(self, out expertText, out gameModeColor);
-
-            if (gameModeColor == Main.creativeModeColor)
-                return;
-
-            if (self.Data.TryGetHeaderData<AnomalySharedData>(out TagCompound tag) && tag.GetBool("Anomaly"))
-            {
-                expertText = Language.GetTextValue(LocalizationPrefix + "Name");
-                gameModeColor = AnomalySharedData.IdentifierColor;
-            }
-        }
+        Difficulties.Add(AnomalyMode.Instance = new());
+        CalculateDifficultyData();
     }
 
     void IContentLoader.OnModUnload()
     {
-        //if (Difficulties.Remove(AnomalyMode.Instance))
-        //    CalculateDifficultyData();
-        //AnomalyMode.Instance = null;
+        AnomalyMode.Instance = null;
     }
 }

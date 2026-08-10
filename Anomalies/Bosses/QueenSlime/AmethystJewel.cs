@@ -32,7 +32,7 @@ public sealed class AmethystJewel : JewelNPC
         }
     }
 
-    public override string LocalizationCategory => "Anomaly.QueenSlime";
+    public override string LocalizationCategory => "Bosses.QueenSlime";
 
     public override void SetStaticDefaults()
     {
@@ -47,7 +47,7 @@ public sealed class AmethystJewel : JewelNPC
         NPC.defense = 10;
 
         NPC.lifeMax = 7000;
-        NPC.ApplyCalamityBossHealthBoost();
+        BridgeUtils.ApplyCalamityHealthBoost(NPC);
 
         NPC.knockBackResist = 0.2f;
         NPC.noGravity = true;

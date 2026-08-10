@@ -75,7 +75,7 @@ public sealed class CombCell : AnomalyModProjectile
     /// <summary>
     /// 位置相比中心蜂巢的偏移量。
     /// </summary>
-    public Vector2 Offset 
+    public Vector2 Offset
     {
         get => new(ExtraUnion0.f, ExtraUnion1.f);
         set
@@ -105,7 +105,7 @@ public sealed class CombCell : AnomalyModProjectile
     public ref int MoveDirection => ref ExtraUnion1.i;
     #endregion 联合数据
 
-    public override string LocalizationCategory => "Anomaly.QueenBee";
+    public override string LocalizationCategory => "Bosses.QueenBee";
 
     public override void SetStaticDefaults()
     {
@@ -313,7 +313,7 @@ public sealed class CombCell : AnomalyModProjectile
     #region 绘制与碰撞
     public const float HexagonRadius = 146f;
 
-    public const string AnomalyQueenBeePath = AnomalySharedData.AnomalyPath + "Bosses/QueenBee/";
+    public const string AnomalyQueenBeePath = AnomalySharedData.ModPath + "Bosses/QueenBee/";
 
     [LoadTexture(AnomalyQueenBeePath + "CombCell")]
     private static Asset<Texture2D> _CellTexture;

@@ -351,7 +351,7 @@ public sealed class AnomalyEntityChangeHelper : IContentLoader
         ProjectileBehaviors.FillSet(assembly);
         ItemBehaviors.FillSet(assembly);
 
-        foreach (ICATweak tweak in TOReflectionUtils.GetTypeInstancesDerivedFrom<ICATweak>( AnomalySharedData.Assembly))
+        foreach (ICATweak tweak in TOReflectionUtils.GetTypeInstancesDerivedFrom<ICATweak>(AnomalySharedData.Assembly))
             tweak.RegisterTweak();
     }
 

@@ -1,7 +1,6 @@
 ﻿// Developed by ColdsUx
 
 using Anomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
-using Terraria.GameContent.ItemDropRules;
 
 namespace Anomalies.Common.SingleBehaviors;
 

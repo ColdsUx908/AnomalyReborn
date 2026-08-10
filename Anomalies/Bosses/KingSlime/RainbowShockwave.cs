@@ -27,7 +27,7 @@ public sealed class RainbowShockwave : BaseShockwaveProjectile, IContentLoader
     }
 
 
-    public override string LocalizationCategory => "Anomaly.KingSlime";
+    public override string LocalizationCategory => "Bosses.KingSlime";
 
     public override bool? CanHitNPC(NPC target) => base.CanHitNPC(target) == true && target.Master == Master;
 

@@ -1,6 +1,5 @@
 ﻿// Developed by ColdsUx
 
-using Anomalies.Bosses.KingSlime;
 using Anomalies.DataStructures;
 
 namespace Anomalies.Bosses.KingSlime;
@@ -396,7 +395,7 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
      */
     #endregion 数据
 
-    public string LocalizationPrefix => AnomalySharedData.AnomalyLocalizationPrefix + "KingSlime";
+    public string LocalizationPrefix => AnomalySharedData.BossLocalizationPrefix + "KingSlime";
 
     public override int ApplyingType => NPCID.KingSlime;
 
@@ -409,6 +408,9 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public override void SetDefaults()
     {
+        NPC.lifeMax = CalamityEnabled ? 3000 : 2400;
+        BridgeUtils.ApplyCalamityHealthBoost(NPC);
+
         TeleportScaleMultiplier = 1f;
         DespawnScaleMultiplier = 1f;
 

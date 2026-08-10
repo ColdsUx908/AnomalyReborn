@@ -19,7 +19,7 @@ public sealed class AnomalySynchronization : IAnomalyLoader
 
         ModPacket packet = GetCAPacket();
         packet.Write(ID.SyncAnomalyMode);
-        packet.Write( AnomalySharedData.Anomaly);
+        packet.Write(AnomalySharedData.Anomaly);
         packet.Send(-1, ignoreClient);
     }
 
@@ -31,7 +31,7 @@ public sealed class AnomalySynchronization : IAnomalyLoader
         ModPacket packet = GetCAPacket();
         packet.Write(ID.SyncAnomalyModeFromServer);
         if (Main.dedServ)
-            packet.Write( AnomalySharedData.Anomaly);
+            packet.Write(AnomalySharedData.Anomaly);
         packet.Send(toClient);
     }
 

@@ -20,7 +20,7 @@ public sealed class BloodShockwave : BaseShockwaveProjectile, IContentLoader
         set => Projectile.ai[0] = value?.whoAmI ?? -1;
     }
 
-    public override string LocalizationCategory => "Anomaly.EyeofCthulhu";
+    public override string LocalizationCategory => "Bosses.EyeofCthulhu";
 
     public override bool? CanHitNPC(NPC target) => base.CanHitNPC(target) == true && target.Master == Master;
 

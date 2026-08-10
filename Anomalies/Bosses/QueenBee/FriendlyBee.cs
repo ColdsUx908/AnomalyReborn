@@ -15,7 +15,7 @@ public sealed class FriendlyBee : AnomalyModProjectile
      *   若行为类型为1（蜂群攻击方向指示），表示蜂群攻击的方向（即 Boss 此时的攻击随机变量）
      */
 
-    public override string LocalizationCategory => "Anomaly.QueenBee";
+    public override string LocalizationCategory => "Bosses.QueenBee";
 
     public override void SetStaticDefaults() => Main.projFrames[Projectile.type] = 2;
 

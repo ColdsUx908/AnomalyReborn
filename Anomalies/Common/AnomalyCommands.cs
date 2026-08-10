@@ -12,7 +12,7 @@ public sealed class StoryModeCommand : ModCommand, ILocalizationPrefix
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
-        if ( AnomalySharedData.StoryMode)
+        if (AnomalySharedData.StoryMode)
         {
             AnomalySharedData.StoryMode = false;
             caller.ReplyLocalizedText(this, "Disable", AnomalySharedData.RebornColor);

@@ -39,7 +39,7 @@ public class BloodOrbProjectile : AnomalyModProjectile
 
     public Vector2 Destination;
 
-    public override string LocalizationCategory => "Anomaly.EyeofCthulhu";
+    public override string LocalizationCategory => "Bosses.EyeofCthulhu";
 
     public override string Texture => EyeofCthulhu_Handler.AnomalyEyeofCthulhuPath + "BloodOrb";
 

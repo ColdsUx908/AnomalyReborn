@@ -412,7 +412,7 @@ public class BossHealthBar : IContentLoader
             Color seperatorColor;
             if (AnomalyNPC.IsRunningAnomalyAI)
             {
-                seperatorColor = Color.Lerp(BaseColor, Color.Lerp( AnomalySharedData.GetGradientColor(0.25f), AnomalySharedData.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin), Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f));
+                seperatorColor = Color.Lerp(BaseColor, Color.Lerp(AnomalySharedData.GetGradientColor(0.25f), AnomalySharedData.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin), Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f));
                 if (Aroma)
                     seperatorColor = Color.Lerp(seperatorColor, AnomalySharedData.AromalyColor, sin);
                 if (IncreasingDefenseOrDRTimer > 0)
@@ -433,7 +433,7 @@ public class BossHealthBar : IContentLoader
             Color? mainColor;
             if (AnomalyNPC.IsRunningAnomalyAI)
             {
-                mainColor = Color.Lerp( AnomalySharedData.GetGradientColor(0.1f), AnomalySharedData.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * cos * 0.8f);
+                mainColor = Color.Lerp(AnomalySharedData.GetGradientColor(0.1f), AnomalySharedData.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * cos * 0.8f);
                 if (Aroma)
                     mainColor = Color.Lerp(seperatorColor, AnomalySharedData.AromalyColor, sin);
                 if (IncreasingDefenseOrDRTimer > 0)
@@ -452,7 +452,7 @@ public class BossHealthBar : IContentLoader
             Color? borderColor;
             if (AnomalyNPC.IsRunningAnomalyAI)
             {
-                borderColor = Color.Lerp( AnomalySharedData.GetGradientColor(0.1f), AnomalySharedData.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin * 0.8f);
+                borderColor = Color.Lerp(AnomalySharedData.GetGradientColor(0.1f), AnomalySharedData.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin * 0.8f);
                 if (Aroma)
                     borderColor = Color.Lerp(seperatorColor, AnomalySharedData.AromalyColor, sin);
                 if (IncreasingDefenseOrDRTimer > 0)

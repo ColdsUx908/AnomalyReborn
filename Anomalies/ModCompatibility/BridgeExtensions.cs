@@ -21,7 +21,7 @@ using CalamityMod.Projectiles;
 namespace Anomalies.Common;
 
 [ExtendsFromMod(CalamityModName)]
-public static class CalamityBridgeExtensions
+public static class BridgeExtensions_Calamity
 {
     extension(Item item)
     {
@@ -61,8 +61,6 @@ public static class CalamityBridgeExtensions
         public bool Ares => npc.ModNPC is AresLaserCannon or AresTeslaCannon or AresGaussNuke or AresPlasmaFlamethrower;
 
         public bool ExoMechs => npc.Thanatos || npc.ExoTwins || npc.Ares;
-
-        public void ApplyCalamityBossHealthBoost() => npc.lifeMax += (int)(npc.lifeMax * CalamityServerConfig.Instance.BossHealthBoost * 0.01f);
 
         public void SyncCalamityNewAI() => npc.SyncExtraAI();
     }

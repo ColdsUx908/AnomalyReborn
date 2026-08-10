@@ -118,7 +118,7 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
         }
     }
 
-    public bool CanHaveBossHealthBar 
+    public bool CanHaveBossHealthBar
     {
         get => InternalAnomalyAI32[0].bits[1];
         set

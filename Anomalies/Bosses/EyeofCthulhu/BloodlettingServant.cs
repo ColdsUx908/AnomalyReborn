@@ -13,7 +13,7 @@ public partial class BloodlettingServant : AnomalyModNPC
     }
 
     public override string Texture => TOAssetUtils.FormatVanillaNPCTexturePath(NPCID.WanderingEye);
-    public override string LocalizationCategory => "Anomaly.EyeofCthulhu";
+    public override string LocalizationCategory => "Bosses.EyeofCthulhu";
 
     public ServantPlace Place;
     public float PositionRotation
@@ -61,7 +61,7 @@ public partial class BloodlettingServant : AnomalyModNPC
         NPC.defense = 5;
 
         NPC.lifeMax = 96;
-        NPC.ApplyCalamityBossHealthBoost();
+        BridgeUtils.ApplyCalamityHealthBoost(NPC);
 
         NPC.knockBackResist = 0f;
         NPC.noGravity = true;

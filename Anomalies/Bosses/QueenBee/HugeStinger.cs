@@ -4,7 +4,7 @@ namespace Anomalies.Bosses.QueenBee;
 
 public sealed class HugeStinger : AnomalyModProjectile
 {
-    public override string LocalizationCategory => "Anomaly.QueenBee";
+    public override string LocalizationCategory => "Bosses.QueenBee";
 
     public override void SetDefaults()
     {

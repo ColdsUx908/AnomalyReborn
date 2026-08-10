@@ -1,38 +1,73 @@
-CAServerConfig: {
-	// DisplayName: Server Settings
+AnomalyServerConfig: {
+	DisplayName: 服务端配置
+	Denied: 你没有权限更改此配置。
+	Headers.BaseBoosts: 基础属性加成
 
-	Contents: {
-		// Label: Enable Mod Content
-		// Tooltip: Enable or disable the content provided by the Anomalies mod.
-	}
-}
-
-CAClientConfig: {
-	// DisplayName: Client Settings
-
-	AuxiliaryVisualEffects: {
-		// Label: Auxiliary Visual Effects
-		// Tooltip: Auxiliary visual effects that may help indicate certain behaviors or states of entities.
+	FasterBaseSpeed: {
+		Label: "[i:HermesBoots] 更高基础移速"
+		Tooltip:
+			'''
+			大幅提高玩家的基础移动速度（移动速度+50%）。
+			异象平衡设定是在启用此配置的基础上进行的。
+			如果灾厄模组已启用，请考虑使用灾厄配置。
+			'''
 	}
 
-	UseCalamityStyleTextures: {
-		// Label: Use Calamity-Style Textures
-		// Tooltip: Replace certain textures in the mod with versions that are more consistent with the art style of the Calamity Mod.
+	FasterJumpSpeed: {
+		Label: "[i:FrogLeg] 更高基础跳跃速度"
+		Tooltip:
+			'''
+			小幅提高玩家的基础跳跃速度。
+			异象平衡设定是在启用此配置的基础上进行的。
+			如果灾厄模组已启用，请考虑使用灾厄配置。
+			'''
+	}
+
+	FasterRopeClimbSpeed: {
+		Label: "[i:Rope] 更快爬绳速度"
+		Tooltip:
+			'''
+			大幅提高玩家爬绳的速度（提高在绳上的加速度和减速度）。
+			异象平衡设定是在启用此配置的基础上进行的。
+			如果灾厄模组已启用，请考虑使用灾厄配置。
+			'''
+	}
+
+	FasterTilePlacement: {
+		Label: "[i:ArchitectGizmoPack] 更快的基础建造速度"
+		Tooltip:
+			'''
+			大幅提高玩家放置方块和墙壁速度。
+			此设置会与砌砖刀、便携式水泥搅拌机等饰品效果叠加。
+			如果灾厄模组已启用，请考虑使用灾厄配置。
+			'''
+	}
+
+	AllBaseBoosts: {
+		Label: 启用所有基础属性加成
+		Tooltip:
+			'''
+			启用所有基础属性加成。
+			异象平衡设定是在启用此配置的基础上进行的。
+			如果灾厄模组已启用，请考虑使用灾厄配置。
+			'''
 	}
 }
 
 AnomalyClientConfig: {
-	// DisplayName: Anomaly Client Config
+	DisplayName: 客户端配置
 
 	AuxiliaryVisualEffects: {
-		// Label: Auxiliary Visual Effects
-		// Tooltip: ""
+		Label: 辅助视觉效果
+		Tooltip: 辅助视觉效果，可能有助于指示实体的某些行为或状态。
 	}
 
 	UseCalamityStyleTextures: {
-		// Label: Use Calamity Style Textures
-		// Tooltip: ""
+		Label: 使用灾厄风格纹理
+		Tooltip:
+			'''
+			将模组中的某些纹理替换为更符合灾厄模组艺术风格的版本。
+			建议搭配灾厄纹理包使用。
+			'''
 	}
 }
-
-// AnomalyServerConfig.DisplayName: Anomaly Server Config

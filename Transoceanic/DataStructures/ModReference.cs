@@ -30,7 +30,7 @@ public sealed class ModReference : IContentLoader
     }
 
     //按字母顺序排列
-    public static Container CA { get; private set; }
+    public static Container Anomalies { get; private set; }
     public static Container Calamity { get; private set; }
     public static Container CalDemutation { get; private set; }
     public static Container CALegacy { get; private set; }
@@ -72,7 +72,7 @@ public sealed class ModReference : IContentLoader
     [LoadPriority(1e10)]
     void IContentLoader.PostSetupContent()
     {
-        CA = new("CalamityAnomalies");
+        Anomalies = new("Anomalies");
         Calamity = new("CalamityMod");
         CalDemutation = new("CalamityDemutation");
         CALegacy = new("CAnomalies");
@@ -114,7 +114,7 @@ public sealed class ModReference : IContentLoader
 
     void IContentLoader.OnModUnload()
     {
-        CA = null;
+        Anomalies = null;
         Calamity = null;
         CalDemutation = null;
         CALegacy = null;

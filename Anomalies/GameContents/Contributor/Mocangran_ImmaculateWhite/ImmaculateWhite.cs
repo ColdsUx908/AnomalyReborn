@@ -24,7 +24,7 @@ public sealed class ImmaculateWhite : AnomalyLegendaryItem, ILocalizationPrefix
             else if (DownedBossSystem_Bridge.downedProvidence) //亵渎天神
                 subPhase = 2;
             else*/
-                subPhase = 1;
+            subPhase = 1;
         }
         else if (Main.hardMode) //肉山
         {

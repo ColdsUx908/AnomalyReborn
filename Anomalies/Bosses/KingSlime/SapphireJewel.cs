@@ -4,7 +4,7 @@ namespace Anomalies.Bosses.KingSlime;
 
 public sealed class SapphireJewel : JewelNPC
 {
-    public override string LocalizationCategory => "Anomaly.KingSlime";
+    public override string LocalizationCategory => "Bosses.KingSlime";
 
     public override void SetStaticDefaults() => NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, new NPCID.Sets.NPCBestiaryDrawModifiers() { Hide = true });
 
@@ -16,7 +16,7 @@ public sealed class SapphireJewel : JewelNPC
         NPC.defense = 5;
 
         NPC.lifeMax = 250;
-        NPC.ApplyCalamityBossHealthBoost();
+        BridgeUtils.ApplyCalamityHealthBoost(NPC);
 
         NPC.knockBackResist = 0.4f;
         NPC.noGravity = true;

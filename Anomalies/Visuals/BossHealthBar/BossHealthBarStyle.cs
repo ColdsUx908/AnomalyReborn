@@ -477,7 +477,7 @@ public class BossHealthBarStyle_Calamity : IContentLoader, ILocalizationPrefix
         {
             if (b.NPC.ModNPC is Apollo apollo)
             {
-                name = Language.GetTextValue( AnomalySharedData.CalamityModLocalizationPrefix + "UI.ExoTwinsName" + (apollo.exoMechdusa ? "Hekate" : "Normal"));
+                name = Language.GetTextValue(AnomalySharedData.CalamityModLocalizationPrefix + "UI.ExoTwinsName" + (apollo.exoMechdusa ? "Hekate" : "Normal"));
                 return true;
             }
             name = null;

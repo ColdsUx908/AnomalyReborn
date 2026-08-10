@@ -1,4 +1,6 @@
-﻿namespace Anomalies.GameContents.Base;
+﻿// Developed by ColdsUx
+
+namespace Anomalies.GameContents.Base;
 
 /// <summary>
 /// An abstract class that gives the baseline code needed to make a buff dedicated to a minion.

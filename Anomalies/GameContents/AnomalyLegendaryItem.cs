@@ -24,5 +24,5 @@ public abstract class AnomalyLegendaryItem : AnomalyModItem
 
     public override void UpdateInventory(Player player) => LegendaryUpdate(player);
 
-    public void AddLegendaryItemIdentifier(List<TooltipLine> tooltips, int index) => tooltips.Insert(index, new TooltipLine(Mod, "Tooltip_CALegendaryItemIdentifier", Language.GetTextValue( AnomalySharedData.ModLocalizationPrefix + "GameContents.LegendaryItemIdentifier")) { OverrideColor = AnomalySharedData.IdentifierColor });
+    public void AddLegendaryItemIdentifier(List<TooltipLine> tooltips, int index) => tooltips.Insert(index, new TooltipLine(Mod, "Tooltip_CALegendaryItemIdentifier", Language.GetTextValue(AnomalySharedData.ModLocalizationPrefix + "GameContents.LegendaryItemIdentifier")) { OverrideColor = AnomalySharedData.IdentifierColor });
 }
