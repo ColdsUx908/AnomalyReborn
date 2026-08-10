@@ -1,0 +1,9 @@
+DimensionalRend: {
+	DisplayName: Dimensional Rend
+	Description: The cost of transcending the bounds of space is losing control over reality
+}
+
+VacuousBlackBuff: {
+	DisplayName: Vacuous Black Buff
+	Description: Mods.Anomalies.Buffs.VacuousBlackBuff.Description
+}

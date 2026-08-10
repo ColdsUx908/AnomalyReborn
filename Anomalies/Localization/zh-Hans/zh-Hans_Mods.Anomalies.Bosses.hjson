@@ -1,0 +1,74 @@
+AnomalyMode: {
+	// Name: Anomaly
+	// ShortInfo: '''[c/FFCCFF:"Final challenge after transcending the abyss"]'''
+	/* ExpandedInfo:
+		'''
+		[c/AFFFFF:Do you think you are worthy of transcending the gods?]
+		[c/AFFFFF:If you crave a challenge beyond Death or Malice...]
+		[c/00FFFF:Then...]
+		''' */
+	// Activate: Anomaly is active... are you serious?
+	// Deactivate: Anomaly is not active; wise choice.
+	// Invalid: Anomaly is only available in TRUE Master difficulty.
+	// UltraSuffix: "[c/FF0000:Ultramundane]"
+	// UltraInvalid_NotLegendary: Anomaly Ultramundane is only available in TRUE Legendary difficulty.
+	// UltraInvalid_Aromaly: You must cook fried rice in such a delicious mode!
+	/* UltraActivate:
+		'''
+		Anomaly Ultramundane is fully activated, please make sure you know what you're doing!
+		Note: This difficulty is extremely difficult and only suitable for ALIEN players!
+		''' */
+	/* UltraDeactivate:
+		'''
+		Anomaly Ultramundane is back to normal...
+		Did you try it?
+		''' */
+	/* UltraInfo:
+		'''
+		[c/FF0000:ATTENTION]
+		[c/FF0000:Anomaly Ultramundane is a special difficulty that is only available in TRUE Legendary difficulty.]
+		[c/FF0000:This difficulty is extremely difficult and only suitable for ALIEN players!]
+		[c/FF0000:Please make sure you know what you're doing before enjoying this difficulty!]
+		''' */
+
+	Aromaly: {
+		// Name: Aromaly
+		// Activate: Aromaly is active! Your world is going to be delicious~
+		// Deactivate: Aromaly is not active. Don't you want something delicious?
+	}
+}
+
+KingSlime: {
+	GFBSummon: 史莱姆王克隆了自己！
+	RubyJewel.DisplayName: 王冠红玉
+	EmeraldJewel.DisplayName: 王冠翡翠
+	SapphireJewel.DisplayName: 王冠蓝玉
+	RainbowJewel.DisplayName: 王冠彩虹宝石
+	SlimeGel.DisplayName: 史莱姆凝胶
+	RubyJewelProjectile.DisplayName: 红玉弹幕
+	EmeraldJewelShadow.DisplayName: 翡翠幻影
+	RainbowShockwave.DisplayName: 彩虹冲击波
+	RainbowJewelProjectile.DisplayName: 彩虹弹幕
+}
+
+EyeofCthulhu: {
+	BloodlettingServant.DisplayName: 流血仆从
+	BloodFlame.DisplayName: 血化火焰
+	EyeofCthulhuArena.DisplayName: 克苏鲁之眼竞技场
+	BloodShockwave.DisplayName: 血化冲击波
+	BloodOrbProjectile.DisplayName: 血珠
+}
+
+QueenBee: {
+	BeeProjectile.DisplayName: 蜜蜂
+	CombCell.DisplayName: 蜂巢单元
+	FriendlyBee.DisplayName: 友好蜜蜂
+	KillerBeeSmall.DisplayName: 小杀人蜂
+	HugeStinger.DisplayName: 巨型毒刺
+	BeeShockwave.DisplayName: 蜜蜂冲击波
+}
+
+QueenSlime: {
+	GFBSummon: 史莱姆皇后克隆了自己！
+	AmethystJewel.DisplayName: 王冠紫晶
+}

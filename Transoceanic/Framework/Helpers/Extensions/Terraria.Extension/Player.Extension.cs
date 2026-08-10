@@ -67,6 +67,23 @@ public static partial class TOExtensions
             }
         }
 
+        /// <summary>
+        /// 判断玩家是否无法使用物品（持有物品或光标物品）或无法使用物品的条件。
+        /// </summary>
+        /// <param name="right">是否检查右键使用物品的条件。</param>
+        /// <param name="needsToHold">是否需要持续按住物品使用键。</param>
+        /// <returns>如果玩家无法使用物品，返回 <see langword="true"/>；否则返回 <see langword="false"/>。</returns>
+        public bool CanNotUseHoldOut(bool? right = null, bool needsToHold = true)
+        {
+            bool notHolding = right switch
+            {
+                true => !Main.mouseRight,
+                false => !player.channel,
+                null => !Main.mouseRight && !player.channel,
+            };
+            return !player.Alive || (notHolding && needsToHold) || player.CCed || player.noItems;
+        }
+
         /// <inheritdoc cref="Player.AddBuff(int, int, bool, bool)"/>
         /// <summary>
         /// 为玩家添加一个 ModBuff。

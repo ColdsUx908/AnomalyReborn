@@ -1,0 +1,37 @@
+Name: 异象
+ShortInfo: "[c/FFCFFF:“跨越深渊后的真正挑战”]"
+ExpandedInfo:
+	'''
+	[c/AFFFFF:你认为你足以超越神明？]
+	[c/AFFFFF:如果你渴望挑战比死亡或恶意模式更加疯狂的难度……]
+	[c/00FFFF:那么……]
+	'''
+Activate: 异象模式已开启……你还好吗？
+Deactivate: 异象模式已关闭，明智之选。
+Invalid: 异象模式只能在真正的大师难度下开启。
+UltraSuffix: "[c/FF0000:超凡]"
+UltraInvalid_NotLegendary: 异象超凡只能在真正的传奇难度下开启。
+UltraInvalid_Aromaly: 如此香溢的模式必须要炒饭！
+UltraActivate:
+	'''
+	异象超凡的力量完全激发，请确定你理解自己在做什么！
+	注意：此难度极为困难，仅适合超人类游玩！
+	'''
+UltraDeactivate:
+	'''
+	异象超凡的力量回归正常……
+	你已经尝试过了，对吧？
+	'''
+UltraInfo:
+	'''
+	[c/FF0000:注意]
+	[c/FF0000:异象超凡是一个特殊难度，仅在真正的传奇难度下可用。]
+	[c/FF0000:此难度极为困难，仅适合超人类游玩！]
+	[c/FF0000:请确保你理解自己在做什么后再享受此难度！]
+	'''
+
+Aromaly: {
+	Name: 香溢
+	Activate: 香溢模式已开启！你的世界将变得十足美味～
+	Deactivate: 香溢模式已关闭。难道你不想来点好吃的吗？
+}
