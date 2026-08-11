@@ -359,7 +359,7 @@ public class BossHealthBar : IContentLoader
     {
         bool result = true;
         bool hasSingle = false;
-        if (NPC.ModNPC is ICAModNPC caNPC)
+        if (NPC.ModNPC is IAnomalyModNPC caNPC)
         {
             result &= caNPC.PreUpdateCalBossBar(this);
             hasSingle = true;
@@ -380,7 +380,7 @@ public class BossHealthBar : IContentLoader
     protected void PostUpdate()
     {
         bool hasSingle = false;
-        if (NPC.ModNPC is ICAModNPC caNPC)
+        if (NPC.ModNPC is IAnomalyModNPC caNPC)
         {
             caNPC.PostUpdateCalBossBar(this);
             hasSingle = true;
@@ -491,7 +491,7 @@ public class BossHealthBar : IContentLoader
     {
         bool result = true;
         bool hasSingle = false;
-        if (NPC.ModNPC is ICAModNPC caNPC)
+        if (NPC.ModNPC is IAnomalyModNPC caNPC)
         {
             result &= caNPC.PreDrawCalBossBar(this, spriteBatch, ref x, ref y);
             hasSingle = true;
@@ -512,7 +512,7 @@ public class BossHealthBar : IContentLoader
     protected void PostDraw(SpriteBatch spriteBatch, int x, int y)
     {
         bool hasSingle = false;
-        if (NPC.ModNPC is ICAModNPC caNPC)
+        if (NPC.ModNPC is IAnomalyModNPC caNPC)
         {
             caNPC.PostDrawCalBossBar(this, spriteBatch, x, y);
             hasSingle = true;

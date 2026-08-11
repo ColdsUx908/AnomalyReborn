@@ -2,7 +2,7 @@
 
 namespace Anomalies.Common;
 
-public interface ICAModNPC
+public interface IAnomalyModNPC
 {
     /// <summary>
     /// 在更新灾厄的Boss血条之前调用。
@@ -31,7 +31,7 @@ public interface ICAModNPC
     public virtual void PostDrawCalBossBar(BossHealthBar newBar, SpriteBatch spriteBatch, int x, int y) { }
 }
 
-public abstract class AnomalyModNPC : TOModNPC, ICAModNPC
+public abstract class AnomalyModNPC : TOModNPC, IAnomalyModNPC
 {
     public AnomalyGlobalNPC AnomalyNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => NPC.Anomaly; }
 
@@ -41,24 +41,24 @@ public abstract class AnomalyModNPC : TOModNPC, ICAModNPC
     public virtual void PostDrawCalBossBar(BossHealthBar newBar, SpriteBatch spriteBatch, int x, int y) { }
 }
 
-public interface ICAModProjectile
+public interface IAnomalyModProjectile
 {
     public virtual void ModifyHitNPC_DR(NPC target, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 }
 
-public abstract class AnomalyModProjectile : TOModProjectile, ICAModProjectile
+public abstract class AnomalyModProjectile : TOModProjectile, IAnomalyModProjectile
 {
     public AnomalyGlobalProjectile AnomalyProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Projectile.Anomaly; }
 
     public virtual void ModifyHitNPC_DR(NPC target, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 }
 
-public interface ICAModItem
+public interface IAnomalyModItem
 {
     public virtual void ModifyHitNPC_DR(NPC target, Player player, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 }
 
-public abstract class AnomalyModItem : TOModItem, ICAModItem
+public abstract class AnomalyModItem : TOModItem, IAnomalyModItem
 {
     public AnomalyGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Item.Anomaly; }
 

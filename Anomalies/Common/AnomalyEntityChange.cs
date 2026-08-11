@@ -224,42 +224,42 @@ public abstract class AnomalySingleItemBehavior<T> : AnomalySingleItemBehavior w
 #endregion Single Behavior
 
 #region Tweak
-public interface ICATweak
+public interface IAnomalyTweak
 {
     public abstract void RegisterTweak();
 }
 
-public abstract class AnomalyNPCTweak : AnomalySingleNPCBehavior, IAnomalyLocalizationPrefix, ICATweak
+public abstract class AnomalyNPCTweak : AnomalySingleNPCBehavior, IAnomalyLocalizationPrefix, IAnomalyTweak
 {
     public abstract AnomalyGamePhase Phase { get; }
     public abstract string LocalizationName { get; }
 
-    void ICATweak.RegisterTweak() => AnomalySharedData.TweakedNPCs[ApplyingType] = true;
+    void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedNPCs[ApplyingType] = true;
 
     public override decimal Priority => 5m;
 }
 
-public abstract class AnomalyNPCTweak<T> : AnomalySingleNPCBehavior<T>, IAnomalyLocalizationPrefix, ICATweak where T : ModNPC
+public abstract class AnomalyNPCTweak<T> : AnomalySingleNPCBehavior<T>, IAnomalyLocalizationPrefix, IAnomalyTweak where T : ModNPC
 {
     public abstract AnomalyGamePhase Phase { get; }
     public virtual string LocalizationName => Type.Name;
 
-    void ICATweak.RegisterTweak() => AnomalySharedData.TweakedNPCs[ApplyingType] = true;
+    void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedNPCs[ApplyingType] = true;
 
     public override decimal Priority => 5m;
 }
 
-public abstract class AnomalyProjectileTweak : AnomalySingleProjectileBehavior, IAnomalyLocalizationPrefix, ICATweak
+public abstract class AnomalyProjectileTweak : AnomalySingleProjectileBehavior, IAnomalyLocalizationPrefix, IAnomalyTweak
 {
     public abstract AnomalyGamePhase Phase { get; }
     public abstract string LocalizationName { get; }
 
-    void ICATweak.RegisterTweak() => AnomalySharedData.TweakedProjectiles[ApplyingType] = true;
+    void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedProjectiles[ApplyingType] = true;
 
     public override decimal Priority => 5m;
 }
 
-public abstract class AnomalyProjectileTweak<T> : AnomalySingleProjectileBehavior<T>, IAnomalyLocalizationPrefix, ICATweak where T : ModProjectile
+public abstract class AnomalyProjectileTweak<T> : AnomalySingleProjectileBehavior<T>, IAnomalyLocalizationPrefix, IAnomalyTweak where T : ModProjectile
 {
     public abstract AnomalyGamePhase Phase { get; }
     public virtual string LocalizationName => Type.Name;
@@ -275,7 +275,7 @@ public abstract class AnomalyProjectileTweak<T> : AnomalySingleProjectileBehavio
     /// </summary>
     public virtual int[] RelatedItems => [];
 
-    void ICATweak.RegisterTweak()
+    void IAnomalyTweak.RegisterTweak()
     {
         AnomalySharedData.TweakedProjectiles[ApplyingType] = true;
         foreach (int npcType in RelatedNPCs)
@@ -287,22 +287,22 @@ public abstract class AnomalyProjectileTweak<T> : AnomalySingleProjectileBehavio
     public override decimal Priority => 5m;
 }
 
-public abstract class AnomalyItemTweak : AnomalySingleItemBehavior, IAnomalyLocalizationPrefix, ICATweak
+public abstract class AnomalyItemTweak : AnomalySingleItemBehavior, IAnomalyLocalizationPrefix, IAnomalyTweak
 {
     public abstract AnomalyGamePhase Phase { get; }
     public abstract string LocalizationName { get; }
 
-    void ICATweak.RegisterTweak() => AnomalySharedData.TweakedItems[ApplyingType] = true;
+    void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedItems[ApplyingType] = true;
 
     public override decimal Priority => 5m;
 }
 
-public abstract class AnomalyItemTweak<T> : AnomalySingleItemBehavior<T>, IAnomalyLocalizationPrefix, ICATweak where T : ModItem
+public abstract class AnomalyItemTweak<T> : AnomalySingleItemBehavior<T>, IAnomalyLocalizationPrefix, IAnomalyTweak where T : ModItem
 {
     public abstract AnomalyGamePhase Phase { get; }
     public virtual string LocalizationName => Type.Name;
 
-    void ICATweak.RegisterTweak() => AnomalySharedData.TweakedItems[ApplyingType] = true;
+    void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedItems[ApplyingType] = true;
 
     public override decimal Priority => 5m;
 }
@@ -351,7 +351,7 @@ public sealed class AnomalyEntityChangeHelper : IContentLoader
         ProjectileBehaviors.FillSet(assembly);
         ItemBehaviors.FillSet(assembly);
 
-        foreach (ICATweak tweak in TOReflectionUtils.GetTypeInstancesDerivedFrom<ICATweak>(AnomalySharedData.Assembly))
+        foreach (IAnomalyTweak tweak in TOReflectionUtils.GetTypeInstancesDerivedFrom<IAnomalyTweak>(AnomalySharedData.Assembly))
             tweak.RegisterTweak();
     }
 

@@ -128,10 +128,4 @@ public sealed class ImmaculateWhiteBow : AnomalyModProjectile
 
     public override bool? CanHitNPC(NPC target) => false;
     public override bool CanHitPvp(Player target) => false;
-
-    //不知道为啥右键使用没法触发channel，在这写一个额外的。
-    public static bool CantUseRightHoldout(Player player, bool needsToHold = true)
-    {
-        return !player.Alive || !Main.mouseRight && needsToHold || player.CCed || player.noItems;
-    }
 }

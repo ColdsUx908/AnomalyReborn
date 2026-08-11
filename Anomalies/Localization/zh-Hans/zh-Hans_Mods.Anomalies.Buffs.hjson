@@ -4,6 +4,6 @@ DimensionalRend: {
 }
 
 VacuousBlackBuff: {
-	// DisplayName: Vacuous Black Buff
-	// Description: Mods.Anomalies.Buffs.VacuousBlackBuff.Description
+	DisplayName: 纯黑
+	Description: 它渴望吞噬一切，甚至可能是你
 }

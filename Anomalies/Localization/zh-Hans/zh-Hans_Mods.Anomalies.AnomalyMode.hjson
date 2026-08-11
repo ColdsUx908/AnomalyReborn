@@ -35,3 +35,13 @@ Aromaly: {
 	Activate: 香溢模式已开启！你的世界将变得十足美味～
 	Deactivate: 香溢模式已关闭。难道你不想来点好吃的吗？
 }
+
+HeavenrendCrown: {
+	DisplayName: 裂天金冕
+	Tooltip:
+		'''
+		开启或关闭异象模式
+		若世界非旅途模式，开启时自动开启真正的大师难度
+		[c/FFA500:金痕裂空，圣冕加身，穹顶垂落，天命所归]
+		'''
+}

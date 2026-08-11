@@ -1,7 +1,5 @@
 // Developed by ColdsUx
 
-//不全局引用任何灾厄命名空间
-
 global using System;
 global using System.Collections.Generic;
 global using System.IO;

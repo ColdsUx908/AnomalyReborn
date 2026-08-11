@@ -139,21 +139,27 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         _ParticlesToDraw_Additive.Clear();
 
         ExitParticleDrawRegion(spriteBatch);
+    }
 
-        static void DrawParticle(SpriteBatch spriteBatch, Particle particle)
+    /// <summary>
+    /// 绘制单个粒子实例。根据粒子自身的属性决定是否受光照影响，并调用粒子的预绘制和后绘制方法。
+    /// </summary>
+    /// <param name="spriteBatch">用于绘制的 SpriteBatch 实例。</param>
+    /// <param name="particle">要绘制的粒子实例。</param>
+    /// <param name="drawOffset">可选的绘制偏移量。</param>
+    public static void DrawParticle(SpriteBatch spriteBatch, Particle particle, Vector2 drawOffset = default)
+    {
+        if (particle.PreDraw(spriteBatch))
         {
-            if (particle.PreDraw(spriteBatch))
-            {
-                Texture2D texture = particle.Texture;
-                Rectangle? frame = particle.GetFrame(texture);
-                Color color = particle.Color;
-                if (particle.AffectedByLight)
-                    color.MultiplyWithWorldLight(particle.Center);
-                spriteBatch.DrawFromCenter(texture, particle.Center - Main.screenPosition, frame, color, particle.Rotation, particle.Scale, SpriteEffects.None, 0f);
-            }
-
-            particle.PostDraw(spriteBatch);
+            Texture2D texture = particle.Texture;
+            Rectangle? frame = particle.GetFrame(texture);
+            Color color = particle.Color;
+            if (particle.AffectedByLight)
+                color.MultiplyWithWorldLight(particle.Center);
+            spriteBatch.DrawFromCenter(texture, particle.Center + drawOffset - Main.screenPosition, frame, color, particle.Rotation, particle.Scale, SpriteEffects.None, 0f);
         }
+
+        particle.PostDraw(spriteBatch);
     }
 
     /// <summary>

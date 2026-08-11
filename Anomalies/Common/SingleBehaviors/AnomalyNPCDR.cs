@@ -20,7 +20,7 @@ public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior, IContentLoader
             behavior.ModifyHitNPC_DR(item, npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (item.TryGetBehavior(out AnomalySingleItemBehavior itemBehavior, nameof(AnomalySingleItemBehavior.ModifyHitNPC_DR)))
             itemBehavior.ModifyHitNPC_DR(npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
-        if (item.ModItem is ICAModItem caItem)
+        if (item.ModItem is IAnomalyModItem caItem)
             caItem.ModifyHitNPC_DR(npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
 
         baseDR = baseDRModifier.ApplyTo(baseDR);
@@ -42,7 +42,7 @@ public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior, IContentLoader
             behavior.ModifyHitNPC_DR(projectile, npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (projectile.TryGetBehavior(out AnomalySingleProjectileBehavior projectileBehavior, nameof(AnomalySingleProjectileBehavior.ModifyHitNPC_DR)))
             projectileBehavior.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
-        if (projectile.ModProjectile is ICAModProjectile caProjectile)
+        if (projectile.ModProjectile is IAnomalyModProjectile caProjectile)
             caProjectile.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
 
         baseDR = baseDRModifier.ApplyTo(baseDR);

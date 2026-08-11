@@ -35,3 +35,13 @@ Aromaly: {
 	Activate: Aromaly is active! Your world is going to be delicious~
 	Deactivate: Aromaly is not active. Don't you want something delicious?
 }
+
+HeavenrendCrown: {
+	DisplayName: Heavenrend Crown
+	Tooltip:
+		'''
+		Enable or disable Anomaly mode
+		If the world is not Journey mode, TRUE Master difficulty will be automatically enabled when activated
+		[c/FFA500:Heavenly cracks, holy crown, dome falls, destiny awaits]
+		'''
+}

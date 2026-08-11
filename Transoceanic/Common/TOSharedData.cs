@@ -142,7 +142,7 @@ public sealed class TOSharedData : ModSystem, ITOLoader
     /// <summary>
     /// 当前世界是否为真正的大师模式（非旅途模式滑块模拟，非专家+FTW）。
     /// </summary>
-    public static bool TrueMasterMode { get; internal set; }
+    public static bool TrueMasterMode => Main.GameMode == GameModeID.Master;
 
     /// <summary>
     /// 当前旅途模式世界是否通过难度滑块启用了大师难度。
@@ -189,9 +189,7 @@ public sealed class TOSharedData : ModSystem, ITOLoader
     {
         GameTimer++;
 
-        GameModeData gameModeInfo = Main_Publicizer._currentGameModeInfo;
-        TrueMasterMode = gameModeInfo.IsMasterMode;
-        if (gameModeInfo.IsJourneyMode)
+        if (Main.GameMode == GameModeID.Creative)
         {
             CreativePowers.DifficultySliderPower power = CreativePowerManager.Instance.GetPower<CreativePowers.DifficultySliderPower>();
             bool currentJourneyMaster = power.StrengthMultiplierToGiveNPCs == 3f;
@@ -258,7 +256,6 @@ public sealed class TOSharedData : ModSystem, ITOLoader
     void ITOLoader.Unload()
     {
         GameTimer = 0;
-        TrueMasterMode = false;
         JourneyMasterMode = false;
         BossList = [];
         BossActive = false;

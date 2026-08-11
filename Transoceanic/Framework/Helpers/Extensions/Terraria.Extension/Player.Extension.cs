@@ -124,6 +124,12 @@ public static partial class TOExtensions
             if (player.dashDelay < 10 && preventDashing)
                 player.dashDelay = 10;
         }
+
+        /// <summary>
+        /// 设置玩家的屏幕震动强度，若当前强度小于传入值则更新为传入值。
+        /// </summary>
+        /// <param name="intensity">屏幕震动强度。</param>
+        public void SetScreenshake(float intensity) => player.Ocean.CurrentScreenShakePower = Math.Max(player.Ocean.CurrentScreenShakePower, intensity);
     }
 
     extension(Player)

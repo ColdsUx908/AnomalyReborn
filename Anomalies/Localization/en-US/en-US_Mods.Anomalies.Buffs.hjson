@@ -4,6 +4,6 @@ DimensionalRend: {
 }
 
 VacuousBlackBuff: {
-	DisplayName: Vacuous Black Buff
-	Description: Mods.Anomalies.Buffs.VacuousBlackBuff.Description
+	DisplayName: Vacuous Black
+	Description: It desires to devour everything, maybe even you.
 }
