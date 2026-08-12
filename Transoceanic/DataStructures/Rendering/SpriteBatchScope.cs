@@ -8,7 +8,21 @@ public sealed class SpriteBatchScope : IDisposable
 {
     private readonly SpriteBatch _SpriteBatch;
     private readonly SpriteBatchSnapshot _Snapshot;
+    private bool _BeginWhenDisposed;
     private bool _Disposed;
+
+    /// <summary>
+    /// 初始化作用域，并保存当前 SpriteBatch 的状态。
+    /// <br/>注意：此构造函数不会改变 SpriteBatch 的状态。
+    /// </summary>
+    /// <param name="spriteBatch"></param>
+    public SpriteBatchScope(SpriteBatch spriteBatch, bool beginWhenDisposed)
+    {
+        ArgumentNullException.ThrowIfNull(spriteBatch);
+        _SpriteBatch = spriteBatch;
+        _Snapshot = new(spriteBatch);
+        _BeginWhenDisposed = beginWhenDisposed;
+    }
 
     /// <summary>
     /// 初始化作用域，并应用指定的新状态。
@@ -29,13 +43,16 @@ public sealed class SpriteBatchScope : IDisposable
         DepthStencilState depthStencilState = null,
         RasterizerState rasterizerState = null,
         Effect customEffect = null,
-        Matrix? transformMatrix = null)
+        Matrix? transformMatrix = null,
+        bool beginWhenDisposed = true)
     {
-        _SpriteBatch = spriteBatch ?? throw new ArgumentNullException(nameof(spriteBatch));
+        ArgumentNullException.ThrowIfNull(spriteBatch);
+        _SpriteBatch = spriteBatch;
         _Snapshot = spriteBatch.ChangeState(
             sortMode, blendState, samplerState,
             depthStencilState, rasterizerState,
             customEffect, transformMatrix);
+        _BeginWhenDisposed = beginWhenDisposed;
     }
 
     /// <summary>
@@ -46,7 +63,10 @@ public sealed class SpriteBatchScope : IDisposable
         if (_Disposed)
             return;
 
-        _SpriteBatch.ResetState(_Snapshot);
+        if (_BeginWhenDisposed)
+            _SpriteBatch.ResetState(_Snapshot);
+        else if (new SpriteBatch_Publicizer(_SpriteBatch).beginCalled)
+            _SpriteBatch.End();
         _Disposed = true;
     }
 }

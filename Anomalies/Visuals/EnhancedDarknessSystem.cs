@@ -63,21 +63,18 @@ public class EnhancedDarknessSystem : ModSystem, IContentLoader
 
         using (lease.Scope(clearColor: Color.Black))
         {
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.Default, Main.Rasterizer, null, Matrix.Identity);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.Default, Main.Rasterizer, null, Matrix.Identity);
             foreach (LightSource item in Lights)
-            {
-                Main.spriteBatch.Draw(item.texture, item.center - Main.screenPosition, item.frame, item.color * item.opacity, item.rotation, item.frame is null ? item.texture.Size() * 0.5f : item.frame.Value.Size(), item.vectorScale * item.scale, SpriteEffects.None, 0);
-            }
+                spriteBatch.Draw(item.texture, item.center - Main.screenPosition, item.frame, item.color * item.opacity, item.rotation, item.frame is null ? item.texture.Size() * 0.5f : item.frame.Value.Size(), item.vectorScale * item.scale, SpriteEffects.None, 0);
+            spriteBatch.End();
         }
 
-        using (Main.spriteBatch.Scope(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix))
-        {
-            AnomalyEffects.LightingShader.Data
-                .UseOpacity(anomalyPlayer.DarknessIntensity)
-                .Apply();
-            Main.spriteBatch.Draw(lease.Target, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, 0, 0);
-            Main.spriteBatch.End();
-        }
+        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+        AnomalyEffects.LightingShader.Data
+            .UseOpacity(anomalyPlayer.DarknessIntensity)
+            .Apply();
+        spriteBatch.Draw(lease.Target, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, 0, 0);
+        spriteBatch.End();
     }
 
     public override void PreUpdateEntities()

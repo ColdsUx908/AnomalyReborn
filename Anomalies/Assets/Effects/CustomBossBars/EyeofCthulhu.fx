@@ -7,7 +7,7 @@ float uTime;
 float3 GetColor(float2 screenCoords)
 {
     float3 uColorBase = float3(0.85, 0.1, 0.25);
-    float3 uColorTop = float3(0.7, 0.25, 0.45);
+    float3 uColorTop = float3(0.7, 0.15, 0.2);
     
     float2 coords = screenCoords + float2(sin(screenCoords.x * 30 + uTime * 2.4), 0.0);
     float txt = tex2D(uImage1, screenCoords * float2(1.5, 3) + float2(uTime * -0.07, uTime * -0.12)).r;

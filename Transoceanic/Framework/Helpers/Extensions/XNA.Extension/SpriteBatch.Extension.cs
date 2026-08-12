@@ -47,9 +47,17 @@ public static partial class TOExtensions
         /// <param name="snapshot">要应用的快照。</param>
         public void ResetState(SpriteBatchSnapshot snapshot)
         {
-            spriteBatch.End();
+            if (new SpriteBatch_Publicizer(spriteBatch).beginCalled)
+                spriteBatch.End();
             spriteBatch.Begin(snapshot.sortMode, snapshot.blendState, snapshot.samplerState, snapshot.depthStencilState, snapshot.rasterizerState, snapshot.customEffect, snapshot.transformMatrix);
         }
+
+        /// <summary>
+        /// 创建一个新的 SpriteBatchScope 对象，用于在使用完毕后自动恢复 SpriteBatch 的绘制状态。
+        /// </summary>
+        /// <param name="beginWhenDisposed">是否在释放时开始新的绘制批次。</param>
+        /// <returns></returns>
+        public SpriteBatchScope Scope(bool beginWhenDisposed) => new(spriteBatch, beginWhenDisposed);
 
         /// <summary>
         /// 创建一个新的 SpriteBatchScope 对象，用于在使用完毕后自动恢复 SpriteBatch 的绘制状态。
@@ -61,6 +69,7 @@ public static partial class TOExtensions
         /// <param name="rasterizerState">要应用的新光栅化状态（null 表示不变）。</param>
         /// <param name="customEffect">要应用的新自定义效果（null 表示不变）。</param>
         /// <param name="transformMatrix">要应用的新变换矩阵（null 表示不变）。</param>
+        /// <param name="beginWhenDisposed">是否在释放时开始新的绘制批次。</param>
         /// <returns>一个新的 SpriteBatchScope 对象。</returns>
         public SpriteBatchScope Scope(
             SpriteSortMode? sortMode = null,
@@ -69,8 +78,9 @@ public static partial class TOExtensions
             DepthStencilState depthStencilState = null,
             RasterizerState rasterizerState = null,
             Effect customEffect = null,
-            Matrix? transformMatrix = null) =>
-            new(spriteBatch, sortMode, blendState, samplerState, depthStencilState, rasterizerState, customEffect, transformMatrix);
+            Matrix? transformMatrix = null,
+            bool beginWhenDisposed = true) =>
+            new(spriteBatch, sortMode, blendState, samplerState, depthStencilState, rasterizerState, customEffect, transformMatrix, beginWhenDisposed);
 
         /// <summary>
         /// 结束当前 SpriteBatch 的绘制批次，并使用指定的混合状态重新开始绘制。
