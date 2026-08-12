@@ -32,6 +32,8 @@ global using Transoceanic.Framework.Abstractions;
 global using Transoceanic.Framework.Helpers;
 global using static Anomalies.Common.AnomalySharedData.QuickAccess;
 
+[assembly: SupportedByTransoceanic]
+
 namespace Anomalies;
 
 public sealed class AnomalyMain : Mod

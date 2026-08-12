@@ -177,25 +177,25 @@ public class TypeDetourGenerator : IIncrementalGenerator
 
             string parameterDeclarationString = string.Join(", ", [$"{typeInfo.FirstTypeParameterName} self", .. methodSymbolInfo.ParameterDeclarationsWithObjectForNonPublic]);
             string parameterNameString = string.Join(", ", ["self", .. methodSymbolInfo.ParameterNamesForCall]);
-            localBuilder.Append($$"""
+                localBuilder.Append($$"""
                 // {{name}}
                 {{GeneratedCodeMarker}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                public delegate {{methodSymbolInfo.ReturnTypeString}} {{delegateTypeName}}({{parameterDeclarationString}});
+                public unsafe delegate {{methodSymbolInfo.ReturnTypeString}} {{delegateTypeName}}({{parameterDeclarationString}});
                 /// <inheritdoc cref="{{typeInfo.TargetTypeSymbol.ToDisplayStringBetter()}}.{{memberName}}"/>
                 {{GeneratedCodeMarker}}
-                public virtual {{methodSymbolInfo.ReturnTypeString}} {{methodName}}({{delegateTypeName}} orig, {{parameterDeclarationString}}) => orig({{parameterNameString}});
+                public unsafe virtual {{methodSymbolInfo.ReturnTypeString}} {{methodName}}({{delegateTypeName}} orig, {{parameterDeclarationString}}) => orig({{parameterNameString}});
                 """);
 
             typeBuilder.AppendLine(localBuilder.ToString());
             applyMethodBuilder.AppendLine($"ApplySingleDetour({methodName});");
         }
 
-        typeBuilder.Append(
+            typeBuilder.Append(
             $$"""
 
             {{GeneratedCodeMarker}}
-            public override void ApplyDetour()
+            public unsafe override void ApplyDetour()
             {
                 base.ApplyDetour();
             {{applyMethodBuilder.ToString().Trim().AddIndent(1)}}
@@ -205,7 +205,7 @@ public class TypeDetourGenerator : IIncrementalGenerator
 
             {{GeneratedCodeMarker}}
             {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-            partial void ApplyExtraDetour();
+            unsafe partial void ApplyExtraDetour();
             """);
 
         return typeBuilder.ToString();

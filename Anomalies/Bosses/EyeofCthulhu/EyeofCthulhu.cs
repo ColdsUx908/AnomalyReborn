@@ -1,5 +1,6 @@
 ﻿// Developed by ColdsUx
 
+using Anomalies.Assets.Effects;
 using Anomalies.DataStructures;
 
 namespace Anomalies.Bosses.EyeofCthulhu;
@@ -555,5 +556,15 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
             return false;
 
         return true;
+    }
+
+    public override void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle)
+    {
+        AnomalyEffects.CustomBossBars.EyeofCthulhu.Data
+            .UseImage1(AnomalyTextures.Noise._Vein)
+            .UseImage2(AnomalyTextures.Noise._Perlin)
+            .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
+            .SetCustomParameter("uPosition", destinationRentangle.BottomLeft())
+            .Apply();
     }
 }

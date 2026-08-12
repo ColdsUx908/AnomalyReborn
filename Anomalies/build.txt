@@ -5,4 +5,4 @@ hideResources = true
 modReferences = Transoceanic
 weakReferences = CalamityMod
 sortAfter = CalamityMod, Transoceanic, Luminance
-buildIgnore = .vs\*, Properties\*, obj\*, bin\*
+buildIgnore = .vs\*, Properties\*, obj\*, bin\*, Tools\*, *.fx

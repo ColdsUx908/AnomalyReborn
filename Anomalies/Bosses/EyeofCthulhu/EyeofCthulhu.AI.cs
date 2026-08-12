@@ -349,7 +349,7 @@ public sealed partial class EyeofCthulhu
                     for (int i = 0; i < particleAmount; i++)
                         EyeofCthulhu_Handler.SpawnOrbParticle(NPC.Center, lastAttack ? Main.rand.NextFloat(5f, 10f) : Main.rand.NextFloat(3f, 5f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.5f, 1f));
 
-                    EyeofCthulhu_Handler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 300);
+                    EyeofCthulhu_Handler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 750);
 
                     if (lastAttack)
                         EyeofCthulhu_Handler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
@@ -912,7 +912,7 @@ public sealed partial class EyeofCthulhu
 
                             Vector2 projectileVelocity = NPC.GetVelocityTowards(Target, Ultra ? 18f : 16f);
                             int type = ProjectileID.BloodShot;
-                            EyeofCthulhu_Handler.ShootEyeProjectile(NPC, type, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 180);
+                            EyeofCthulhu_Handler.ShootEyeProjectile(NPC, type, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 450);
                             EyeofCthulhu_Handler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
 
                             CheckPhaseChange();

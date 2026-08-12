@@ -90,30 +90,50 @@ public abstract class AnomalySingleNPCBehavior : SingleNPCBehavior
     public virtual bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => true;
 
     /// <summary>
-    /// 在更新灾厄的Boss血条之前调用。
+    /// 在更新Boss血条之前调用。
     /// </summary>
+    /// <param name="newBar">Boss血条实例。</param>
     /// <returns>返回 <see langword="false"/> 以阻止默认的更新血条方法运行（除对 <see cref="BossHealthBar.Valid"/> 属性的更新之外）。默认返回 <see langword="true"/>。</returns>
-    public virtual bool PreUpdateCalBossBar(BossHealthBar newBar) => true;
+    public virtual bool PreUpdateBossBar(BossHealthBar newBar) => true;
 
     /// <summary>
-    /// 在更新灾厄的Boss血条之后调用。
+    /// 在更新Boss血条之后调用。
     /// </summary>
-    public virtual void PostUpdateCalBossBar(BossHealthBar newBar) { }
+    /// <param name="newBar">Boss血条实例。</param>
+    public virtual void PostUpdateBossBar(BossHealthBar newBar) { }
 
     /// <summary>
-    /// 在绘制灾厄的Boss血条之前调用。
-    /// </summary>
+    /// 在绘制Boss血条之前调用。
+    /// </summary>    
+    /// <param name="newBar">Boss血条实例。</param>
+    /// <param name="spriteBatch">SpriteBatch实例。</param>
     /// <param name="x">绘制位置左上角的X坐标。</param>
     /// <param name="y">绘制位置左上角的Y坐标。</param>
     /// <returns>返回 <see langword="false"/> 以阻止默认的绘制血条方法运行。默认返回 <see langword="true"/>。</returns>
-    public virtual bool PreDrawCalBossBar(BossHealthBar newBar, SpriteBatch spriteBatch, ref int x, ref int y) => true;
+    public virtual bool PreDrawBossBar(BossHealthBar newBar, SpriteBatch spriteBatch, ref int x, ref int y) => true;
 
     /// <summary>
-    /// 在绘制灾厄的Boss血条之后调用。
+    /// 在绘制Boss血条之后调用。
     /// </summary>
     /// <param name="x">绘制位置左上角的X坐标。</param>
     /// <param name="y">绘制位置左上角的Y坐标。</param>
-    public virtual void PostDrawCalBossBar(BossHealthBar newBar, SpriteBatch spriteBatch, int x, int y) { }
+    public virtual void PostDrawBossBar(BossHealthBar newBar, SpriteBatch spriteBatch, int x, int y) { }
+
+    /// <summary>
+    /// 在绘制Boss血条时应用自定义的着色器。
+    /// </summary>
+    /// <param name="newBar">Boss血条实例。</param>
+    /// <param name="spriteBatch">SpriteBatch实例。</param>
+    /// <param name="destinationRentangle">绘制目标矩形。</param>
+    /// <remarks>
+    /// <b>注意：</b>本方法调用前将自动改变 <paramref name="spriteBatch"/> 状态为：
+    /// <list type="bullet">
+    /// <item/><description/><see cref="SpriteSortMode.Immediate"/>
+    /// <item/><description/><see cref="BlendState.AlphaBlend"/>
+    /// <item/><description/><see cref="SamplerState.LinearClamp"/>
+    /// </list>
+    /// </remarks>
+    public virtual void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle) { }
 }
 
 public abstract class AnomalySingleNPCBehavior<T> : AnomalySingleNPCBehavior where T : ModNPC

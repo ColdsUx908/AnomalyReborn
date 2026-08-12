@@ -69,7 +69,7 @@ public sealed class ModReference : IContentLoader
     public static Container TO { get; private set; }
     public static Container WrathoftheGods { get; private set; }
 
-    [LoadPriority(1e10)]
+    [LoadPriority(10)]
     void IContentLoader.PostSetupContent()
     {
         Anomalies = new("Anomalies");

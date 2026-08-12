@@ -9,7 +9,7 @@ namespace Transoceanic.Hooks.Framework.Helpers;
 /// </summary>
 public sealed class On_TOExtensions : IContentLoader
 {
-    [LoadPriority(1e5)]
+    [LoadPriority(5)]
     void IContentLoader.PostSetupContent() => TOHookHelper.ResetHandlerFields(typeof(On_TOExtensions));
     void IContentLoader.OnModUnload() => TOHookHelper.ResetHandlerFields(typeof(On_TOExtensions));
 

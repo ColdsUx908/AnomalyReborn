@@ -4,7 +4,7 @@ namespace Anomalies.GameContents.Dusts;
 
 public class SquashDust : ModDust
 {
-    public static Texture2D SolidCircle => AnomalyTextures.BasicCircle;
+    public static Texture2D SolidCircle => AnomalyTextures.Extra.BasicCircle;
 
     public static Texture2D BloomCircle => ParticleHandler.GetTexture<BloomParticle>();
 
@@ -23,7 +23,7 @@ public class SquashDust : ModDust
 
     public override bool Update(Dust dust)
     {
-        float fadeSpeed = (dust.fadeIn + 1);
+        float fadeSpeed = dust.fadeIn + 1;
         dust.rotation = dust.velocity.ToRotation() + MathHelper.PiOver2;
         dust.velocity *= 0.96f;
         if (dust.noGravity)

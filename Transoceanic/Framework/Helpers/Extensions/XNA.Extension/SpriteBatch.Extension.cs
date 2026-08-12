@@ -1,11 +1,77 @@
 ﻿// Developed by ColdsUx
 
+using Transoceanic.DataStructures.Rendering;
+
 namespace Transoceanic.Framework.Helpers;
 
 public static partial class TOExtensions
 {
     extension(SpriteBatch spriteBatch)
     {
+        /// <summary>
+        /// 改变当前 SpriteBatch 的绘制状态，并返回一个包含原始状态的 SpriteBatchSnapshot 结构体。
+        /// </summary>
+        /// <param name="sortMode">要应用的新排序模式（null 表示不变）。</param>
+        /// <param name="blendState">要应用的新混合状态（null 表示不变）。</param>
+        /// <param name="samplerState">要应用的新采样器状态（null 表示不变）。</param>
+        /// <param name="depthStencilState">要应用的新深度模板状态（null 表示不变）。</param>
+        /// <param name="rasterizerState">要应用的新光栅化状态（null 表示不变）。</param>
+        /// <param name="customEffect">要应用的新自定义效果（null 表示不变）。</param>
+        /// <param name="transformMatrix">要应用的新变换矩阵。</param>
+        /// <returns>包含原始状态的 SpriteBatchSnapshot 结构体。</returns>
+        public SpriteBatchSnapshot ChangeState(
+            SpriteSortMode? sortMode = null,
+            BlendState blendState = null,
+            SamplerState samplerState = null,
+            DepthStencilState depthStencilState = null,
+            RasterizerState rasterizerState = null,
+            Effect customEffect = null,
+            Matrix? transformMatrix = null)
+        {
+            SpriteBatchSnapshot copy = new(spriteBatch);
+            spriteBatch.End();
+            spriteBatch.Begin(
+                sortMode ?? copy.sortMode,
+                blendState ?? copy.blendState,
+                samplerState ?? copy.samplerState,
+                depthStencilState ?? copy.depthStencilState,
+                rasterizerState ?? copy.rasterizerState,
+                customEffect ?? copy.customEffect,
+                transformMatrix ?? copy.transformMatrix);
+            return copy;
+        }
+
+        /// <summary>
+        /// 根据提供的快照重置 SpriteBatch 的绘制状态。
+        /// </summary>
+        /// <param name="snapshot">要应用的快照。</param>
+        public void ResetState(SpriteBatchSnapshot snapshot)
+        {
+            spriteBatch.End();
+            spriteBatch.Begin(snapshot.sortMode, snapshot.blendState, snapshot.samplerState, snapshot.depthStencilState, snapshot.rasterizerState, snapshot.customEffect, snapshot.transformMatrix);
+        }
+
+        /// <summary>
+        /// 创建一个新的 SpriteBatchScope 对象，用于在使用完毕后自动恢复 SpriteBatch 的绘制状态。
+        /// </summary>
+        /// <param name="sortMode">要应用的新排序模式（null 表示不变）。</param>
+        /// <param name="blendState">要应用的新混合状态（null 表示不变）。</param>
+        /// <param name="samplerState">要应用的新采样器状态（null 表示不变）。</param>
+        /// <param name="depthStencilState">要应用的新深度模板状态（null 表示不变）。</param>
+        /// <param name="rasterizerState">要应用的新光栅化状态（null 表示不变）。</param>
+        /// <param name="customEffect">要应用的新自定义效果（null 表示不变）。</param>
+        /// <param name="transformMatrix">要应用的新变换矩阵（null 表示不变）。</param>
+        /// <returns>一个新的 SpriteBatchScope 对象。</returns>
+        public SpriteBatchScope Scope(
+            SpriteSortMode? sortMode = null,
+            BlendState blendState = null,
+            SamplerState samplerState = null,
+            DepthStencilState depthStencilState = null,
+            RasterizerState rasterizerState = null,
+            Effect customEffect = null,
+            Matrix? transformMatrix = null) =>
+            new(spriteBatch, sortMode, blendState, samplerState, depthStencilState, rasterizerState, customEffect, transformMatrix);
+
         /// <summary>
         /// 结束当前 SpriteBatch 的绘制批次，并使用指定的混合状态重新开始绘制。
         /// </summary>

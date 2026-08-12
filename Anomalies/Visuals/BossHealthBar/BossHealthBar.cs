@@ -359,14 +359,14 @@ public class BossHealthBar : IContentLoader
     {
         bool result = true;
         bool hasSingle = false;
-        if (NPC.ModNPC is IAnomalyModNPC caNPC)
+        if (NPC.ModNPC is IAnomalyModNPC anomalyNPC)
         {
-            result &= caNPC.PreUpdateCalBossBar(this);
+            result &= anomalyNPC.PreUpdateCalBossBar(this);
             hasSingle = true;
         }
-        if (NPC.TryGetBehavior(out AnomalySingleNPCBehavior npcBehavior, nameof(AnomalySingleNPCBehavior.PreUpdateCalBossBar)))
+        if (NPC.TryGetBehavior(out AnomalySingleNPCBehavior npcBehavior, nameof(AnomalySingleNPCBehavior.PreUpdateBossBar)))
         {
-            result &= npcBehavior.PreUpdateCalBossBar(this);
+            result &= npcBehavior.PreUpdateBossBar(this);
             hasSingle = true;
         }
         foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.Enumerate<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PreUpdateCalBossBar)))
@@ -380,14 +380,14 @@ public class BossHealthBar : IContentLoader
     protected void PostUpdate()
     {
         bool hasSingle = false;
-        if (NPC.ModNPC is IAnomalyModNPC caNPC)
+        if (NPC.ModNPC is IAnomalyModNPC anomalyNPC)
         {
-            caNPC.PostUpdateCalBossBar(this);
+            anomalyNPC.PostUpdateCalBossBar(this);
             hasSingle = true;
         }
-        if (NPC.TryGetBehavior(out AnomalySingleNPCBehavior npcBehavior, nameof(AnomalySingleNPCBehavior.PostUpdateCalBossBar)))
+        if (NPC.TryGetBehavior(out AnomalySingleNPCBehavior npcBehavior, nameof(AnomalySingleNPCBehavior.PostUpdateBossBar)))
         {
-            npcBehavior.PostUpdateCalBossBar(this);
+            npcBehavior.PostUpdateBossBar(this);
             hasSingle = true;
         }
         foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.Enumerate<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PostUpdateCalBossBar)))
@@ -491,14 +491,14 @@ public class BossHealthBar : IContentLoader
     {
         bool result = true;
         bool hasSingle = false;
-        if (NPC.ModNPC is IAnomalyModNPC caNPC)
+        if (NPC.ModNPC is IAnomalyModNPC anomalyNPC)
         {
-            result &= caNPC.PreDrawCalBossBar(this, spriteBatch, ref x, ref y);
+            result &= anomalyNPC.PreDrawCalBossBar(this, spriteBatch, ref x, ref y);
             hasSingle = true;
         }
-        if (NPC.TryGetBehavior(out AnomalySingleNPCBehavior npcBehavior, nameof(AnomalySingleNPCBehavior.PreDrawCalBossBar)))
+        if (NPC.TryGetBehavior(out AnomalySingleNPCBehavior npcBehavior, nameof(AnomalySingleNPCBehavior.PreDrawBossBar)))
         {
-            result &= npcBehavior.PreDrawCalBossBar(this, spriteBatch, ref x, ref y);
+            result &= npcBehavior.PreDrawBossBar(this, spriteBatch, ref x, ref y);
             hasSingle = true;
         }
         foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.Enumerate<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PreDrawCalBossBar)))
@@ -512,14 +512,14 @@ public class BossHealthBar : IContentLoader
     protected void PostDraw(SpriteBatch spriteBatch, int x, int y)
     {
         bool hasSingle = false;
-        if (NPC.ModNPC is IAnomalyModNPC caNPC)
+        if (NPC.ModNPC is IAnomalyModNPC anomalyNPC)
         {
-            caNPC.PostDrawCalBossBar(this, spriteBatch, x, y);
+            anomalyNPC.PostDrawCalBossBar(this, spriteBatch, x, y);
             hasSingle = true;
         }
-        if (NPC.TryGetBehavior(out AnomalySingleNPCBehavior npcBehavior, nameof(AnomalySingleNPCBehavior.PostDrawCalBossBar)))
+        if (NPC.TryGetBehavior(out AnomalySingleNPCBehavior npcBehavior, nameof(AnomalySingleNPCBehavior.PostDrawBossBar)))
         {
-            npcBehavior.PostDrawCalBossBar(this, spriteBatch, x, y);
+            npcBehavior.PostDrawBossBar(this, spriteBatch, x, y);
             hasSingle = true;
         }
         foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.Enumerate<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PostDrawCalBossBar)))
@@ -537,8 +537,32 @@ public class BossHealthBar : IContentLoader
     public void DrawMainBar(SpriteBatch spriteBatch, int x, int y, Color? newColor = null)
     {
         int mainBarWidth = (int)MathHelper.Min(400f * AnimationCompletionRatio, 400f * NPCLifeRatio);
-        Color color = newColor ?? Color.White * AnimationCompletionRatio * AnimationCompletionRatio2;
-        spriteBatch.Draw(MainBar, new Rectangle(x, y + 43, mainBarWidth, MainBar.Height), color);
+        Rectangle destinationRectangle = new(x, y + 43, mainBarWidth, MainBar.Height);
+
+        if (NPC.ModNPC is IAnomalyNPCWithCustomShader anomalyNPCWithCustomShader)
+        {
+            using (spriteBatch.Scope(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp))
+            {
+                anomalyNPCWithCustomShader.ApplyCustomMainBossBarShader(this, spriteBatch, destinationRectangle);
+                DrawCore(spriteBatch, destinationRectangle, null);
+            }
+        }
+        else if (NPC.TryGetBehavior(out AnomalySingleNPCBehavior npcBehavior, nameof(AnomalySingleNPCBehavior.ApplyCustomMainBossBarShader)))
+        {
+            using (spriteBatch.Scope(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp))
+            {
+                npcBehavior.ApplyCustomMainBossBarShader(this, spriteBatch, destinationRectangle);
+                DrawCore(spriteBatch, destinationRectangle, null);
+            }
+        }
+        else
+            DrawCore(spriteBatch, destinationRectangle, newColor);
+
+        void DrawCore(SpriteBatch spriteBatch, Rectangle destinationRectangle, Color? newColor)
+        {
+            Color color = newColor ?? Color.White * AnimationCompletionRatio * AnimationCompletionRatio2;
+            spriteBatch.Draw(MainBar, destinationRectangle, color);
+        }
     }
 
     /// <summary>

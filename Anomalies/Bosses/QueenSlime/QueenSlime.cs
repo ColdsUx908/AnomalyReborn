@@ -1,5 +1,6 @@
 ﻿// Developed by ColdsUx
 
+using Anomalies.Assets.Effects;
 using Anomalies.Bosses.KingSlime;
 using Anomalies.DataStructures;
 using Terraria.Graphics.Shaders;
@@ -577,5 +578,15 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
         spriteBatch.Draw(crownTexture, crownPosition, crownFrame, queenColor, NPC.rotation, crownOrigin, 1f, spriteEffects ^ SpriteEffects.FlipHorizontally, 0f);
 
         return false;
+    }
+
+    public override void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle)
+    {
+        AnomalyEffects.CustomBossBars.QueenSlime.Data
+            .UseImage1(AnomalyTextures.Noise._Turbulence)
+            .UseImage2(AnomalyTextures.Noise._Perlin)
+            .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
+            .SetCustomParameter("uPosition", destinationRentangle.BottomLeft())
+            .Apply();
     }
 }

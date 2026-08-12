@@ -131,7 +131,7 @@ public abstract class BaseShockwaveProjectile : AnomalyModProjectile
         Texture2D texture = UseHDTexture ? PulseRing.TextureHD : ParticleHandler.GetTexture<PulseRing>();
         Color color = GetAlpha(lightColor) ?? Color.White;
         spriteBatch.DrawFromCenter(texture, Projectile.Center - Main.screenPosition, null, color * Projectile.Opacity, Projectile.rotation, Projectile.scale);
-        ParticleHandler.ExitParticleDrawRegion(spriteBatch);
+        TODrawUtils.ResetSpriteBatch(spriteBatch);
         return false;
     }
 }

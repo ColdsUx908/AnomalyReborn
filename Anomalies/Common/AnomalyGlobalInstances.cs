@@ -15,6 +15,12 @@ public sealed class AnomalyPlayer : ModPlayer
 
     public PlayerDownedBoss DownedBoss = new();
 
+    public float DarknessIntensity
+    {
+        get;
+        set => field = MathHelper.Clamp(value, 0f, 1f);
+    }
+
     public int ImmaculateWhite_Timer
     {
         get;
@@ -33,6 +39,8 @@ public sealed class AnomalyPlayer : ModPlayer
         clone.Debuff_DimensionalRend = Debuff_DimensionalRend;
         clone.DownedBoss = DownedBoss;
 
+        clone.DarknessIntensity = DarknessIntensity;
+
         clone.ImmaculateWhite_Timer = ImmaculateWhite_Timer;
 
         return clone;
@@ -43,6 +51,7 @@ public sealed class AnomalyPlayer : ModPlayer
         Debuff_DimensionalRend = false;
         ImmaculateWhite_Timer--;
         Minion_VacuousBlack = false;
+        DarknessIntensity = MathHelper.Max(DarknessIntensity - 0.05f, 0);
     }
 }
 

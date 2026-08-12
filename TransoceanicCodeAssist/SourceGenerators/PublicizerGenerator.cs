@@ -69,7 +69,6 @@ public class PublicizerGenerator : IIncrementalGenerator
             foreach (ISymbol memberSymbol in memberSymbols)
             {
                 if (memberSymbol.IsImplicitlyDeclared
-                    || memberSymbol.DeclaredAccessibility == Accessibility.Public
                     || memberSymbol.IsExtern
                     || !memberSymbol.Name.IsValidCSharpIdentifier)
                 {
@@ -78,7 +77,7 @@ public class PublicizerGenerator : IIncrementalGenerator
 
                 switch (memberSymbol)
                 {
-                    case IFieldSymbol fieldSymbol:
+                    case IFieldSymbol fieldSymbol when fieldSymbol.DeclaredAccessibility != Accessibility.Public:
                         if (fieldSymbol.IsStatic)
                         {
                             StaticFieldSymbols.Add(fieldSymbol);
@@ -89,16 +88,22 @@ public class PublicizerGenerator : IIncrementalGenerator
                         }
                         break;
                     case IPropertySymbol propertySymbol:
-                        if (propertySymbol.IsStatic)
+                        bool isNonPublic = propertySymbol.DeclaredAccessibility != Accessibility.Public
+                            || (propertySymbol.GetMethod is not null && propertySymbol.GetMethod.DeclaredAccessibility != Accessibility.Public)
+                            || (propertySymbol.SetMethod is not null && propertySymbol.SetMethod.DeclaredAccessibility != Accessibility.Public);
+                        if (isNonPublic)
                         {
-                            StaticPropertySymbols.Add(propertySymbol);
-                        }
-                        else
-                        {
-                            InstancePropertySymbols.Add(propertySymbol);
+                            if (propertySymbol.IsStatic)
+                            {
+                                StaticPropertySymbols.Add(propertySymbol);
+                            }
+                            else
+                            {
+                                InstancePropertySymbols.Add(propertySymbol);
+                            }
                         }
                         break;
-                    case IMethodSymbol methodSymbol when methodSymbol.MethodKind == MethodKind.Ordinary:
+                    case IMethodSymbol methodSymbol when methodSymbol.MethodKind == MethodKind.Ordinary && methodSymbol.DeclaredAccessibility != Accessibility.Public:
                         if (methodSymbol.IsStatic)
                         {
                             StaticMethodSymbols.Add(methodSymbol);
@@ -155,7 +160,7 @@ public class PublicizerGenerator : IIncrementalGenerator
         builder.AppendLine($$"""
             {{GeneratedCodeMarker}}
             {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-            public static new readonly global::System.Type {{TargetTypeFieldName}} = typeof({{targetTypeName}});
+            public unsafe static new readonly global::System.Type {{TargetTypeFieldName}} = typeof({{targetTypeName}});
             """);
 
         builder.AppendLine(HandleInstanceFields(typeInfo));
@@ -203,8 +208,8 @@ public class PublicizerGenerator : IIncrementalGenerator
                 // {{name}}{{nonPublicIndicator}}
                 {{GeneratedCodeMarker}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                public static readonly {{ReflectionNamespace}}FieldInfo {{fieldInfoName}} = {{HelperMethodClass}}GetInstanceField({{TargetTypeFieldName}}, "{{name}}");
-                public {{typeName}} {{name}}
+                public unsafe static readonly {{ReflectionNamespace}}FieldInfo {{fieldInfoName}} = {{HelperMethodClass}}GetInstanceField({{TargetTypeFieldName}}, "{{name}}");
+                public unsafe {{typeName}} {{name}}
                 {
                     get => ({{typeName}}){{fieldInfoName}}.GetValue(base.Source);
                     {{setter}}
@@ -252,19 +257,21 @@ public class PublicizerGenerator : IIncrementalGenerator
 
             bool hasGetter = propertySymbol.GetMethod is not null;
             bool hasSetter = propertySymbol.SetMethod is not null;
+            bool hasPublicGetter = hasGetter && propertySymbol.GetMethod.DeclaredAccessibility == Accessibility.Public;
+            bool hasPublicSetter = hasSetter && propertySymbol.SetMethod.DeclaredAccessibility == Accessibility.Public;
 
             if (!hasGetter && !hasSetter) //一般不应出现既没有getter又没有setter的情况
                 continue;
 
-            string getter = hasGetter ? $$"""get => ({{typeName}}){{propertyInfoName}}.GetValue(base.Source);""" : "// no getter";
-            string setter = hasSetter ? $$"""set => {{propertyInfoName}}.SetValue(base.Source, value);""" : "// no setter";
+            string getter = hasPublicGetter ? "// public getter" : hasGetter ? $$"""get => ({{typeName}}){{propertyInfoName}}.GetValue(base.Source);""" : "// no getter";
+            string setter = hasPublicSetter ? "// public setter" : hasSetter ? $$"""set => {{propertyInfoName}}.SetValue(base.Source, value);""" : "// no setter";
 
             localBuilder.Append($$"""
                 // {{name}}{{nonPublicIndicator}}
                 {{GeneratedCodeMarker}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                public static readonly {{ReflectionNamespace}}PropertyInfo {{propertyInfoName}} = {{HelperMethodClass}}GetInstanceProperty({{TargetTypeFieldName}}, {{"\"" + name + "\""}});
-                public {{typeName}} {{name}}
+                public unsafe static readonly {{ReflectionNamespace}}PropertyInfo {{propertyInfoName}} = {{HelperMethodClass}}GetInstanceProperty({{TargetTypeFieldName}}, {{"\"" + name + "\""}});
+                public unsafe {{typeName}} {{name}}
                 {
                     {{getter}}
                     {{setter}}
@@ -304,7 +311,7 @@ public class PublicizerGenerator : IIncrementalGenerator
 
             string name = methodSymbol.Name;
 
-            if (methodSymbol.Parameters.Any(p => p.Type.DeclaredAccessibility is not (Accessibility.Public or Accessibility.NotApplicable)))
+            if (methodSymbol.Parameters.Any(p => !p.Type.IsPubliclyAccessible))
             {
                 localBuilder.Append($$"""
                     // {{name}}
@@ -349,15 +356,15 @@ public class PublicizerGenerator : IIncrementalGenerator
                     // {{name}}
                     {{GeneratedCodeMarker}}
                     {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                    public static readonly {{ReflectionNamespace}}MethodInfo {{methodInfoFieldName}} = {{HelperMethodClass}}GetInstanceMethod({{TargetTypeFieldName}}, "{{name}}", new global::System.Type[] {{{(string.IsNullOrEmpty(paramTypesArray) ? " " : $" {paramTypesArray} ")}}});
+                    public unsafe static readonly {{ReflectionNamespace}}MethodInfo {{methodInfoFieldName}} = {{HelperMethodClass}}GetInstanceMethod({{TargetTypeFieldName}}, "{{name}}", new global::System.Type[] {{{(string.IsNullOrEmpty(paramTypesArray) ? " " : $" {paramTypesArray} ")}}});
                     {{GeneratedCodeMarker}}
                     {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
                     {{methodSymbolInfo.GenerateDelegateDeclaration(delegateTypeName)}}
                     {{GeneratedCodeMarker}}
                     {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                    public static readonly {{delegateTypeName}} {{delegateFieldName}} = {{methodInfoFieldName}}.CreateDelegate<{{delegateTypeName}}>();
+                    public unsafe static readonly {{delegateTypeName}} {{delegateFieldName}} = {{methodInfoFieldName}}.CreateDelegate<{{delegateTypeName}}>();
                     {{GeneratedCodeMarker}}
-                    public {{methodSymbolInfo.ReturnTypeString}} {{name}}({{string.Join(", ", methodSymbolInfo.ParameterDeclarationsWithObjectForNonPublic)}}) => {{delegateFieldName}}.Invoke({{string.Join(", ", parameterNames)}});
+                    public unsafe {{methodSymbolInfo.ReturnTypeString}} {{name}}({{string.Join(", ", methodSymbolInfo.ParameterDeclarationsWithObjectForNonPublic)}}) => {{delegateFieldName}}.Invoke({{string.Join(", ", parameterNames)}});
                     """);
             }
 
@@ -404,8 +411,8 @@ public class PublicizerGenerator : IIncrementalGenerator
                 // {{name}}{{nonPublicIndicator}}
                 {{GeneratedCodeMarker}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                public static readonly {{ReflectionNamespace}}FieldInfo {{fieldInfoName}} = {{HelperMethodClass}}GetStaticField({{TargetTypeFieldName}}, {{"\"" + name + "\""}});
-                public static {{typeName}} {{name}}
+                public unsafe static readonly {{ReflectionNamespace}}FieldInfo {{fieldInfoName}} = {{HelperMethodClass}}GetStaticField({{TargetTypeFieldName}}, {{"\"" + name + "\""}});
+                public unsafe static {{typeName}} {{name}}
                 {
                     get => ({{typeName}}){{fieldInfoName}}.GetValue(null);
                     {{setter}}
@@ -453,19 +460,21 @@ public class PublicizerGenerator : IIncrementalGenerator
 
             bool hasGetter = propertySymbol.GetMethod is not null;
             bool hasSetter = propertySymbol.SetMethod is not null;
+            bool hasPublicGetter = hasGetter && propertySymbol.GetMethod.DeclaredAccessibility == Accessibility.Public;
+            bool hasPublicSetter = hasSetter && propertySymbol.SetMethod.DeclaredAccessibility == Accessibility.Public;
 
             if (!hasGetter && !hasSetter) // 一般不应出现既没有 getter 又没有 setter 的情况
                 continue;
 
-            string getter = hasGetter ? $$"""get => ({{typeName}}){{propertyInfoName}}.GetValue(null);""" : "// no getter";
-            string setter = hasSetter ? $$"""set => {{propertyInfoName}}.SetValue(null, value);""" : "// no setter";
+            string getter = hasPublicGetter ? "// public getter" : hasGetter ? $$"""get => ({{typeName}}){{propertyInfoName}}.GetValue(null);""" : "// no getter";
+            string setter = hasPublicSetter ? "// public setter" : hasSetter ? $$"""set => {{propertyInfoName}}.SetValue(null, value);""" : "// no setter";
 
             localBuilder.Append($$"""
                 // {{name}}{{nonPublicIndicator}}
                 {{GeneratedCodeMarker}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                public static readonly {{ReflectionNamespace}}PropertyInfo {{propertyInfoName}} = {{HelperMethodClass}}GetStaticProperty({{TargetTypeFieldName}}, {{"\"" + name + "\""}});
-                public static {{typeName}} {{name}}
+                public unsafe static readonly {{ReflectionNamespace}}PropertyInfo {{propertyInfoName}} = {{HelperMethodClass}}GetStaticProperty({{TargetTypeFieldName}}, {{"\"" + name + "\""}});
+                public unsafe static {{typeName}} {{name}}
                 {
                     {{getter}}
                     {{setter}}
@@ -505,7 +514,7 @@ public class PublicizerGenerator : IIncrementalGenerator
 
             string name = methodSymbol.Name;
 
-            if (methodSymbol.Parameters.Any(p => p.Type.DeclaredAccessibility is not (Accessibility.Public or Accessibility.NotApplicable)))
+            if (methodSymbol.Parameters.Any(p => !p.Type.IsPubliclyAccessible))
             {
                 localBuilder.Append($$"""
                     // {{name}}
@@ -549,15 +558,15 @@ public class PublicizerGenerator : IIncrementalGenerator
                     // {{name}}
                     {{GeneratedCodeMarker}}
                     {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                    public static readonly {{ReflectionNamespace}}MethodInfo {{methodInfoFieldName}} = {{HelperMethodClass}}GetStaticMethod({{TargetTypeFieldName}}, "{{name}}", new global::System.Type[] {{{(string.IsNullOrEmpty(paramTypesArray) ? " " : $" {paramTypesArray} ")}}});
+                    public unsafe static readonly {{ReflectionNamespace}}MethodInfo {{methodInfoFieldName}} = {{HelperMethodClass}}GetStaticMethod({{TargetTypeFieldName}}, "{{name}}", new global::System.Type[] {{{(string.IsNullOrEmpty(paramTypesArray) ? " " : $" {paramTypesArray} ")}}});
                     {{GeneratedCodeMarker}}
                     {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
                     {{methodSymbolInfo.GenerateDelegateDeclaration(delegateTypeName)}}
                     {{GeneratedCodeMarker}}
                     {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
-                    public static readonly {{delegateTypeName}} {{delegateFieldName}} = {{methodInfoFieldName}}.CreateDelegate<{{delegateTypeName}}>();
+                    public unsafe static readonly {{delegateTypeName}} {{delegateFieldName}} = {{methodInfoFieldName}}.CreateDelegate<{{delegateTypeName}}>();
                     {{GeneratedCodeMarker}}
-                    public static {{methodSymbolInfo.ReturnTypeString}} {{name}}({{string.Join(", ", methodSymbolInfo.ParameterDeclarationsWithObjectForNonPublic)}}) => {{delegateFieldName}}.Invoke({{string.Join(", ", methodSymbolInfo.ParameterNamesForCall)}});
+                    public unsafe static {{methodSymbolInfo.ReturnTypeString}} {{name}}({{string.Join(", ", methodSymbolInfo.ParameterDeclarationsWithObjectForNonPublic)}}) => {{delegateFieldName}}.Invoke({{string.Join(", ", methodSymbolInfo.ParameterNamesForCall)}});
                     """);
             }
 

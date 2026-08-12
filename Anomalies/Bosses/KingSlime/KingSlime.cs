@@ -1,5 +1,6 @@
 ﻿// Developed by ColdsUx
 
+using Anomalies.Assets.Effects;
 using Anomalies.DataStructures;
 
 namespace Anomalies.Bosses.KingSlime;
@@ -434,8 +435,9 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public override Color? GetAlpha(Color drawColor)
     {
-        Color newColor = Color.Lerp(new Color(0, 0, 150, NPC.alpha), new Color(125, 125, 255, NPC.alpha), TOMathUtils.TimeWrappingFunction.GetTimeSin(0.35f, 1.5f, unsigned: true) + 0.3f);
+        Color newColor = Color.Lerp(new Color(0, 0, 150, NPC.GraphicAlpha), new Color(125, 125, 255, NPC.GraphicAlpha), TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 1.5f, unsigned: true));
         Color preRainbow = Color.Lerp(Aroma ? new Color(125, 125, 255, NPC.alpha) : drawColor, newColor, SapphireBuffRatio);
+        preRainbow.A -= (byte)MathHelper.Lerp(0, 200, SapphireBuffRatio);
 
         if (Main.remixWorld || Aroma)
         {
@@ -446,7 +448,7 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
             preRainbow = new Color(b, b, (r + g) / 2, a);
         }
 
-        return Color.Lerp(preRainbow, Main.DiscoColor, RainbowRatio) with { A = NPC.GraphicAlpha };
+        return Color.Lerp(preRainbow, Main.DiscoColor with { A = NPC.GraphicAlpha }, RainbowRatio);
     }
 
     public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
@@ -478,5 +480,15 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
             JewelHandler.GetKingSlimeJewel(JewelSapphire)?.MasterDead = true;
         if (JewelRainbowAlive)
             JewelHandler.GetKingSlimeJewel(JewelRainbow)?.MasterDead = true;
+    }
+
+    public override void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle)
+    {
+        AnomalyEffects.CustomBossBars.KingSlime.Data
+            .UseImage1(AnomalyTextures.Noise._Turbulence)
+            .UseImage2(AnomalyTextures.Noise._Perlin)
+            .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
+            .SetCustomParameter("uPosition", destinationRentangle.BottomLeft())
+            .Apply();
     }
 }

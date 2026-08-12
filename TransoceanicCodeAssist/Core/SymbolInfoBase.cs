@@ -241,6 +241,9 @@ internal class TypeSymbolInfoBase : SymbolInfoBase<INamedTypeSymbol>
             if (type.Symbol.IsSealed)
                 modifiers.Add("sealed");
         }
+        // 始终将 unsafe 添加到生成的类型声明中，确保生成代码可以包含不安全上下文（指针等）
+        modifiers.Add("unsafe");
+        // partial 必须紧接在类型关键字之前，因此将 partial 放在修饰符列表的最后
         modifiers.Add("partial");
         string keyword = GetTypeKeyword(type.Symbol);
         string typeParams = type.Symbol.TypeParameters.Length > 0
@@ -321,6 +324,9 @@ internal class FieldSymbolInfoBase : SymbolInfoBase<IFieldSymbol>
 
         List<string> modifiers = [AccessibilityString];
 
+        // 对字段也添加 unsafe 修饰符，保证生成字段在不安全上下文中
+        modifiers.Add("unsafe");
+
         if (Symbol.IsStatic)
             modifiers.Add("static");
         if (Symbol.IsReadOnly && !Symbol.IsConst)
@@ -387,6 +393,8 @@ internal class PropertySymbolInfoBase : SymbolInfoBase<IPropertySymbol>
         else if (Symbol.IsVirtual && !Symbol.IsSealed)
             modifiers.Add("virtual");
 
+        // 为属性声明添加 unsafe 修饰符以匹配项目生成要求，partial 必须紧挨类型，因此放在最后
+        modifiers.Add("unsafe");
         modifiers.Add("partial"); //始终添加partial关键字，避免问题
 
         string type = Symbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
@@ -540,8 +548,10 @@ internal class MethodSymbolInfoBase : SymbolInfoBase<IMethodSymbol>
         else if (Symbol.IsVirtual && !Symbol.IsSealed)
             modifiers.Add("virtual");
 
+        // 为方法声明添加 unsafe 修饰符
+        modifiers.Add("unsafe");
         if (partial)
-            modifiers.Add("partial"); //添加partial关键字，避免问题
+            modifiers.Add("partial"); //添加partial关键字，partial 必须在返回类型前
 
         string parametersString = string.Join(", ", ParameterDeclarationsWithObjectForNonPublic);
 
@@ -573,9 +583,9 @@ internal class MethodSymbolInfoBase : SymbolInfoBase<IMethodSymbol>
         }
 
         // 添加方法的原有参数
-        parameters.AddRange(ParameterDeclarations);
+        parameters.AddRange(ParameterDeclarationsWithObjectForNonPublic);
 
         string parametersString = string.Join(", ", parameters);
-        return $"public delegate {ReturnTypeString} {delegateName}({parametersString});";
+        return $"public unsafe delegate {ReturnTypeString} {delegateName}({parametersString});";
     }
 }

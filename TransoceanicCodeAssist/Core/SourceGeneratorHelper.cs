@@ -439,7 +439,7 @@ internal static class SourceGeneratorHelper
                             if (namedType.IsUnboundGenericType) //未绑定泛型参数直接返回 true
                                 return true;
 
-                            if (namedType.DeclaredAccessibility != Accessibility.Public) //类型本身
+                            if (namedType.DeclaredAccessibility is not (Accessibility.Public or Accessibility.NotApplicable)) //类型本身
                                 return false;
 
                             foreach (ITypeSymbol typeArg in namedType.TypeArguments) //类型实参

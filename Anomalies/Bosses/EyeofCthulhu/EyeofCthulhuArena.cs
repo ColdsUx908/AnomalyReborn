@@ -1,6 +1,7 @@
 ﻿// Developed by ColdsUx
 
 using Anomalies.GameContents.Base;
+using Transoceanic.DataStructures.Rendering;
 
 namespace Anomalies.Bosses.EyeofCthulhu;
 
@@ -567,8 +568,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                 if (shouldDrawInnerParticle)
                     spriteBatch.DrawFromCenter(particleTexture, Projectile.Center + innerOffset.RotatedBy(rotation) - Main.screenPosition, null, Color.Red * Math.Min(intensity * 1.5f, 1f), 0f, scale * EyeofCthulhu_Handler.EyeShapeHelper.InnerParticleScaleMultiplier * EyeofCthulhu_Handler.EyeShapeHelper.GetOuterParticleScaleMultiplier(rotationOffset) * intensity);
             }
-
-            ParticleHandler.ExitParticleDrawRegion(spriteBatch);
+            TODrawUtils.ResetSpriteBatch(spriteBatch);
         }
         #endregion 绘制旋转攻击预警粒子
 
@@ -581,7 +581,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
         if (bloodOrbs.Count > 0) //依次进行三次绘制：大边框、主体、高亮材质
         {
-            spriteBatch.ChangeBlendState(BlendState.Additive);
+            SpriteBatchSnapshot copy = spriteBatch.ChangeState(blendState: BlendState.Additive);
 
             foreach (Projectile p in bloodOrbs)
             {
@@ -590,12 +590,12 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                 spriteBatch.DrawFromCenter(orbBorderBigTexture, p.Center - Main.screenPosition, null, Color.Red * intensity, p.rotation, p.scale * scaleMultiplier);
             }
 
-            spriteBatch.ChangeBlendState(BlendState.AlphaBlend);
+            spriteBatch.ChangeState(blendState: BlendState.AlphaBlend);
 
             foreach (Projectile p in bloodOrbs)
                 spriteBatch.DrawFromCenter(orbTexture, p.Center - Main.screenPosition, null, Color.White, p.rotation, p.scale);
 
-            spriteBatch.ChangeBlendState(BlendState.Additive);
+            spriteBatch.ChangeState(blendState: BlendState.Additive);
 
             foreach (Projectile p in bloodOrbs)
             {
@@ -603,7 +603,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                 spriteBatch.DrawFromCenter(orbBorderTexture, p.Center - Main.screenPosition, null, Color.Red * intensity, p.rotation, p.scale);
             }
 
-            spriteBatch.ChangeBlendState(BlendState.AlphaBlend);
+            spriteBatch.ResetState(copy);
         }
         #endregion 绘制血珠弹幕
 
@@ -668,14 +668,14 @@ public sealed class EyeofCthulhuArena_Player : AnomalyPlayerBehavior
             {
                 success = true;
                 float scaleMultiplier = 0.0082f;
-                //EnhancedDarknessSystem_Bridge.AddLightSource(projectile.Center, BloomParticle.BloomCircleLarge, scale: arena.Radius * scaleMultiplier);
-                //EnhancedDarknessSystem_Bridge.AddLightSource(scale: 2f, opacity: MathHelper.Clamp(Main.LocalPlayer.Distance(projectile.Center) / 640f, 0, 1));
+                EnhancedDarknessSystem.AddLightSource(projectile.Center, BloomParticle.BloomCircleLarge, scale: arena.Radius * scaleMultiplier);
+                EnhancedDarknessSystem.AddLightSource(scale: 2f, opacity: MathHelper.Clamp(Main.LocalPlayer.Distance(projectile.Center) / 640f, 0, 1));
             }
         }
 
         if (success)
         {
-            //EnhancedDarknessSystem_Bridge.ChangeDarknessIntensity(Main.LocalPlayer, f => f + 0.065f);
+            EnhancedDarknessSystem.ChangeDarknessIntensity(Main.LocalPlayer, f => f + 0.065f);
         }
     }
 

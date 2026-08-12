@@ -164,11 +164,29 @@ public static class TOReflectionUtils
     }
 
     /// <summary>
+    /// 获取所有受 Transoceanic 框架支持的 Mod（即标记了 <see cref="SupportedByTransoceanicAttribute"/> 的 Mod）。
+    /// </summary>
+    /// <returns>一个包含所有受支持 Mod 的枚举集合。</returns>
+    public static IEnumerable<Mod> GetAllSupportedMods() =>
+        from mod in ModLoader.Mods
+        where mod is TOMain || mod.Code.GetCustomAttribute<SupportedByTransoceanicAttribute>() is not null //Transoceanic 本体不标记特性，但属于受支持 Mod
+        select mod;
+
+    /// <summary>
     /// 获取能被 tModLoader 加载的所有类型（包含所有已加载 Mod 的程序集中的类型）。
     /// </summary>
     /// <returns>一个包含所有可加载类型的枚举集合。</returns>
     public static IEnumerable<Type> GetAllTypes() =>
         from mod in ModLoader.Mods
+        from type in AssemblyManager.GetLoadableTypes(mod.Code)
+        select type;
+
+    /// <summary>
+    /// 获取受 Transoceanic 框架支持的所有类型（包含所有已加载 Mod 的程序集中的类型）。
+    /// </summary>
+    /// <returns>一个包含所有可加载类型的枚举集合。</returns>
+    public static IEnumerable<Type> GetAllSupportedTypes() =>
+        from mod in GetAllSupportedMods()
         from type in AssemblyManager.GetLoadableTypes(mod.Code)
         select type;
 
@@ -190,7 +208,7 @@ public static class TOReflectionUtils
     /// <returns>符合条件的类型枚举。</returns>
     /// <remarks>使用此方法的加载器应在 <see cref="Mod.PostSetupContent"/> 中调用，以确保所有 Mod 的类型均已加载。</remarks>
     public static IEnumerable<Type> GetTypesDerivedFrom(Type baseType) =>
-        from type in GetAllTypes()
+        from type in GetAllSupportedTypes()
         where baseType.IsAssignableTo(type) && !type.IsAbstract
         select type;
 
@@ -231,7 +249,7 @@ public static class TOReflectionUtils
     /// <returns>符合条件的类型实例枚举。</returns>
     /// <remarks>使用此方法的加载器应在 <see cref="Mod.PostSetupContent"/> 中调用。</remarks>
     public static IEnumerable<T> GetTypeInstancesDerivedFrom<T>(bool notInitialize = false) where T : class =>
-        GetAllTypes().Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
+        GetAllSupportedTypes().Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
         .Select(type => (T)CreateInstanceSafe(type, notInitialize))
         .Where(instance => instance is not null);
 
@@ -255,7 +273,7 @@ public static class TOReflectionUtils
     /// <returns>包含类型与实例的元组枚举。</returns>
     /// <remarks>使用此方法的加载器应在 <see cref="Mod.PostSetupContent"/> 中调用。</remarks>
     public static IEnumerable<(Type type, T instance)> GetTypesAndInstancesDerivedFrom<T>(bool notInitialize = false) where T : class =>
-        GetAllTypes().Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
+        GetAllSupportedTypes().Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
         .Select(type => (type, instance: (T)CreateInstanceSafe(type, notInitialize))).Where(pair => pair.instance is not null);
 
     /// <summary>
@@ -276,7 +294,7 @@ public static class TOReflectionUtils
     /// <param name="inherit">是否搜索继承链上的特性。</param>
     /// <returns>包含类型与特性实例的元组枚举。</returns>
     /// <remarks>使用此方法的加载器应在 <see cref="Mod.PostSetupContent"/> 中调用。</remarks>
-    public static IEnumerable<(Type type, T attribute)> GetTypesWithAttribute<T>(bool inherit = true) where T : Attribute => GetAllTypes()
+    public static IEnumerable<(Type type, T attribute)> GetTypesWithAttribute<T>(bool inherit = true) where T : Attribute => GetAllSupportedTypes()
         .Select(type => (type, attribute: type.Attribute<T>(inherit))).Where(pair => pair.attribute is not null);
 
     /// <summary>
@@ -298,7 +316,7 @@ public static class TOReflectionUtils
     /// <returns>包含方法信息与特性实例的元组枚举。</returns>
     /// <remarks>使用此方法的加载器应在 <see cref="Mod.PostSetupContent"/> 中调用。</remarks>
     public static IEnumerable<(MethodInfo method, T attribute)> GetMethodsWithAttribute<T>(bool inherit = true) where T : Attribute =>
-        GetAllTypes().SelectMany(type => type.GetRealMethods(UniversalBindingFlags)
+        GetAllSupportedTypes().SelectMany(type => type.GetRealMethods(UniversalBindingFlags)
         .Select(method => (method, attribute: method.Attribute<T>(inherit))).Where(pair => pair.attribute is not null));
 
     /// <summary>
@@ -312,7 +330,7 @@ public static class TOReflectionUtils
     public static IEnumerable<(TMember member, TAttribute attribute)> GetMembersWithAttribute<TMember, TAttribute>(bool inherit = true)
         where TMember : MemberInfo
         where TAttribute : Attribute =>
-        GetAllTypes().SelectMany(type => type.GetMembers(UniversalBindingFlags)).OfType<TMember>()
+        GetAllSupportedTypes().SelectMany(type => type.GetMembers(UniversalBindingFlags)).OfType<TMember>()
         .Select(member => (member, attribute: member.Attribute<TAttribute>(inherit))).Where(pair => pair.attribute is not null);
 
     /// <summary>

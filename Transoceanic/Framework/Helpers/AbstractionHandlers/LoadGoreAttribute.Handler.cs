@@ -13,7 +13,7 @@ public sealed class GoreLoader : IContentLoader
     /// </summary>
     void IContentLoader.PostSetupContent()
     {
-        foreach (Mod mod in ModLoader.Mods)
+        foreach (Mod mod in TOReflectionUtils.GetAllSupportedMods())
         {
             foreach ((FieldInfo field, LoadGoreAttribute attribute) in TOReflectionUtils.GetMembersWithAttribute<FieldInfo, LoadGoreAttribute>(mod))
             {

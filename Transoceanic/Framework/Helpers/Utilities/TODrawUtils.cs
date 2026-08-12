@@ -142,4 +142,13 @@ public static class TODrawUtils
     /// <param name="rotation">旋转角度（弧度）。</param>
     public static void DrawBorderString(SpriteBatch spriteBatch, DynamicSpriteFont font, StringBuilder textBuilder, Vector2 baseDrawPosition, Color mainColor, Color borderColor, int way = 8, float borderWidth = 1f, float scale = 1f, float rotation = 0f) =>
         DrawBorderString(spriteBatch, font, textBuilder.ToString(), baseDrawPosition, mainColor, borderColor, way, borderWidth, scale, rotation);
+
+    /// <summary>
+    /// 恢复 SpriteBatch 的默认绘制状态。
+    /// </summary>
+    public static void ResetSpriteBatch(SpriteBatch spriteBatch)
+    {
+        spriteBatch.End();
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
+    }
 }

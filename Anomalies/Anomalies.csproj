@@ -26,4 +26,8 @@
       </Reference>
     </ItemGroup>
 
+    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+      <Exec Command="call $(ProjectDir)Tools\EasyXnb\EasyXnb.exe" />
+    </Target>
+
 </Project>

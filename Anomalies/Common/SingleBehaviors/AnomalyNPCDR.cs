@@ -42,8 +42,8 @@ public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior, IContentLoader
             behavior.ModifyHitNPC_DR(projectile, npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (projectile.TryGetBehavior(out AnomalySingleProjectileBehavior projectileBehavior, nameof(AnomalySingleProjectileBehavior.ModifyHitNPC_DR)))
             projectileBehavior.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
-        if (projectile.ModProjectile is IAnomalyModProjectile caProjectile)
-            caProjectile.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
+        if (projectile.ModProjectile is IAnomalyModProjectile anomalyProjectile)
+            anomalyProjectile.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
 
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);

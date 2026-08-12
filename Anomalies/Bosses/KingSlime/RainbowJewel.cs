@@ -1,10 +1,11 @@
 ﻿// Developed by ColdsUx
 
+using Anomalies.Assets.Effects;
 using Anomalies.DataStructures;
 
 namespace Anomalies.Bosses.KingSlime;
 
-public sealed class RainbowJewel : JewelNPC
+public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShader
 {
     public enum Behavior : byte
     {
@@ -350,5 +351,15 @@ public sealed class RainbowJewel : JewelNPC
                 spriteBatch.Draw(texture, oldold + entity.Size / 2f - screenPos, null, color, rotation, origin, scale, effects, 0f);
             }
         }
+    }
+
+    public void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle)
+    {
+        AnomalyEffects.CustomBossBars.RainbowJewel.Data
+            .UseImage1(AnomalyTextures.Noise._Turbulence)
+            .UseImage2(AnomalyTextures.Noise._Perlin)
+            .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
+            .SetCustomParameter("uPosition", destinationRentangle.BottomLeft())
+            .Apply();
     }
 }

@@ -404,7 +404,7 @@ public abstract partial class ModBuffDetour<T> : ModTexturedTypeDetour<T> where 
     /// <inheritdoc cref="ModBuff.ReApply(NPC, int, int)"/>
     public virtual bool Detour_ReApply__NPC(Orig_ReApply__NPC orig, T self, NPC npc, int time, int buffIndex) => orig(self, npc, time, buffIndex);
 
-    partial void ApplyExtraDetour()
+    unsafe partial void ApplyExtraDetour()
     {
         ApplySingleDetour(Detour_Update__Player);
         ApplySingleDetour(Detour_Update__NPC);
@@ -535,7 +535,7 @@ public abstract partial class GlobalBuffDetour<T> : ModTypeDetour<T> where T : G
     /// <inheritdoc cref="GlobalBuff.ReApply(int, NPC, int, int)"/>
     public virtual bool Detour_ReApply__NPC(Orig_ReApply__NPC orig, T self, int type, NPC npc, int time, int buffIndex) => orig(self, type, npc, time, buffIndex);
 
-    partial void ApplyExtraDetour()
+    unsafe partial void ApplyExtraDetour()
     {
         ApplySingleDetour(Detour_Update__Player);
         ApplySingleDetour(Detour_Update__NPC);

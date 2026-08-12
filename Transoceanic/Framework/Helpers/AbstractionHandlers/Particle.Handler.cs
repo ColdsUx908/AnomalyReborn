@@ -137,8 +137,8 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         _ParticlesToDraw_AlphaBlend.Clear();
         _ParticlesToDraw_NonPremultiplied.Clear();
         _ParticlesToDraw_Additive.Clear();
-
-        ExitParticleDrawRegion(spriteBatch);
+        TODrawUtils.
+                ResetSpriteBatch(spriteBatch);
     }
 
     /// <summary>
@@ -211,15 +211,6 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
     }
 
     /// <summary>
-    /// 退出粒子绘制区域，恢复默认渲染状态。
-    /// </summary>
-    public static void ExitParticleDrawRegion(SpriteBatch spriteBatch)
-    {
-        spriteBatch.End();
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
-    }
-
-    /// <summary>
     /// 在所有实体更新后处理粒子的更新与移除。
     /// </summary>
     public override void PostUpdateEverything()
@@ -246,6 +237,7 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
             particle.Center += particle.Velocity;
     }
 
+    [LoadPriority(1)]
     void IContentLoader.PostSetupContent()
     {
         _ParticleCache = [];
