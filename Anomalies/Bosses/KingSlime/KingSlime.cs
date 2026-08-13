@@ -486,7 +486,6 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
     {
         AnomalyEffects.CustomBossBars.KingSlime.Data
             .UseImage1(AnomalyTextures.Noise._Turbulence)
-            .UseImage2(AnomalyTextures.Noise._Perlin)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
             .SetCustomParameter("uPosition", destinationRentangle.BottomLeft())
             .Apply();

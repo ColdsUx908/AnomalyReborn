@@ -6,6 +6,8 @@ namespace Anomalies.Common.SingleBehaviors;
 
 public sealed class PlayerBaseStatBoosts : AnomalyPlayerBehavior, IContentLoader
 {
+    public override decimal Priority => -10m; //在最后应用
+
     public override void UpdateEquips()
     {
         if (AnomalyServerConfig.Instance.FasterTilePlacement)

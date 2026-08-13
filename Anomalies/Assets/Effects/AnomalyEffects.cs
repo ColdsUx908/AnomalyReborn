@@ -12,6 +12,7 @@ public sealed class AnomalyEffects : IContentLoader
     {
         public static MiscShaderContainer EyeofCthulhu;
         public static MiscShaderContainer KingSlime;
+        public static MiscShaderContainer QueenBee;
         public static MiscShaderContainer QueenSlime;
         public static MiscShaderContainer RainbowJewel;
     }
@@ -23,6 +24,7 @@ public sealed class AnomalyEffects : IContentLoader
 
         CustomBossBars.EyeofCthulhu = LoadAndRegisterMiscShader(nameof(CustomBossBars), nameof(CustomBossBars.EyeofCthulhu));
         CustomBossBars.KingSlime = LoadAndRegisterMiscShader(nameof(CustomBossBars), nameof(CustomBossBars.KingSlime));
+        CustomBossBars.QueenBee = LoadAndRegisterMiscShader(nameof(CustomBossBars), nameof(CustomBossBars.QueenBee));
         CustomBossBars.QueenSlime = LoadAndRegisterMiscShader(nameof(CustomBossBars), nameof(CustomBossBars.QueenSlime));
         CustomBossBars.RainbowJewel = LoadAndRegisterMiscShader(nameof(CustomBossBars), nameof(CustomBossBars.RainbowJewel));
     }

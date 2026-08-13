@@ -13,6 +13,14 @@ public sealed class AnomalyTextures
         [LoadTexture(Path + "BasicCircle")]
         internal static Asset<Texture2D> _BasicCircle;
         public static Texture2D BasicCircle => _BasicCircle?.Value;
+
+        [LoadTexture(Path + "CrystalTextGlow")]
+        internal static Asset<Texture2D> _CrystalTextGlow;
+        public static Texture2D CrystalTextGlow => _CrystalTextGlow?.Value;
+
+        [LoadTexture(Path + "CrystalTextSparkle")]
+        internal static Asset<Texture2D> _CrystalTextSparkle;
+        public static Texture2D CrystalTextSparkle => _CrystalTextSparkle?.Value;
     }
 
 

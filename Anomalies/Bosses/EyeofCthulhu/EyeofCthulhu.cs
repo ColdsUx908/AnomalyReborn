@@ -562,7 +562,6 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
     {
         AnomalyEffects.CustomBossBars.EyeofCthulhu.Data
             .UseImage1(AnomalyTextures.Noise._Vein)
-            .UseImage2(AnomalyTextures.Noise._Perlin)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
             .SetCustomParameter("uPosition", destinationRentangle.BottomLeft())
             .Apply();

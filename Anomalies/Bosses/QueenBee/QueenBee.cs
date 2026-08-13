@@ -1,5 +1,6 @@
 ﻿// Developed by ColdsUx
 
+using Anomalies.Assets.Effects;
 using Anomalies.DataStructures;
 
 namespace Anomalies.Bosses.QueenBee;
@@ -38,7 +39,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
         Phase2_Stinger,
     }
 
-    public const string AnomalyQueenBeePath = "Anomalies/Anomaly/QueenBee/";
+    public const string AnomalyQueenBeePath = AnomalySharedData.ModPath + "Bosses/QueenBee/";
 
     public const float DespawnDistance = 8000f;
     public const float EnrageDistance = 1000f;
@@ -354,5 +355,15 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
         }
 
         return true;
+    }
+
+    public override void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle)
+    {
+        AnomalyEffects.CustomBossBars.QueenBee.Data
+            .UseImage1(AnomalyTextures.Noise._Milky)
+            .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
+            .SetCustomParameter("uScreenRatio", TODrawUtils.ScreenRatio)
+            .SetCustomParameter("uPosition", destinationRentangle.BottomLeft())
+            .Apply();
     }
 }

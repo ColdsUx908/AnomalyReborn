@@ -8,6 +8,11 @@ namespace Transoceanic.Framework.Helpers;
 public static class TODrawUtils
 {
     /// <summary>
+    /// 获取当前屏幕的宽高比（宽度 / 高度）。
+    /// </summary>
+    public static float ScreenRatio => Main.screenWidth / (float)Main.screenHeight;
+
+    /// <summary>
     /// 获取当前屏幕的尺寸（像素）。
     /// </summary>
     public static Vector2 ScreenSize => new(Main.screenWidth, Main.screenHeight);
