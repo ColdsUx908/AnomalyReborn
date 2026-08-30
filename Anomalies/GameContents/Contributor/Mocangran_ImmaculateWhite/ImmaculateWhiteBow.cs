@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
+﻿namespace Anomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
 
 public sealed class ImmaculateWhiteBow : AnomalyModProjectile
 {

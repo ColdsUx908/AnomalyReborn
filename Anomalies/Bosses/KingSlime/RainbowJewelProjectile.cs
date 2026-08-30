@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.KingSlime;
+﻿namespace Anomalies.Bosses.KingSlime;
 
 public class RainbowJewelProjectile : AnomalyModProjectile
 {
@@ -126,3 +124,4 @@ public class RainbowJewelProjectile : AnomalyModProjectile
 
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(Projectile.Center, 7f * Projectile.scale).Collides(targetHitbox);
 }
+

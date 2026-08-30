@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Common.SingleBehaviors;
+﻿namespace Anomalies.Common.SingleBehaviors;
 
 public sealed class GFBMetalPipeFalling : AnomalyPlayerBehavior
 {
@@ -15,3 +13,4 @@ public sealed class GFBMetalPipeFalling : AnomalyPlayerBehavior
         return true;
     }
 }
+

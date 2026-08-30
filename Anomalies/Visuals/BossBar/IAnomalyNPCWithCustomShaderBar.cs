@@ -1,8 +1,6 @@
-﻿// Developed by ColdsUx
+﻿namespace Anomalies.Visuals.BossBar;
 
-namespace Anomalies.Visuals;
-
-public interface IAnomalyNPCWithCustomShader
+public interface IAnomalyNPCWithCustomShaderBar
 {
     /// <summary>
     /// 在绘制Boss血条时应用自定义的着色器。

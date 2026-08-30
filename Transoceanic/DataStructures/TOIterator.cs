@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures;
+﻿namespace Transoceanic.DataStructures;
 
 /// <summary>
 /// 提供对一组指定类型对象的延迟、条件过滤迭代功能。

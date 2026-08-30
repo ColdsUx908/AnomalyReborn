@@ -1,10 +1,4 @@
-﻿// Developed by ColdsUx
-
-#if DEBUG
-#define TEST_DEV
-#endif
-
-#if TEST_DEV
+﻿#if DEBUG
 namespace Anomalies.GameContents.Developer;
 
 /// <summary>

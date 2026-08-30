@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures;
+﻿namespace Transoceanic.DataStructures;
 
 public sealed class ModReference : IContentLoader
 {
@@ -154,3 +152,4 @@ public sealed class ModReference : IContentLoader
         WrathoftheGods = null;
     }
 }
+

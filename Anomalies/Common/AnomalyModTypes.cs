@@ -1,4 +1,4 @@
-﻿// Developed by ColdsUx
+﻿using Anomalies.Visuals.BossBar;
 
 namespace Anomalies.Common;
 

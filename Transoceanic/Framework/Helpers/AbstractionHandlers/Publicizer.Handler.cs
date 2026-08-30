@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.Helpers;
+﻿namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
 /// 提供一系列强类型的反射获取方法，若成员不存在则抛出异常。

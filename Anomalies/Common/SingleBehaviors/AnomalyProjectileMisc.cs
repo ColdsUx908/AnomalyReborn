@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Common.SingleBehaviors;
+﻿namespace Anomalies.Common.SingleBehaviors;
 
 public sealed class AnomalyProjectileMisc : AnomalyGlobalProjectileBehavior
 {
@@ -13,3 +11,4 @@ public sealed class AnomalyProjectileMisc : AnomalyGlobalProjectileBehavior
         anomalyProjectile.ShouldRunAnomalyAI = true;
     }
 }
+

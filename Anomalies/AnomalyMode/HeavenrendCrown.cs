@@ -11,7 +11,7 @@ public sealed class HeavenrendCrown : AnomalyModItem, ILocalizationPrefix
     public override string LocalizationCategory => "AnomalyMode";
     public string LocalizationPrefix => AnomalySharedData.ModLocalizationPrefix + "AnomalyMode";
 
-    public static EnergyParticleSet EnchantmentEnergyParticles = new(-1, 2,
+    public static EnchantedParticleSet EnchantmentEnergyParticles = new(-1, 0.5f,
         () => Main.rand.NextFloat() switch
         {
             < 0.3f => AnomalySharedData.MainColor,
@@ -45,7 +45,6 @@ public sealed class HeavenrendCrown : AnomalyModItem, ILocalizationPrefix
     public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {
         Texture2D texture = Item.Texture;
-        Rectangle itemFrame = Main.itemAnimations[Type] is null ? texture.Frame() : Main.itemAnimations[Type].GetFrame(texture);
         Vector2 particleDrawCenter = position;
 
         EnchantmentEnergyParticles.DrawSet(particleDrawCenter + Main.screenPosition);
@@ -93,14 +92,14 @@ public sealed class HeavenrendCrownHoldout : AnomalyModProjectile
             case 1:
                 if (!AnomalySharedData.Anomaly)
                 {
-                    SoundEngine.PlaySound(AnomalyModeHandler.ActivationSound);
+                    SoundEngine.PlaySound(AnomalyHandler.ActivationSound);
                     if (Main.GameMode != GameModeID.Creative)
                         Main.GameMode = GameModeID.Master;
                     AnomalySharedData.Anomaly = true;
                 }
                 else
                 {
-                    SoundEngine.PlaySound(AnomalyModeHandler.ActivationSound);
+                    SoundEngine.PlaySound(AnomalyHandler.ActivationSound);
                     AnomalySharedData.Anomaly = false;
                 }
                 break;

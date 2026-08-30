@@ -1,7 +1,6 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.Assets.Effects;
+﻿using Anomalies.Assets.Effects;
 using Anomalies.DataStructures;
+using Anomalies.Visuals.BossBar;
 
 namespace Anomalies.Bosses.QueenBee;
 
@@ -37,12 +36,13 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
         Phase2_BeeSwarm3,
         Phase2_Stinger,
+        Phase2_Dance,
     }
 
     public const string AnomalyQueenBeePath = AnomalySharedData.ModPath + "Bosses/QueenBee/";
 
     public const float DespawnDistance = 8000f;
-    public const float EnrageDistance = 1000f;
+    public const float EnrageDistance = 1250f;
 
     public const float Phase1_2LifeRatio_Anomaly = 0.5f;
     public const float Phase1_2LifeRatio_Ultra = 0.55f;
@@ -199,6 +199,19 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
         }
     }
 
+    public bool AttackRandomVariation_Dance
+    {
+        get => AnomalyNPC.AnomalyAI32[0].bits[6];
+        set
+        {
+            if (AnomalyNPC.AnomalyAI32[0].bits[6] != value)
+            {
+                AnomalyNPC.AnomalyAI32[0].bits[6] = value;
+                AnomalyNPC.AIChanged32[0] = true;
+            }
+        }
+    }
+
     public Projectile OwnedCombCell
     {
         get => Projectile.GetProjectileFromIndex(AnomalyNPC.AnomalyAI32[1].i);
@@ -215,7 +228,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
     public bool OwnCombCell => OwnedCombCell.active && OwnedCombCell.ModProjectile is CombCell combCell;
     public CombCell ModOwnedCombCell => OwnedCombCell.GetModProjectile<CombCell>();
 
-    public Projectile SafeCombCell
+    public Projectile SpecialCombCell
     {
         get => Projectile.GetProjectileFromIndex(AnomalyNPC.AnomalyAI32[2].i);
         set
@@ -228,8 +241,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
             }
         }
     }
-    public bool HasSafeCombCell => SafeCombCell.active && SafeCombCell.ModProjectile is CombCell combCell && combCell.BehaviorType == CombCell.Behavior.BeeSwarm2_Safe;
-    public CombCell ModSafeCombCell => SafeCombCell.GetModProjectile<CombCell>();
+    public bool HasSpecialCombCell => SpecialCombCell.active && SpecialCombCell.ModProjectile is CombCell combCell;
 
     public int CurrentAttackCounter
     {
@@ -270,11 +282,13 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
      *   [0].
      *       bits[0] IsCharging
      *       bits[1] ShouldDecelerate
-     *       bits[2] AttackRandomVariation_Charge
-     *       bits[3] AttackRandomVariation_Stinger
-     *       bits[4] AttackRandomVariation_BeeSwarm
+     *       bits[2] HasBeenEnraged
+     *       bits[3] AttackRandomVariation_Charge
+     *       bits[4] AttackRandomVariation_Stinger
+     *       bits[5] AttackRandomVariation_BeeSwarm
+     *       bits[6] AttackRandomVariation_Dance
      *   [1].i OwnedCombCell
-     *   [2].i SafeCombCell
+     *   [2].i SpecialCombCell
      *   [3].i CurrentAttackCounter
      * 
      * AnomalyAI64
@@ -293,9 +307,8 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
     public override void SetDefaults()
     {
-        NPC.lifeMax = 5000;
-
         AttackRandomVariation_BeeSwarm = Main.rand.NextBool();
+        AttackRandomVariation_Dance = Main.rand.NextBool();
 
         AnomalyNPC.DynamicDRHandler = new TimedDDRHandler(
             new TimedDDRHandler.SingleDDRHandler(1f, Phase2LifeRatio, null, n => GetInstance(n).CurrentPhase >= Phase.PhaseChange_1To2, 60),
@@ -305,6 +318,17 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
         NPC.AddAnomalyHPIndicator(Phase1_2LifeRatio_Anomaly, Phase1_2LifeRatio_Ultra, true);
         NPC.AddAnomalyHPIndicator(Phase2LifeRatio_Anomaly, Phase2LifeRatio_Ultra);
         NPC.AddAnomalyHPIndicator(Phase2_2LifeRatio_Anomaly, Phase2_2LifeRatio_Ultra, true, n => GetInstance(n).Phase2);
+    }
+
+    public override void SetDefaultsFinal()
+    {
+        NPC.lifeMax = CalamityEnabled ? 7500 : 6000;
+    }
+
+    public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
+    {
+        const float VanillaExpertLifeMultiplier = 1.4f;
+        NPC.lifeMax = (int)MathF.Round(NPC.lifeMax / (VanillaExpertLifeMultiplier * 1.5f) / bossAdjustment / 10f) * 10;
     }
 
     public override void FindFrame(int frameHeight)
@@ -341,7 +365,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
     public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
     {
         if (Ultra && !Phase2)
-            modifiers.SetMaxDamage((int)(NPC.life - NPC.lifeMax * Phase2LifeRatio));
+            modifiers.SetMaxDamage((int)(NPC.life - NPC.lifeMax * Phase2LifeRatio + 1));
     }
 
     public override bool CheckDead()
@@ -367,3 +391,4 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
             .Apply();
     }
 }
+

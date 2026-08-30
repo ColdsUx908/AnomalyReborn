@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.GameContents.Dusts;
+﻿using Anomalies.GameContents.Dusts;
 
 namespace Anomalies.Bosses.KingSlime;
 
@@ -654,15 +652,8 @@ public sealed partial class KingSlime
                             NPC.noGravity = true;
                             NPC.Center = TeleportDestination;
 
-                            Vector2 dustVelocity = Main.rand.NextPolarVector2(15f, 20f);
-                            Dust.NewDustPerfectAction<SquashDust>(NPC.Center - dustVelocity.ToCustomLength(Main.rand.NextFloat(250f, 400f)), d =>
-                            {
-                                d.velocity = dustVelocity;
-                                d.scale = Main.rand.NextFloat(1.3f, 1.75f);
-                                d.noGravity = true;
-                                d.fadeIn = 0.25f;
-                                d.color = Color.GetRandomRainbowColor();
-                            });
+                            Vector2 dustVelocity = Main.rand.NextPolarVector2(10f, 12.5f);
+                            ParticleHandler.SpawnParticle(new SquashParticle(NPC.Center - dustVelocity * Main.rand.NextFloat(25, 30), dustVelocity, 20, Main.rand.NextFloat(1.3f, 1.75f), Color.GetRandomRainbowColor(), baseSize: null, noGravity: true) { FadeIn = 0.25f });
                         }
                     }
                     else if (TeleportScaleMultiplier >= 1f)
@@ -754,3 +745,4 @@ public sealed partial class KingSlime
         #endregion 行为函数
     }
 }
+

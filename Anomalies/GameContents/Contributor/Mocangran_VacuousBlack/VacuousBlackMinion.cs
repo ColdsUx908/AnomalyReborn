@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
+﻿using Anomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
 
 namespace Anomalies.GameContents.Contributor.Mocangran_VacuousBlack;
 
@@ -94,3 +92,4 @@ public sealed class VacuousBlackMinion : AnomalyModProjectile
         target.velocity = Owner.GetVelocityTowards(target.Center, GetInterpolation(10f, 1.35f));
     }
 }
+

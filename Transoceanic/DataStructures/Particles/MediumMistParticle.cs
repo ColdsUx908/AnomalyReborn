@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures.Particles;
+﻿namespace Transoceanic.DataStructures.Particles;
 
 public class MediumMistParticle : Particle
 {

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures.Particles;
+﻿namespace Transoceanic.DataStructures.Particles;
 
 public class EnchantedParticle : Particle
 {
@@ -31,8 +29,14 @@ public class EnchantedParticle : Particle
         Scale = MathHelper.SmoothStep(0.05f, 0.125f, Utils.GetLerpValue(EdgeOffset, 6f, distanceToCenter, true));
         Scale *= Utils.GetLerpValue(Lifetime, Lifetime - 10f, Timer, true);
 
-        if (distanceToCenter > 4.5f)
+        if (distanceToCenter > 4f)
             Center = Vector2.Lerp(Center, Vector2.Zero, InterpolationSpeed);
+        else
+        {
+            Scale *= 0.92f;
+            if (Scale < 0.05f)
+                Kill();
+        }
 
         Color = Color.Lerp(EdgeColor, CenterColor, Utils.GetLerpValue(0f, 0.67f, LifetimeCompletion, true));
         Color.A = 50;

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Common;
+﻿namespace Anomalies.Common;
 
 public enum AnomalyGamePhase
 {
@@ -46,4 +44,5 @@ public interface IAnomalyLocalizationPrefix : ILocalizationPrefix
         _ => ""
     } + LocalizationName;
 }
+
 

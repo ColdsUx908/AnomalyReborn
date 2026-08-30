@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.ExternalAttributes;
+﻿namespace Transoceanic.Framework.ExternalAttributes;
 
 /// <summary>
 /// 指示源生成器为指定的泛型目标类型生成 <c>Detour</c>（方法拦截）支持类，通过重写虚方法拦截目标类型中所有公有实例虚方法和抽象方法。

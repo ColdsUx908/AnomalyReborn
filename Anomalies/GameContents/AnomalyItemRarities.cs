@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.GameContents;
+﻿namespace Anomalies.GameContents;
 
 public sealed class Celestial : ModRarity
 {
@@ -9,4 +7,5 @@ public sealed class Celestial : ModRarity
     public override Color RarityColor => TOSharedData.CelestialColor;
     public override int GetPrefixedRarity(int offset, float valueMult) => Type;
 }
+
 

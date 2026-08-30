@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using CalamityMod;
+﻿using CalamityMod;
 using CalamityMod.CalPlayer;
 using CalamityMod.Items;
 using CalamityMod.NPCs;
@@ -75,3 +73,4 @@ public static class BridgeExtensions_Calamity
         public CalamityGlobalProjectile CalamityProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => projectile?.GetGlobalProjectile<CalamityGlobalProjectile>(); }
     }
 }
+

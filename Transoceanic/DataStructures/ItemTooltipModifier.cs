@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework;
+﻿namespace Transoceanic.Framework;
 
 /// <summary>
 /// 管理物品提示信息的字典容器，用于存储、索引和检索 <see cref="TooltipLine"/> 条目。

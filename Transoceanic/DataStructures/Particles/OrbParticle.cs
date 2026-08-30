@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures.Particles;
+﻿namespace Transoceanic.DataStructures.Particles;
 
 public class OrbParticle : Particle
 {
@@ -44,14 +42,14 @@ public class OrbParticle : Particle
         Rotation = Velocity.ToRotation() + MathHelper.PiOver2;
     }
 
-    public override bool PreDraw(SpriteBatch spriteBatch)
+    public override bool PreDraw(SpriteBatch spriteBatch, Vector2 drawOffset = default)
     {
         Texture2D texture = Texture;
         Vector2 scale = new(Scale);
 
-        spriteBatch.DrawFromCenter_VectorScale(texture, Center - Main.screenPosition, null, Color, Rotation, scale);
+        spriteBatch.DrawFromCenter_VectorScale(texture, Center + drawOffset - Main.screenPosition, null, Color, Rotation, scale);
         if (GlowCenter)
-            spriteBatch.DrawFromCenter_VectorScale(texture, Center - Main.screenPosition, null, Color.White * FadeOut, Rotation, scale * new Vector2(0.5f, 0.5f));
+            spriteBatch.DrawFromCenter_VectorScale(texture, Center + drawOffset - Main.screenPosition, null, Color.White * FadeOut, Rotation, scale * new Vector2(0.5f, 0.5f));
 
         return false;
     }

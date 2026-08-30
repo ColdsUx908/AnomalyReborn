@@ -1,11 +1,25 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.QueenBee;
+﻿namespace Anomalies.Bosses.QueenBee;
 
 public sealed class FriendlyBee : AnomalyModProjectile
 {
+    /*
+    public static class DanceHelper
+    {
+        public const float TotalTime = 90f; //动作总耗时80帧
+
+        public static Vector2 GetOffset_Round(int timer, float radius) => timer switch
+        {
+            <= 40 => new Vector2(0f, -radius) + new PolarVector2(Utils.Remap(timer, 0, 40, radius, radius * 0.875f), MathHelper.PiOver2 + timer / 40f * MathHelper.TwoPi), //第一段：顺时针圈
+            <= 50 => new PolarVector2(radius * 0.125f, -MathHelper.PiOver2 - (timer - 40) / 10f * MathHelper.Pi), //第二段：小半圆
+            <= 90 => new Vector2(0f, -radius) + new PolarVector2(Utils.Remap(timer, 50, 90, radius * 1.125f, radius), MathHelper.PiOver2 - (timer - 50) / 40f * MathHelper.TwoPi), //第三段：逆时针圈
+            _ => Vector2.Zero
+        };
+    }
+    */
+
     public const byte Behavior_SwarmReminder = 1;
-    public const byte Behavior_SafeCombCellReminder = 2;
+    public const byte Behavior_RoundDanceReminder = 2;
+    public const byte Behavior_WaggleDanceReminder = 3;
 
     /* 数组使用约定
      * 
@@ -55,15 +69,6 @@ public sealed class FriendlyBee : AnomalyModProjectile
                     Projectile.Kill();
                 break;
 
-            case Behavior_SafeCombCellReminder:
-                Projectile.scale = 0.75f;
-
-                Projectile.Opacity = Timer1 <= 70 ? Math.Clamp(Timer1 / 20f, 0f, 1f) : Math.Clamp((90 - Timer1) / 20f, 0f, 1f);
-                Projectile.velocity *= 1.01f;
-                if (Timer1 >= 90)
-                    Projectile.Kill();
-                break;
-
             default:
                 Projectile.Kill();
                 break;
@@ -72,3 +77,4 @@ public sealed class FriendlyBee : AnomalyModProjectile
 
     public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI) => behindNPCs.Add(index);
 }
+

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Common;
+﻿namespace Anomalies.Common;
 
 public sealed class AnomalyKeybinds : ModSystem, IAnomalyLoader
 {
@@ -12,3 +10,4 @@ public sealed class AnomalyKeybinds : ModSystem, IAnomalyLoader
     {
     }
 }
+

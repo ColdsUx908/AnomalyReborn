@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.KingSlime;
+﻿namespace Anomalies.Bosses.KingSlime;
 
 public class RubyJewelProjectile : AnomalyModProjectile
 {
@@ -42,3 +40,4 @@ public class RubyJewelProjectile : AnomalyModProjectile
         }
     }
 }
+

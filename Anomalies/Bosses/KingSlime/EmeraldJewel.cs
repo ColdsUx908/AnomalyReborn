@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.DataStructures;
+﻿using Anomalies.DataStructures;
 using Anomalies.GameContents.Dusts;
 
 namespace Anomalies.Bosses.KingSlime;
@@ -124,14 +122,7 @@ public sealed class EmeraldJewel : JewelNPC
                     NPC.rotation += (0.1f + Timer1 / 135f) * NPC.direction;
 
                     Vector2 dustVelocity = Main.rand.NextPolarVector2(10.5f, 14.5f);
-                    Dust.NewDustPerfectAction<SquashDust>(NPC.Center - dustVelocity.ToCustomLength(Main.rand.NextFloat(150f, 250f)), d =>
-                    {
-                        d.velocity = dustVelocity;
-                        d.scale = Main.rand.NextFloat(0.9f, 1.2f);
-                        d.noGravity = true;
-                        d.fadeIn = 0.5f;
-                        d.color = JewelHandler.EmeraldColor;
-                    });
+                    ParticleHandler.SpawnParticle(new SquashParticle(NPC.Center - dustVelocity * Main.rand.NextFloat(20, 25), dustVelocity, 15, Main.rand.NextFloat(0.9f, 1.2f), JewelHandler.EmeraldColor, baseSize: null, noGravity: true) { FadeIn = 0.5f });
 
                     if (Timer1 > 150) //正常情况下这里不应该被触发，因为开始冲刺由史莱姆王控制
                         CurrentAttackPhase = 1;
@@ -226,3 +217,4 @@ public sealed class EmeraldJewel : JewelNPC
         return true;
     }
 }
+

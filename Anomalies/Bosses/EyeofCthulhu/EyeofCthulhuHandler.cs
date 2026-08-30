@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.EyeofCthulhu;
+﻿namespace Anomalies.Bosses.EyeofCthulhu;
 
 public enum BehaviorCommand_Servant
 {
@@ -21,7 +19,7 @@ public enum BehaviorCommand_Arena
     EyeSpinLast,
 }
 
-public static class EyeofCthulhu_Handler
+public static class EyeofCthulhuHandler
 {
     public static class EyeShapeHelper
     {
@@ -211,3 +209,4 @@ public static class EyeofCthulhu_Handler
         }
     }
 }
+

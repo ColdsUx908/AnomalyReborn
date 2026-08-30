@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.DataStructures;
+﻿namespace Anomalies.DataStructures;
 
 public interface IDynamicDRHandler
 {

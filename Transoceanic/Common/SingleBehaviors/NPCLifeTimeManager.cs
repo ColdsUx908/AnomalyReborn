@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Common.SingleBehaviors;
+﻿namespace Transoceanic.Common.SingleBehaviors;
 
 public sealed class NPCLifeTimeManager : TOGlobalNPCBehavior
 {
@@ -22,3 +20,4 @@ public sealed class NPCLifeTimeManager : TOGlobalNPCBehavior
         return true;
     }
 }
+

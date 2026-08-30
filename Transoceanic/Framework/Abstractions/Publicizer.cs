@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.Abstractions;
+﻿namespace Transoceanic.Framework.Abstractions;
 
 public abstract class InstancedPublicizer(object Source)
 {

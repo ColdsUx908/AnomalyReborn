@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures;
+﻿namespace Transoceanic.DataStructures;
 
 //含扩展
 

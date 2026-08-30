@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Terraria.GameContent.Bestiary;
+﻿using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
 

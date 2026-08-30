@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.KingSlime;
+﻿namespace Anomalies.Bosses.KingSlime;
 
 public sealed class EmeraldJewelShadow : AnomalyModProjectile
 {

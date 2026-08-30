@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.QueenBee;
+﻿namespace Anomalies.Bosses.QueenBee;
 
 public sealed partial class QueenBee
 {
@@ -106,22 +104,11 @@ public sealed partial class QueenBee
                         CombCell.Behavior.BeeSwarm
                         or CombCell.Behavior.BeeSwarm2
                         or CombCell.Behavior.BeeSwarm3
+                        or CombCell.Behavior.Dance
                         or CombCell.Behavior.PhaseChange)
                     {
                         OwnedCombCell = p;
                     }
-                });
-            }
-        }
-
-        void SpawnFriendlyBee(Vector2 position, Vector2 velocity, byte behavior, float ai1)
-        {
-            if (TOSharedData.NotClient)
-            {
-                Projectile.NewProjectileAction<FriendlyBee>(SourceAI, position, velocity, 0, 0f, action: p =>
-                {
-                    p.ai[0] = behavior;
-                    p.ai[1] = ai1;
                 });
             }
         }
@@ -133,7 +120,6 @@ public sealed partial class QueenBee
             p.tileCollide = false;
             p.extraUpdates = 0;
         }
-        ;
 
         void HandleEnrage()
         {
@@ -517,14 +503,12 @@ public sealed partial class QueenBee
                     case 1:
                         StopMovement(0.85f);
                         NPC.FaceTarget(Target);
+                        NPC.spriteDirection = NPC.direction;
 
                         switch (Timer1)
                         {
                             case 1:
-                                SpawnCombCell(QueenBee_Handler.GetOwnedCombCellCenter(NPC), Vector2.Zero, 0, CombCell.Behavior.BeeSwarm, OwnedCombCellScaleMultiplier * NPC.scale);
-                                break;
-                            case 40:
-                                SpawnFriendlyBee(NPC.Center, Vector2.Zero, FriendlyBee.Behavior_SwarmReminder, AttackRandomVariation_Stinger.ToDirectionInt());
+                                SpawnCombCell(QueenBeeHandler.GetOwnedCombCellCenter(NPC), Vector2.Zero, 0, CombCell.Behavior.BeeSwarm, OwnedCombCellScaleMultiplier * NPC.scale);
                                 break;
                             case 50:
                                 Timer1 = 0;
@@ -540,14 +524,18 @@ public sealed partial class QueenBee
                         if (adjustedTimer % attackTimer == 0)
                         {
                             int num = adjustedTimer / attackTimer;
-                            float spread = MathHelper.ToRadians(Ultra ? 55f : 50f);
+                            float spread = MathHelper.ToRadians(Ultra ? 60f : 50f);
 
                             if (TOSharedData.NotClient)
                             {
                                 for (int i = -1; i <= 1; i += 2)
                                 {
                                     float speed = Main.rand.NextFloat(9f, 18f);
-                                    Vector2 velocity = new PolarVector2(speed, MathHelper.ToRadians(2f * Math.Max(num - 15, 0) * AttackRandomVariation_Stinger.ToDirectionInt()) + Main.rand.NextFloat(-spread, spread)) * i;
+                                    float angleOffset = MathHelper.ToRadians(2f * (
+                                        num < 25 ? TOMathUtils.Interpolation.QuadraticEaseIn((num - 10) / 10f) * 10f
+                                        : num - 15));
+                                    angleOffset *= AttackRandomVariation_Stinger.ToDirectionInt();
+                                    Vector2 velocity = new PolarVector2(speed, angleOffset + Main.rand.NextFloat(-spread, spread)) * i;
                                     Projectile.NewProjectileAction<BeeProjectile>(SourceAI, NPC.Center, velocity, BeeDamage, 0f, action: p =>
                                     {
                                         p.ai[0] = BeeProjectile.Behavior_Rotate;
@@ -653,6 +641,7 @@ public sealed partial class QueenBee
                         StopMovement(0.85f);
 
                         NPC.FaceTarget(Target);
+                        NPC.spriteDirection = NPC.direction;
 
                         switch (Timer1)
                         {
@@ -717,20 +706,20 @@ public sealed partial class QueenBee
                                         Vector2 spawnCoordinate = spawnCoordinates[i];
                                         PolarVector2 offset = basis0 * spawnCoordinate.X + basis1 * spawnCoordinate.Y;
                                         bool safe = i == safeCombCellNumber;
-                                        SpawnCombCell(QueenBee_Handler.GetOwnedCombCellCenter(NPC) + offset, Vector2.Zero, 0, safe ? CombCell.Behavior.BeeSwarm2_Safe : CombCell.Behavior.BeeSwarm2_Fake, scale, (p, c) =>
+                                        SpawnCombCell(QueenBeeHandler.GetOwnedCombCellCenter(NPC) + offset, Vector2.Zero, 0, safe ? CombCell.Behavior.BeeSwarm2_Safe : CombCell.Behavior.BeeSwarm2_Fake, scale, (p, c) =>
                                         {
                                             c.Offset = offset;
                                             if (safe)
-                                                SafeCombCell = p;
+                                                SpecialCombCell = p;
                                         });
                                     }
                                 }
                                 break;
 
                             case 165:
-                                if (HasSafeCombCell)
+                                if (HasSpecialCombCell)
                                 {
-                                    Vector2 position = SafeCombCell.Center;
+                                    Vector2 position = SpecialCombCell.Center;
                                     int beeAmount = Ultra ? 12 : 8;
                                     for (int i = 0; i < beeAmount; i++)
                                     {
@@ -748,7 +737,7 @@ public sealed partial class QueenBee
                         }
                         break;
                     case 2:
-                        if (!HasSafeCombCell)
+                        if (!HasSpecialCombCell)
                         {
                             CurrentAttackPhase = 3;
                             break;
@@ -770,7 +759,7 @@ public sealed partial class QueenBee
                                     Vector2 velocity = Main.rand.NextPolarVector2(15f, 25f);
                                     Projectile.NewProjectileAction<KillerBeeSmall>(SourceAI, NPC.Center, velocity, BeeDamage, 0f, action: p =>
                                     {
-                                        p.ai[0] = SafeCombCell.whoAmI;
+                                        p.ai[0] = SpecialCombCell.whoAmI;
                                         p.ai[1] = Main.rand.NextFloat(0.01f, 0.07f) * Main.rand.NextDirectionInt();
                                     });
                                 }
@@ -817,11 +806,12 @@ public sealed partial class QueenBee
                 case 1:
                     StopMovement(0.85f);
                     NPC.FaceTarget(Target);
+                    NPC.spriteDirection = NPC.direction;
 
                     switch (Timer1)
                     {
                         case 1:
-                            SpawnCombCell(QueenBee_Handler.GetOwnedCombCellCenter(NPC), Vector2.Zero, 0, CombCell.Behavior.PhaseChange, OwnedCombCellScaleMultiplier * NPC.scale);
+                            SpawnCombCell(QueenBeeHandler.GetOwnedCombCellCenter(NPC), Vector2.Zero, 0, CombCell.Behavior.PhaseChange, OwnedCombCellScaleMultiplier * NPC.scale);
                             break;
 
                         case 90:
@@ -888,6 +878,9 @@ public sealed partial class QueenBee
                 case Behavior.Phase2_Stinger:
                     Stinger();
                     break;
+                case Behavior.Phase2_Dance:
+                    Dance();
+                    break;
                 default:
                     CheckPhaseChange();
                     SelectNextBehavior();
@@ -907,12 +900,14 @@ public sealed partial class QueenBee
                 void SwitchToNext()
                 {
                     FinishedBehaviorCounter++;
-                    int attackCycleLength = 2;
+                    int attackCycleLength = 4;
 
                     CurrentBehavior = (FinishedBehaviorCounter % attackCycleLength) switch
                     {
                         0 => Behavior.Phase2_BeeSwarm3,
                         1 => Behavior.Phase2_Stinger,
+                        2 => Behavior.Phase2_Dance,
+                        3 => Behavior.Phase2_Stinger,
 
                         _ => Behavior.Phase2_Stinger
                     };
@@ -951,6 +946,7 @@ public sealed partial class QueenBee
                         StopMovement(0.85f);
 
                         NPC.FaceTarget(Target);
+                        NPC.spriteDirection = NPC.direction;
 
                         switch (Timer1)
                         {
@@ -964,7 +960,7 @@ public sealed partial class QueenBee
                                     int initialPositionParameter = i / 2; //除以整数2来获得0-5的范围
                                     int direction = (i % 2 == 0).ToDirectionInt(); //偶数为顺，奇数为逆
 
-                                    SpawnCombCell(QueenBee_Handler.GetOwnedCombCellCenter(NPC), Vector2.Zero, 0, CombCell.Behavior.BeeSwarm3_Move, 0.28f, (p, c) =>
+                                    SpawnCombCell(QueenBeeHandler.GetOwnedCombCellCenter(NPC), Vector2.Zero, 0, CombCell.Behavior.BeeSwarm3_Move, 0.28f, (p, c) =>
                                     {
                                         c.CurrentPositionParameter = initialPositionParameter;
                                         c.MoveDirection = direction;
@@ -1102,6 +1098,91 @@ public sealed partial class QueenBee
                                 CheckPhaseChange();
                                 SelectNextBehavior();
                             }
+                        }
+                        break;
+                }
+            }
+
+            void Dance()
+            {
+                HandleEnrage();
+
+                Timer1++;
+
+                NPC.FaceTarget(Target);
+                NPC.spriteDirection = NPC.direction;
+
+                switch (CurrentAttackPhase)
+                {
+                    case 0:
+                        TryMoveAboveTarget();
+
+                        if (Timer1 >= 40 && NPC.Bottom.Y < Target.Top.Y)
+                        {
+                            Timer1 = 0;
+                            CurrentAttackPhase = 1;
+                        }
+
+                        CheckPhaseChange();
+                        break;
+                    case 1:
+                        StopMovement(0.85f);
+
+                        NPC.FaceTarget(Target);
+                        NPC.spriteDirection = NPC.direction;
+
+                        switch (Timer1)
+                        {
+                            case 1:
+                                SpawnCombCell(NPC.Center, Vector2.Zero, 0, CombCell.Behavior.Dance, OwnedCombCellScaleMultiplier * NPC.scale);
+                                break;
+                            case 40: //生成巨型蜂巢
+                                SpawnCombCell(NPC.Center, Vector2.Zero, 0, CombCell.Behavior.Dance2, OwnedCombCellScaleMultiplier * NPC.scale * 4f, (p, _) => SpecialCombCell = p);
+                                break;
+                            case 120:
+                                Timer1 = 0;
+                                CurrentAttackPhase = 2;
+                                break;
+                        }
+
+                        CheckPhaseChange();
+                        break;
+                    case 2:
+                        NPC.velocity = Vector2.Zero;
+
+                        int adjustedTimer = Timer1 - 1;
+                        int attackAmount = 150;
+
+                        if (Timer1 >= attackAmount)
+                        {
+                            Timer1 = 0;
+                            CurrentAttackPhase = 3;
+                        }
+                        else if (TOSharedData.NotClient)
+                        {
+                            for (int i = 0; i < 5; i++)
+                            {
+                                Vector2 velocity = Main.rand.NextPolarVector2(20f, 25f);
+                                if (!AttackRandomVariation_Dance)
+                                    velocity *= 0.7f;
+                                Vector2 position = AttackRandomVariation_Dance ? NPC.Center - velocity * 90f : NPC.Center;
+
+                                Projectile.NewProjectileAction<KillerBeeSmall>(SourceAI, position, velocity, BeeDamage, 0f, action: p =>
+                                {
+                                    p.ai[0] = SpecialCombCell.whoAmI;
+                                    p.ai[1] = 0f;
+                                    p.ai[2] = AttackRandomVariation_Dance ? 2f : 1f;
+                                });
+                            }
+                        }
+                        break;
+                    case 3:
+                        if (Timer1 >= 135)
+                        {
+                            CheckPhaseChange();
+                            SelectNextBehavior();
+                            if (Main.rand.NextProbability(0.7f))
+                                AttackRandomVariation_Dance = !AttackRandomVariation_Dance;
                         }
                         break;
                 }

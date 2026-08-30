@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.QueenBee;
+﻿namespace Anomalies.Bosses.QueenBee;
 
 public sealed class BeeProjectile : AnomalyModProjectile
 {
@@ -46,8 +44,12 @@ public sealed class BeeProjectile : AnomalyModProjectile
                 Projectile.frame = 0;
         }
 
+        float velocityX = Projectile.velocity.X;
+        float absX = Math.Abs(velocityX);
         Projectile.spriteDirection = (Projectile.velocity.X >= 0f).ToDirectionInt();
-        Projectile.rotation = Projectile.velocity.X * 0.03f;
+        Projectile.rotation = MathF.Atan2(Math.Clamp(Projectile.velocity.Y * 0.1f, absX * -1.3f, absX * 1.3f), velocityX);
+        if (Projectile.spriteDirection == -1)
+            Projectile.rotation += MathHelper.Pi;
 
         switch ((byte)Projectile.ai[0])
         {
@@ -120,3 +122,4 @@ public sealed class BeeProjectile : AnomalyModProjectile
         Projectile.tileCollide = Timer1 >= 100;
     }
 }
+

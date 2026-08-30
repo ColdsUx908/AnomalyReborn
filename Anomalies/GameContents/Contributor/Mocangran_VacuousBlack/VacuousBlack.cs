@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
+﻿using Anomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
 
 namespace Anomalies.GameContents.Contributor.Mocangran_VacuousBlack;
 
@@ -104,3 +102,4 @@ public sealed class VacuousBlack : AnomalyLegendaryItem, ILocalizationPrefix
             .Register();
     }
 }
+

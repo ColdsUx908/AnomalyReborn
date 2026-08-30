@@ -16,7 +16,7 @@ float3 GetColor(float2 screenCoords)
     return gradientColor;
 }
 
-float4 PixelShaderFunction(float4 screenPos : VPOS, float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
+float4 Main(float4 screenPos : VPOS, float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
 {
     float2 screenCoords = (screenPos.xy - uPosition) / uScreenResolution;
     float alpha = tex2D(uImage0, coords).a;
@@ -28,6 +28,6 @@ technique Technique1
 {
     pass Pass0
     {
-        PixelShader = compile ps_3_0 PixelShaderFunction();
+        PixelShader = compile ps_3_0 Main();
     }
 }

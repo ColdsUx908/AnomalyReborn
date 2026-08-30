@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.GameContents.Base;
+﻿using Anomalies.GameContents.Base;
 
 namespace Anomalies.Bosses.QueenBee;
 
@@ -26,3 +24,4 @@ public sealed class BeeShockwave : BaseShockwaveProjectile, IContentLoader
 
     public override Color? GetAlpha(Color lightColor) => Color.Orange;
 }
+

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures.Geometry;
+﻿namespace Transoceanic.DataStructures.Geometry;
 
 /// <summary>
 /// 表示一个二维平行四边形，由中心点和两个从中心指向相邻顶点的向量定义。
@@ -119,3 +117,4 @@ public struct Parallelogram : IEquatable<Parallelogram>, ICoordinateTransformabl
 
     public readonly bool Collides(Rectangle other) => TOMathUtils.Collision.ParallelogramVFloatRectangleCollision(this, other);
 }
+

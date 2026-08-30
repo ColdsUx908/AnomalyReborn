@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.EyeofCthulhu;
+﻿namespace Anomalies.Bosses.EyeofCthulhu;
 
 public sealed partial class EyeofCthulhuArena
 {
@@ -31,3 +29,4 @@ public sealed partial class EyeofCthulhuArena
         public float GetDeltaValue() => (UseLerp ? LifeCompletion : TOMathUtils.Interpolation.QuadraticEaseInOut(LifeCompletion)) * Delta;
     }
 }
+

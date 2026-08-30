@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Common.SingleBehaviors;
+﻿namespace Transoceanic.Common.SingleBehaviors;
 
 public class PlayerCameraEffects : TOPlayerBehavior
 {

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.DataStructures;
+﻿using Anomalies.DataStructures;
 
 namespace Anomalies.Bosses.KingSlime;
 
@@ -107,3 +105,4 @@ public sealed class SlimeGel : AnomalyModProjectile
 
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(Projectile.Center, 32f * Projectile.scale).Collides(targetHitbox);
 }
+

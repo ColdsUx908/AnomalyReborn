@@ -1,4 +1,4 @@
-namespace Transoceanic.DataStructures.Rendering;
+﻿namespace Transoceanic.DataStructures.Rendering;
 
 /// <summary>
 ///     Describes the creation parameters of a render target.
@@ -470,3 +470,4 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
         }
     }
 }
+

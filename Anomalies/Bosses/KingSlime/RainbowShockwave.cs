@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.GameContents.Base;
+﻿using Anomalies.GameContents.Base;
 
 namespace Anomalies.Bosses.KingSlime;
 
@@ -62,3 +60,4 @@ public sealed class RainbowShockwave : BaseShockwaveProjectile, IContentLoader
         _NpcTypesToHit = null;
     }
 }
+

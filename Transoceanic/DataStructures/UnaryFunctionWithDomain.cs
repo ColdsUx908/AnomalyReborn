@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures;
+﻿namespace Transoceanic.DataStructures;
 
 /// <summary>
 /// 表示带定义域限制的一元泛型函数。

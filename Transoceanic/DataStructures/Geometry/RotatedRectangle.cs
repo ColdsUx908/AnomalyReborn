@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures.Geometry;
+﻿namespace Transoceanic.DataStructures.Geometry;
 
 /// <summary>
 /// 表示一个可以旋转的矩形。

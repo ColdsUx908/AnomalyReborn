@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.DukeFishron;
+﻿namespace Anomalies.Bosses.DukeFishron;
 
 public sealed class DetonatingBubble : AnomalyNPCBehavior<DetonatingBubble>
 {
@@ -14,3 +12,4 @@ public sealed class DetonatingBubble : AnomalyNPCBehavior<DetonatingBubble>
         return true;
     }
 }
+

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.DataStructures;
+﻿using Anomalies.DataStructures;
 
 namespace Anomalies.Bosses.QueenSlime;
 
@@ -385,3 +383,4 @@ public sealed class QueenSlimeMinionPurple : AnomalyNPCBehavior<QueenSlimeMinion
 
     public override Color? GetAlpha(Color drawColor) => drawColor;
 }
+

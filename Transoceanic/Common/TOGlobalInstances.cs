@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Transoceanic.DataStructures.Particles;
+﻿using Transoceanic.DataStructures.Particles;
 using Transoceanic.Framework.Helpers.Utilities;
 
 namespace Transoceanic.Common;

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Terraria.GameContent.ItemDropRules;
+﻿using Terraria.GameContent.ItemDropRules;
 
 namespace Transoceanic.DataStructures;
 

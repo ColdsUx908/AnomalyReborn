@@ -1,12 +1,16 @@
-﻿// Developed by ColdsUx
+﻿using Anomalies.DataStructures;
 
-namespace Anomalies.Visuals;
+namespace Anomalies.Visuals.BossBar;
 
 /// <summary>
 /// 血量阈值指示器，用于在异象模式下 Boss 血条上标记关键血量百分比。
 /// </summary>
 public class HPThresholdIndicator
 {
+    public const string Path = "Anomalies/Visuals/BossHealthBar/";
+
+    // 纹理已迁移到 BossBarTextures.Fancy
+
     /// <summary>
     /// 获取阈值浮点值（0~1）的委托。返回值代表血量条上的位置比例。
     /// </summary>
@@ -71,8 +75,62 @@ public class HPThresholdIndicator
     public bool IsSubPhaseIndicator;
 
     /// <summary>
+    /// 粒子效果集，用于在指示器中心附近生成粒子效果。
+    /// </summary>
+    public EnchantedParticleSet ParticleSet;
+
+    /// <summary>
     /// 获取当前指示器的阈值比例。
     /// </summary>
     /// <returns>比例值，0~1。</returns>
     public float GetValue(NPC npc, BossHealthBar bar) => ValueFunction?.Invoke(this, npc, bar) ?? 0f;
+
+    public void Update(NPC npc, BossHealthBar bar)
+    {
+        if (CustomUpdateFunction?.Invoke(this, npc, bar) == false)
+            return;
+
+        Timer++;
+        if (npc.LifeRatio <= GetValue(npc, bar) || EaseOutTimer > 0)
+            EaseOutTimer++;
+
+        float value = GetValue(npc, bar);
+        float realLifeRatio = npc.LifeRatio;
+        float particleIntensity = Utils.Remap(realLifeRatio - value, IsSubPhaseIndicator ? 0.04f : 0.05f, 0f, 0f, 1f); //接近或超过阈值时粒子效果更明显
+
+        if (particleIntensity > 0f)
+        {
+            float interpolatedIntensity = TOMathUtils.Interpolation.QuadraticEaseOut(particleIntensity);
+
+            ParticleSet.ParticleSpawnRate = realLifeRatio >= value ? particleIntensity * (IsSubPhaseIndicator ? 0.4f : 0.5f) : 0f;
+            ParticleSet.MaxEdgeRadius = interpolatedIntensity * (IsSubPhaseIndicator ? 32f : 40f);
+            ParticleSet.Scale = interpolatedIntensity * 0.5f;
+
+            ParticleSet.Update();
+        }
+    }
+
+    /// <summary>
+    /// 绘制主方法。
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="bar"></param>
+    /// <param name="spriteBatch"></param>
+    /// <param name="center"></param>
+    public void Draw(NPC npc, BossHealthBar bar, SpriteBatch spriteBatch, Vector2 center)
+    {
+        if (CustomDrawFunction?.Invoke(this, npc, bar, spriteBatch, center) == false)
+            return;
+
+        float opacity = Math.Clamp(bar.AnimationCompletionRatio * 3f, 0f, 1f) * Math.Clamp((60f - EaseOutTimer) / 60f, 0f, 1f);
+        float value = GetValue(npc, bar);
+        if (value == 0f)
+            return;
+
+        //依次绘制：指示器底层，粒子效果，指示器中心宝石
+
+        spriteBatch.DrawFromCenter(IsSubPhaseIndicator ? BossBarTextures.Fancy.SubPhaseIndicator : BossBarTextures.Fancy.PhaseIndicator, center, null, Color.White * opacity);
+        ParticleSet.DrawSet(center + Main.screenPosition);
+        spriteBatch.DrawFromCenter(IsSubPhaseIndicator ? BossBarTextures.Fancy.SubPhaseIndicatorCenter : BossBarTextures.Fancy.PhaseIndicatorCenter, center, null, Color.White * opacity);
+    }
 }

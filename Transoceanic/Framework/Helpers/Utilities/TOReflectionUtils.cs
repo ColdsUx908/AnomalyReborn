@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace Transoceanic.Framework.Helpers;
 
@@ -167,10 +165,7 @@ public static class TOReflectionUtils
     /// 获取所有受 Transoceanic 框架支持的 Mod（即标记了 <see cref="SupportedByTransoceanicAttribute"/> 的 Mod）。
     /// </summary>
     /// <returns>一个包含所有受支持 Mod 的枚举集合。</returns>
-    public static IEnumerable<Mod> GetAllSupportedMods() =>
-        from mod in ModLoader.Mods
-        where mod is TOMain || mod.Code.GetCustomAttribute<SupportedByTransoceanicAttribute>() is not null //Transoceanic 本体不标记特性，但属于受支持 Mod
-        select mod;
+    public static IEnumerable<Mod> GetAllSupportedMods() => ModLoader.Mods.Where(m => m is TOMain || m.Code.GetCustomAttribute<SupportedByTransoceanicAttribute>() is not null);
 
     /// <summary>
     /// 获取能被 tModLoader 加载的所有类型（包含所有已加载 Mod 的程序集中的类型）。

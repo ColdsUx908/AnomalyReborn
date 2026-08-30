@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures.Geometry;
+﻿namespace Transoceanic.DataStructures.Geometry;
 
 /// <summary>
 /// 表示一个二维平面坐标系，由原点（坐标中心）和两个线性无关的基底向量定义。

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.Bosses.KingSlime;
+﻿using Anomalies.Bosses.KingSlime;
 using Anomalies.DataStructures;
 
 namespace Anomalies.Bosses.QueenSlime;
@@ -151,3 +149,4 @@ public sealed class AmethystJewel : JewelNPC
         JewelHandler.OnKill(NPC);
     }
 }
+

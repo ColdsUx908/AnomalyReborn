@@ -1,6 +1,6 @@
-﻿using Terraria.Graphics.Shaders;
+﻿namespace Anomalies.Assets.Effects;
 
-namespace Anomalies.Assets.Effects;
+using Terraria.Graphics.Shaders;
 
 public sealed class AnomalyEffects : IContentLoader
 {
@@ -10,6 +10,7 @@ public sealed class AnomalyEffects : IContentLoader
 
     public static class CustomBossBars
     {
+        public static MiscShaderContainer EaterofWorlds;
         public static MiscShaderContainer EyeofCthulhu;
         public static MiscShaderContainer KingSlime;
         public static MiscShaderContainer QueenBee;
@@ -22,16 +23,14 @@ public sealed class AnomalyEffects : IContentLoader
     {
         LightingShader = LoadAndRegisterMiscShader("", nameof(LightingShader));
 
-        CustomBossBars.EyeofCthulhu = LoadAndRegisterMiscShader(nameof(CustomBossBars), nameof(CustomBossBars.EyeofCthulhu));
-        CustomBossBars.KingSlime = LoadAndRegisterMiscShader(nameof(CustomBossBars), nameof(CustomBossBars.KingSlime));
-        CustomBossBars.QueenBee = LoadAndRegisterMiscShader(nameof(CustomBossBars), nameof(CustomBossBars.QueenBee));
-        CustomBossBars.QueenSlime = LoadAndRegisterMiscShader(nameof(CustomBossBars), nameof(CustomBossBars.QueenSlime));
-        CustomBossBars.RainbowJewel = LoadAndRegisterMiscShader(nameof(CustomBossBars), nameof(CustomBossBars.RainbowJewel));
+        foreach (FieldInfo field in typeof(CustomBossBars).GetFields(TOReflectionUtils.StaticBindingFlags))
+            field.SetValue(null, LoadAndRegisterMiscShader(nameof(CustomBossBars), field.Name));
     }
 
     void IContentLoader.OnModUnload()
     {
         ClearType(typeof(AnomalyEffects));
+        ClearType(typeof(CustomBossBars));
     }
 
     private static MiscShaderContainer LoadAndRegisterMiscShader(string subDirectory, string registrationName, string passName = "Pass0")

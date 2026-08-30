@@ -1,8 +1,6 @@
-﻿// Developed by ColdsUx
+﻿namespace Anomalies.Bosses.QueenBee;
 
-namespace Anomalies.Bosses.QueenBee;
-
-public sealed partial class QueenBee_Handler
+public sealed partial class QueenBeeHandler
 {
     public static void SpawnGores(CombCell cell)
     {

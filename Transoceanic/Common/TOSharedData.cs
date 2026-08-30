@@ -1,8 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Terraria.GameContent.Creative;
-
-namespace Transoceanic.Common;
+﻿namespace Transoceanic.Common;
 
 public sealed class TOSharedData : ModSystem, ITOLoader
 {
@@ -191,7 +187,7 @@ public sealed class TOSharedData : ModSystem, ITOLoader
 
         if (Main.GameMode == GameModeID.Creative)
         {
-            CreativePowers.DifficultySliderPower power = CreativePowerManager.Instance.GetPower<CreativePowers.DifficultySliderPower>();
+            Terraria.GameContent.Creative.CreativePowers.DifficultySliderPower power = Terraria.GameContent.Creative.CreativePowerManager.Instance.GetPower<Terraria.GameContent.Creative.CreativePowers.DifficultySliderPower>();
             bool currentJourneyMaster = power.StrengthMultiplierToGiveNPCs == 3f;
             if (power.GetIsUnlocked())
                 JourneyMasterMode = currentJourneyMaster;

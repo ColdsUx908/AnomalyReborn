@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Common.SingleBehaviors;
+﻿namespace Anomalies.Common.SingleBehaviors;
 
 public sealed class StoryPlayerDamage : AnomalyPlayerBehavior
 {
@@ -12,3 +10,4 @@ public sealed class StoryPlayerDamage : AnomalyPlayerBehavior
         modifiers.SourceDamage.Flat += 50f; //玩家受到的最终伤害增加50点
     }
 }
+

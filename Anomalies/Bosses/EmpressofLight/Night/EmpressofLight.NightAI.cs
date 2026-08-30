@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.EmpressofLight;
+﻿namespace Anomalies.Bosses.EmpressofLight;
 
 public sealed partial class EmpressofLight_Night
 {
@@ -9,3 +7,4 @@ public sealed partial class EmpressofLight_Night
         return false;
     }
 }
+

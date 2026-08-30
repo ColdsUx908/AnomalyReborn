@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.GameContents.Base;
+﻿using Anomalies.GameContents.Base;
 using Transoceanic.DataStructures.Rendering;
 
 namespace Anomalies.Bosses.EyeofCthulhu;
@@ -12,8 +10,8 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
     public static float NormalRotationSpeed => 0.005f;
 
     public static readonly UnaryFunctionWithDomain EyeSpinEffectIntensityFunction = UnaryFunctionWithDomain.Piecewise(
-        (new MathInterval(float.NegativeInfinity, EyeofCthulhu_Handler.EyeSpinTime - 30f, false, false), x => TOMathUtils.Interpolation.QuadraticEaseInOut(x / 10f)),
-        (new MathInterval(EyeofCthulhu_Handler.EyeSpinTime - 30f, float.PositiveInfinity, true, false), x => TOMathUtils.Interpolation.QuadraticEaseInOut((EyeofCthulhu_Handler.EyeSpinTime - x) / 30f))
+        (new MathInterval(float.NegativeInfinity, EyeofCthulhuHandler.EyeSpinTime - 30f, false, false), x => TOMathUtils.Interpolation.QuadraticEaseInOut(x / 10f)),
+        (new MathInterval(EyeofCthulhuHandler.EyeSpinTime - 30f, float.PositiveInfinity, true, false), x => TOMathUtils.Interpolation.QuadraticEaseInOut((EyeofCthulhuHandler.EyeSpinTime - x) / 30f))
         );
 
     public bool IsActivated
@@ -40,9 +38,9 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
     public BehaviorCommand_Arena MasterCommandReceiver;
 
-    public float UnmodifiedRadius = EyeofCthulhu_Handler.MaxArenaRadius;
+    public float UnmodifiedRadius = EyeofCthulhuHandler.MaxArenaRadius;
 
-    public override float Radius { get; set; } = EyeofCthulhu_Handler.MaxArenaRadius;
+    public override float Radius { get; set; } = EyeofCthulhuHandler.MaxArenaRadius;
 
     public float UnmodifiedRotationSpeed;
 
@@ -136,7 +134,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
     {
         index = (int)TOMathUtils.NormalizeWithPeriod(index, 32);
         if (playSound)
-            SoundEngine.PlaySound(EyeofCthulhu_Handler.HighlightActivateSound, GetEyeCenter(index));
+            SoundEngine.PlaySound(EyeofCthulhuHandler.HighlightActivateSound, GetEyeCenter(index));
         ExecuteActionToArenaEye(index, e => e.Highlights.Add(new EyeHighlight(lifetime, 20, 10f)));
     }
     #endregion 交互方法
@@ -297,7 +295,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
             if (masterBehavior.CurrentBehavior != EyeofCthulhu.Behavior.Phase3_Charge)
             {
-                ChangeArenaRadiusTo(EyeofCthulhu_Handler.MaxArenaRadius, 15);
+                ChangeArenaRadiusTo(EyeofCthulhuHandler.MaxArenaRadius, 15);
                 MasterCommandReceiver = BehaviorCommand_Arena.None;
             }
 
@@ -305,7 +303,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
             {
                 bool firstCharge = masterBehavior.AttackCounter == 0;
 
-                int teleportDuration = firstCharge ? EyeofCthulhu_Handler.NormalTeleportDuration + 30 : EyeofCthulhu_Handler.NormalTeleportDuration;
+                int teleportDuration = firstCharge ? EyeofCthulhuHandler.NormalTeleportDuration + 30 : EyeofCthulhuHandler.NormalTeleportDuration;
 
                 switch (masterBehavior.CurrentAttackPhase)
                 {
@@ -315,10 +313,10 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                         break;
                 }
 
-                if (masterBehavior.Timer1 - 1 == teleportDuration - EyeofCthulhu_Handler.NormalTeleportDuration)
+                if (masterBehavior.Timer1 - 1 == teleportDuration - EyeofCthulhuHandler.NormalTeleportDuration)
                 {
                     for (int i = -1; i <= 1; i++)
-                        AddHighlightTo((int)TOMathUtils.NormalizeWithPeriod(masterBehavior.UsedEyeIndex1 + i, 32), EyeofCthulhu_Handler.NormalTeleportDuration + 10, i == 0);
+                        AddHighlightTo((int)TOMathUtils.NormalizeWithPeriod(masterBehavior.UsedEyeIndex1 + i, 32), EyeofCthulhuHandler.NormalTeleportDuration + 10, i == 0);
                 }
             }
 
@@ -363,7 +361,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                     {
                         bool shouldIncreaseHighlightTime = i % (32 / (buff ? 4 : 2)) == 0;
                         int actualIndex = (int)TOMathUtils.NormalizeWithPeriod(index1 + i, 32);
-                        int hightliteTime = shouldIncreaseHighlightTime ? EyeofCthulhu_Handler.EyeSpinTime + 15 : EyeofCthulhu_Handler.EyeSpinTime;
+                        int hightliteTime = shouldIncreaseHighlightTime ? EyeofCthulhuHandler.EyeSpinTime + 15 : EyeofCthulhuHandler.EyeSpinTime;
                         AddHighlightTo(actualIndex, hightliteTime, shouldIncreaseHighlightTime);
 
                         ExecuteActionToArenaEye(actualIndex, e =>
@@ -376,7 +374,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                                 {
                                     Vector2 originalVector = GetEyeCenterDirection(index1) * (Radius - 15f);
                                     float rotationOffset = TOMathUtils.PiOver16 * iClone;
-                                    Vector2 destination = Projectile.Center + EyeofCthulhu_Handler.EyeShapeHelper.GetVector(originalVector, rotationOffset);
+                                    Vector2 destination = Projectile.Center + EyeofCthulhuHandler.EyeShapeHelper.GetVector(originalVector, rotationOffset);
                                     Vector2 center = e1.Center;
                                     return (destination - center).ToRotation(MathHelper.Pi);
                                 };
@@ -405,7 +403,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                     ChangeRotationSpeedTo(targetRotationSpeed, duration);
                     break;
 
-                case 1 when timer1 == EyeofCthulhu_Handler.EyeSpinTime - 1:
+                case 1 when timer1 == EyeofCthulhuHandler.EyeSpinTime - 1:
                     //生成弹幕
 
                     Vector2 originalVector = GetEyeCenterDirection(index1) * (Radius - 15f);
@@ -414,7 +412,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                     int maxOffset = (projectileAmountPerEye - 1) / 2;
                     int projectileAmount = Eyes.Length * projectileAmountPerEye;
                     float singleRadian = MathHelper.TwoPi / projectileAmount;
-                    float? verticalHeightMultiplierOverride = buff ? EyeofCthulhu_Handler.EyeShapeHelper.VerticalHeightMultiplier2 : null;
+                    float? verticalHeightMultiplierOverride = buff ? EyeofCthulhuHandler.EyeShapeHelper.VerticalHeightMultiplier2 : null;
 
                     for (int i = 0; i < 32; i++)
                     {
@@ -429,7 +427,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
                         int particleAmount = 10;
                         for (int j = 0; j < particleAmount; j++)
-                            EyeofCthulhu_Handler.SpawnOrbParticle(offsetCenter, Main.rand.NextFloat(3f, 4f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.5f, 0.8f));
+                            EyeofCthulhuHandler.SpawnOrbParticle(offsetCenter, Main.rand.NextFloat(3f, 4f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.5f, 0.8f));
 
                         PolarVector2 originalDirection = GetEyeCenterDirection(actualIndex).RotatedBy(MathHelper.Pi);
 
@@ -437,7 +435,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                         {
                             int projectileIndex = (int)TOMathUtils.NormalizeWithPeriod(i * projectileAmountPerEye + j, projectileAmount);
                             float rotationOffset = singleRadian * projectileIndex;
-                            Vector2 destination = Projectile.Center + EyeofCthulhu_Handler.EyeShapeHelper.GetVector(originalVector, rotationOffset, verticalHeightMultiplierOverride);
+                            Vector2 destination = Projectile.Center + EyeofCthulhuHandler.EyeShapeHelper.GetVector(originalVector, rotationOffset, verticalHeightMultiplierOverride);
 
                             Vector2 velocity = (destination - offsetCenter) / BloodOrbProjectile.StillTime;
 
@@ -462,7 +460,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                             {
                                 int projectileIndex2 = (int)TOMathUtils.NormalizeWithPeriod((i + 24) * projectileAmountPerEye + k, projectileAmount);
                                 float rotationOffset2 = singleRadian * projectileIndex2;
-                                Vector2 destination2 = Projectile.Center + EyeofCthulhu_Handler.EyeShapeHelper.GetVector(originalVector2, rotationOffset2, verticalHeightMultiplierOverride);
+                                Vector2 destination2 = Projectile.Center + EyeofCthulhuHandler.EyeShapeHelper.GetVector(originalVector2, rotationOffset2, verticalHeightMultiplierOverride);
 
                                 Vector2 velocity2 = (destination2 - offsetCenter) / BloodOrbProjectile.StillTime;
 
@@ -530,17 +528,17 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
             float rotation = GetEyeRotation(index1);
             float originalVectorLength = Radius - 25f;
             Vector2 originalVector = new(originalVectorLength, 0f);
-            Vector2 innerVector = EyeofCthulhu_Handler.EyeShapeHelper.GetInnerVector(originalVector);
+            Vector2 innerVector = EyeofCthulhuHandler.EyeShapeHelper.GetInnerVector(originalVector);
             float innerVectorLength = innerVector.Length();
             float distanceMultiplier = TOMathUtils.Interpolation.ExponentialEaseInOut((timer1 - 20f) / 30f, 1.5f);
-            float archHeightMultiplier = (buff ? EyeofCthulhu_Handler.EyeShapeHelper.CalculateArchHeightMultiplier(EyeofCthulhu_Handler.EyeShapeHelper.VerticalHeightMultiplier2) : EyeofCthulhu_Handler.EyeShapeHelper.ArchHeightMultiplier) * distanceMultiplier;
+            float archHeightMultiplier = (buff ? EyeofCthulhuHandler.EyeShapeHelper.CalculateArchHeightMultiplier(EyeofCthulhuHandler.EyeShapeHelper.VerticalHeightMultiplier2) : EyeofCthulhuHandler.EyeShapeHelper.ArchHeightMultiplier) * distanceMultiplier;
 
             for (int i = 0; i < iterationAmount; i++)
             {
                 float rotationOffset = i * singleRadian;
-                Vector2 offset = EyeofCthulhu_Handler.EyeShapeHelper.GetVectorDirect(originalVector, rotationOffset, archHeightMultiplier);
+                Vector2 offset = EyeofCthulhuHandler.EyeShapeHelper.GetVectorDirect(originalVector, rotationOffset, archHeightMultiplier);
 
-                float realScale = scale * EyeofCthulhu_Handler.EyeShapeHelper.GetOuterParticleScaleMultiplier(rotationOffset) * intensity;
+                float realScale = scale * EyeofCthulhuHandler.EyeShapeHelper.GetOuterParticleScaleMultiplier(rotationOffset) * intensity;
                 spriteBatch.DrawFromCenter(particleTexture, Projectile.Center + offset.RotatedBy(rotation) - Main.screenPosition, null, Color.Red * Math.Min(intensity * 1.5f, 1f), 0f, realScale);
                 if (buff)
                     spriteBatch.DrawFromCenter(particleTexture, Projectile.Center + offset.RotatedBy(rotation + MathHelper.PiOver2) - Main.screenPosition, null, Color.Red * Math.Min(intensity * 1.5f, 1f), 0f, realScale);
@@ -548,8 +546,8 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
             //瞳孔部分
 
-            float verticalHeightMultiplier = EyeofCthulhu_Handler.EyeShapeHelper.CalculateVerticalHeightMultiplier(archHeightMultiplier);
-            float radiusMultiplier = EyeofCthulhu_Handler.EyeShapeHelper.CalculateRadiusMultiplier(verticalHeightMultiplier);
+            float verticalHeightMultiplier = EyeofCthulhuHandler.EyeShapeHelper.CalculateVerticalHeightMultiplier(archHeightMultiplier);
+            float radiusMultiplier = EyeofCthulhuHandler.EyeShapeHelper.CalculateRadiusMultiplier(verticalHeightMultiplier);
             float verticalHeight = originalVectorLength * verticalHeightMultiplier;
             float radius = originalVectorLength * radiusMultiplier;
 
@@ -566,16 +564,16 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                         && Vector2.Distance(innerOffset, new Vector2(-verticalHeight, 0f)) < radius));
 
                 if (shouldDrawInnerParticle)
-                    spriteBatch.DrawFromCenter(particleTexture, Projectile.Center + innerOffset.RotatedBy(rotation) - Main.screenPosition, null, Color.Red * Math.Min(intensity * 1.5f, 1f), 0f, scale * EyeofCthulhu_Handler.EyeShapeHelper.InnerParticleScaleMultiplier * EyeofCthulhu_Handler.EyeShapeHelper.GetOuterParticleScaleMultiplier(rotationOffset) * intensity);
+                    spriteBatch.DrawFromCenter(particleTexture, Projectile.Center + innerOffset.RotatedBy(rotation) - Main.screenPosition, null, Color.Red * Math.Min(intensity * 1.5f, 1f), 0f, scale * EyeofCthulhuHandler.EyeShapeHelper.InnerParticleScaleMultiplier * EyeofCthulhuHandler.EyeShapeHelper.GetOuterParticleScaleMultiplier(rotationOffset) * intensity);
             }
             TODrawUtils.ResetSpriteBatch(spriteBatch);
         }
         #endregion 绘制旋转攻击预警粒子
 
         #region 绘制血珠弹幕
-        Texture2D orbTexture = EyeofCthulhu_Handler.BloodOrbTexture;
-        Texture2D orbBorderTexture = EyeofCthulhu_Handler.BloodOrbBorderTexture;
-        Texture2D orbBorderBigTexture = EyeofCthulhu_Handler.BloodOrbBigBorderTexture;
+        Texture2D orbTexture = EyeofCthulhuHandler.BloodOrbTexture;
+        Texture2D orbBorderTexture = EyeofCthulhuHandler.BloodOrbBorderTexture;
+        Texture2D orbBorderBigTexture = EyeofCthulhuHandler.BloodOrbBigBorderTexture;
 
         List<Projectile> bloodOrbs = TOIteratorFactory.NewActiveProjectileIterator(p => p.ModProjectile is BloodOrbProjectile orb && orb.ArenaProjectile == Projectile && orb.BehaviorType != 0).ToList();
 

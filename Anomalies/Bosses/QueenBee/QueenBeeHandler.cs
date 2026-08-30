@@ -1,8 +1,6 @@
-﻿// Developed by ColdsUx
+﻿namespace Anomalies.Bosses.QueenBee;
 
-namespace Anomalies.Bosses.QueenBee;
-
-public sealed partial class QueenBee_Handler
+public sealed partial class QueenBeeHandler
 {
     public static Vector2 GetOwnedCombCellCenter(NPC master) => master.Center + new Vector2(0f, -30f * master.scale);
 
@@ -45,3 +43,4 @@ public sealed partial class QueenBee_Handler
         }
     }
 }
+

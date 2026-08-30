@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.QueenSlime;
+﻿namespace Anomalies.Bosses.QueenSlime;
 
 public sealed class QueenSlimeSmash : AnomalyProjectileBehavior<QueenSlimeSmash>
 {
@@ -140,3 +138,4 @@ public sealed class QueenSlimeSmash : AnomalyProjectileBehavior<QueenSlimeSmash>
 
     public override Color? GetAlpha(Color lightColor) => lightColor;
 }
+

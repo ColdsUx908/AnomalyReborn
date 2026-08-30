@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Transoceanic.DataStructures.Assets;
+﻿using Transoceanic.DataStructures.Assets;
 
 namespace Transoceanic.DataStructures.Particles;
 
@@ -64,9 +62,10 @@ public class CustomSpriteParticle : Particle
         CustomUpdateAction?.Invoke(this);
     }
 
-    public override bool PreDraw(SpriteBatch spriteBatch)
+    public override bool PreDraw(SpriteBatch spriteBatch, Vector2 drawOffset = default)
     {
-        spriteBatch.DrawFromCenter(Texture, Center - Main.screenPosition, CustomGetFrameAction?.Invoke(this), Color * Opacity, Rotation, Scale, SpriteEffects.None);
+        spriteBatch.DrawFromCenter(Texture, Center + drawOffset - Main.screenPosition, CustomGetFrameAction?.Invoke(this), Color * Opacity, Rotation, Scale, SpriteEffects.None);
         return false;
     }
 }
+

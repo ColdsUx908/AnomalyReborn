@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures.Particles;
+﻿namespace Transoceanic.DataStructures.Particles;
 
 public class BloomParticle : Particle
 {
@@ -49,9 +47,10 @@ public class BloomParticle : Particle
         Lighting.AddLight(Center, Color.R / 255f, Color.G / 255f, Color.B / 255f);
     }
 
-    public override bool PreDraw(SpriteBatch spriteBatch)
+    public override bool PreDraw(SpriteBatch spriteBatch, Vector2 drawOffset = default)
     {
-        spriteBatch.DrawFromCenter(UseLargeTexture ? BloomCircleLarge : Texture, Center - Main.screenPosition, null, Color, scale: Scale);
+        spriteBatch.DrawFromCenter(UseLargeTexture ? BloomCircleLarge : Texture, Center + drawOffset - Main.screenPosition, null, Color, scale: Scale);
         return false;
     }
 }
+

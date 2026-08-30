@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace TransoceanicCodeAssist;
+﻿namespace TransoceanicCodeAssist;
 
 /// <summary>
 /// 符号信息基类，封装了 <typeparamref name="TSymbol"/> 类型符号的公共属性，

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Terraria.Graphics.Light;
+﻿using Terraria.Graphics.Light;
 
 namespace Transoceanic.DataStructures;
 

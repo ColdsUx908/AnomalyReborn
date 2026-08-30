@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace TransoceanicCodeAssist.SourceGenerators;
+﻿namespace TransoceanicCodeAssist.SourceGenerators;
 
 [Generator]
 public class TypeDetourGenerator : IIncrementalGenerator

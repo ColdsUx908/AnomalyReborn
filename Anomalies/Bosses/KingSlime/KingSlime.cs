@@ -1,7 +1,6 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.Assets.Effects;
+﻿using Anomalies.Assets.Effects;
 using Anomalies.DataStructures;
+using Anomalies.Visuals.BossBar;
 
 namespace Anomalies.Bosses.KingSlime;
 
@@ -409,7 +408,6 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public override void SetDefaults()
     {
-        NPC.lifeMax = CalamityEnabled ? 3000 : 2400;
         BridgeUtils.ApplyCalamityHealthBoost(NPC);
 
         TeleportScaleMultiplier = 1f;
@@ -429,6 +427,17 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
         NPC.AddAnomalyHPIndicator(JewelSapphireLifeRatio_Anomaly, JewelSapphireLifeRatio_Ultra, true);
         NPC.AddAnomalyHPIndicator(Phase2LifeRatio_Anomaly, Phase2LifeRatio_Ultra);
         NPC.AddAnomalyHPIndicator(Phase2_2LifeRatio_Anomaly, Phase2_2LifeRatio_Ultra, true, n => GetInstance(n).Phase2);
+    }
+
+    public override void SetDefaultsFinal()
+    {
+        NPC.lifeMax = CalamityEnabled ? 5400 : 4200;
+    }
+
+    public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
+    {
+        const float VanillaExpertLifeMultiplier = 1.4f;
+        NPC.lifeMax = (int)MathF.Round(NPC.lifeMax / (VanillaExpertLifeMultiplier * 1.5f) / bossAdjustment / 10f) * 10;
     }
 
     public override bool CheckActive() => false;
@@ -454,7 +463,7 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
     public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
     {
         if (Ultra && !Phase2)
-            modifiers.SetMaxDamage((int)(NPC.life - NPC.lifeMax * Phase2LifeRatio));
+            modifiers.SetMaxDamage((int)(NPC.life - NPC.lifeMax * Phase2LifeRatio + 1));
     }
 
     public override bool CheckDead()
@@ -491,3 +500,4 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
             .Apply();
     }
 }
+

@@ -1,5 +1,4 @@
-﻿// Developed by ColdsUx
-
+﻿using Anomalies.Visuals.BossBar;
 using CalamityMod.NPCs;
 using CalamityMod.Projectiles;
 
@@ -68,6 +67,11 @@ public abstract class AnomalyGlobalItemBehavior : GlobalItemBehavior
 #endregion General Behavior
 
 #region Single Behavior
+public interface IAnomalyTweak
+{
+    public abstract void RegisterTweak();
+}
+
 public enum CalamityLogicType_NPCBehavior
 {
     VanillaOverrideAI,
@@ -77,11 +81,16 @@ public enum CalamityLogicType_NPCBehavior
     PreDraw,
 }
 
-public abstract class AnomalySingleNPCBehavior : SingleNPCBehavior
+public abstract class AnomalyNPCBehavior : SingleNPCBehavior, IAnomalyTweak
 {
     public sealed override AnomalyMain Mod => AnomalyMain.Instance;
 
     public AnomalyGlobalNPC AnomalyNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Anomaly; }
+
+    /// <summary>
+    /// 设置NPC基本属性，确保在 <see cref="NPCLoader"/> 类的 SetDefaults 方法末尾调用。
+    /// </summary>
+    public virtual void SetDefaultsFinal() { }
 
     /// <summary>
     /// 是否允许灾厄的相关逻辑执行。
@@ -134,18 +143,21 @@ public abstract class AnomalySingleNPCBehavior : SingleNPCBehavior
     /// </list>
     /// </remarks>
     public virtual void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle) { }
+
+    public delegate void Orig_SetDefaults(NPC npc, bool createModNPC = true);
+    [DetourMethodTo(typeof(NPCLoader))]
+    public static void Detour_SetDefaults(Orig_SetDefaults orig, NPC npc, bool createModNPC = true)
+    {
+        orig(npc, createModNPC);
+
+        if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(SetDefaultsFinal)))
+            npcBehavior.SetDefaultsFinal();
+    }
+
+    void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedNPCs[ApplyingType] = true;
 }
 
-public abstract class AnomalySingleNPCBehavior<T> : AnomalySingleNPCBehavior where T : ModNPC
-{
-    public static readonly Type Type = typeof(T);
-
-    public T ModNPC => _Entity.GetModNPC<T>();
-
-    public override int ApplyingType => ModContent.NPCType<T>();
-}
-
-public abstract class AnomalyNPCBehavior<TBehavior> : AnomalySingleNPCBehavior where TBehavior : AnomalyNPCBehavior<TBehavior>, new()
+public abstract class AnomalyNPCBehavior<TBehavior> : AnomalyNPCBehavior where TBehavior : AnomalyNPCBehavior<TBehavior>, new()
 {
     public override decimal Priority => 100m;
 
@@ -154,15 +166,19 @@ public abstract class AnomalyNPCBehavior<TBehavior> : AnomalySingleNPCBehavior w
     public static TBehavior GetInstance(NPC npc) => new() { _Entity = npc };
 }
 
-public abstract class AnomalyNPCBehavior<TModNPC, TBehavior> : AnomalySingleNPCBehavior<TModNPC>
+public abstract class AnomalyNPCBehavior<TModNPC, TBehavior> : AnomalyNPCBehavior<TBehavior>
     where TModNPC : ModNPC
     where TBehavior : AnomalyNPCBehavior<TModNPC, TBehavior>, new()
 {
+    public static readonly Type Type = typeof(TModNPC);
+
+    public TModNPC ModNPC => _Entity.GetModNPC<TModNPC>();
+
+    public override int ApplyingType => ModContent.NPCType<TModNPC>();
+
     public override decimal Priority => 100m;
 
     public override bool ShouldProcess => AnomalySharedData.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
-
-    public static TBehavior GetInstance(NPC npc) => new() { _Entity = npc };
 }
 
 public enum CalamityLogicType_ProjectileBehavior
@@ -172,7 +188,7 @@ public enum CalamityLogicType_ProjectileBehavior
     PreDraw,
 }
 
-public abstract class AnomalySingleProjectileBehavior : SingleProjectileBehavior
+public abstract class AnomalyProjectileBehavior : SingleProjectileBehavior, IAnomalyTweak
 {
     public sealed override AnomalyMain Mod => AnomalyMain.Instance;
 
@@ -189,18 +205,11 @@ public abstract class AnomalySingleProjectileBehavior : SingleProjectileBehavior
     /// </summary>
     /// <param name="baseDR">由灾厄方法计算出的基础DR。</param>
     public virtual void ModifyHitNPC_DR(NPC target, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
+
+    void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedProjectiles[ApplyingType] = true;
 }
 
-public abstract class AnomalySingleProjectileBehavior<T> : AnomalySingleProjectileBehavior where T : ModProjectile
-{
-    public static readonly Type Type = typeof(T);
-
-    public T ModProjectile => _Entity.GetModProjectile<T>();
-
-    public override int ApplyingType => ModContent.ProjectileType<T>();
-}
-
-public abstract class AnomalyProjectileBehavior<TBehavior> : AnomalySingleProjectileBehavior where TBehavior : AnomalyProjectileBehavior<TBehavior>, new()
+public abstract class AnomalyProjectileBehavior<TBehavior> : AnomalyProjectileBehavior where TBehavior : AnomalyProjectileBehavior<TBehavior>, new()
 {
     public override decimal Priority => 100m;
 
@@ -209,18 +218,22 @@ public abstract class AnomalyProjectileBehavior<TBehavior> : AnomalySingleProjec
     public static TBehavior GetInstance(Projectile projectile) => new() { _Entity = projectile };
 }
 
-public abstract class AnomalyProjectileBehavior<TModProjectile, TBehavior> : AnomalySingleProjectileBehavior<TModProjectile>
+public abstract class AnomalyProjectileBehavior<TModProjectile, TBehavior> : AnomalyProjectileBehavior<TBehavior>
     where TModProjectile : ModProjectile
     where TBehavior : AnomalyProjectileBehavior<TModProjectile, TBehavior>, new()
 {
+    public static readonly Type Type = typeof(TModProjectile);
+
+    public TModProjectile ModProjectile => _Entity.GetModProjectile<TModProjectile>();
+
+    public override int ApplyingType => ModContent.ProjectileType<TModProjectile>();
+
     public override decimal Priority => 100m;
 
     public override bool ShouldProcess => AnomalySharedData.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
-
-    public static TBehavior GetInstance(Projectile projectile) => new() { _Entity = projectile };
 }
 
-public abstract class AnomalySingleItemBehavior : SingleItemBehavior
+public abstract class AnomalyItemBehavior : SingleItemBehavior, IAnomalyTweak
 {
     public sealed override AnomalyMain Mod => AnomalyMain.Instance;
 
@@ -231,9 +244,11 @@ public abstract class AnomalySingleItemBehavior : SingleItemBehavior
     /// </summary>
     /// <param name="baseDR">由灾厄方法计算出的基础DR。</param>
     public virtual void ModifyHitNPC_DR(NPC target, Player player, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
+
+    void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedItems[ApplyingType] = true;
 }
 
-public abstract class AnomalySingleItemBehavior<T> : AnomalySingleItemBehavior where T : ModItem
+public abstract class AnomalyItemBehavior<T> : AnomalyItemBehavior where T : ModItem
 {
     public static readonly Type Type = typeof(T);
 
@@ -243,126 +258,41 @@ public abstract class AnomalySingleItemBehavior<T> : AnomalySingleItemBehavior w
 }
 #endregion Single Behavior
 
-#region Tweak
-public interface IAnomalyTweak
-{
-    public abstract void RegisterTweak();
-}
-
-public abstract class AnomalyNPCTweak : AnomalySingleNPCBehavior, IAnomalyLocalizationPrefix, IAnomalyTweak
-{
-    public abstract AnomalyGamePhase Phase { get; }
-    public abstract string LocalizationName { get; }
-
-    void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedNPCs[ApplyingType] = true;
-
-    public override decimal Priority => 5m;
-}
-
-public abstract class AnomalyNPCTweak<T> : AnomalySingleNPCBehavior<T>, IAnomalyLocalizationPrefix, IAnomalyTweak where T : ModNPC
-{
-    public abstract AnomalyGamePhase Phase { get; }
-    public virtual string LocalizationName => Type.Name;
-
-    void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedNPCs[ApplyingType] = true;
-
-    public override decimal Priority => 5m;
-}
-
-public abstract class AnomalyProjectileTweak : AnomalySingleProjectileBehavior, IAnomalyLocalizationPrefix, IAnomalyTweak
-{
-    public abstract AnomalyGamePhase Phase { get; }
-    public abstract string LocalizationName { get; }
-
-    void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedProjectiles[ApplyingType] = true;
-
-    public override decimal Priority => 5m;
-}
-
-public abstract class AnomalyProjectileTweak<T> : AnomalySingleProjectileBehavior<T>, IAnomalyLocalizationPrefix, IAnomalyTweak where T : ModProjectile
-{
-    public abstract AnomalyGamePhase Phase { get; }
-    public virtual string LocalizationName => Type.Name;
-
-    /// <summary>
-    /// 弹幕关联的NPC。将应用于显示NPC的修改标签。
-    /// <br/>如无关联NPC，不要覆写该方法，如果覆写应返回空集合。
-    /// </summary>
-    public virtual int[] RelatedNPCs => [];
-    /// <summary>
-    /// 弹幕关联的物品。将应用于显示物品的修改标签。
-    /// <br/>如无关联物品，不要覆写该方法，如果覆写应返回空集合。
-    /// </summary>
-    public virtual int[] RelatedItems => [];
-
-    void IAnomalyTweak.RegisterTweak()
-    {
-        AnomalySharedData.TweakedProjectiles[ApplyingType] = true;
-        foreach (int npcType in RelatedNPCs)
-            AnomalySharedData.TweakedNPCs[npcType] = true;
-        foreach (int itemType in RelatedItems)
-            AnomalySharedData.TweakedItems[itemType] = true;
-    }
-
-    public override decimal Priority => 5m;
-}
-
-public abstract class AnomalyItemTweak : AnomalySingleItemBehavior, IAnomalyLocalizationPrefix, IAnomalyTweak
-{
-    public abstract AnomalyGamePhase Phase { get; }
-    public abstract string LocalizationName { get; }
-
-    void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedItems[ApplyingType] = true;
-
-    public override decimal Priority => 5m;
-}
-
-public abstract class AnomalyItemTweak<T> : AnomalySingleItemBehavior<T>, IAnomalyLocalizationPrefix, IAnomalyTweak where T : ModItem
-{
-    public abstract AnomalyGamePhase Phase { get; }
-    public virtual string LocalizationName => Type.Name;
-
-    void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedItems[ApplyingType] = true;
-
-    public override decimal Priority => 5m;
-}
-#endregion
-
 #region Handler
-public sealed class AnomalySingleNPCBehaviorHandler : SingleNPCBehaviorHandler<AnomalySingleNPCBehavior>
+public sealed class AnomalySingleNPCBehaviorHandler : SingleNPCBehaviorHandler<AnomalyNPCBehavior>
 {
     public override AnomalyMain Mod => AnomalyMain.Instance;
 
     public override decimal Priority => 50m;
 
-    protected override SingleEntityBehaviorSet<NPC, AnomalySingleNPCBehavior> BehaviorSet => AnomalyEntityChangeHelper.NPCBehaviors;
+    protected override SingleEntityBehaviorSet<NPC, AnomalyNPCBehavior> BehaviorSet => AnomalyEntityChangeHelper.NPCBehaviors;
 }
 
-public sealed class AnomalySingleProjectileBehaviorHandler : SingleProjectileBehaviorHandler<AnomalySingleProjectileBehavior>
+public sealed class AnomalySingleProjectileBehaviorHandler : SingleProjectileBehaviorHandler<AnomalyProjectileBehavior>
 {
     public override AnomalyMain Mod => AnomalyMain.Instance;
 
     public override decimal Priority => 50m;
 
-    protected override SingleEntityBehaviorSet<Projectile, AnomalySingleProjectileBehavior> BehaviorSet => AnomalyEntityChangeHelper.ProjectileBehaviors;
+    protected override SingleEntityBehaviorSet<Projectile, AnomalyProjectileBehavior> BehaviorSet => AnomalyEntityChangeHelper.ProjectileBehaviors;
 }
 
-public sealed class AnomalySingleItemBehaviorHandler : SingleItemBehaviorHandler<AnomalySingleItemBehavior>
+public sealed class AnomalySingleItemBehaviorHandler : SingleItemBehaviorHandler<AnomalyItemBehavior>
 {
     public override AnomalyMain Mod => AnomalyMain.Instance;
 
     public override decimal Priority => 50m;
 
-    protected override SingleEntityBehaviorSet<Item, AnomalySingleItemBehavior> BehaviorSet => AnomalyEntityChangeHelper.ItemBehaviors;
+    protected override SingleEntityBehaviorSet<Item, AnomalyItemBehavior> BehaviorSet => AnomalyEntityChangeHelper.ItemBehaviors;
 }
 
 public sealed class AnomalyEntityChangeHelper : IContentLoader
 {
-    internal static readonly SingleEntityBehaviorSet<NPC, AnomalySingleNPCBehavior> NPCBehaviors = new();
+    internal static readonly SingleEntityBehaviorSet<NPC, AnomalyNPCBehavior> NPCBehaviors = new();
 
-    internal static readonly SingleEntityBehaviorSet<Projectile, AnomalySingleProjectileBehavior> ProjectileBehaviors = new();
+    internal static readonly SingleEntityBehaviorSet<Projectile, AnomalyProjectileBehavior> ProjectileBehaviors = new();
 
-    internal static readonly SingleEntityBehaviorSet<Item, AnomalySingleItemBehavior> ItemBehaviors = new();
+    internal static readonly SingleEntityBehaviorSet<Item, AnomalyItemBehavior> ItemBehaviors = new();
 
     void IContentLoader.PostSetupContent()
     {
@@ -390,7 +320,7 @@ public sealed class CalamityGlobalNPCBehaviorDetour : GlobalNPCDetour<CalamityGl
 {
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalNPC self, NPC npc)
     {
-        if (npc.TryGetBehavior(out AnomalySingleNPCBehavior npcBehavior, nameof(AnomalySingleNPCBehavior.PreAI))
+        if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.PreAI))
             && !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.PreAI))
             return true;
 
@@ -399,7 +329,7 @@ public sealed class CalamityGlobalNPCBehaviorDetour : GlobalNPCDetour<CalamityGl
 
     public override Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalNPC self, NPC npc, Color drawColor)
     {
-        if (npc.TryGetBehavior(out AnomalySingleNPCBehavior npcBehavior, nameof(AnomalySingleNPCBehavior.GetAlpha))
+        if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.GetAlpha))
             && !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.GetAlpha))
             return null;
 
@@ -408,7 +338,7 @@ public sealed class CalamityGlobalNPCBehaviorDetour : GlobalNPCDetour<CalamityGl
 
     public override bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalNPC self, NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        if (npc.TryGetBehavior(out AnomalySingleNPCBehavior npcBehavior, nameof(AnomalySingleNPCBehavior.PreDraw))
+        if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.PreDraw))
             && npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.PreDraw))
             return true;
 
@@ -421,7 +351,7 @@ public sealed class CalamityVanillaAIOverrideDetour : GlobalNPCDetour<CalamityVa
 {
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityVanillaAIOverrideNPC self, NPC npc)
     {
-        if (npc.TryGetBehavior(out AnomalySingleNPCBehavior npcBehavior, nameof(AnomalySingleNPCBehavior.PreAI))
+        if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.PreAI))
             && !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.VanillaOverrideAI))
             return true;
 
@@ -434,7 +364,7 @@ public sealed class CalamityGlobalProjectileBehaviorDetour : GlobalProjectileDet
 {
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalProjectile self, Projectile projectile)
     {
-        if (projectile.TryGetBehavior(out AnomalySingleProjectileBehavior projectileBehavior, nameof(AnomalySingleProjectileBehavior.PreAI))
+        if (projectile.TryGetBehavior(out AnomalyProjectileBehavior projectileBehavior, nameof(AnomalyProjectileBehavior.PreAI))
             && !projectileBehavior.AllowCalamityLogic(CalamityLogicType_ProjectileBehavior.PreAI))
             return true;
 
@@ -443,7 +373,7 @@ public sealed class CalamityGlobalProjectileBehaviorDetour : GlobalProjectileDet
 
     public override Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalProjectile self, Projectile projectile, Color lightColor)
     {
-        if (projectile.TryGetBehavior(out AnomalySingleProjectileBehavior projectileBehavior, nameof(AnomalySingleProjectileBehavior.GetAlpha))
+        if (projectile.TryGetBehavior(out AnomalyProjectileBehavior projectileBehavior, nameof(AnomalyProjectileBehavior.GetAlpha))
             && !projectileBehavior.AllowCalamityLogic(CalamityLogicType_ProjectileBehavior.GetAlpha))
             return null;
 
@@ -452,7 +382,7 @@ public sealed class CalamityGlobalProjectileBehaviorDetour : GlobalProjectileDet
 
     public override bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalProjectile self, Projectile projectile, ref Color lightColor)
     {
-        if (projectile.TryGetBehavior(out AnomalySingleProjectileBehavior projectileBehavior, nameof(AnomalySingleProjectileBehavior.PreDraw))
+        if (projectile.TryGetBehavior(out AnomalyProjectileBehavior projectileBehavior, nameof(AnomalyProjectileBehavior.PreDraw))
             && !projectileBehavior.AllowCalamityLogic(CalamityLogicType_ProjectileBehavior.PreDraw))
             return true;
 

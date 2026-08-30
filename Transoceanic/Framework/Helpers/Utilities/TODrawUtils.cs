@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.Helpers;
+﻿namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
 /// 提供与绘图相关的工具方法，例如屏幕坐标计算、自定义尺寸物品绘制以及描边效果。

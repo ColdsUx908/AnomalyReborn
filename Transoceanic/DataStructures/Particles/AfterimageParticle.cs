@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Transoceanic.DataStructures.Assets;
+﻿using Transoceanic.DataStructures.Assets;
 
 namespace Transoceanic.DataStructures.Particles;
 
@@ -39,7 +37,7 @@ public class AfterimageParticle : Particle, IContentLoader
         Opacity = OriginalOpacity * 0.65f * TOMathUtils.Interpolation.QuadraticEaseOut(1f - lifetimeCompletion);
     }
 
-    public override bool PreDraw(SpriteBatch spriteBatch) => false;
+    public override bool PreDraw(SpriteBatch spriteBatch, Vector2 drawOffset = default) => false;
 
     public void Draw(SpriteBatch spriteBatch)
     {

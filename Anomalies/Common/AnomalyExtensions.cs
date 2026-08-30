@@ -1,6 +1,7 @@
-﻿// Developed by ColdsUx
-
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
+using Anomalies.DataStructures;
+using Anomalies.Visuals.BossBar;
+using Terraria.Graphics.Shaders;
 
 namespace Anomalies.Common;
 
@@ -11,7 +12,7 @@ public static class AnomalyExtensions
         public AnomalyGlobalItem Anomaly { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => item?.GetGlobalItem<AnomalyGlobalItem>(); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetBehavior(out AnomalySingleItemBehavior itemBehavior, [CallerMemberName] string methodName = null) => AnomalyEntityChangeHelper.ItemBehaviors.TryGetBehavior(item, methodName, out itemBehavior);
+        public bool TryGetBehavior(out AnomalyItemBehavior itemBehavior, [CallerMemberName] string methodName = null) => AnomalyEntityChangeHelper.ItemBehaviors.TryGetBehavior(item, methodName, out itemBehavior);
     }
 
     extension(AnomalyItemTooltipModifier modifier)
@@ -19,16 +20,25 @@ public static class AnomalyExtensions
         public void ApplyAnomalyTweakColorToDamage() => modifier.Modify(null, "Damage", l => l.OverrideColor = AnomalySharedData.GetGradientColor(0.25f));
     }
 
+    extension(MiscShaderData data)
+    {
+        public void ApplyIfUsingShader(DrawData? drawData = null)
+        {
+            if (AnomalySharedData.ShouldUseShaders)
+                data.Apply();
+        }
+    }
+
     extension(NPC npc)
     {
         public AnomalyGlobalNPC Anomaly { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => npc?.GetGlobalNPC<AnomalyGlobalNPC>(); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetBehavior(out AnomalySingleNPCBehavior npcBehavior, [CallerMemberName] string methodName = null) => AnomalyEntityChangeHelper.NPCBehaviors.TryGetBehavior(npc, methodName, out npcBehavior);
+        public bool TryGetBehavior(out AnomalyNPCBehavior npcBehavior, [CallerMemberName] string methodName = null) => AnomalyEntityChangeHelper.NPCBehaviors.TryGetBehavior(npc, methodName, out npcBehavior);
 
         public bool TryGetBossBar([NotNullWhen(true)] out BossHealthBar bar)
         {
-            if (BossHealthBarStyle.CurrentBars.TryGetValue(npc.Identifier, out BossHealthBar foundBar) && foundBar.Valid)
+            if (BossBarHandler.CurrentBars.TryGetValue(npc.Identifier, out BossHealthBar foundBar) && foundBar.Valid)
             {
                 bar = foundBar;
                 return true;
@@ -54,7 +64,11 @@ public static class AnomalyExtensions
 
                     return true;
                 },
-                IsSubPhaseIndicator = isSubPhaseIndicator
+                IsSubPhaseIndicator = isSubPhaseIndicator,
+
+                ParticleSet = new EnchantedParticleSet(-1, 0f,
+                    () => isSubPhaseIndicator ? TOSharedData.CelestialColor : AnomalySharedData.AnomalyUltramundaneColor,
+                    () => Color.White, 0.1f, 0f)
             });
         }
     }
@@ -69,6 +83,7 @@ public static class AnomalyExtensions
         public AnomalyGlobalProjectile Anomaly { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => projectile?.GetGlobalProjectile<AnomalyGlobalProjectile>(); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetBehavior(out AnomalySingleProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null) => AnomalyEntityChangeHelper.ProjectileBehaviors.TryGetBehavior(projectile, methodName, out projectileBehavior);
+        public bool TryGetBehavior(out AnomalyProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null) => AnomalyEntityChangeHelper.ProjectileBehaviors.TryGetBehavior(projectile, methodName, out projectileBehavior);
     }
 }
+

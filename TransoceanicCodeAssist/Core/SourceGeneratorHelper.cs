@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace TransoceanicCodeAssist;
+﻿namespace TransoceanicCodeAssist;
 
 /// <summary>
 /// 为 Transoceanic 系列源生成器提供通用辅助方法、常量和扩展。

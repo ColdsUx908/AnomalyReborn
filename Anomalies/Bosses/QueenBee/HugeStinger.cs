@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.QueenBee;
+﻿namespace Anomalies.Bosses.QueenBee;
 
 public sealed class HugeStinger : AnomalyModProjectile
 {
@@ -83,3 +81,4 @@ public sealed class HugeStinger : AnomalyModProjectile
         return false;
     }
 }
+

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Common.SingleBehaviors;
+﻿namespace Anomalies.Common.SingleBehaviors;
 
 public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior, IContentLoader
 {
@@ -18,7 +16,7 @@ public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior, IContentLoader
 
         foreach (AnomalyGlobalItemBehavior behavior in GlobalItemBehaviorHandler.BehaviorSet.Enumerate<AnomalyGlobalItemBehavior>(nameof(AnomalyGlobalItemBehavior.ModifyHitNPC_DR)))
             behavior.ModifyHitNPC_DR(item, npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
-        if (item.TryGetBehavior(out AnomalySingleItemBehavior itemBehavior, nameof(AnomalySingleItemBehavior.ModifyHitNPC_DR)))
+        if (item.TryGetBehavior(out AnomalyItemBehavior itemBehavior, nameof(AnomalyItemBehavior.ModifyHitNPC_DR)))
             itemBehavior.ModifyHitNPC_DR(npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (item.ModItem is IAnomalyModItem caItem)
             caItem.ModifyHitNPC_DR(npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
@@ -40,7 +38,7 @@ public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior, IContentLoader
 
         foreach (AnomalyGlobalProjectileBehavior behavior in GlobalProjectileBehaviorHandler.BehaviorSet.Enumerate<AnomalyGlobalProjectileBehavior>(nameof(AnomalyGlobalProjectileBehavior.ModifyHitNPC_DR)))
             behavior.ModifyHitNPC_DR(projectile, npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
-        if (projectile.TryGetBehavior(out AnomalySingleProjectileBehavior projectileBehavior, nameof(AnomalySingleProjectileBehavior.ModifyHitNPC_DR)))
+        if (projectile.TryGetBehavior(out AnomalyProjectileBehavior projectileBehavior, nameof(AnomalyProjectileBehavior.ModifyHitNPC_DR)))
             projectileBehavior.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (projectile.ModProjectile is IAnomalyModProjectile anomalyProjectile)
             anomalyProjectile.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
@@ -60,3 +58,4 @@ public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior, IContentLoader
         return timedDR;
     }
 }
+

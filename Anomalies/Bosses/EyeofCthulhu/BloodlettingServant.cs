@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.DataStructures;
+﻿using Anomalies.DataStructures;
 
 namespace Anomalies.Bosses.EyeofCthulhu;
 
@@ -142,7 +140,7 @@ public partial class BloodlettingServant : AnomalyModNPC
                 float newPositionRotation = PositionRotation;
                 float targetPositionRotation = master.rotation;
                 float acceleration = ShouldUsePhase2Frame ? 0.5f : 0.15f;
-                EyeofCthulhu_Handler.UpdateRotation(ref newPositionRotation, targetPositionRotation, acceleration);
+                EyeofCthulhuHandler.UpdateRotation(ref newPositionRotation, targetPositionRotation, acceleration);
                 PositionRotation = newPositionRotation;
             }
             Vector2 offset = new Vector2(FollowDistance * (Place == ServantPlace.Left ? -1 : 1), 0f).RotatedBy(PositionRotation);
@@ -155,7 +153,7 @@ public partial class BloodlettingServant : AnomalyModNPC
             else
             {
                 float targetRotation = TOMathUtils.NormalizeWithPeriod((Target.Center - NPC.Center).ToRotation(MathHelper.Pi));
-                EyeofCthulhu_Handler.UpdateRotation(ref NPC.rotation, targetRotation, 0.12f);
+                EyeofCthulhuHandler.UpdateRotation(ref NPC.rotation, targetRotation, 0.12f);
             }
         }
 
@@ -163,7 +161,7 @@ public partial class BloodlettingServant : AnomalyModNPC
         {
             float projectileSpeed = 12.5f;
             int amount = Ultra ? 3 : 1;
-            EyeofCthulhu_Handler.ShootProjectile(NPC, ProjectileID.BloodShot, EyeofCthulhu.BloodDamage, projectileSpeed, amount, MathHelper.ToRadians(15f), p => p.timeLeft = 300);
+            EyeofCthulhuHandler.ShootProjectile(NPC, ProjectileID.BloodShot, EyeofCthulhu.BloodDamage, projectileSpeed, amount, MathHelper.ToRadians(15f), p => p.timeLeft = 300);
 
             MasterCommandReceiver = BehaviorCommand_Servant.None;
             NPC.netUpdate = true;
@@ -198,11 +196,11 @@ public partial class BloodlettingServant : AnomalyModNPC
             }
 
             float timer = masterBehavior.Timer1;
-            ArenaRadius = MathHelper.Lerp(MaxFollowDistance, EyeofCthulhu_Handler.MaxArenaRadius, TOMathUtils.Interpolation.ExponentialEaseInOut(timer / EyeofCthulhu.PhaseChangeGateValue_2To3_1, 4f));
+            ArenaRadius = MathHelper.Lerp(MaxFollowDistance, EyeofCthulhuHandler.MaxArenaRadius, TOMathUtils.Interpolation.ExponentialEaseInOut(timer / EyeofCthulhu.PhaseChangeGateValue_2To3_1, 4f));
 
             float newPositionRotation = PositionRotation;
             float targetPositionRotation = Place == ServantPlace.Left ? MathHelper.Pi : 0f;
-            EyeofCthulhu_Handler.UpdateRotation(ref newPositionRotation, targetPositionRotation, 0.2f * TOMathUtils.Interpolation.CubicEaseInOut(masterBehavior.Timer1 / 10f));
+            EyeofCthulhuHandler.UpdateRotation(ref newPositionRotation, targetPositionRotation, 0.2f * TOMathUtils.Interpolation.CubicEaseInOut(masterBehavior.Timer1 / 10f));
             PositionRotation = newPositionRotation;
 
             Vector2 offset = new Vector2(ArenaRadius, 0f).RotatedBy(PositionRotation);
@@ -210,7 +208,7 @@ public partial class BloodlettingServant : AnomalyModNPC
             NPC.Center = Vector2.SmootherStep(NPC.Center, destination, Math.Clamp(timer / EyeofCthulhu.PhaseChangeGateValue_2To3_1, 0f, 1f));
 
             float targetRotation = Place == ServantPlace.Left ^ timer > EyeofCthulhu.PhaseChangeGateValue_2To3_1 ? 0f : MathHelper.Pi;
-            EyeofCthulhu_Handler.UpdateRotation(ref NPC.rotation, targetRotation, 0.3f * TOMathUtils.Interpolation.CubicEaseInOut(masterBehavior.Timer1 / 10f));
+            EyeofCthulhuHandler.UpdateRotation(ref NPC.rotation, targetRotation, 0.3f * TOMathUtils.Interpolation.CubicEaseInOut(masterBehavior.Timer1 / 10f));
         }
     }
 
@@ -246,7 +244,7 @@ public partial class BloodlettingServant : AnomalyModNPC
         NPC.frame.Y = frameNum * frameHeight;
     }
 
-    public override Color? GetAlpha(Color drawColor) => Color.Lerp(Color.Red * 0.75f, EyeofCthulhu_Handler.ChargeColor, Math.Clamp(Timer2 / 10f, 0f, 1f)) with { A = NPC.GraphicAlpha };
+    public override Color? GetAlpha(Color drawColor) => Color.Lerp(Color.Red * 0.75f, EyeofCthulhuHandler.ChargeColor, Math.Clamp(Timer2 / 10f, 0f, 1f)) with { A = NPC.GraphicAlpha };
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
@@ -554,7 +552,7 @@ public partial class BloodlettingServant : AnomalyModNPC
         {
             Texture2D npcTexture = TextureAssets.Npc[NPC.type].Value;
             Color originalColor = Color.Red * 0.75f;
-            Color newColor = EyeofCthulhu_Handler.ChargeColor;
+            Color newColor = EyeofCthulhuHandler.ChargeColor;
             Vector2 drawPosition = NPC.Center - screenPos + new Vector2(0, NPC.gfxOffY);
             Vector2 origin = NPC.frame.Size() / 2;
 

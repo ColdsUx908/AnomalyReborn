@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Common;
+﻿namespace Anomalies.Common;
 
 internal interface IAnomalyLoader
 {
@@ -14,4 +12,5 @@ internal interface IAnomalyLoader
     /// </summary>
     internal virtual void Unload() { }
 }
+
 

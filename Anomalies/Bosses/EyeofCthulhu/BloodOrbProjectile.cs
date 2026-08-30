@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.EyeofCthulhu;
+﻿namespace Anomalies.Bosses.EyeofCthulhu;
 
 public class BloodOrbProjectile : AnomalyModProjectile
 {
@@ -41,7 +39,7 @@ public class BloodOrbProjectile : AnomalyModProjectile
 
     public override string LocalizationCategory => "Bosses.EyeofCthulhu";
 
-    public override string Texture => EyeofCthulhu_Handler.AnomalyEyeofCthulhuPath + "BloodOrb";
+    public override string Texture => EyeofCthulhuHandler.AnomalyEyeofCthulhuPath + "BloodOrb";
 
     public override void SetDefaults()
     {
@@ -110,7 +108,7 @@ public class BloodOrbProjectile : AnomalyModProjectile
 
                         goto default;
                     default:
-                        if (ArenaProjectileAlive && Projectile.Distance(ArenaProjectile.Center) > ArenaModProjectile.Radius + 30f)
+                        if (ArenaProjectileAlive && Projectile.Distance(ArenaProjectile.Center) > ArenaModProjectile.Radius + 100f)
                             Projectile.Kill();
                         break;
                 }
@@ -146,8 +144,9 @@ public class BloodOrbProjectile : AnomalyModProjectile
             return false; //在竞技场的PreDraw中集中绘制
 
         float intensity = TOMathUtils.Interpolation.QuadraticEaseOut(Timer1 / 5f);
-        Main.spriteBatch.DrawFromCenter(EyeofCthulhu_Handler.BloodOrbBigBorderTexture, Projectile.Center - Main.screenPosition, null, Color.Red * intensity, Projectile.rotation, Projectile.scale * 0.84f);
-        Main.spriteBatch.DrawFromCenter(EyeofCthulhu_Handler.BloodOrbTexture, Projectile.Center - Main.screenPosition, null, Color.White, Projectile.rotation, Projectile.scale);
+        Main.spriteBatch.DrawFromCenter(EyeofCthulhuHandler.BloodOrbBigBorderTexture, Projectile.Center - Main.screenPosition, null, Color.Red * intensity, Projectile.rotation, Projectile.scale * 0.84f);
+        Main.spriteBatch.DrawFromCenter(EyeofCthulhuHandler.BloodOrbTexture, Projectile.Center - Main.screenPosition, null, Color.White, Projectile.rotation, Projectile.scale);
         return false;
     }
 }
+

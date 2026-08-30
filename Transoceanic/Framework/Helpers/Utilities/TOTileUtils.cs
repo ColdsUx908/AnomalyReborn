@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.Helpers;
+﻿namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
 /// 提供与物块（<see cref="Tile"/>）相关的工具方法，如安全获取、边界遍历、类型判断等。

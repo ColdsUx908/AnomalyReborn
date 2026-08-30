@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Hooks;
+﻿namespace Transoceanic.Hooks;
 
 internal static class TOHookHelper
 {

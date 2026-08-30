@@ -1,5 +1,4 @@
-﻿
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 
 namespace Transoceanic.DataStructures.Rendering;
@@ -45,3 +44,4 @@ public static class RenderTargetPreserver
         return bindings;
     }
 }
+

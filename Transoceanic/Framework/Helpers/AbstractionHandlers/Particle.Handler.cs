@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.Helpers;
+﻿namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
 /// 粒子系统全局处理器，负责粒子的更新、绘制以及生命周期管理。
@@ -66,7 +64,6 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
     internal static Dictionary<Type, int> _ParticleTypes;
 
     private static List<Particle> _Particles;
-    private static List<Particle> _ParticlesToKill;
 
     private static List<Particle> _ParticlesToDraw_AlphaBlend;
     private static List<Particle> _ParticlesToDraw_NonPremultiplied;
@@ -149,7 +146,7 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
     /// <param name="drawOffset">可选的绘制偏移量。</param>
     public static void DrawParticle(SpriteBatch spriteBatch, Particle particle, Vector2 drawOffset = default)
     {
-        if (particle.PreDraw(spriteBatch))
+        if (particle.PreDraw(spriteBatch, drawOffset))
         {
             Texture2D texture = particle.Texture;
             Rectangle? frame = particle.GetFrame(texture);
@@ -159,7 +156,7 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
             spriteBatch.DrawFromCenter(texture, particle.Center + drawOffset - Main.screenPosition, frame, color, particle.Rotation, particle.Scale, SpriteEffects.None, 0f);
         }
 
-        particle.PostDraw(spriteBatch);
+        particle.PostDraw(spriteBatch, drawOffset);
     }
 
     /// <summary>
@@ -225,8 +222,7 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
             UpdateParticle(particle);
         }
 
-        _Particles.RemoveAll(particle => particle is null || (particle.Timer >= particle.Lifetime && particle.AutoKillByLifeTime) || _ParticlesToKill.Contains(particle));
-        _ParticlesToKill.Clear();
+        _Particles.RemoveAll(particle => particle is null || (particle.Timer >= particle.Lifetime && particle.AutoKillByLifeTime) || particle.Dead);
     }
 
     internal static void UpdateParticle(Particle particle)
@@ -243,7 +239,6 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         _ParticleCache = [];
         _ParticleTypes = [];
         _Particles = [];
-        _ParticlesToKill = [];
         _ParticlesToDraw_AlphaBlend = [];
         _ParticlesToDraw_NonPremultiplied = [];
         _ParticlesToDraw_Additive = [];
@@ -269,7 +264,6 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         _ParticleCache = null;
         _ParticleTypes = null;
         _Particles = null;
-        _ParticlesToKill = null;
         _ParticlesToDraw_AlphaBlend = null;
         _ParticlesToDraw_NonPremultiplied = null;
         _ParticlesToDraw_Additive = null;
@@ -330,17 +324,6 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         }
 
         return true;
-    }
-
-    /// <summary>
-    /// 将指定粒子标记为待移除。
-    /// </summary>
-    public static void AddToRemoveList(Particle particle)
-    {
-        if (Main.dedServ)
-            return;
-
-        _ParticlesToKill.Add(particle);
     }
 
     /// <summary>

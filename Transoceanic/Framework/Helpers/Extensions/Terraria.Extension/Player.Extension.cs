@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.Helpers;
+﻿namespace Transoceanic.Framework.Helpers;
 
 public static partial class TOExtensions
 {
@@ -65,6 +63,20 @@ public static partial class TOExtensions
                 }
                 return totalSlots - usedSlots;
             }
+        }
+
+        /// <summary>
+        /// 判断玩家是否可以进行控制操作（移动、跳跃、使用物品等）。
+        /// </summary>
+        /// <param name="allowWoFTongue">是否忽略玩家被血肉墙控制的情况。</param>
+        /// <returns>如果玩家可以进行控制操作，返回 <see langword="true"/>；否则返回 <see langword="false"/>。</returns>
+        public bool ControlsEnabled(bool allowWoFTongue = false)
+        {
+            if (player.CCed) // Covers frozen (player.frozen), webs (player.webbed), and Medusa (player.stoned)
+                return false;
+            if (player.tongued && !allowWoFTongue)
+                return false;
+            return true;
         }
 
         /// <summary>

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
+﻿using Anomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
 
 namespace Anomalies.Common.SingleBehaviors;
 
@@ -16,3 +14,4 @@ public sealed class AnomalyStarterItems : AnomalyPlayerBehavior
         return result;
     }
 }
+

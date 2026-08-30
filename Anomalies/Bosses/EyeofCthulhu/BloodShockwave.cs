@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.GameContents.Base;
+﻿using Anomalies.GameContents.Base;
 
 namespace Anomalies.Bosses.EyeofCthulhu;
 
@@ -28,3 +26,4 @@ public sealed class BloodShockwave : BaseShockwaveProjectile, IContentLoader
 
     public override Color? GetAlpha(Color lightColor) => Color.Red * 0.75f;
 }
+

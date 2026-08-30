@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.GameContents.Dusts;
+﻿namespace Anomalies.GameContents.Dusts;
 
 public class SquashDust : ModDust
 {
@@ -65,3 +63,4 @@ public class SquashDust : ModDust
         return false;
     }
 }
+

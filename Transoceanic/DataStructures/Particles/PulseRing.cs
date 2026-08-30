@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures.Particles;
+﻿namespace Transoceanic.DataStructures.Particles;
 
 public class PulseRing : Particle
 {
@@ -51,9 +49,10 @@ public class PulseRing : Particle
         Velocity *= 0.95f;
     }
 
-    public override bool PreDraw(SpriteBatch spriteBatch)
+    public override bool PreDraw(SpriteBatch spriteBatch, Vector2 drawOffset = default)
     {
-        spriteBatch.DrawFromCenter_VectorScale(UseHDTexture ? TextureHD : Texture, Center - Main.screenPosition, null, Color * Opacity, Rotation, (UseHDTexture ? Scale * TextureRadiusConversionFactor : Scale) * Squish, SpriteEffects.None, 0);
+        spriteBatch.DrawFromCenter_VectorScale(UseHDTexture ? TextureHD : Texture, Center + drawOffset - Main.screenPosition, null, Color * Opacity, Rotation, (UseHDTexture ? Scale * TextureRadiusConversionFactor : Scale) * Squish, SpriteEffects.None, 0);
         return false;
     }
 }
+

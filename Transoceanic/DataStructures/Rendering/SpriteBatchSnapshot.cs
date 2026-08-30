@@ -26,3 +26,4 @@ public struct SpriteBatchSnapshot
         transformMatrix = publicizer.transformMatrix;
     }
 }
+

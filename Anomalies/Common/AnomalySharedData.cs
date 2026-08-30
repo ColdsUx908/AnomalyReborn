@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.AnomalyMode;
+﻿using Anomalies.AnomalyMode;
 
 namespace Anomalies.Common;
 
@@ -38,6 +36,19 @@ public sealed partial class AnomalySharedData : ModSystem
 
     public static Color GetGradientColor(float maxRatio = 0.5f) => Color.LerpMany(ColorList, TOMathUtils.TimeWrappingFunction.GetTimeSin(maxRatio / 2f, unsigned: true));
 
+    /// <summary>
+    /// 是否使用 Anomalies 的着色器。
+    /// <br/>启用条件：
+    /// <list type="bullet">
+    /// <item>Anomalies 客户端配置中的 EnableShaders 为 true</item>
+    /// <item>照明不为复古或迷幻</item>
+    /// <item>水波质量开启</item>
+    /// </list>
+    /// </summary>
+    public static bool ShouldUseShaders => AnomalyClientConfig.Instance.EnableShaders
+        && Lighting.NotRetro //照明不为复古或迷幻
+        && Main.WaveQuality >= 1; //水波质量开启
+
     #region Sets
     public static bool[] TweakedNPCs { get; private set; }
     public static bool[] TweakedProjectiles { get; private set; }
@@ -64,7 +75,7 @@ public sealed partial class AnomalySharedData : ModSystem
                 return;
 
             if (!value && AnomalyUltramundane)
-                AnomalyModeHandler.DisableUltra();
+                AnomalyHandler.DisableUltra();
 
             field = value;
 
@@ -75,7 +86,7 @@ public sealed partial class AnomalySharedData : ModSystem
                 TOLocalizationUtils.ChatLocalizedText(key, color);
             }
             if (value)
-                AnomalyModeHandler.CheckAnomalyUltra();
+                AnomalyHandler.CheckAnomalyUltra();
 
             OnAnomalyModeToggled?.Invoke(value);
             AnomalySynchronization.SyncAnomalyMode();
@@ -141,5 +152,6 @@ public sealed partial class AnomalySharedData : ModSystem
 
     #endregion World
 }
+
 
 

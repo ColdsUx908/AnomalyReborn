@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.Bosses.QueenSlime;
+﻿using Anomalies.Bosses.QueenSlime;
 
 namespace Anomalies.Bosses.KingSlime;
 

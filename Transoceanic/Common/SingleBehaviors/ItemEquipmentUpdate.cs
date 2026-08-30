@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Common.SingleBehaviors;
+﻿namespace Transoceanic.Common.SingleBehaviors;
 
 public sealed class ItemEquipmentUpdate : TOGlobalItemBehavior
 {
@@ -22,3 +20,4 @@ public sealed class ItemEquipmentUpdate : TOGlobalItemBehavior
         oceanItem.Equip.Value = false;
     }
 }
+

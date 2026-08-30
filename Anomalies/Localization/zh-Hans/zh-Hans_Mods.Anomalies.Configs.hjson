@@ -1,10 +1,38 @@
 AnomalyServerConfig: {
 	DisplayName: 服务端配置
 	Denied: 你没有权限更改此配置。
-	Headers.BaseBoosts: 基础属性加成
+}
+
+AnomalyClientConfig: {
+	DisplayName: 客户端配置
+
+	Headers: {
+		Visuals: 视觉效果
+		BaseBoosts: 基础属性加成
+	}
+
+	UseCalamityStyleTextures: {
+		Label: 使用灾厄风格纹理
+		Tooltip:
+			'''
+			将模组中的某些纹理替换为更符合灾厄模组艺术风格的版本。
+			建议搭配灾厄纹理包使用。
+			'''
+	}
+
+	EnableShaders: {
+		Label: 启用着色器
+		Tooltip:
+			'''
+			启用模组中视觉效果的着色器。
+			禁用此选项可能会提高性能，但也会使某些效果看起来更差。
+			如果你遇到视觉或性能问题，请禁用此设置。
+			注意：如果照明方式为复古或迷幻，或者水波质量为关，着色器会被强制禁用，无论此设置是否启用。
+			'''
+	}
 
 	FasterBaseSpeed: {
-		Label: "[i:HermesBoots] 更高基础移速"
+		Label: 更高基础移速
 		Tooltip:
 			'''
 			大幅提高玩家的基础移动速度（移动速度+50%）。
@@ -14,7 +42,7 @@ AnomalyServerConfig: {
 	}
 
 	FasterJumpSpeed: {
-		Label: "[i:FrogLeg] 更高基础跳跃速度"
+		Label: 更高基础跳跃速度
 		Tooltip:
 			'''
 			小幅提高玩家的基础跳跃速度。
@@ -23,8 +51,19 @@ AnomalyServerConfig: {
 			'''
 	}
 
+	FasterFall: {
+		Label: 启用更快下落
+		Tooltip:
+			'''
+			启用后，你可以在空中按住{$Key.DOWN}以更快地向下降落。
+			此配置不会增加你的最大下降速度，只会增加加速度。
+			异象平衡设定是在启用此配置的基础上进行的。
+			如果灾厄模组已启用，请考虑使用灾厄配置。
+			'''
+	}
+
 	FasterRopeClimbSpeed: {
-		Label: "[i:Rope] 更快爬绳速度"
+		Label: 更快爬绳速度
 		Tooltip:
 			'''
 			大幅提高玩家爬绳的速度（提高在绳上的加速度和减速度）。
@@ -34,7 +73,7 @@ AnomalyServerConfig: {
 	}
 
 	FasterTilePlacement: {
-		Label: "[i:ArchitectGizmoPack] 更快的基础建造速度"
+		Label: 更快的基础建造速度
 		Tooltip:
 			'''
 			大幅提高玩家放置方块和墙壁速度。
@@ -50,24 +89,6 @@ AnomalyServerConfig: {
 			启用所有基础属性加成。
 			异象平衡设定是在启用此配置的基础上进行的。
 			如果灾厄模组已启用，请考虑使用灾厄配置。
-			'''
-	}
-}
-
-AnomalyClientConfig: {
-	DisplayName: 客户端配置
-
-	AuxiliaryVisualEffects: {
-		Label: 辅助视觉效果
-		Tooltip: 辅助视觉效果，可能有助于指示实体的某些行为或状态。
-	}
-
-	UseCalamityStyleTextures: {
-		Label: 使用灾厄风格纹理
-		Tooltip:
-			'''
-			将模组中的某些纹理替换为更符合灾厄模组艺术风格的版本。
-			建议搭配灾厄纹理包使用。
 			'''
 	}
 }

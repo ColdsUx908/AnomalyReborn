@@ -38,3 +38,4 @@ public sealed class BloodShot : AnomalyProjectileBehavior<BloodShot>
         return false;
     }
 }
+

@@ -1,8 +1,7 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.Assets.Effects;
+﻿using Anomalies.Assets.Effects;
 using Anomalies.Bosses.KingSlime;
 using Anomalies.DataStructures;
+using Anomalies.Visuals.BossBar;
 using Terraria.Graphics.Shaders;
 
 namespace Anomalies.Bosses.QueenSlime;
@@ -589,3 +588,4 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
             .Apply();
     }
 }
+

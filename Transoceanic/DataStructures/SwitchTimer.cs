@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures;
+﻿namespace Transoceanic.DataStructures;
 
 /// <summary>
 /// 表示一个基于开/关时间戳的整数计时器，用于计算并限制在指定范围内的经过时间或剩余时间。
@@ -50,3 +48,4 @@ public struct SwitchTimer : IEquatable<SwitchTimer>
     public static bool operator ==(SwitchTimer left, SwitchTimer right) => left.Equals(right);
     public static bool operator !=(SwitchTimer left, SwitchTimer right) => !(left == right);
 }
+

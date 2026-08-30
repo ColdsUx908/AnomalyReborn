@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.Abstractions;
+﻿namespace Transoceanic.Framework.Abstractions;
 
 /// <summary>
 /// A set of particles that aren't attached to any particular position in the world, but instead an arbitrary center point defined in the draw function
@@ -13,9 +11,9 @@ public abstract class ParticleSet
     public int LocalTimer { get; internal set; }
     public int SetLifetime { get; internal set; }
     /// <summary>
-    /// The amount of frames it takes for a new particle to be spawned in the set.
+    /// The probability of a particle spawning each tick. This is a float between 0 and 1, where 1 means a particle will spawn every tick and 0 means no particles will spawn.
     /// </summary>
-    public int ParticleSpawnRate;
+    public float ParticleSpawnRate;
     /// <summary>
     /// The particles in the set
     /// </summary>
@@ -32,7 +30,7 @@ public abstract class ParticleSet
     public abstract Particle SpawnParticle();
     public virtual Func<Particle, int> OrderFunction { get; } = null;
 
-    public ParticleSet(int setLifetime, int particleSpawnRate)
+    public ParticleSet(int setLifetime, float particleSpawnRate)
     {
         SetLifetime = setLifetime;
         ParticleSpawnRate = particleSpawnRate;
@@ -46,7 +44,7 @@ public abstract class ParticleSet
 
         //Spawn new particles if time remains
         bool closeToDeath = LocalTimer >= SetLifetime - ParticleLifetime && SetLifetime > 0;
-        if (LocalTimer % ParticleSpawnRate == ParticleSpawnRate - 1 && !closeToDeath)
+        if (Main.rand.NextProbability(ParticleSpawnRate) && !closeToDeath)
         {
             Particle particle = SpawnParticle();
             Particles.Add(particle);
@@ -61,7 +59,7 @@ public abstract class ParticleSet
         }
 
         // Clear all expired particles.
-        Particles.RemoveAll(particle => particle.Timer >= particle.Lifetime && particle.AutoKillByLifeTime);
+        Particles.RemoveAll(particle => (particle.Timer >= particle.Lifetime && particle.AutoKillByLifeTime) || particle.Dead);
         LocalTimer++;
     }
 

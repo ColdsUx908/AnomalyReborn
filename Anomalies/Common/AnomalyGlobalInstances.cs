@@ -1,6 +1,5 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.DataStructures;
+﻿using Anomalies.DataStructures;
+using Anomalies.Visuals.BossBar;
 using Transoceanic.Framework.Helpers.Utilities;
 
 namespace Anomalies.Common;
@@ -340,3 +339,4 @@ public sealed class AnomalyGlobalItem : GlobalItem
         return clone;
     }
 }
+

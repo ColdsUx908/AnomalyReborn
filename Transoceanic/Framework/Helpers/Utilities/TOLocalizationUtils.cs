@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Terraria.Chat;
+﻿using Terraria.Chat;
 
 namespace Transoceanic.Framework.Helpers;
 

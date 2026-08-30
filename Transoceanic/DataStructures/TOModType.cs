@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures;
+﻿namespace Transoceanic.DataStructures;
 
 public interface ITOModNPC
 {
@@ -175,3 +173,4 @@ public abstract class TOModItem : ModItem, ITOModItem
 {
     public TOGlobalItem OceanItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Item.Ocean; }
 }
+

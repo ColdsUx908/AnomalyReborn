@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.Helpers.Utilities;
+﻿namespace Transoceanic.Framework.Helpers.Utilities;
 
 /// <summary>
 /// 提供与网络通信相关的便捷工具方法，主要针对 AI 数据的变化收集、传输与重放。

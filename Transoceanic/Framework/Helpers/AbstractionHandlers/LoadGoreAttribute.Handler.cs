@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.Helpers;
+﻿namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
 /// 血污加载器，负责处理标记了 <see cref="LoadGoreAttribute"/> 特性的静态 <see cref="ModGore"/> 字段的自动加载与卸载。

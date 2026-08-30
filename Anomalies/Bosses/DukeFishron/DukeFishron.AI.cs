@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.DukeFishron;
+﻿namespace Anomalies.Bosses.DukeFishron;
 
 public sealed partial class DukeFishron
 {
@@ -611,3 +609,4 @@ public sealed partial class DukeFishron
         #endregion 行为函数
     }
 }
+

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.DataStructures;
+﻿using Anomalies.DataStructures;
 
 namespace Anomalies.Bosses.KingSlime;
 

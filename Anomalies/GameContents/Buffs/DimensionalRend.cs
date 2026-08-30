@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.GameContents.Buffs;
+﻿namespace Anomalies.GameContents.Buffs;
 
 public sealed class DimensionalRend : ModDOT
 {

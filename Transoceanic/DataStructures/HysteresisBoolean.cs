@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures;
+﻿namespace Transoceanic.DataStructures;
 
 /// <summary>
 /// 表示一个具有滞后（防抖）特性的布尔值。
@@ -55,3 +53,4 @@ public struct HysteresisBoolean : IEquatable<HysteresisBoolean>
     public static bool operator !=(HysteresisBoolean left, HysteresisBoolean right) => !(left == right);
     public override readonly int GetHashCode() => _Value.GetHashCode();
 }
+

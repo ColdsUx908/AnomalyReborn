@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.DataStructures.Particles;
+﻿namespace Transoceanic.DataStructures.Particles;
 
 public class PointingParticle : Particle
 {
@@ -38,13 +36,14 @@ public class PointingParticle : Particle
         Rotation = Velocity.ToRotation() + MathHelper.PiOver2;
     }
 
-    public override bool PreDraw(SpriteBatch spriteBatch)
+    public override bool PreDraw(SpriteBatch spriteBatch, Vector2 drawOffset = default)
     {
         Vector2 scale = new Vector2(0.5f, 1.6f) * Scale;
 
-        spriteBatch.DrawFromCenter_VectorScale(Texture, Center - Main.screenPosition, null, Color, Rotation, scale, 0, 0f);
-        spriteBatch.DrawFromCenter_VectorScale(Texture, Center - Main.screenPosition, null, Color, Rotation, scale * new Vector2(0.45f, 1f), 0, 0f);
+        spriteBatch.DrawFromCenter_VectorScale(Texture, Center + drawOffset - Main.screenPosition, null, Color, Rotation, scale, 0, 0f);
+        spriteBatch.DrawFromCenter_VectorScale(Texture, Center + drawOffset - Main.screenPosition, null, Color, Rotation, scale * new Vector2(0.45f, 1f), 0, 0f);
 
         return false;
     }
 }
+

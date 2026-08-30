@@ -26,8 +26,12 @@
       </Reference>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Visuals\BossBar\Textures\Retro\" />
+    </ItemGroup>
+
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-      <Exec Command="call $(ProjectDir)Tools\EasyXnb\EasyXnb.exe" />
+      <Exec Command="call $(ProjectDir)PreBuild\EasyXnb\EasyXnb.exe" />
     </Target>
 
 </Project>

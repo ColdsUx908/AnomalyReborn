@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Visuals;
+﻿namespace Anomalies.Visuals;
 
 /// <summary>
 /// 针对 Anomalies 模组扩展的 <see cref="ItemTooltipModifier"/> 实现，
@@ -258,5 +256,5 @@ public sealed class AnomalyItemTooltipModifier : ItemTooltipModifier
     /// 该行文本来自 Calamity Mod 的本地化键 "Misc.ShiftToExpand"。
     /// </summary>
     /// <returns>当前 <see cref="CAItemTooltipModifier"/> 实例，支持链式调用。</returns>
-    public AnomalyItemTooltipModifier AddExpendedDisplayLine() => AddCATooltip(Language.GetTextValue(AnomalySharedData.CalamityModLocalizationPrefix + "Misc.ShiftToExpand"), new Color(0xBE, 0xBE, 0xBE));
+    public AnomalyItemTooltipModifier AddExpendedDisplayLine() => AddCATooltip(Language.GetTextValue(AnomalySharedData.ModLocalizationPrefix + "GameContents.ShiftExpandIdentifier"), new Color(0xBE, 0xBE, 0xBE));
 }

@@ -1,10 +1,38 @@
 AnomalyServerConfig: {
 	DisplayName: Server Config
 	Denied: You have no permission to change this config.
-	Headers.BaseBoosts: Base Stat Boosts
+}
+
+AnomalyClientConfig: {
+	DisplayName: Client Config
+
+	Headers: {
+		Visuals: Visual Effects
+		BaseBoosts: Base Stat Boosts
+	}
+
+	UseCalamityStyleTextures: {
+		Label: Use Calamity-Style Textures
+		Tooltip:
+			'''
+			Replace certain textures in the mod with versions that are more consistent with the art style of the Calamity Mod.
+			It is recommended to use this in conjunction with Calamity Texture Pack.
+			'''
+	}
+
+	EnableShaders: {
+		Label: Enable Shaders
+		Tooltip:
+			'''
+			Enables shaders for certain visual effects in the mod.
+			Disabling this may improve performance, but will also make certain effects look worse.
+			If you have visual or performance issues, disable this setting.
+			Note: Shaders will be forcibly disabled regardless of this setting if "Lighting" is set to Retro or Trippy, or if "Wave Quality" is set to Off.
+			'''
+	}
 
 	FasterBaseSpeed: {
-		Label: "[i:HermesBoots] Increase Base Movement Speed"
+		Label: Increase Base Movement Speed
 		Tooltip:
 			'''
 			Increases the player's base movement speed substantially by always giving them +50% movement speed.
@@ -14,7 +42,7 @@ AnomalyServerConfig: {
 	}
 
 	FasterJumpSpeed: {
-		Label: "[i:FrogLeg] Increase Base Jump Speed"
+		Label: Increase Base Jump Speed
 		Tooltip:
 			'''
 			Slightly increases the player's base jump speed.
@@ -23,8 +51,19 @@ AnomalyServerConfig: {
 			'''
 	}
 
+	FasterFall: {
+		Label: Enable Faster Falling
+		Tooltip:
+			'''
+			When enabled, you can hold the {$Key.DOWN} key while in the air to accelerate downwards faster.
+			This config does not increase your maximum falling speed, just how quickly you accelerate to it.
+			Anomalies is balanced around this setting being enabled.
+			If Calamity is enabled, consider using Calamity config instead.
+			'''
+	}
+
 	FasterRopeClimbSpeed: {
-		Label: "[i:Rope] Increase Rope Climb Speed"
+		Label: Increase Rope Climb Speed
 		Tooltip:
 			'''
 			Increases the player's rope climb speed substantially by increasing acceleration and deceleration while on a rope.
@@ -50,24 +89,6 @@ AnomalyServerConfig: {
 			Enables all base stat boosts.
 			Anomalies is balanced around this setting being enabled.
 			If Calamity is enabled, consider using Calamity config instead.
-			'''
-	}
-}
-
-AnomalyClientConfig: {
-	DisplayName: Client Config
-
-	AuxiliaryVisualEffects: {
-		Label: Auxiliary Visual Effects
-		Tooltip: Auxiliary visual effects that may help indicate certain behaviors or states of entities.
-	}
-
-	UseCalamityStyleTextures: {
-		Label: Use Calamity-Style Textures
-		Tooltip:
-			'''
-			Replace certain textures in the mod with versions that are more consistent with the art style of the Calamity Mod.
-			It is recommended to use this in conjunction with Calamity Texture Pack.
 			'''
 	}
 }

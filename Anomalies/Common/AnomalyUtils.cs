@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace Anomalies.Common;
 
@@ -25,3 +23,4 @@ public static class AnomalyUtils
         return newLine;
     }
 }
+

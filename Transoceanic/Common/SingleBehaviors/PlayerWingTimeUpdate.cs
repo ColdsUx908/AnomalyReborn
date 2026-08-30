@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Common.SingleBehaviors;
+﻿namespace Transoceanic.Common.SingleBehaviors;
 
 public sealed class PlayerWingTimeUpdate : TOPlayerBehavior
 {

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.ExternalAttributes;
+﻿namespace Transoceanic.Framework.ExternalAttributes;
 
 /// <summary>
 /// 指示源生成器为指定的非公开类型生成公共访问包装器，通过反射暴露其非公共成员（字段、属性、方法）。
@@ -23,7 +21,7 @@ namespace Transoceanic.Framework.ExternalAttributes;
 /// <para/>下面的示例演示如何公开类 <c>ExampleHelper</c>（定义有私有字段 <c>private int _Counter</c>）的私有成员。
 /// <code>
 /// [Publicize(typeof(ExampleHelper))]
-/// public partial class ExampleHelper_Publicizer(object Source) : InstancedPublicizer(Source); //应用特性，指定目标类型
+/// public partial class ExampleHelper_Publicizer(ExampleHelper Source) : InstancedPublicizer(Source); //应用特性，指定目标类型
 /// 
 /// //使用生成的公共包装器
 /// ExampleHelper instance = new();

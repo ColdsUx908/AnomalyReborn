@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.GameContents.Base;
+﻿namespace Anomalies.GameContents.Base;
 
 /// <summary>
 /// 环形竞技场弹幕的抽象基类，用于将玩家限制在以弹幕中心为圆心的环形区域内。
@@ -148,3 +146,4 @@ public abstract class BaseArenaProjectile : AnomalyModProjectile
     /// <returns>如果玩家碰撞箱与环形区域重叠则返回 <see langword="true"/>，否则返回 <see langword="false"/>。永不返回 <see langword="null"/>。</returns>
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => ArenaRing.Collides(targetHitbox);
 }
+

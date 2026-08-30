@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.Assets.Effects;
+﻿using Anomalies.Assets.Effects;
 using Terraria.Graphics.Effects;
 using Transoceanic.DataStructures.Rendering;
 
@@ -37,10 +35,16 @@ public class EnhancedDarknessSystem : ModSystem, IContentLoader
 
     public static List<LightSource> Lights = [];
 
-    private static void DrawShadowOverlay(On_OverlayManager.orig_Draw orig, OverlayManager self, SpriteBatch spriteBatch, RenderLayers layer, bool beginSpriteBatch)
+    private static void On_OverlayManager_Draw(On_OverlayManager.orig_Draw orig, OverlayManager self, SpriteBatch spriteBatch, RenderLayers layer, bool beginSpriteBatch)
     {
         orig(self, spriteBatch, layer, beginSpriteBatch);
 
+        if (AnomalySharedData.ShouldUseShaders)
+            DrawShadowOverlay(spriteBatch, layer, beginSpriteBatch);
+    }
+
+    private static void DrawShadowOverlay(SpriteBatch spriteBatch, RenderLayers layer, bool beginSpriteBatch)
+    {
         //This ensures that the shadows only draw
         //  - In the world
         //  - Right before UI is drawn (and right before the hideUI check), as that's where RenderLayers.All is drawn
@@ -106,7 +110,7 @@ public class EnhancedDarknessSystem : ModSystem, IContentLoader
 
     void IContentLoader.PostSetupContent()
     {
-        On_OverlayManager.Draw += DrawShadowOverlay;
+        On_OverlayManager.Draw += On_OverlayManager_Draw;
         _DefaultTexture = ParticleHandler.GetTexture<BloomParticle>();
     }
 

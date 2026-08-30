@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using MonoMod.RuntimeDetour;
 using Terraria.Graphics.Effects;
 using Transoceanic.Framework.RuntimeEditing;

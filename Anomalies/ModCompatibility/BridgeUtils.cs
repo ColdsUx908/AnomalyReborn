@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using CalamityMod;
 using static Anomalies.ModCompatibility.BridgeUtils;
 
@@ -12,14 +10,14 @@ public static class BridgeUtils
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void ApplyCalamityHealthBoost(NPC npc) => OnApplyCalamityHealthBoost?.Invoke(npc);
-}
 
-[ExtendsFromMod(CalamityModName)]
-[EditorBrowsable(EditorBrowsableState.Never)]
-public sealed class BridgeUtils_Calamity : IContentLoader
-{
-    void IContentLoader.PostSetupContent()
+    [ExtendsFromMod(CalamityModName)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public sealed class CalamitySupport : IContentLoader
     {
-        OnApplyCalamityHealthBoost += npc => npc.lifeMax = (int)(npc.lifeMax * (1f + CalamityServerConfig.Instance.BossHealthBoost * 0.01f));
+        void IContentLoader.PostSetupContent()
+        {
+            OnApplyCalamityHealthBoost += npc => npc.lifeMax = (int)(npc.lifeMax * (1f + CalamityServerConfig.Instance.BossHealthBoost * 0.01f));
+        }
     }
 }

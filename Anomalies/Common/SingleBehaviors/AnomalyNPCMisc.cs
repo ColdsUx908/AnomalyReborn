@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Common.SingleBehaviors;
+﻿namespace Anomalies.Common.SingleBehaviors;
 
 public sealed class AnomalyNPCMisc : AnomalyGlobalNPCBehavior
 {
@@ -41,3 +39,4 @@ public sealed class AnomalyNPCMisc : AnomalyGlobalNPCBehavior
         return true;
     }
 }
+

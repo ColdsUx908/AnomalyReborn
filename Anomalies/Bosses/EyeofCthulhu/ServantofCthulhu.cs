@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Terraria.Enums;
+﻿using Terraria.Enums;
 
 namespace Anomalies.Bosses.EyeofCthulhu;
 

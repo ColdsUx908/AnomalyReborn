@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.KingSlime;
+﻿namespace Anomalies.Bosses.KingSlime;
 
 public sealed class SapphireJewel : JewelNPC
 {
@@ -77,3 +75,4 @@ public sealed class SapphireJewel : JewelNPC
         return true;
     }
 }
+

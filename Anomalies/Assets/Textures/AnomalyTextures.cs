@@ -1,10 +1,17 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Assets;
+﻿namespace Anomalies.Assets;
 
 public sealed class AnomalyTextures
 {
     public const string TexturePathPrefix = "Anomalies/Assets/Textures/";
+
+    public static class Config
+    {
+        public const string Path = TexturePathPrefix + "Config/";
+
+        [LoadTexture(Path + "BallAndChain")]
+        internal static Asset<Texture2D> _BallAndChain;
+        public static Texture2D BallAndChain => _BallAndChain?.Value;
+    }
 
     public static class Extra
     {

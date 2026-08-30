@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.Abstractions;
+﻿namespace Transoceanic.Framework.Abstractions;
 
 /// <summary>
 /// 表示可与 <see cref="Rectangle"/> 进行碰撞检测的类型。

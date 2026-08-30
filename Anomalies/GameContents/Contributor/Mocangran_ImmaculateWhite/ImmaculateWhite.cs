@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
+﻿namespace Anomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
 
 public sealed class ImmaculateWhite : AnomalyLegendaryItem, ILocalizationPrefix
 {
@@ -196,3 +194,4 @@ public sealed class ImmaculateWhite : AnomalyLegendaryItem, ILocalizationPrefix
             .Register();
     }
 }
+

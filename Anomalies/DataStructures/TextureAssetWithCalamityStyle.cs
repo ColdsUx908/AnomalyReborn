@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.DataStructures;
+﻿namespace Anomalies.DataStructures;
 
 public sealed class TextureAssetWithCalamityStyle
 {

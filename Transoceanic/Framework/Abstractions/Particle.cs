@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.Abstractions;
+﻿namespace Transoceanic.Framework.Abstractions;
 
 /// <summary>
 /// 粒子系统的抽象基类，定义了粒子的基本属性、生命周期行为以及与 <see cref="ParticleHandler"/> 的交互接口。
@@ -84,6 +82,11 @@ public abstract class Particle
     /// <para>默认值为 <see langword="false"/>。</para>
     /// </summary>
     public bool AffectedByLight;
+
+    /// <summary>
+    /// 标记粒子是否已死亡。若为 <see langword="true"/>，则粒子将不再参与更新或绘制，并将在下一帧被移除。
+    /// </summary>
+    public bool Dead;
 
     /// <summary>
     /// 获取已加载的粒子纹理。
@@ -195,8 +198,9 @@ public abstract class Particle
     /// </summary>
     /// <param name="spriteBatch">用于绘制的 <see cref="SpriteBatch"/> 实例，
     /// 其状态（如混合模式、变换矩阵）已由 <see cref="ParticleHandler"/> 按照当前批次设置好。</param>
+    /// <param name="drawOffset">一个可选的用于绘制偏移的向量，会在绘制位置计算时加入 <see cref="Center"/>。</param>
     /// <returns>若应继续执行默认绘制代码，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
-    public virtual bool PreDraw(SpriteBatch spriteBatch) => true;
+    public virtual bool PreDraw(SpriteBatch spriteBatch, Vector2 drawOffset = default) => true;
 
     /// <summary>
     /// 在 <see cref="ParticleHandler"/> 执行默认粒子绘制代码之后调用。
@@ -205,14 +209,12 @@ public abstract class Particle
     /// 此方法仍会被调用，但通常不应在此方法中再进行主要绘制，以免逻辑混乱。</para>
     /// </summary>
     /// <param name="spriteBatch">用于绘制的 <see cref="SpriteBatch"/> 实例。</param>
-    public virtual void PostDraw(SpriteBatch spriteBatch) { }
+    /// <param name="drawOffset">与 <see cref="PreDraw"/> 相同的绘制偏移量。</param>
+    public virtual void PostDraw(SpriteBatch spriteBatch, Vector2 drawOffset = default) { }
 
     /// <summary>
-    /// 标记该粒子在下一更新帧被移除。
-    /// <para>调用此方法等效于将粒子添加到 <see cref="ParticleHandler"/> 内部的移除列表中。
-    /// 移除操作在 <see cref="ParticleHandler.PostUpdateEverything"/> 中批量执行，
-    /// 因此粒子不会在调用后立即从活动列表中消失，但不会再被更新或绘制。</para>
-    /// <para>若需立即停止粒子的所有行为（包括当前帧的绘制），可结合条件判断与 <see cref="PreDraw"/> 返回 <see langword="false"/>。</para>
+    /// 将粒子标记为死亡状态，使其在下一帧被移除。
     /// </summary>
-    public void Kill() => ParticleHandler.AddToRemoveList(this);
+    public void Kill() => Dead = true;
 }
+

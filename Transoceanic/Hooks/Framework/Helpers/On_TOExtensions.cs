@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-#pragma warning disable IDE1006 //命名样式
+﻿#pragma warning disable IDE1006
 
 namespace Transoceanic.Hooks.Framework.Helpers;
 

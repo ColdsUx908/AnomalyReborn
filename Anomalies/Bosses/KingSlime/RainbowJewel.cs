@@ -1,11 +1,10 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.Assets.Effects;
+﻿using Anomalies.Assets.Effects;
 using Anomalies.DataStructures;
+using Anomalies.Visuals.BossBar;
 
 namespace Anomalies.Bosses.KingSlime;
 
-public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShader
+public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
 {
     public enum Behavior : byte
     {
@@ -363,3 +362,4 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShader
             .Apply();
     }
 }
+

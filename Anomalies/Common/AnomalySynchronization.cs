@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Common;
+﻿namespace Anomalies.Common;
 
 public sealed class AnomalySynchronization : IAnomalyLoader
 {
@@ -59,3 +57,4 @@ public sealed class AnomalySynchronization : IAnomalyLoader
         TOSharedData.SyncEnabled = true;
     }
 }
+

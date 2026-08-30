@@ -1,7 +1,6 @@
-﻿// Developed by ColdsUx
-
-using Anomalies.Assets.Effects;
+﻿using Anomalies.Assets.Effects;
 using Anomalies.DataStructures;
+using Anomalies.Visuals.BossBar;
 
 namespace Anomalies.Bosses.EyeofCthulhu;
 
@@ -451,7 +450,6 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public override void SetDefaults()
     {
-        NPC.lifeMax = CalamityEnabled ? 3620 : 2715;
         BridgeUtils.ApplyCalamityHealthBoost(NPC);
 
         ServantLeft = NPC.DummyNPC;
@@ -469,6 +467,17 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
         NPC.AddAnomalyHPIndicator(Phase2_3LifeRatio_Anomaly, Phase2_3LifeRatio_Ultra, true);
         NPC.AddAnomalyHPIndicator(Phase3LifeRatio_Anomaly, Phase3LifeRatio_Ultra);
         NPC.AddAnomalyHPIndicator(Phase3_2LifeRatio_Anomaly, Phase3_2LifeRatio_Ultra, true, n => GetInstance(n).Phase3);
+    }
+
+    public override void SetDefaultsFinal()
+    {
+        NPC.lifeMax = CalamityEnabled ? 6000 : 4800;
+    }
+
+    public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
+    {
+        const float VanillaExpertLifeMultiplier = 1.3f;
+        NPC.lifeMax = (int)MathF.Round(NPC.lifeMax / (VanillaExpertLifeMultiplier * 1.5f) / bossAdjustment / 10f) * 10;
     }
 
     public override void FindFrame(int frameHeight)
@@ -526,7 +535,7 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
             modifiers.SourceDamage *= damageMultiplier;
         }
         else if (InvalidPhase2)
-            modifiers.SetMaxDamage((int)(NPC.life - NPC.lifeMax * Phase3LifeRatio));
+            modifiers.SetMaxDamage((int)(NPC.life - NPC.lifeMax * Phase3LifeRatio + 1));
     }
 
     public override bool CheckDead()
@@ -567,3 +576,4 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
             .Apply();
     }
 }
+

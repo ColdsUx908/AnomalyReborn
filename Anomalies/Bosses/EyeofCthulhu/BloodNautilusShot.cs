@@ -53,3 +53,4 @@ public sealed class BloodNautilusShot : AnomalyProjectileBehavior<BloodShot>
 
     public override Color? GetAlpha(Color lightColor) => new Color(200, 0, 0, Projectile.alpha);
 }
+

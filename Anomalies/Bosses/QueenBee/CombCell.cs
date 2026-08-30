@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.QueenBee;
+﻿namespace Anomalies.Bosses.QueenBee;
 
 public sealed class CombCell : AnomalyModProjectile
 {
@@ -13,6 +11,8 @@ public sealed class CombCell : AnomalyModProjectile
         BeeSwarm2_Safe,
         BeeSwarm3,
         BeeSwarm3_Move,
+        Dance,
+        Dance2,
         PhaseChange,
     }
 
@@ -128,7 +128,8 @@ public sealed class CombCell : AnomalyModProjectile
 
         Timer1++;
 
-        Projectile.scale = FinalScale * TOMathUtils.Interpolation.QuadraticEaseOut(Timer1 / 20f);
+        float timeToEnlarge = (int)Utils.Remap(FinalScale, 1.5f, 3f, 20, 50);
+        Projectile.scale = FinalScale * TOMathUtils.Interpolation.QuadraticEaseOut(Timer1 / timeToEnlarge);
         HasContactDamage = false;
 
         switch (BehaviorType)
@@ -154,6 +155,9 @@ public sealed class CombCell : AnomalyModProjectile
             case Behavior.BeeSwarm3_Move:
                 Behavior_BeeSwarm3(1);
                 break;
+            case Behavior.Dance or Behavior.Dance2:
+                Behavior_Dance();
+                break;
             case Behavior.PhaseChange:
                 Behavior_PhaseChange();
                 break;
@@ -161,9 +165,8 @@ public sealed class CombCell : AnomalyModProjectile
                 break;
         }
 
-        bool isHoneyWet = BehaviorType is Behavior.BeeSwarm or Behavior.BeeSwarm2 or Behavior.BeeSwarm2_Safe or Behavior.BeeSwarm3_Move;
-        if (isHoneyWet)
-            QueenBee_Handler.HoneyWetCombCells.Add(Projectile.whoAmI);
+        if (BehaviorType is Behavior.BeeSwarm or Behavior.BeeSwarm2 or Behavior.BeeSwarm2_Safe or Behavior.BeeSwarm3_Move or Behavior.Dance or Behavior.Dance2)
+            QueenBeeHandler.HoneyWetCombCells.Add(Projectile.whoAmI);
 
         void Decelerate(float factor = 0.95f)
         {
@@ -196,7 +199,7 @@ public sealed class CombCell : AnomalyModProjectile
         {
             HasContactDamage = true;
 
-            Projectile.Center = QueenBee_Handler.GetOwnedCombCellCenter(Master);
+            Projectile.Center = QueenBeeHandler.GetOwnedCombCellCenter(Master);
 
             if (Master is null || !Master.active || Master.type != NPCID.QueenBee)
                 Projectile.Kill();
@@ -210,7 +213,7 @@ public sealed class CombCell : AnomalyModProjectile
         {
             HasContactDamage = false;
 
-            Projectile.Center = QueenBee_Handler.GetOwnedCombCellCenter(Master) + Offset;
+            Projectile.Center = QueenBeeHandler.GetOwnedCombCellCenter(Master) + Offset;
 
             if (Master is null || !Master.active || Master.type != NPCID.QueenBee)
                 Projectile.Kill();
@@ -259,7 +262,7 @@ public sealed class CombCell : AnomalyModProjectile
                         break;
                     }
 
-                    Projectile.Center = QueenBee_Handler.GetOwnedCombCellCenter(Master);
+                    Projectile.Center = QueenBeeHandler.GetOwnedCombCellCenter(Master);
                     break;
                 case 1:
                     HasContactDamage = true;
@@ -276,15 +279,30 @@ public sealed class CombCell : AnomalyModProjectile
                         float speed = Utils.Remap(Timer1, 50f, 70f, 0f, 0.0114f);
                         CurrentPositionParameter += speed * MoveDirection;
                     }
-                    Projectile.Center = QueenBee_Handler.GetOwnedCombCellCenter(Master) + radius * Vector2.LerpMany(HexagonVerticesUnit, CurrentPositionParameter / 6f);
+                    Projectile.Center = QueenBeeHandler.GetOwnedCombCellCenter(Master) + radius * Vector2.LerpMany(HexagonVerticesUnit, CurrentPositionParameter / 6f);
                     break;
             }
+        }
+        
+        void Behavior_Dance()
+        {
+            HasContactDamage = BehaviorType == Behavior.Dance;
+
+            Projectile.Center = QueenBeeHandler.GetOwnedCombCellCenter(Master);
+
+            if (Master is null || !Master.active || Master.type != NPCID.QueenBee)
+                Projectile.Kill();
+
+            QueenBee masterBehavior = MasterBehavior;
+            int killThresholdTime = BehaviorType == Behavior.Dance2 ? (masterBehavior.AttackRandomVariation_Dance ? 90 : 45) : 60;
+            if ((masterBehavior.CurrentAttackPhase >= 3 && masterBehavior.Timer1 > killThresholdTime) || masterBehavior.CurrentBehavior != QueenBee.Behavior.Phase2_Dance)
+                Projectile.Kill();
         }
 
         void Behavior_PhaseChange()
         {
             HasContactDamage = true;
-            Projectile.Center = QueenBee_Handler.GetOwnedCombCellCenter(Master);
+            Projectile.Center = QueenBeeHandler.GetOwnedCombCellCenter(Master);
 
             if (Master is null || !Master.active || Master.type != NPCID.QueenBee)
                 Projectile.Kill();
@@ -297,7 +315,7 @@ public sealed class CombCell : AnomalyModProjectile
 
     public override void OnKill(int timeLeft)
     {
-        QueenBee_Handler.SpawnGores(this);
+        QueenBeeHandler.SpawnGores(this);
 
         if (Aroma)
         {
@@ -355,6 +373,8 @@ public sealed class CombCell : AnomalyModProjectile
             Behavior.BeeSwarm2_Safe => 0.8f,
             Behavior.BeeSwarm3 => 0.7f,
             Behavior.BeeSwarm3_Move => 0.65f,
+            Behavior.Dance => 0.7f,
+            Behavior.Dance2 => 0.45f,
             Behavior.PhaseChange => 0.7f,
 
             _ => 1f
@@ -367,3 +387,4 @@ public sealed class CombCell : AnomalyModProjectile
     public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI) => overPlayers.Add(index);
     #endregion 绘制与碰撞
 }
+

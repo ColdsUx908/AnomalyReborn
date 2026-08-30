@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using MonoMod.Cil;
+﻿using MonoMod.Cil;
 
 namespace Anomalies.Common.SingleBehaviors;
 
@@ -10,7 +8,7 @@ public sealed class PlayerBaseStatBoosts : AnomalyPlayerBehavior, IContentLoader
 
     public override void UpdateEquips()
     {
-        if (AnomalyServerConfig.Instance.FasterTilePlacement)
+        if (AnomalyClientConfig.Instance.FasterTilePlacement)
         {
             Player.tileSpeed += 0.5f;
             Player.wallSpeed += 0.5f;
@@ -19,7 +17,24 @@ public sealed class PlayerBaseStatBoosts : AnomalyPlayerBehavior, IContentLoader
 
     public override void PostUpdateMiscEffects()
     {
-        if (AnomalyServerConfig.Instance.FasterRopeClimbSpeed)
+        if (AnomalyClientConfig.Instance.FasterFall)
+        {
+            // Allow the player to double their gravity (but NOT max fall speed!) by holding the down button while in midair.
+            bool holdingDown = Player.controlDown && !Player.controlJump;
+            bool controlsEnabled = Player.ControlsEnabled();
+            bool notInLiquid = !Player.wet;
+            bool notOnRope = !Player.pulley && Player.ropeCount == 0;
+            bool notGrappling = Player.grappling[0] == -1;
+            bool airborne = Player.velocity.Y != 0;
+            if (holdingDown && Player.ControlsEnabled() && notInLiquid && notOnRope && notGrappling && airborne) //Player cannot further increase their ridiculous gravity during a Gravistar Slam
+            {
+                Player.velocity.Y += Player.gravity * Player.gravDir; //下落加速度提高100￥
+                if (Player.velocity.Y * Player.gravDir > Player.maxFallSpeed)
+                    Player.velocity.Y = Player.maxFallSpeed * Player.gravDir;
+            }
+        }
+
+        if (AnomalyClientConfig.Instance.FasterRopeClimbSpeed)
         {
             if (Player.pulley)
             {
@@ -86,7 +101,7 @@ public sealed class PlayerBaseStatBoosts : AnomalyPlayerBehavior, IContentLoader
             }
         }
 
-        if (AnomalyServerConfig.Instance.FasterBaseSpeed)
+        if (AnomalyClientConfig.Instance.FasterBaseSpeed)
             Player.moveSpeed *= 1.5f;
     }
 
@@ -114,6 +129,7 @@ public sealed class PlayerBaseStatBoosts : AnomalyPlayerBehavior, IContentLoader
         cursor.Remove();
 
         // Increase by 10% if the higher jump speed is enabled.
-        cursor.EmitDelegate(() => AnomalyServerConfig.Instance.FasterJumpSpeed ? ConfigBoostedBaseJumpSpeed : VanillaBaseJumpSpeed);
+        cursor.EmitDelegate(() => AnomalyClientConfig.Instance.FasterJumpSpeed ? ConfigBoostedBaseJumpSpeed : VanillaBaseJumpSpeed);
     }
 }
+

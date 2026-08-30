@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.DukeFishron;
+﻿namespace Anomalies.Bosses.DukeFishron;
 
 public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
 {
@@ -476,3 +474,4 @@ public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
             index = -1;
     }
 }
+

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.ModCompatibility;
+﻿namespace Anomalies.ModCompatibility;
 
 public static class AnomalyModCall
 {
@@ -39,3 +37,4 @@ public static class AnomalyModCall
         return null;
     }
 }
+

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-using Transoceanic.DataStructures.Particles;
+﻿using Transoceanic.DataStructures.Particles;
 
 namespace Transoceanic.Common.SingleBehaviors;
 
@@ -36,3 +34,4 @@ public sealed class NPCMisc : TOGlobalNPCBehavior
         return true;
     }
 }
+

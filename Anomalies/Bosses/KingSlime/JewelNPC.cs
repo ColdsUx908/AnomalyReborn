@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.KingSlime;
+﻿namespace Anomalies.Bosses.KingSlime;
 
 public abstract class JewelNPC : AnomalyModNPC
 {
@@ -68,3 +66,4 @@ public abstract class JewelNPC : AnomalyModNPC
         return false;
     }
 }
+

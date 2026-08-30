@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.Abstractions;
+﻿namespace Transoceanic.Framework.Abstractions;
 
 /// <summary>
 /// 标记一个静态 <see cref="ModGore"/> 字段，使其在模组加载时自动根据指定名称加载血污资源，
@@ -20,3 +18,4 @@ public sealed class LoadGoreAttribute : Attribute
     /// <param name="textureName">血污资源的名称。</param>
     public LoadGoreAttribute(string textureName) => TextureName = textureName;
 }
+

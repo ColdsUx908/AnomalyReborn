@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.GameContents;
+﻿namespace Anomalies.GameContents;
 
 public abstract class AnomalyLegendaryItem : AnomalyModItem
 {
@@ -26,3 +24,4 @@ public abstract class AnomalyLegendaryItem : AnomalyModItem
 
     public void AddLegendaryItemIdentifier(List<TooltipLine> tooltips, int index) => tooltips.Insert(index, new TooltipLine(Mod, "Tooltip_CALegendaryItemIdentifier", Language.GetTextValue(AnomalySharedData.ModLocalizationPrefix + "GameContents.LegendaryItemIdentifier")) { OverrideColor = AnomalySharedData.IdentifierColor });
 }
+

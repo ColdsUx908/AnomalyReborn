@@ -6,3 +6,4 @@
 /// </summary>
 [AttributeUsage(AttributeTargets.Assembly)]
 public sealed class SupportedByTransoceanicAttribute : Attribute;
+

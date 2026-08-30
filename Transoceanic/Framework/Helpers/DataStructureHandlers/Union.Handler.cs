@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Transoceanic.Framework.Helpers;
+﻿namespace Transoceanic.Framework.Helpers;
 
 public static partial class TOExtensions
 {
@@ -50,4 +48,5 @@ public static partial class TOExtensions
         }
     }
 }
+
 

@@ -1,6 +1,4 @@
-﻿// Developed by ColdsUx
-
-namespace Anomalies.Bosses.EmpressofLight;
+﻿namespace Anomalies.Bosses.EmpressofLight;
 
 public sealed partial class EmpressofLight_Night : AnomalyNPCBehavior<EmpressofLight_Night>
 {
@@ -14,3 +12,4 @@ public sealed partial class EmpressofLight_Night : AnomalyNPCBehavior<EmpressofL
         _ => true,
     };
 }
+

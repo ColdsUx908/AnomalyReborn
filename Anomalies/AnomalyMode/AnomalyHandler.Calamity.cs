@@ -1,12 +1,10 @@
-﻿// Developed by ColdsUx
-
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using CalamityMod;
 using CalamityMod.Systems;
 using CalamityMod.UI.ModeIndicator;
-using Terraria.GameContent.UI.Elements;
+using CalamityMod.World;
 using Terraria.UI.Chat;
-using static Anomalies.AnomalyMode.AnomalyModeHandler;
+using static Anomalies.AnomalyMode.AnomalyHandler;
 using static Anomalies.ModCompatibility.DifficultyModeSystem_Publicizer;
 using static Anomalies.ModCompatibility.ModeIndicatorUI_Publicizer;
 using static CalamityMod.Systems.DifficultyModeSystem;
@@ -14,148 +12,65 @@ using static CalamityMod.UI.ModeIndicator.ModeIndicatorUI;
 
 namespace Anomalies.AnomalyMode;
 
-public sealed class AnomalyModeHandler : ModSystem, IContentLoader
+[ExtendsFromMod(CalamityModName)]
+public sealed class AnomalyDifficulty : DifficultyMode, ILocalizationPrefix
 {
-    public const string LocalizationPrefix = AnomalySharedData.ModLocalizationPrefix + "AnomalyMode.";
+    public string LocalizationPrefix => AnomalySharedData.ModLocalizationPrefix + "AnomalyMode";
 
-    #region 资产
-    public const string Path = AnomalySharedData.ModPath + "AnomalyMode/";
+    internal static AnomalyDifficulty Instance;
 
-    [LoadTexture(Path + "Indicator")]
-    internal static Asset<Texture2D> _Indicator;
-    public static Texture2D Indicator => _Indicator?.Value;
-
-    [LoadTexture(Path + "Indicator_Off")]
-    internal static Asset<Texture2D> _Indicator_Off;
-    public static Texture2D Indicator_Off => _Indicator_Off?.Value;
-
-    [LoadTexture(Path + "Indicator_Border")]
-    internal static Asset<Texture2D> _Indicator_Border;
-    public static Texture2D Indicator_Border => _Indicator_Border?.Value;
-
-    [LoadTexture(Path + "Indicator_Locked")]
-    internal static Asset<Texture2D> _Indicator_Locked;
-    public static Texture2D Indicator_Locked => _Indicator_Locked?.Value;
-
-    [LoadTexture(Path + "UltraIndicator")]
-    internal static Asset<Texture2D> _UltraIndicator;
-    public static Texture2D UltraIndicator => _UltraIndicator?.Value;
-
-    [LoadTexture(Path + "UltraIndicator_Off")]
-    internal static Asset<Texture2D> _UltraIndicator_Off;
-    public static Texture2D UltraIndicator_Off => _UltraIndicator_Off?.Value;
-
-    [LoadTexture(Path + "UltraIndicator_Border")]
-    internal static Asset<Texture2D> _UltraIndicator_Border;
-    public static Texture2D UltraIndicator_Border => _UltraIndicator_Border?.Value;
-
-    [LoadTexture(Path + "UltraIndicator_Locked")]
-    internal static Asset<Texture2D> _UltraIndicator_Locked;
-    public static Texture2D UltraIndicator_Locked => _UltraIndicator_Locked?.Value;
-
-    public static readonly SoundStyle ActivationSound = new(Path + "Activation");
-    public static readonly SoundStyle AromalyActivationSound = new(Path + "AromalyActivation") { Volume = 0.6f };
-    #endregion 资产
-
-    #region 世界内难度管理
-    public override void PreUpdateWorld()
+    public override bool Enabled
     {
-        if (AnomalySharedData.Anomaly)
+        get => AnomalySharedData.Anomaly;
+        set => AnomalySharedData.Anomaly = value;
+    }
+
+    public override Asset<Texture2D> Texture => Ultra ? _UltraIndicator : _Indicator;
+    public override Asset<Texture2D> OutlineTexture => Ultra ? _UltraIndicator_Border : _Indicator_Border;
+    public override Asset<Texture2D> TextureDisabled => Ultra ? _UltraIndicator_Off : _Indicator_Off;
+
+    public override SoundStyle ActivationSound => Main.zenithWorld ? AromalyActivationSound : AnomalyHandler.ActivationSound;
+
+    public override int BackBoneGameModeID => GameModeID.Master;
+
+    public override bool IsBasedOn(DifficultyMode mode)
+    {
+        if (mode is MasterDifficulty or LegendaryDifficulty or DeathDifficulty or MaliceDifficulty)
+            return true;
+        return false;
+    }
+
+    public override float DifficultyScale => 10000f;
+
+    public override LocalizedText Name => this.GetText((Main.zenithWorld ? "Aromaly." : "") + "Name");
+
+    public override Color ChatTextColor => Main.zenithWorld ? AnomalySharedData.AromalyColor : AnomalySharedData.MainColor;
+
+    public override LocalizedText ShortDescription => this.GetText("ShortInfo");
+    public override LocalizedText ExpandedDescription => this.GetText("ExpandedInfo");
+
+    public override int[] FavoredDifficultyAtTier(int tier)
+    {
+        DifficultyMode[] tierList = DifficultyTiers[tier];
+
+        List<int> difficulties = [];
+
+        for (int i = 0; i < tierList.Length; i++)
         {
-            if (!TOSharedData.MasterMode)
-            {
-                DisableAnomaly();
-                return;
-            }
+            if (tierList[i] is MasterDifficulty or LegendaryDifficulty or DeathDifficulty or MaliceDifficulty)
+                difficulties.Add(i);
         }
 
-        CheckAnomalyUltra();
-    }
+        if (difficulties.Count <= 0)
+            difficulties.Add(0);
 
-    public static void DisableAnomaly()
-    {
-        if (TOSharedData.NotClient)
-            TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Invalid", Color.Red);
-        AnomalySharedData.Anomaly = false;
-    }
-
-    public static void DisableUltra()
-    {
-        AnomalySharedData.AnomalyUltramundane = false;
-    }
-
-    public static void EnableUltra()
-    {
-        AnomalySharedData.AnomalyUltramundane = true;
-    }
-
-    public static void InvalidInfo_NotLegendary()
-    {
-        if (TOSharedData.NotClient)
-            TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "UltraInvalid_NotLegendary", Color.Red);
-    }
-
-    public static void InvalidInfo_Aromaly()
-    {
-        if (TOSharedData.NotClient)
-            TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "UltraInvalid_Aromaly", AnomalySharedData.AromalyColor);
-        //SoundEngine.PlaySound();
-    }
-
-    public static void CheckAnomalyUltra()
-    {
-        if (AnomalySharedData.Anomaly)
-        {
-            switch (TOSharedData.LegendaryMode, !Main.zenithWorld)
-            {
-                case (false, true) when AnomalySharedData.AnomalyUltramundane: //不是传奇难度，不在GFB世界
-                    InvalidInfo_NotLegendary();
-                    DisableUltra();
-                    break;
-                case (true, false) when AnomalySharedData.AnomalyUltramundane: //是传奇难度，在GFB世界
-                    InvalidInfo_Aromaly();
-                    DisableUltra();
-                    break;
-                case (false, false) when AnomalySharedData.AnomalyUltramundane: //不是传奇难度，且在GFB世界
-                    InvalidInfo_NotLegendary();
-                    InvalidInfo_Aromaly();
-                    DisableUltra();
-                    break;
-                case (true, true) when !AnomalySharedData.AnomalyUltramundane: //是传奇难度，且不在GFB世界，应开启异象超凡
-                    EnableUltra();
-                    break;
-                default:
-                    break;
-            }
-        }
-        else if (AnomalySharedData.AnomalyUltramundane)
-            DisableUltra();
-    }
-    #endregion 世界内难度管理
-
-    void IContentLoader.PostSetupContent()
-    {
-        //世界难度显示（渐变色）
-        On_AWorldListItem.GetDifficulty += On_AWorldListItem_GetDifficulty;
-
-        void On_AWorldListItem_GetDifficulty(On_AWorldListItem.orig_GetDifficulty orig, AWorldListItem self, out string expertText, out Color gameModeColor)
-        {
-            orig(self, out expertText, out gameModeColor);
-
-            if (gameModeColor == Main.creativeModeColor)
-                return;
-
-            if (self.Data.TryGetHeaderData<AnomalySharedData>(out TagCompound tag) && tag.GetBool("Anomaly"))
-            {
-                expertText = Language.GetTextValue(LocalizationPrefix + "Name");
-                gameModeColor = AnomalySharedData.IdentifierColor;
-            }
-        }
+        return [.. difficulties];
     }
 }
 
+
 [ExtendsFromMod(CalamityModName)]
-public sealed class AnomalyModeHandler_Calamity : IContentLoader
+public sealed class AnomalyHandler_Calamity : IContentLoader
 {
     #region Detour
     public delegate void Orig_CalculateDifficultyData();
@@ -173,12 +88,12 @@ public sealed class AnomalyModeHandler_Calamity : IContentLoader
             DifficultyMode[] tier = difficultyTiers[i];
             for (int j = 0; j < tier.Length; j++)
             {
-                if (tier[j] is AnomalyMode)
+                if (tier[j] is AnomalyDifficulty)
                 {
                     if (tier.Length == 1) //该行只有异象模式，直接删除
                         difficultyTiers.RemoveAt(i);
                     else //该行还有其他模式，将异象模式删除，重新整理该行
-                        difficultyTiers[i] = [.. tier.Where(m => m is not AnomalyMode)];
+                        difficultyTiers[i] = [.. tier.Where(m => m is not AnomalyDifficulty)];
 
                     foundAnomaly = true;
                     break;
@@ -188,7 +103,7 @@ public sealed class AnomalyModeHandler_Calamity : IContentLoader
 
         //在最后一行添加异象模式
         if (foundAnomaly)
-            difficultyTiers.Add([AnomalyMode.Instance]);
+            difficultyTiers.Add([AnomalyDifficulty.Instance]);
     }
 
     public delegate void Orig_ManageHexIcons(SpriteBatch spriteBatch, out string text);
@@ -196,7 +111,7 @@ public sealed class AnomalyModeHandler_Calamity : IContentLoader
     public static void Detour_ManageHexIcons(Orig_ManageHexIcons orig, SpriteBatch spriteBatch, out string text)
     {
         List<DifficultyMode[]> difficultyTiers = DifficultyTiers;
-        bool hasAnomaly = difficultyTiers.Any(tier => tier.Any(mode => mode is AnomalyMode));
+        bool hasAnomaly = difficultyTiers.Any(tier => tier.Any(mode => mode is AnomalyDifficulty));
         bool ultra = Ultra;
 
         int tiers = difficultyTiers.Count;
@@ -231,7 +146,7 @@ public sealed class AnomalyModeHandler_Calamity : IContentLoader
                 if (ultra) //修改点：针对异象超凡单独调整位置
                 {
                     iconPosition += ultraOffset;
-                    if (mode is AnomalyMode) //如果当前绘制的正是异象模式（此时必定为异象超凡），则再次调整位置
+                    if (mode is AnomalyDifficulty) //如果当前绘制的正是异象模式（此时必定为异象超凡），则再次调整位置
                         iconPosition += ultraOffset;
                 }
 
@@ -247,7 +162,7 @@ public sealed class AnomalyModeHandler_Calamity : IContentLoader
                     usedOpacity = 1f;
                     Texture2D outlineTexture = mode.OutlineTexture.Value;
                     Color chatTextColor = mode.ChatTextColor;
-                    if (mode is AnomalyMode && !Main.zenithWorld) //修改点：针对异象模式调整为渐变色
+                    if (mode is AnomalyDifficulty && !Main.zenithWorld) //修改点：针对异象模式调整为渐变色
                         chatTextColor = Ultra ? AnomalySharedData.UltraIdentifierColor : AnomalySharedData.IdentifierColor;
                     spriteBatch.Draw(outlineTexture, iconPosition, null, chatTextColor * progressMult, 0f, outlineTexture.Size() * 0.5f, 1f, SpriteEffects.None, 0f);
                 }
@@ -345,7 +260,7 @@ public sealed class AnomalyModeHandler_Calamity : IContentLoader
             ManageHexIcons(spriteBatch, out extraDescText);
 
         //对于异象模式，不绘制锁，而是绘制特殊的锁定材质
-        if (locked && GetCurrentDifficulty is AnomalyMode)
+        if (locked && GetCurrentDifficulty is AnomalyDifficulty)
         {
             indicatorTexture = Ultra ? UltraIndicator_Locked : Indicator_Locked;
             locked = false;
@@ -421,7 +336,7 @@ public sealed class AnomalyModeHandler_Calamity : IContentLoader
                 {
                     modeToDisplay = Main.getGoodWorld && difficulty.FTWName is not null ? difficulty.FTWName.ToString() : difficulty.Name.ToString();
 
-                    if (difficulty is AnomalyMode && Ultra) //异象超凡显示“超凡”后缀
+                    if (difficulty is AnomalyDifficulty && Ultra) //异象超凡显示“超凡”后缀
                         modeToDisplay += " " + Language.GetTextValue(LocalizationPrefix + "UltraSuffix") + " ";
 
                     anyActiveMode = true;
@@ -451,7 +366,7 @@ public sealed class AnomalyModeHandler_Calamity : IContentLoader
             if (Main.keyState.PressingShift())
             {
                 text += "\n" + mode.ExpandedDescription.ToString();
-                if (mode is AnomalyMode && Ultra)
+                if (mode is AnomalyDifficulty && Ultra)
                     text += "\n\n" + Language.GetTextValue(LocalizationPrefix + "UltraInfo");
             }
             else
@@ -459,7 +374,7 @@ public sealed class AnomalyModeHandler_Calamity : IContentLoader
         }
 
         string name = preface.ToString();
-        if (mode is AnomalyMode && Ultra) //异象超凡显示“超凡”后缀
+        if (mode is AnomalyDifficulty && Ultra) //异象超凡显示“超凡”后缀
             name += " " + Language.GetTextValue(LocalizationPrefix + "UltraSuffix");
         return name + text;
     }
@@ -467,12 +382,18 @@ public sealed class AnomalyModeHandler_Calamity : IContentLoader
 
     void IContentLoader.PostSetupContent()
     {
-        Difficulties.Add(AnomalyMode.Instance = new());
+        Difficulties.Add(AnomalyDifficulty.Instance = new());
         CalculateDifficultyData();
+
+        AnomalyEnabledUpdate += () =>
+        {
+            CalamityWorld.revenge = true;
+            CalamityWorld.death = true;
+        };
     }
 
     void IContentLoader.OnModUnload()
     {
-        AnomalyMode.Instance = null;
+        AnomalyDifficulty.Instance = null;
     }
 }
