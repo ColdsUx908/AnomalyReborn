@@ -1,6 +1,4 @@
-﻿using Anomalies.GameContents.Dusts;
-
-namespace Anomalies.Bosses.EyeofCthulhu;
+﻿namespace Anomalies.Bosses.EyeofCthulhu;
 
 public sealed partial class EyeofCthulhu
 {
@@ -31,6 +29,8 @@ public sealed partial class EyeofCthulhu
         }
         else if (Timer5 > 0)
             Timer5--;
+
+        AnomalyNPC.CurrentlyImmune = InvalidPhase2;
 
         if (Main.rand.NextBool(5))
         {
@@ -267,7 +267,7 @@ public sealed partial class EyeofCthulhu
                     NPC.damage = SetDamage;
 
                     float chargeSpeed = (Ultra ? 17.5f : 12f) + 6f * NPC.LostLifeRatio;
-                    NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target.Center, chargeSpeed), -MathHelper.PiOver2);
+                    NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, chargeSpeed), -MathHelper.PiOver2);
 
                     if (AttackCounter >= 1)
                         chargeSpeed *= 1.1f;
@@ -650,6 +650,8 @@ public sealed partial class EyeofCthulhu
 
             void RapidCharge()
             {
+                NPC.SpawnAfterimage(4, Phase3Color, DrawOffset);
+
                 switch (CurrentAttackPhase) //冲刺
                 {
                     case 0:
@@ -863,7 +865,7 @@ public sealed partial class EyeofCthulhu
                         float speedMultiplier = Ultra ? 1.25f : 1f;
                         float chargeSpeed = (baseChargeSpeed + speedBoost) * speedMultiplier;
 
-                        NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target.Center, chargeSpeed), -MathHelper.PiOver2);
+                        NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, chargeSpeed), -MathHelper.PiOver2);
                         CurrentAttackPhase++;
                         break;
 
@@ -1169,7 +1171,7 @@ public sealed partial class EyeofCthulhu
                 {
                     NPC.damage = SetDamage;
                     NPC.VelocityToRotation(-MathHelper.PiOver2);
-                    NPC.SpawnAfterimage(4, Phase3Color, DrawOffset);
+                    NPC.SpawnAfterimage(7, Phase3Color, DrawOffset);
 
                     if (CurrentAttackPhase == firstAttackPhase && NPC.Distance(ArenaProjectile.Center) <= ArenaModProjectile.Radius + 20f)
                         CurrentAttackPhase = firstAttackPhase + 1;
@@ -1229,11 +1231,11 @@ public sealed partial class EyeofCthulhu
                             NPC.damage = SetDamage;
                             SoundEngine.PlaySound(Roar, NPC.Center);
                             SpawnChargeParticle();
-                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target.Center, 27f), -MathHelper.PiOver2);
+                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, 27f), -MathHelper.PiOver2);
                             NPC.damage = SetDamage;
 
                             int projectileAmountOver4 = 3;
-                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Target.Center, 13.5f);
+                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Target, 13.5f);
                             EyeofCthulhuHandler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 120);
                             EyeofCthulhuHandler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
 
@@ -1305,11 +1307,11 @@ public sealed partial class EyeofCthulhu
                             CheckPhaseChange();
                             SoundEngine.PlaySound(ForceRoar, NPC.Center);
                             SpawnChargeParticle();
-                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target.Center, 35f), -MathHelper.PiOver2);
+                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, 35f), -MathHelper.PiOver2);
                             NPC.damage = SetDamage;
 
                             int projectileAmountOver4 = 2;
-                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Target.Center, 13.5f);
+                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Target, 13.5f);
                             EyeofCthulhuHandler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 90);
                             EyeofCthulhuHandler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
 
@@ -1354,11 +1356,11 @@ public sealed partial class EyeofCthulhu
                             CheckPhaseChange();
                             SoundEngine.PlaySound(ForceRoar, NPC.Center);
                             SpawnChargeParticle();
-                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target.Center, 35f), -MathHelper.PiOver2);
+                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, 35f), -MathHelper.PiOver2);
                             NPC.damage = SetDamage;
 
                             int projectileAmountOver4 = 2;
-                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Target.Center, 13.5f);
+                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Target, 13.5f);
                             EyeofCthulhuHandler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 90);
                             EyeofCthulhuHandler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
 
@@ -1398,11 +1400,11 @@ public sealed partial class EyeofCthulhu
                             CheckPhaseChange();
                             SoundEngine.PlaySound(ForceRoar, NPC.Center);
                             SpawnChargeParticle();
-                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target.Center, 40f), -MathHelper.PiOver2);
+                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, 40f), -MathHelper.PiOver2);
                             NPC.damage = SetDamage;
 
                             int projectileAmountOver4 = 3;
-                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Target.Center, 13.5f);
+                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Target, 13.5f);
                             EyeofCthulhuHandler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 90);
                             EyeofCthulhuHandler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
 

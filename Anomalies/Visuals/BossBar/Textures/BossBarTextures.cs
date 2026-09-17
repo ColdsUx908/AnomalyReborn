@@ -28,6 +28,20 @@ public sealed class BossBarTextures : IContentLoader
         /// </summary>
         public static Texture2D BaseBarFiller => _BaseBarFiller.Value;
 
+        [LoadTexture(Path + "BaseBarSmall")]
+        internal static Asset<Texture2D> _BaseBarSmall;
+        /// <summary>
+        /// 小尺寸基础血量条纹理。
+        /// </summary>
+        public static Texture2D BaseBarSmall => _BaseBarSmall.Value;
+
+        [LoadTexture(Path + "BaseBarFillerSmall")]
+        internal static Asset<Texture2D> _BaseBarFillerSmall;
+        /// <summary>
+        /// 小尺寸血量条填充背景纹理。
+        /// </summary>
+        public static Texture2D BaseBarFillerSmall => _BaseBarFillerSmall.Value;
+
         [LoadTexture(Path + "PhaseIndicator")]
         internal static Asset<Texture2D> _PhaseIndicator;
         /// <summary>
@@ -55,6 +69,13 @@ public sealed class BossBarTextures : IContentLoader
         /// 亚阶段血量阈值指示器中心纹理。
         /// </summary>
         public static Texture2D SubPhaseIndicatorCenter => _SubPhaseIndicatorCenter?.Value;
+
+        [LoadTexture(Path + "BarLock")]
+        internal static Asset<Texture2D> _BarLock;
+        /// <summary>
+        /// 血条锁纹理。
+        /// </summary>
+        public static Texture2D BarLock => _BarLock?.Value;
     }
 
     public static class Retro

@@ -21,4 +21,20 @@ public static class TONPCUtils
     /// 获取一个值，指示机械三王（毁灭者、双子魔眼、机械骷髅王）是否都已被击败。
     /// </summary>
     public static bool DownedMechBossAll => NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3;
+
+    /// <summary>
+    /// 以更不易获取到空索引的方式获取 Boss 头部纹理索引。
+    /// <br/>此方法会优先返回 <see cref="NPCID.Sets.BossHeadTextures"/> 中的索引，如果该索引存在且 <see cref="NPC.GetBossHeadTextureIndex"/> 返回 -1，则使用前者；否则使用后者。
+    /// </summary>
+    /// <param name="npc">要获取头部纹理索引的 NPC 实例。</param>
+    /// <returns>返回 Boss 头部纹理的索引。</returns>
+    public static int GetBossHeadTextureIndexBetter(NPC npc)
+    {
+        int result = NPCID.Sets.BossHeadTextures[npc.type];
+        int result2 = npc.GetBossHeadTextureIndex();
+
+        if (result != -1 && result2 == -1)
+            return result;
+        return result2;
+    }
 }

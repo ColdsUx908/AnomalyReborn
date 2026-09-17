@@ -34,7 +34,7 @@ public class AfterimageParticle : Particle, IContentLoader
     public override void Update()
     {
         float lifetimeCompletion = Timer / (Lifetime + 1f);
-        Opacity = OriginalOpacity * 0.65f * TOMathUtils.Interpolation.QuadraticEaseOut(1f - lifetimeCompletion);
+        Opacity = OriginalOpacity * 0.5f * (1f - lifetimeCompletion);
     }
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 drawOffset = default) => false;

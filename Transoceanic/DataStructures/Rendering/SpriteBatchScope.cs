@@ -15,7 +15,8 @@ public sealed class SpriteBatchScope : IDisposable
     /// 初始化作用域，并保存当前 SpriteBatch 的状态。
     /// <br/>注意：此构造函数不会改变 SpriteBatch 的状态。
     /// </summary>
-    /// <param name="spriteBatch"></param>
+    /// <param name="spriteBatch">要操作的 SpriteBatch 实例。</param>
+    /// <param name="beginWhenDisposed">在释放作用域时是否调用 Begin。</param>
     public SpriteBatchScope(SpriteBatch spriteBatch, bool beginWhenDisposed)
     {
         ArgumentNullException.ThrowIfNull(spriteBatch);
@@ -28,13 +29,15 @@ public sealed class SpriteBatchScope : IDisposable
     /// 初始化作用域，并应用指定的新状态。
     /// </summary>
     /// <param name="spriteBatch">要操作的 SpriteBatch 实例。</param>
-    /// <param name="sortMode">新排序模式（null 表示不变）。</param>
-    /// <param name="blendState">新混合状态（null 表示不变）。</param>
-    /// <param name="samplerState">新采样器状态（null 表示不变）。</param>
-    /// <param name="depthStencilState">新深度模板状态（null 表示不变）。</param>
-    /// <param name="rasterizerState">新光栅化状态（null 表示不变）。</param>
-    /// <param name="customEffect">新自定义效果（null 表示不变）。</param>
-    /// <param name="transformMatrix">新变换矩阵（null 表示不变）。</param>
+    /// <param name="sortMode">新排序模式（<see langword="null"/> 表示不变）。</param>
+    /// <param name="blendState">新混合状态（<see langword="null"/> 表示不变）。</param>
+    /// <param name="samplerState">新采样器状态（<see langword="null"/> 表示不变）。</param>
+    /// <param name="depthStencilState">新深度模板状态（<see langword="null"/> 表示不变）。</param>
+    /// <param name="rasterizerState">新光栅化状态（<see langword="null"/> 表示不变）。</param>
+    /// <param name="customEffect">新自定义效果（<see langword="null"/> 表示不变）。</param>
+    /// <param name="transformMatrix">新变换矩阵（<see langword="null"/> 表示不变）。</param>
+    /// <param name="beginWhenDisposed">在释放作用域时是否调用 Begin。</param>
+    /// <param name="effectIsNull">是否将自定义效果设置为 <see langword="null"/>（<see langword="true"/> 表示设置为 <see langword="null"/>，<see langword="false"/> 表示不变）。</param>
     public SpriteBatchScope(
         SpriteBatch spriteBatch,
         SpriteSortMode? sortMode = null,
@@ -44,14 +47,15 @@ public sealed class SpriteBatchScope : IDisposable
         RasterizerState rasterizerState = null,
         Effect customEffect = null,
         Matrix? transformMatrix = null,
-        bool beginWhenDisposed = true)
+        bool beginWhenDisposed = true,
+        bool effectIsNull = false)
     {
         ArgumentNullException.ThrowIfNull(spriteBatch);
         _SpriteBatch = spriteBatch;
         _Snapshot = spriteBatch.ChangeState(
             sortMode, blendState, samplerState,
             depthStencilState, rasterizerState,
-            customEffect, transformMatrix);
+            customEffect, transformMatrix, effectIsNull);
         _BeginWhenDisposed = beginWhenDisposed;
     }
 

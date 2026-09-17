@@ -1,6 +1,4 @@
-﻿using Anomalies.GameContents.Dusts;
-
-namespace Anomalies.Bosses.KingSlime;
+﻿namespace Anomalies.Bosses.KingSlime;
 
 public sealed partial class KingSlime
 {
@@ -26,6 +24,8 @@ public sealed partial class KingSlime
         AnomalyNPC.CurrentlyIncreasingDefenseOrDR = hasSapphireBuff;
         NPC.defense = JewelSapphireDead ? (int)(NPC.defDefense * 0.75f) : hasSapphireBuff ? (int)(NPC.defDefense * 1.25f) : NPC.defDefense;
         AnomalyNPC.DR = Ultra && hasSapphireBuff ? 0.2f : 0f;
+
+        AnomalyNPC.CurrentlyImmune = InvalidPhase1;
 
         switch (CurrentPhase)
         {
@@ -334,7 +334,7 @@ public sealed partial class KingSlime
                     NPC.NewNPCAction(NPC.GetBossSpawnSource(Target.whoAmI), NPC.Center, NPCID.KingSlime, action: n =>
                     {
                         n.Master = NPC;
-                        SoundEngine.PlaySound(SoundID.Roar, n.Center);
+                        SoundEngine.PlaySound(SoundID.ForceRoar, n.Center);
                         TOLocalizationUtils.ChatLocalizedText(this, "GFBSummon", Color.LightSeaGreen);
                     });
                 }
@@ -683,7 +683,7 @@ public sealed partial class KingSlime
 
                 case 90:
                     SoundEngine.PlaySound(SoundID.Item38, NPC.Center);
-                    SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
+                    SoundEngine.PlaySound(SoundID.ForceRoar, NPC.Center);
                     for (int i = 0; i < 6; i++)
                         SpawnSlime(NPCID.RainbowSlime);
                     Vector2 position = GetJewelSpawnPosition();

@@ -3,12 +3,12 @@ KingSlime: {
 	RubyJewel.DisplayName: 王冠红玉
 	EmeraldJewel.DisplayName: 王冠翡翠
 	SapphireJewel.DisplayName: 王冠蓝玉
-	RainbowJewel.DisplayName: 王冠彩虹宝石
+	RainbowJewel.DisplayName: 王冠虹晶
 	SlimeGel.DisplayName: 史莱姆凝胶
-	RubyJewelProjectile.DisplayName: 红玉弹幕
+	RubyBullet.DisplayName: 红玉弹
 	EmeraldJewelShadow.DisplayName: 翡翠幻影
 	RainbowShockwave.DisplayName: 彩虹冲击波
-	RainbowJewelProjectile.DisplayName: 彩虹弹幕
+	RainbowBullet.DisplayName: 虹晶弹
 }
 
 EyeofCthulhu: {

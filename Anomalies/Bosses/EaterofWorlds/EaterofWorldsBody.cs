@@ -1,43 +1,21 @@
 ﻿namespace Anomalies.Bosses.EaterofWorlds;
 
-public sealed class EaterofWorldsBody : AnomalyNPCBehavior<EaterofWorldsBody>
+public sealed class EaterofWorldsBody : EaterofWorldsSegment<EaterofWorldsBody>
 {
-    public NPC Head
+    public bool HasInitialized
     {
-        get => NPC.GetNPCFromIndex(AI_Union_0.byte0);
+        get => AnomalyNPC.AnomalyAI32[0].bits[0];
         set
         {
-            Union32 union = AI_Union_0;
-            union.byte0 = (byte)(value?.whoAmI ?? Main.maxNPCs);
-            AI_Union_0 = union;
-        }
-    }
-    public bool ValidHead => Head.active && Head.type == NPCID.EaterofWorldsHead;
-
-    public NPC Previous
-    {
-        get => NPC.GetNPCFromIndex(AI_Union_0.byte1);
-        set
-        {
-            Union32 union = AI_Union_0;
-            union.byte1 = (byte)(value?.whoAmI ?? Main.maxNPCs);
-            AI_Union_0 = union;
-        }
-    }
-    public bool ValidPrevious => Previous.active && Previous.EoW;
-
-    public int BodyIndex
-    {
-        get => AI_Union_1.i;
-        set
-        {
-            Union32 union = AI_Union_1;
-            union.i = value;
-            AI_Union_1 = union;
+            if (AnomalyNPC.AnomalyAI32[0].bits[0] != value)
+            {
+                AnomalyNPC.AnomalyAI32[0].bits[0] = value;
+                AnomalyNPC.AIChanged32[0] = true;
+            }
         }
     }
 
-    public override int ApplyingType => NPCID.EaterofWorldsBody;
+    public override EaterofWorldsSegmentType SegmentType => EaterofWorldsSegmentType.Body;
 
     public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => type switch
     {
@@ -55,39 +33,19 @@ public sealed class EaterofWorldsBody : AnomalyNPCBehavior<EaterofWorldsBody>
             return false;
         }
 
+        if (!HasInitialized)
+        {
+            HasInitialized = true;
+            for (int i = 0; i < NPCID.Sets.TrailCacheLength[NPC.type]; i++)
+                NPC.oldPos[i] = NPC.position;
+        }
+
         NPC.realLife = Head.whoAmI;
         BodyAndTailMovementAI();
 
         OnRunningPreAI?.Invoke(this);
 
         return false;
-
-        void BodyAndTailMovementAI()
-        {
-            // 计算到前一个体节的方向向量
-            Vector2 targetPos = Previous.Center - NPC.Center;
-            float targetPosX = targetPos.X;
-            float targetPosY = targetPos.Y;
-
-            // 设定旋转角度（朝向前一个体节）
-            NPC.rotation = (float)Math.Atan2(targetPosY, targetPosX) + MathHelper.PiOver2;
-
-            // 计算当前体节与前一个体节的距离
-            float targetDistance = (float)Math.Sqrt(targetPosX * targetPosX + targetPosY * targetPosY);
-
-            // 获取期望的间隔宽度（受缩放影响，特殊情况下固定为62）
-            int npcWidth = (int)(NPC.width * NPC.scale);
-            if (Main.getGoodWorld)
-                npcWidth = 62;
-
-            // 将目标向量缩放到保持固定距离
-            targetDistance = (targetDistance - npcWidth) / targetDistance;
-            targetPos *= targetDistance;
-
-            // 直接设置位置，速度归零（体节无独立速度）
-            NPC.velocity = Vector2.Zero;
-            NPC.position += targetPos;
-        }
     }
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)

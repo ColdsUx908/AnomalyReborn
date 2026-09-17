@@ -120,4 +120,35 @@ public struct Hexagon : IEquatable<Hexagon>, ICollidableWithRectangle
         //所有轴均重叠，则发生碰撞
         return true;
     }
+
+    public readonly bool Contains(Rectangle other)
+    {
+        float apothem = CircumRadius * MathF.Cos(TOMathUtils.PiOver6);
+
+        ReadOnlySpan<Vector2> adjustedCorners =
+        [
+            other.TopLeft() - Center,
+            other.TopRight() - Center,
+            other.BottomLeft() - Center,
+            other.BottomRight() - Center
+        ];
+
+        //六条边的外法线方向
+        for (int i = 0; i < 6; i++)
+        {
+            float normalAngle = Rotation + TOMathUtils.PiOver6 + i * TOMathUtils.PiOver3;
+            Vector2 outwardNormal = new PolarVector2(normalAngle); //单位向量
+
+            foreach (Vector2 corner in adjustedCorners)
+            {
+                float projection = Vector2.Dot(corner, outwardNormal);
+
+                // 超出六边形边界
+                if (projection > apothem)
+                    return false;
+            }
+        }
+
+        return true;
+    }
 }

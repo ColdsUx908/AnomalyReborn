@@ -33,12 +33,6 @@ public interface IEntityBehavior : ILoadable, IContentLoader
     /// <br/>当通过 <see cref="SimpleEntityBehaviorSet{TEntity, TBehavior}"/> 遍历行为时，仅返回此属性为 <see langword="true"/> 的实例。
     /// </summary>
     public abstract bool ShouldProcess { get; }
-
-    /// <summary>
-    /// 在 Mod 加载的静态初始化阶段调用，用于设置静态默认值。
-    /// <br/>等效于 <see cref="ModType.SetStaticDefaults"/>。
-    /// </summary>
-    public abstract void SetStaticDefaults();
 }
 
 /// <summary>
@@ -71,9 +65,6 @@ public abstract class EntityBehavior<TEntity> : IEntityBehavior where TEntity : 
     /// 获取一个值，指示当前行为是否应该执行处理逻辑。默认返回 <see langword="true"/>。
     /// </summary>
     public virtual bool ShouldProcess => true;
-
-    /// <inheritdoc cref="IEntityBehavior.SetStaticDefaults"/>
-    public virtual void SetStaticDefaults() { }
 
     /// <summary>
     /// 显式实现 <see cref="ILoadable.Load(Mod)"/>，将调用转至虚方法 <see cref="Load(Mod)"/>。
@@ -2167,15 +2158,6 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
     public virtual bool TryGetBehavior(NPC npc, out TNPCBehavior npcBehavior, [CallerMemberName] string methodName = null) => BehaviorSet.TryGetBehavior(npc, methodName, out npcBehavior);
 
     #region Defaults
-    public override void SetStaticDefaults()
-    {
-        foreach (SimpleEntityBehaviorSet<NPC, TNPCBehavior> simpleSet in BehaviorSet._Data.Values)
-        {
-            foreach (TNPCBehavior npcBehavior in simpleSet.Enumerate())
-                npcBehavior.SetStaticDefaults();
-        }
-    }
-
     public override void SetDefaults(NPC npc)
     {
         if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
@@ -2761,15 +2743,6 @@ public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : Glo
     public virtual bool TryGetBehavior(Projectile projectile, out TProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null) => BehaviorSet.TryGetBehavior(projectile, methodName, out projectileBehavior);
 
     #region Defaults
-    public override void SetStaticDefaults()
-    {
-        foreach (SimpleEntityBehaviorSet<Projectile, TProjectileBehavior> simpleSet in BehaviorSet._Data.Values)
-        {
-            foreach (TProjectileBehavior projectileBehavior in simpleSet.Enumerate())
-                projectileBehavior.SetStaticDefaults();
-        }
-    }
-
     public override void SetDefaults(Projectile projectile)
     {
         if (TryGetBehavior(projectile, out TProjectileBehavior projectileBehavior))
@@ -3074,15 +3047,6 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
     public virtual bool TryGetBehavior(Item item, out TItemBehavior itemBehavior, [CallerMemberName] string methodName = null) => BehaviorSet.TryGetBehavior(item, methodName, out itemBehavior);
 
     #region Defaults
-    public override void SetStaticDefaults()
-    {
-        foreach (SimpleEntityBehaviorSet<Item, TItemBehavior> simpleSet in BehaviorSet._Data.Values)
-        {
-            foreach (TItemBehavior itemBehavior in simpleSet.Enumerate())
-                itemBehavior.SetStaticDefaults();
-        }
-    }
-
     public override void SetDefaults(Item item)
     {
         if (TryGetBehavior(item, out TItemBehavior itemBehavior))

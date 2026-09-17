@@ -27,7 +27,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Visuals\BossBar\Textures\Retro\" />
+      <Folder Include="GameContents\Developer\HiganbanaPyre\" />
     </ItemGroup>
 
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

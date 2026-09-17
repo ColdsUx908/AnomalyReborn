@@ -584,7 +584,7 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
         AnomalyEffects.CustomBossBars.QueenSlime.Data
             .UseImage1(AnomalyTextures.Noise._Turbulence)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
-            .SetCustomParameter("uPosition", destinationRentangle.BottomLeft())
+            .SetCustomParameter("uPosition", destinationRentangle.TopLeft())
             .Apply();
     }
 }

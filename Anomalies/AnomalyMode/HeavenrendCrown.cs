@@ -47,17 +47,10 @@ public sealed class HeavenrendCrown : AnomalyModItem, ILocalizationPrefix
         Texture2D texture = Item.Texture;
         Vector2 particleDrawCenter = position;
 
+        EnchantmentEnergyParticles.Update();
         EnchantmentEnergyParticles.DrawSet(particleDrawCenter + Main.screenPosition);
         TODrawUtils.DrawInInventoryWithCustomSize(spriteBatch, position, frame, drawColor, origin, texture, 0.5f);
         return false;
-    }
-}
-
-public sealed class HeavenrendCrownSystem : ModSystem
-{
-    public override void UpdateUI(GameTime gameTime)
-    {
-        HeavenrendCrown.EnchantmentEnergyParticles.Update();
     }
 }
 

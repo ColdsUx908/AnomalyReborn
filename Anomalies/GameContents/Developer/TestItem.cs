@@ -4,7 +4,7 @@ namespace Anomalies.GameContents.Developer;
 /// <summary>
 /// Anomaly测试物品。
 /// </summary>
-public sealed class TestItem : AnomalyModItem
+public sealed class TestItem : AnomalyModItem, IDeveloperItem
 {
     public override string Texture => TOAssetUtils.FormatVanillaItemTexturePath(ItemID.IronBroadsword);
 
@@ -37,6 +37,15 @@ public sealed class TestItem : AnomalyModItem
     public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
     {
         return false;
+    }
+
+    public override void ModifyTooltips(List<TooltipLine> tooltips)
+    {
+        AnomalyItemTooltipModifier modifier = new(Item, tooltips);
+        if (!modifier.TryGet(null, "Tooltip0", out int index, out _))
+            return;
+
+        IDeveloperItem.AddDeveloperItemIdentifier(Mod, tooltips, index);
     }
 }
 #endif

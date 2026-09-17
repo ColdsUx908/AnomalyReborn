@@ -27,7 +27,9 @@ AnomalyClientConfig: {
 			Enables shaders for certain visual effects in the mod.
 			Disabling this may improve performance, but will also make certain effects look worse.
 			If you have visual or performance issues, disable this setting.
-			Note: Shaders will be forcibly disabled regardless of this setting if "Lighting" is set to Retro or Trippy, or if "Wave Quality" is set to Off.
+			Note
+			Shaders require a graphics card that supports at least DirecX 9.0c.
+			Shaders will be forcibly disabled regardless of this setting if "Lighting" is set to Retro or Trippy, or if "Wave Quality" is set to Off.
 			'''
 	}
 

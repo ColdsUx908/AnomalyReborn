@@ -5,10 +5,10 @@ KingSlime: {
 	SapphireJewel.DisplayName: Sapphire Jewel
 	RainbowJewel.DisplayName: Rainbow Jewel
 	SlimeGel.DisplayName: Slime Gel
-	RubyJewelProjectile.DisplayName: Ruby Bolt
+	RubyBullet.DisplayName: Ruby Bullet
 	EmeraldJewelShadow.DisplayName: Emerald Jewel Shadow
 	RainbowShockwave.DisplayName: Rainbow Shockwave
-	RainbowJewelProjectile.DisplayName: Rainbow Bolt
+	RainbowBullet.DisplayName: Rainbow Bullet
 }
 
 EyeofCthulhu: {

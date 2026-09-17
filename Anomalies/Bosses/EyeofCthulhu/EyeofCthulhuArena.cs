@@ -361,8 +361,8 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
                     {
                         bool shouldIncreaseHighlightTime = i % (32 / (buff ? 4 : 2)) == 0;
                         int actualIndex = (int)TOMathUtils.NormalizeWithPeriod(index1 + i, 32);
-                        int hightliteTime = shouldIncreaseHighlightTime ? EyeofCthulhuHandler.EyeSpinTime + 15 : EyeofCthulhuHandler.EyeSpinTime;
-                        AddHighlightTo(actualIndex, hightliteTime, shouldIncreaseHighlightTime);
+                        int highlightTime = shouldIncreaseHighlightTime ? EyeofCthulhuHandler.EyeSpinTime + 15 : EyeofCthulhuHandler.EyeSpinTime;
+                        AddHighlightTo(actualIndex, highlightTime, shouldIncreaseHighlightTime);
 
                         ExecuteActionToArenaEye(actualIndex, e =>
                         {

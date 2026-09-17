@@ -57,6 +57,8 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
         NPC.DeathSound = JewelHandler.ShatterSound;
 
         NPC.IsImportantBossMinion = true;
+        AnomalyNPC.CanHaveBossHealthBar = true;
+        AnomalyNPC.BossHealthBarIsSmall = true;
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) => NPC.lifeMax = (int)(NPC.lifeMax * balance);
@@ -84,7 +86,6 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
         Lighting.AddLight(NPC.Center, 1f, 0f, 0f);
 
         NPC.damage = 0;
-        AnomalyNPC.CanHaveBossHealthBar = true;
 
         if (!HasInitialized)
         {
@@ -149,7 +150,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
                 float totalAngle = MathHelper.TwoPi;
                 float singleRadian = totalAngle / amount;
                 Vector2 originalVelocity = NPC.GetVelocityTowards(Target, MaxProjectileSpeed * 0.85f);
-                Projectile.NewProjectilesArc<RainbowJewelProjectile>(amount, singleRadian, SourceAI, NPC.Center, originalVelocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowJewelProjectile.TextureType_Circle);
+                Projectile.NewProjectilesArc<RainbowBullet>(amount, singleRadian, SourceAI, NPC.Center, originalVelocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureType_Circle);
             }
 
             CurrentBehavior = Behavior.None;
@@ -179,7 +180,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
                 for (int i = 0; i < amount; i++)
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
-                    Projectile.NewProjectileAction<RainbowJewelProjectile>(SourceAI, NPC.Center, velocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowJewelProjectile.TextureType_Triangle);
+                    Projectile.NewProjectileAction<RainbowBullet>(SourceAI, NPC.Center, velocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureType_Triangle);
                 }
             }
 
@@ -212,7 +213,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
                 for (int i = 0; i < amount; i++)
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
-                    Projectile.NewProjectileAction<RainbowJewelProjectile>(SourceAI, NPC.Center, velocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowJewelProjectile.TextureType_Star);
+                    Projectile.NewProjectileAction<RainbowBullet>(SourceAI, NPC.Center, velocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureType_Star);
                 }
             }
 
@@ -258,7 +259,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
                 for (int i = 0; i < amount; i++)
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
-                    Projectile.NewProjectileAction<RainbowJewelProjectile>(SourceAI, NPC.Center, velocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowJewelProjectile.TextureType_Square);
+                    Projectile.NewProjectileAction<RainbowBullet>(SourceAI, NPC.Center, velocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureType_Square);
                 }
             }
         }
@@ -312,7 +313,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
                     float singleRadian = MathHelper.TwoPi / amount;
                     float radian = singleRadian * (amount - 1);
                     float initialRotation = (Target.Center - NPC.Center).ToRotation() + attackNum * TOMathUtils.PiOver5 + Main.rand.NextFloat(TOMathUtils.PiOver12);
-                    Projectile.NewProjectilesArc<RainbowJewelProjectile>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(MaxProjectileSpeed - attackNum / 2f, initialRotation), RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowJewelProjectile.TextureType_Circle);
+                    Projectile.NewProjectilesArc<RainbowBullet>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(MaxProjectileSpeed - attackNum / 2f, initialRotation), RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureType_Circle);
                 }
             }
 

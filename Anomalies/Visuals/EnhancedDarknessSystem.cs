@@ -74,7 +74,8 @@ public class EnhancedDarknessSystem : ModSystem, IContentLoader
         }
 
         spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-        AnomalyEffects.LightingShader.Data
+        AnomalyEffects.SolidColorMask.Data
+            .UseColor(Color.Black)
             .UseOpacity(anomalyPlayer.DarknessIntensity)
             .Apply();
         spriteBatch.Draw(lease.Target, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, 0, 0);

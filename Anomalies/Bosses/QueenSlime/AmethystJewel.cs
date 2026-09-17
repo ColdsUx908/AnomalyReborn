@@ -119,7 +119,7 @@ public sealed class AmethystJewel : JewelNPC
                 int amount = 9;
                 float singleRadian = MathHelper.TwoPi / amount;
                 Vector2 originalVelocity = (PolarVector2)NPC.GetVelocityTowards(Target, MaxProjectileSpeed * 0.85f);
-                Projectile.NewProjectilesArc<RainbowJewelProjectile>(amount, singleRadian, SourceAI, NPC.Center, originalVelocity, JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = RainbowJewelProjectile.TextureType_Circle);
+                Projectile.NewProjectilesArc<RainbowBullet>(amount, singleRadian, SourceAI, NPC.Center, originalVelocity, JewelProjectileRainbowDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureType_Circle);
             }
 
             CurrentBehavior = Behavior.None;

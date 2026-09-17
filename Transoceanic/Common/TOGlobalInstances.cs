@@ -87,7 +87,7 @@ public sealed class TOGlobalNPC : GlobalNPC, ITOLoader
     /// NPC生成时 <see cref="TOMain.GameTimer"/> 的值。
     /// <br/>不同步。
     /// </summary>
-    internal int SpawnTime = -1;
+    internal long SpawnTime = -1;
 
     public readonly List<AfterimageParticle> Afterimages = [];
 
@@ -212,5 +212,5 @@ public sealed class TOGlobalItem : GlobalItem
     /// <returns>装备时长。
     /// <br/>在物品装备时，返回值从0逐渐增加至max；未装备时，从max逐渐减少至0。
     /// </returns>
-    public int GetEquippedTimer(int max) => Equip_Timer.GetValue(TOSharedData.GameTimer.TotalTicks, max);
+    public long GetEquippedTimer(long max) => Equip_Timer.GetValue(TOSharedData.GameTimer.TotalTicks, max);
 }

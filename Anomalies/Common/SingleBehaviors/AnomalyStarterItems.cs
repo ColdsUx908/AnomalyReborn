@@ -1,4 +1,4 @@
-﻿using Anomalies.GameContents.Contributor.Mocangran_ImmaculateWhite;
+﻿using Anomalies.GameContents.Contributor.ImmaculateWhite;
 
 namespace Anomalies.Common.SingleBehaviors;
 

@@ -233,11 +233,16 @@ public abstract class AnomalyProjectileBehavior<TModProjectile, TBehavior> : Ano
     public override bool ShouldProcess => AnomalySharedData.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
 }
 
-public abstract class AnomalyItemBehavior : SingleItemBehavior, IAnomalyTweak
+public abstract class AnomalyItemBehavior : SingleItemBehavior, IAnomalyTweak, IContentLoader
 {
     public sealed override AnomalyMain Mod => AnomalyMain.Instance;
 
     public AnomalyGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Anomaly; }
+
+    /// <summary>
+    /// 设置物品基本属性，确保在 <see cref="Item.SetDefaults(int, bool, Terraria.GameContent.Items.ItemVariant)"/> 方法末尾调用。
+    /// </summary>
+    public virtual void SetDefaultsFinal() { }
 
     /// <summary>
     /// 编辑受击NPC的DR。
@@ -246,15 +251,29 @@ public abstract class AnomalyItemBehavior : SingleItemBehavior, IAnomalyTweak
     public virtual void ModifyHitNPC_DR(NPC target, Player player, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 
     void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedItems[ApplyingType] = true;
+
+    void IContentLoader.PostSetupContent() => On_Item.SetDefaults_int_bool_ItemVariant += On_Item_SetDefaults_int_bool_ItemVariant;
+
+    private static void On_Item_SetDefaults_int_bool_ItemVariant(On_Item.orig_SetDefaults_int_bool_ItemVariant orig, Item self, int Type, bool noMatCheck, Terraria.GameContent.Items.ItemVariant variant)
+    {
+        orig(self, Type, noMatCheck, variant);
+        if (self.TryGetBehavior(out AnomalyItemBehavior itemBehavior, nameof(SetDefaultsFinal)))
+            itemBehavior.SetDefaultsFinal();
+    }
 }
 
-public abstract class AnomalyItemBehavior<T> : AnomalyItemBehavior where T : ModItem
+public abstract class AnomalyItemBehavior<TBehavior> : AnomalyItemBehavior where TBehavior : AnomalyItemBehavior<TBehavior>, new()
 {
-    public static readonly Type Type = typeof(T);
+    public static TBehavior GetInstance(Item item) => new() { _Entity = item };
+}
 
-    public T ModItem => _Entity.GetModItem<T>();
+public abstract class AnomalyItemBehavior<TModItem, TBehavior> : AnomalyItemBehavior<TBehavior> where TModItem : ModItem where TBehavior : AnomalyItemBehavior<TModItem, TBehavior>, new()
+{
+    public static readonly Type Type = typeof(TModItem);
 
-    public override int ApplyingType => ModContent.ItemType<T>();
+    public TModItem ModItem => _Entity.GetModItem<TModItem>();
+
+    public override int ApplyingType => ModContent.ItemType<TModItem>();
 }
 #endregion Single Behavior
 

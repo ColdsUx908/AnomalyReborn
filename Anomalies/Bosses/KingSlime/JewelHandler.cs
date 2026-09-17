@@ -221,7 +221,7 @@ public static class JewelHandler
                     if (Main.rand.NextBool())
                     {
                         d.scale = 0.5f;
-                        d.fadeIn = 1f + Main.rand.Next(10) * 0.1f;
+                        d.fadeIn = Main.rand.NextFloat(1f, 2f);
                     }
                     Dust d2 = Dust.CloneDust(d);
                     d2.scale *= 0.5f;

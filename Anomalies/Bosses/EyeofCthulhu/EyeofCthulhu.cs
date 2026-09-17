@@ -1,6 +1,7 @@
 ﻿using Anomalies.Assets.Effects;
 using Anomalies.DataStructures;
 using Anomalies.Visuals.BossBar;
+using Newtonsoft.Json;
 
 namespace Anomalies.Bosses.EyeofCthulhu;
 
@@ -72,7 +73,7 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public static float TeleportOffset => 150f;
 
-    public static readonly SoundStyle Roar = SoundID.Roar with { MaxInstances = 0 };
+    public static readonly SoundStyle Roar = SoundID.ForceRoar with { MaxInstances = 0 };
     public static readonly SoundStyle ForceRoar = SoundID.ForceRoarPitched with { MaxInstances = 0 };
 
     private static readonly ProjectileDamageContainer _BloodDamage = new(30, 60, 75, 90, 120, 150);
@@ -94,7 +95,7 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
     public float ActualRotation => NPC.rotation + MathHelper.PiOver2;
     public Vector2 DrawOffset => -new PolarVector2(24f, ActualRotation);
 
-    public int RapidChargeTime => Ultra ? (Phase2_3 ? 11 : 13) : (Phase2_3 ? 12 : 15);
+    public int RapidChargeTime => Ultra ? (Phase2_3 ? 10 : 13) : (Phase2_3 ? 12 : 15);
 
     public int HorizontalChargeTime => Phase2_3 ? 30 : 35;
 
@@ -442,12 +443,6 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
         _ => true,
     };
 
-    public override void SetStaticDefaults()
-    {
-        NPCID.Sets.TrailingMode[ApplyingType] = 3;
-        NPCID.Sets.TrailCacheLength[ApplyingType] = 5;
-    }
-
     public override void SetDefaults()
     {
         BridgeUtils.ApplyCalamityHealthBoost(NPC);
@@ -471,7 +466,8 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public override void SetDefaultsFinal()
     {
-        NPC.lifeMax = CalamityEnabled ? 6000 : 4800;
+        NPC.lifeMax = CalamityEnabled ? 6000 : 4500;
+        BridgeUtils.ApplyCalamityHealthBoost(NPC);
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
@@ -534,7 +530,7 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
             float damageMultiplier = IsInPhase3Arena ? 1.1f : 0.15f;
             modifiers.SourceDamage *= damageMultiplier;
         }
-        else if (InvalidPhase2)
+        else if (Ultra)
             modifiers.SetMaxDamage((int)(NPC.life - NPC.lifeMax * Phase3LifeRatio + 1));
     }
 
@@ -572,8 +568,7 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
         AnomalyEffects.CustomBossBars.EyeofCthulhu.Data
             .UseImage1(AnomalyTextures.Noise._Vein)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
-            .SetCustomParameter("uPosition", destinationRentangle.BottomLeft())
+            .SetCustomParameter("uPosition", destinationRentangle.TopLeft())
             .Apply();
     }
 }
-

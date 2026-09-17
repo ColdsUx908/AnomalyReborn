@@ -11,21 +11,10 @@ public sealed class CombCell : AnomalyModProjectile
         BeeSwarm2_Safe,
         BeeSwarm3,
         BeeSwarm3_Move,
-        Dance,
-        Dance2,
+        BeeSwarm4,
+        BeeSwarm4_Huge,
         PhaseChange,
     }
-
-    public static readonly Vector2[] HexagonVerticesUnit =
-    [
-        PolarVector2.UnitClocks[0],
-        PolarVector2.UnitClocks[2],
-        PolarVector2.UnitClocks[4],
-        PolarVector2.UnitClocks[6],
-        PolarVector2.UnitClocks[8],
-        PolarVector2.UnitClocks[10],
-        PolarVector2.UnitClocks[0]
-    ];
 
     public NPC Master
     {
@@ -88,8 +77,8 @@ public sealed class CombCell : AnomalyModProjectile
     //使用场景：BeeSwarm3
 
     /// <summary>
-    /// 在六边形边上的位置参数。
-    /// <br/>为 0 表示上方顶点，为 1 表示右上顶点，为 2 表示右下顶点，为 3 表示下方顶点，为 4 表示左下顶点，为 5 表示左上顶点。
+    /// 在圆上的位置参数。
+    /// <br/>为 0 表示上方，为 1 表示右上，为 2 表示右下，为 3 表示下方，为 4 表示左下，为 5 表示左上。
     /// <br/>赋值时自动模 6。
     /// </summary>
     public float CurrentPositionParameter
@@ -128,7 +117,7 @@ public sealed class CombCell : AnomalyModProjectile
 
         Timer1++;
 
-        float timeToEnlarge = (int)Utils.Remap(FinalScale, 1.5f, 3f, 20, 50);
+        float timeToEnlarge = (int)Utils.Remap(FinalScale, 1.5f, 3f, 20, 70);
         Projectile.scale = FinalScale * TOMathUtils.Interpolation.QuadraticEaseOut(Timer1 / timeToEnlarge);
         HasContactDamage = false;
 
@@ -155,7 +144,7 @@ public sealed class CombCell : AnomalyModProjectile
             case Behavior.BeeSwarm3_Move:
                 Behavior_BeeSwarm3(1);
                 break;
-            case Behavior.Dance or Behavior.Dance2:
+            case Behavior.BeeSwarm4 or Behavior.BeeSwarm4_Huge:
                 Behavior_Dance();
                 break;
             case Behavior.PhaseChange:
@@ -165,7 +154,7 @@ public sealed class CombCell : AnomalyModProjectile
                 break;
         }
 
-        if (BehaviorType is Behavior.BeeSwarm or Behavior.BeeSwarm2 or Behavior.BeeSwarm2_Safe or Behavior.BeeSwarm3_Move or Behavior.Dance or Behavior.Dance2)
+        if (BehaviorType is Behavior.BeeSwarm or Behavior.BeeSwarm2 or Behavior.BeeSwarm2_Safe or Behavior.BeeSwarm3_Move or Behavior.BeeSwarm4 or Behavior.BeeSwarm4_Huge)
             QueenBeeHandler.HoneyWetCombCells.Add(Projectile.whoAmI);
 
         void Decelerate(float factor = 0.95f)
@@ -256,7 +245,7 @@ public sealed class CombCell : AnomalyModProjectile
             {
                 case 0:
                     HasContactDamage = true;
-                    if ((masterBehavior.CurrentAttackPhase >= 3 && masterBehavior.Timer1 >= 90) || masterBehavior.CurrentBehavior != QueenBee.Behavior.Phase2_BeeSwarm3)
+                    if ((masterBehavior.CurrentAttackPhase >= 3 && masterBehavior.Timer1 >= 25) || masterBehavior.CurrentBehavior != QueenBee.Behavior.Phase2_BeeSwarm3)
                     {
                         Projectile.Kill();
                         break;
@@ -266,7 +255,7 @@ public sealed class CombCell : AnomalyModProjectile
                     break;
                 case 1:
                     HasContactDamage = true;
-                    if ((masterBehavior.CurrentAttackPhase >= 3 && masterBehavior.Timer1 >= 90) || masterBehavior.CurrentBehavior != QueenBee.Behavior.Phase2_BeeSwarm3)
+                    if ((masterBehavior.CurrentAttackPhase >= 3 && masterBehavior.Timer1 >= 40) || masterBehavior.CurrentBehavior != QueenBee.Behavior.Phase2_BeeSwarm3)
                     {
                         Projectile.Kill();
                         break;
@@ -279,14 +268,14 @@ public sealed class CombCell : AnomalyModProjectile
                         float speed = Utils.Remap(Timer1, 50f, 70f, 0f, 0.0114f);
                         CurrentPositionParameter += speed * MoveDirection;
                     }
-                    Projectile.Center = QueenBeeHandler.GetOwnedCombCellCenter(Master) + radius * Vector2.LerpMany(HexagonVerticesUnit, CurrentPositionParameter / 6f);
+                    Projectile.Center = QueenBeeHandler.GetOwnedCombCellCenter(Master) + new PolarVector2(radius, CurrentPositionParameter * TOMathUtils.PiOver3);
                     break;
             }
         }
         
         void Behavior_Dance()
         {
-            HasContactDamage = BehaviorType == Behavior.Dance;
+            HasContactDamage = BehaviorType == Behavior.BeeSwarm4;
 
             Projectile.Center = QueenBeeHandler.GetOwnedCombCellCenter(Master);
 
@@ -294,8 +283,8 @@ public sealed class CombCell : AnomalyModProjectile
                 Projectile.Kill();
 
             QueenBee masterBehavior = MasterBehavior;
-            int killThresholdTime = BehaviorType == Behavior.Dance2 ? (masterBehavior.AttackRandomVariation_Dance ? 90 : 45) : 60;
-            if ((masterBehavior.CurrentAttackPhase >= 3 && masterBehavior.Timer1 > killThresholdTime) || masterBehavior.CurrentBehavior != QueenBee.Behavior.Phase2_Dance)
+            int killThresholdTime = BehaviorType == Behavior.BeeSwarm4_Huge ? ((masterBehavior.AttackRandomVariation_BeeSwarmPhase2 ^ masterBehavior.Phase2_2) ? 90 : 45) : 60;
+            if ((masterBehavior.CurrentAttackPhase >= 3 && masterBehavior.Timer1 > killThresholdTime) || masterBehavior.CurrentBehavior != QueenBee.Behavior.Phase2_BeeSwarm4)
                 Projectile.Kill();
         }
 
@@ -373,8 +362,8 @@ public sealed class CombCell : AnomalyModProjectile
             Behavior.BeeSwarm2_Safe => 0.8f,
             Behavior.BeeSwarm3 => 0.7f,
             Behavior.BeeSwarm3_Move => 0.65f,
-            Behavior.Dance => 0.7f,
-            Behavior.Dance2 => 0.45f,
+            Behavior.BeeSwarm4 => 0.7f,
+            Behavior.BeeSwarm4_Huge => 0.45f,
             Behavior.PhaseChange => 0.7f,
 
             _ => 1f

@@ -1,5 +1,4 @@
 ﻿using Anomalies.DataStructures;
-using Anomalies.GameContents.Dusts;
 
 namespace Anomalies.Bosses.KingSlime;
 
@@ -118,7 +117,7 @@ public sealed class EmeraldJewel : JewelNPC
                         break;
                     }
 
-                    NPC.velocity *= 0.94f;
+                    NPC.velocity *= 0.9f;
                     NPC.rotation += (0.1f + Timer1 / 135f) * NPC.direction;
 
                     Vector2 dustVelocity = Main.rand.NextPolarVector2(10.5f, 14.5f);
@@ -156,7 +155,7 @@ public sealed class EmeraldJewel : JewelNPC
 
                     if (TOSharedData.NotClient && validSapphire)
                     {
-                        int type = Aroma ? ModContent.ProjectileType<RubyJewelProjectile>() : ModContent.ProjectileType<EmeraldJewelShadow>();
+                        int type = Aroma ? ModContent.ProjectileType<RubyBullet>() : ModContent.ProjectileType<EmeraldJewelShadow>();
                         Vector2 velocityUnit = NPC.GetVelocityTowards(NPC.PlayerTarget, 1f);
                         Vector2 offset = velocityUnit.RotatedBy(MathHelper.PiOver2);
                         int amount = Ultra ? 4 : 3;

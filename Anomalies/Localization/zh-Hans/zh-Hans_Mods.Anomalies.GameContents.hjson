@@ -28,7 +28,16 @@ Developer: {
 
 	TestItem: {
 		DisplayName: 测试物品
-		Tooltip: ""
+		Tooltip: 仅用于测试
+	}
+
+	EventideReunion: {
+		DisplayName: 落日遗逢
+		Tooltip:
+			'''
+			太阳燃尽万物，轮回编织因果；生命绽放新芽，死亡收割终局；神圣裁决罪孽，恒星坍缩成核
+			六相轮转，终焉日升
+			'''
 	}
 }
 
@@ -50,6 +59,8 @@ Contributor: {
 }
 
 DeveloperItemIdentifier: - 开发者物品 -
+DeveloperItemOwnerIdentifier: 开发者: {0}
 ContributorItemIdentifier: - 贡献者物品 -
+ContributorItemOwnerIdentifier: 贡献者: {0}
 LegendaryItemIdentifier: - 传奇物品 -
 ShiftExpandIdentifier: 按住Shift键以查看详细描述

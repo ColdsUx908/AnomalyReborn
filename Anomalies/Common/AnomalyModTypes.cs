@@ -63,7 +63,4 @@ public abstract class AnomalyModItem : TOModItem, IAnomalyModItem
     public AnomalyGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Item.Anomaly; }
 
     public virtual void ModifyHitNPC_DR(NPC target, Player player, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
-
-    public void AddDeveloperItemIdentifier(List<TooltipLine> tooltips, int index) => tooltips.Insert(index, new TooltipLine(Mod, "Tooltip_DeveloperItemIdentifier", Language.GetTextValue(AnomalySharedData.ModLocalizationPrefix + "GameContents.DeveloperItemIdentifier")) { OverrideColor = AnomalySharedData.UltraIdentifierColor });
-    public void AddContributorItemIdentifier(List<TooltipLine> tooltips, int index) => tooltips.Insert(index, new TooltipLine(Mod, "Tooltip_ContributorItemIdentifier", Language.GetTextValue(AnomalySharedData.ModLocalizationPrefix + "GameContents.ContributorItemIdentifier")) { OverrideColor = AnomalySharedData.AnomalyUltramundaneColor });
 }

@@ -90,11 +90,15 @@ public class HPThresholdIndicator
         if (CustomUpdateFunction?.Invoke(this, npc, bar) == false)
             return;
 
+        float value = GetValue(npc, bar);
+
+        if (value <= 0f)
+            return;
+
         Timer++;
-        if (npc.LifeRatio <= GetValue(npc, bar) || EaseOutTimer > 0)
+        if (npc.LifeRatio <= value || EaseOutTimer > 0)
             EaseOutTimer++;
 
-        float value = GetValue(npc, bar);
         float realLifeRatio = npc.LifeRatio;
         float particleIntensity = Utils.Remap(realLifeRatio - value, IsSubPhaseIndicator ? 0.04f : 0.05f, 0f, 0f, 1f); //接近或超过阈值时粒子效果更明显
 
@@ -122,7 +126,7 @@ public class HPThresholdIndicator
         if (CustomDrawFunction?.Invoke(this, npc, bar, spriteBatch, center) == false)
             return;
 
-        float opacity = Math.Clamp(bar.AnimationCompletionRatio * 3f, 0f, 1f) * Math.Clamp((60f - EaseOutTimer) / 60f, 0f, 1f);
+        float opacity = Math.Min(Math.Clamp(bar.AnimationCompletionRatio * 3f, 0f, 1f), Math.Clamp(Math.Min(Timer / 30F, (60f - EaseOutTimer) / 60F), 0f, 1f));
         float value = GetValue(npc, bar);
         if (value == 0f)
             return;

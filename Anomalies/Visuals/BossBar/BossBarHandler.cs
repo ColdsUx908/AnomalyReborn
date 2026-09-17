@@ -49,7 +49,7 @@ public class BossBarHandler : IContentLoader
     public static HashSet<int> Minibosses = [];
 
     /// <summary>
-    /// 当前活跃的 BetterBossHPUI 实例，以 NPC 的 Identifier 为键。
+    /// 当前活跃的 <see cref="BossHealthBar"/> 实例，以 NPC 的 Identifier 为键。
     /// </summary>
     public static readonly Dictionary<long, BossHealthBar> CurrentBars = [];
 
@@ -69,17 +69,17 @@ public class BossBarHandler : IContentLoader
             long npcIdentifier = npc.Identifier;
             if (CurrentBars.ContainsKey(npcIdentifier))
                 CurrentValidIdentifiers.Add(npcIdentifier);
-            else if (CurrentBars.Count < MaxBars && ((npc.IsBossEnemy && !ExclusionList.Contains(npc.type)) || Minibosses.Contains(npc.type) || npc.Anomaly.CanHaveBossHealthBar))
+            else if (CurrentBars.Count < MaxBars && npc.realLife < 0 && ((npc.IsBossEnemy && !ExclusionList.Contains(npc.type)) || Minibosses.Contains(npc.type) || npc.Anomaly.CanHaveBossHealthBar))
             {
                 CurrentBars.Add(npcIdentifier, new BossHealthBar(npc));
                 CurrentValidIdentifiers.Add(npcIdentifier);
             }
         }
 
-        foreach ((long identifier, BossHealthBar newBar) in CurrentBars)
+        foreach ((long identifier, BossHealthBar bar) in CurrentBars)
         {
-            newBar.Update(CurrentValidIdentifiers.Contains(identifier));
-            if (newBar.CloseAnimationTimer >= 120)
+            bar.Update(CurrentValidIdentifiers.Contains(identifier));
+            if (bar.CloseAnimationTimer >= 120)
                 CurrentBars.Remove(identifier);
         }
     }
@@ -97,21 +97,21 @@ public class BossBarHandler : IContentLoader
         if (isFancy)
             x -= 90;
 
-        int y = Main.screenHeight - 20;
+        int y = Main.screenHeight - 16;
 
         int activeCount = 0;
 
-        foreach (BossHealthBar newBar in
+        foreach (BossHealthBar bar in
             from pair in CurrentBars
-            let newBar = pair.Value
-            orderby newBar.Valid descending, pair.Key ascending
-            select newBar)
+            let bar = pair.Value
+            orderby bar.Valid descending, pair.Key ascending
+            select bar)
         {
-            y -= BossHealthBar.GetHeight(isFancy);
-            if (activeCount >= MaxActiveBars && newBar.Valid)
+            y -= bar.GetHeight(isFancy) + 4;
+            if (activeCount >= MaxActiveBars && bar.Valid)
                 continue;
-            newBar.Draw(spriteBatch, ref x, ref y, isFancy);
-            if (newBar.Valid)
+            bar.Draw(spriteBatch, ref x, ref y, isFancy);
+            if (bar.Valid)
                 activeCount++;
         }
     }

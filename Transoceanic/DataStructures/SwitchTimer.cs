@@ -13,12 +13,12 @@ public struct SwitchTimer : IEquatable<SwitchTimer>
     /// <summary>
     /// 最近一次“开启”事件的时间戳。
     /// </summary>
-    public int LastOnTime;
+    public long LastOnTime;
 
     /// <summary>
     /// 最近一次“关闭”事件的时间戳。
     /// </summary>
-    public int LastOffTime;
+    public long LastOffTime;
 
     /// <summary>
     /// 根据当前实际时间计算一个受边界限制的计时值。
@@ -38,7 +38,7 @@ public struct SwitchTimer : IEquatable<SwitchTimer>
     /// <remarks>
     /// 该方法不修改任何字段，仅根据当前时间与存储的时间戳计算差值并限幅。
     /// </remarks>
-    public readonly int GetValue(int actualTime, int max, bool equal = false) => Math.Clamp(
+    public readonly long GetValue(long actualTime, long max, bool equal = false) => Math.Clamp(
         LastOnTime > LastOffTime || (equal && LastOnTime == LastOffTime) ? actualTime - LastOnTime : max - actualTime + LastOffTime,
         0, max);
 

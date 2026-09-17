@@ -515,12 +515,6 @@ public sealed class PlayerBehaviorHandler : ModPlayer
 {
     public static readonly GeneralEntityBehaviorSet<Player, PlayerBehavior> BehaviorSet = new();
 
-    public override void SetStaticDefaults()
-    {
-        foreach (PlayerBehavior behavior in BehaviorSet.Enumerate())
-            behavior.SetStaticDefaults();
-    }
-
     public override void Initialize()
     {
         foreach (PlayerBehavior behavior in BehaviorSet.Enumerate(Player))
@@ -1421,12 +1415,6 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC
 
     public static readonly GlobalEntityBehaviorSet<NPC, GlobalNPCBehavior> BehaviorSet = new();
 
-    public override void SetStaticDefaults()
-    {
-        foreach (GlobalNPCBehavior behavior in BehaviorSet.Enumerate())
-            behavior.SetStaticDefaults();
-    }
-
     public override void SetDefaults(NPC npc)
     {
         foreach (GlobalNPCBehavior behavior in BehaviorSet.Enumerate())
@@ -2039,12 +2027,6 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile
 
     public static readonly GlobalEntityBehaviorSet<Projectile, GlobalProjectileBehavior> BehaviorSet = new();
 
-    public override void SetStaticDefaults()
-    {
-        foreach (GlobalProjectileBehavior behavior in BehaviorSet.Enumerate())
-            behavior.SetStaticDefaults();
-    }
-
     public override void SetDefaults(Projectile projectile)
     {
         foreach (GlobalProjectileBehavior behavior in BehaviorSet.Enumerate())
@@ -2351,12 +2333,6 @@ public sealed class GlobalItemBehaviorHandler : GlobalItem
     public override bool InstancePerEntity => true;
 
     public static readonly GlobalEntityBehaviorSet<Item, GlobalItemBehavior> BehaviorSet = new();
-
-    public override void SetStaticDefaults()
-    {
-        foreach (GlobalItemBehavior behavior in BehaviorSet.Enumerate())
-            behavior.SetStaticDefaults();
-    }
 
     public override void SetDefaults(Item item)
     {
@@ -3204,7 +3180,7 @@ public sealed class GlobalItemBehaviorHandler : GlobalItem
 
 public sealed class BehaviorLoader : IContentLoader
 {
-    private static IEnumerable<IEntityBehavior> _AllBehaviors;
+    internal static IEnumerable<IEntityBehavior> _AllBehaviors;
 
     void IContentLoader.PostSetupContent()
     {

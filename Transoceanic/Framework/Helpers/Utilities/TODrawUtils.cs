@@ -103,7 +103,50 @@ public static class TODrawUtils
     }
 
     /// <summary>
+    /// 绘制字符串的描边。
+    /// <br/>描边部分的位置计算使用 Lame 曲线函数（n = 3）。
+    /// </summary>
+    /// <param name="spriteBatch">用于绘制文字的 SpriteBatch。</param>
+    /// <param name="font">要使用的动态字体。</param>
+    /// <param name="text">要绘制的文本内容。</param>
+    /// <param name="baseDrawPosition">文字绘制基准位置（通常为左上角）。</param>
+    /// <param name="borderColor">文字描边颜色。</param>
+    /// <param name="way">描边采样方向数量，数值越大描边越平滑，默认为 8。</param>
+    /// <param name="borderWidth">描边宽度（像素）。若小于等于 0，则只绘制主体文字。</param>
+    /// <param name="scale">文字缩放比例。</param>
+    /// <param name="rotation">旋转角度（弧度）。</param>
+    public static void DrawBorderString(SpriteBatch spriteBatch, DynamicSpriteFont font, string text, Vector2 baseDrawPosition, Color borderColor, int way, float borderWidth, float scale, float rotation)
+    {
+        if (borderWidth <= 0f)
+            return;
+
+        float singleRadian = MathHelper.TwoPi / way;
+        for (int i = 0; i < way; i++)
+        {
+            float rotationOffset = singleRadian * i;
+            PolarVector2 offset = new(borderWidth * TOMathUtils.PolarEquation.LameCurve(rotationOffset, 3f), rotation + rotationOffset);
+            spriteBatch.DrawString(font, text, baseDrawPosition + offset, borderColor, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
+        }
+    }
+
+    /// <inheritdoc cref="DrawBorderString(SpriteBatch, DynamicSpriteFont, string, Vector2, Color, int, float, float, float)"/>
+    public static void DrawBorderString(SpriteBatch spriteBatch, DynamicSpriteFont font, string text, Vector2 baseDrawPosition, Color borderColor, int way, float borderWidth, Vector2 scale, float rotation)
+    {
+        if (borderWidth <= 0f)
+            return;
+
+        float singleRadian = MathHelper.TwoPi / way;
+        for (int i = 0; i < way; i++)
+        {
+            float rotationOffset = singleRadian * i;
+            PolarVector2 offset = new(borderWidth * TOMathUtils.PolarEquation.LameCurve(rotationOffset, 3f), rotation + rotationOffset);
+            spriteBatch.DrawString(font, text, baseDrawPosition + offset, borderColor, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
+        }
+    }
+
+    /// <summary>
     /// 绘制带有描边效果的字符串。
+    /// <br/>描边部分的位置计算使用 Lame 曲线函数（n = 3）。
     /// </summary>
     /// <param name="spriteBatch">用于绘制文字的 SpriteBatch。</param>
     /// <param name="font">要使用的动态字体。</param>
@@ -115,36 +158,18 @@ public static class TODrawUtils
     /// <param name="borderWidth">描边宽度（像素）。若小于等于 0，则只绘制主体文字。</param>
     /// <param name="scale">文字缩放比例。</param>
     /// <param name="rotation">旋转角度（弧度）。</param>
-    public static void DrawBorderString(SpriteBatch spriteBatch, DynamicSpriteFont font, string text, Vector2 baseDrawPosition, Color mainColor, Color borderColor, int way = 8, float borderWidth = 1f, float scale = 1f, float rotation = 0f)
+    public static void DrawStringWithBorder(SpriteBatch spriteBatch, DynamicSpriteFont font, string text, Vector2 baseDrawPosition, Color mainColor, Color borderColor, int way = 8, float borderWidth = 1f, float scale = 1f, float rotation = 0f)
     {
-        if (borderWidth > 0f)
-        {
-            float singleRadian = MathHelper.TwoPi / way;
-            for (int i = 0; i < way; i++)
-            {
-                float rotationOffset = singleRadian * i;
-                PolarVector2 offset = new(borderWidth * TOMathUtils.PolarEquation.LameCurve(rotationOffset, 3f), rotation + rotationOffset);
-                spriteBatch.DrawString(font, text, baseDrawPosition + offset, borderColor, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
-            }
-        }
+        DrawBorderString(spriteBatch, font, text, baseDrawPosition, borderColor, way, borderWidth, scale, rotation);
         spriteBatch.DrawString(font, text, baseDrawPosition, mainColor, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
     }
 
-    /// <summary>
-    /// 绘制带有描边效果的字符串（使用 StringBuilder 以提高性能）。
-    /// </summary>
-    /// <param name="spriteBatch">用于绘制文字的 SpriteBatch。</param>
-    /// <param name="font">要使用的动态字体。</param>
-    /// <param name="textBuilder">要绘制的文本内容构建器。</param>
-    /// <param name="baseDrawPosition">文字绘制基准位置（通常为左上角）。</param>
-    /// <param name="mainColor">文字主体颜色。</param>
-    /// <param name="borderColor">文字描边颜色。</param>
-    /// <param name="way">描边采样方向数量，数值越大描边越平滑，默认为 8。</param>
-    /// <param name="borderWidth">描边宽度（像素）。若小于等于 0，则只绘制主体文字。</param>
-    /// <param name="scale">文字缩放比例。</param>
-    /// <param name="rotation">旋转角度（弧度）。</param>
-    public static void DrawBorderString(SpriteBatch spriteBatch, DynamicSpriteFont font, StringBuilder textBuilder, Vector2 baseDrawPosition, Color mainColor, Color borderColor, int way = 8, float borderWidth = 1f, float scale = 1f, float rotation = 0f) =>
-        DrawBorderString(spriteBatch, font, textBuilder.ToString(), baseDrawPosition, mainColor, borderColor, way, borderWidth, scale, rotation);
+    /// <inheritdoc cref="DrawStringWithBorder(SpriteBatch, DynamicSpriteFont, string, Vector2, Color, Color, int, float, float, float)"/>
+    public static void DrawStringWithBorder(SpriteBatch spriteBatch, DynamicSpriteFont font, string text, Vector2 baseDrawPosition, Color mainColor, Color borderColor, int way, float borderWidth, Vector2 scale, float rotation = 0f)
+    {
+        DrawBorderString(spriteBatch, font, text, baseDrawPosition, borderColor, way, borderWidth, scale, rotation);
+        spriteBatch.DrawString(font, text, baseDrawPosition, mainColor, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
+    }
 
     /// <summary>
     /// 恢复 SpriteBatch 的默认绘制状态。

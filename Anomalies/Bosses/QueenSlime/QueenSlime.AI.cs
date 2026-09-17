@@ -1,5 +1,4 @@
 ﻿using Anomalies.Bosses.KingSlime;
-using Anomalies.GameContents.Dusts;
 
 namespace Anomalies.Bosses.QueenSlime;
 
@@ -182,7 +181,7 @@ public sealed partial class QueenSlime
                     NPC.NewNPCAction(NPC.GetBossSpawnSource(Target.whoAmI), NPC.Center, NPCID.KingSlime, action: n =>
                     {
                         n.Master = NPC;
-                        SoundEngine.PlaySound(SoundID.Roar, n.Center);
+                        SoundEngine.PlaySound(SoundID.ForceRoar, n.Center);
                         TOLocalizationUtils.ChatLocalizedText(this, "GFBSummon", Color.HotPink);
                     });
                 }

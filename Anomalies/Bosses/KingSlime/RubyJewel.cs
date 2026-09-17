@@ -134,7 +134,7 @@ public sealed class RubyJewel : JewelNPC
             int amount = HasEnteredPhase2 ? (Aroma ? 7 : buff && Ultra ? 3 : 1) : (Aroma ? 17 : buff ? (Ultra ? 5 : 3) : (Ultra ? 3 : 1));
             float singleRadian = MathHelper.ToRadians(HasEnteredPhase2 ? (Aroma ? 18f : 10f) : (Aroma ? 18f : 13.5f));
             float initialRotation = (Target.Center - NPC.Center).ToRotation();
-            Projectile.NewProjectilesArc<RubyJewelProjectile>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(Aroma ? 16f : 15f, initialRotation), RubyJewelProjectileDamage, 0f, Main.myPlayer, p =>
+            Projectile.NewProjectilesArc<RubyBullet>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(Aroma ? 16f : 15f, initialRotation), RubyJewelProjectileDamage, 0f, Main.myPlayer, p =>
             {
                 if (Aroma)
                 {
@@ -146,7 +146,7 @@ public sealed class RubyJewel : JewelNPC
 
             if (validSapphire)
             {
-                int type = Aroma ? ModContent.ProjectileType<EmeraldJewelShadow>() : ModContent.ProjectileType<RubyJewelProjectile>();
+                int type = Aroma ? ModContent.ProjectileType<EmeraldJewelShadow>() : ModContent.ProjectileType<RubyBullet>();
                 int amount1 = Aroma ? 9 : buff ? (Ultra ? 7 : 5) : (Ultra ? 5 : 3);
                 Projectile.NewProjectilesArc(amount1, MathHelper.TwoPi / amount1, SourceAI, NPC.Center, NPC.GetVelocityTowards(NPC.PlayerTarget, Aroma ? 13.5f : 18f), type, RubyJewelProjectileDamage, 0f, Main.myPlayer, BuffedRubyProjectileAction);
             }

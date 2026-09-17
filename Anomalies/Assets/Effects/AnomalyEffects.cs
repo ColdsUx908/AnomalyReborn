@@ -1,12 +1,11 @@
-﻿namespace Anomalies.Assets.Effects;
+﻿using Terraria.Graphics.Shaders;
 
-using Terraria.Graphics.Shaders;
-
+namespace Anomalies.Assets.Effects;
 public sealed class AnomalyEffects : IContentLoader
 {
     public sealed record MiscShaderContainer(Asset<Effect> Asset, MiscShaderData Data);
 
-    public static MiscShaderContainer LightingShader;
+    public static MiscShaderContainer SolidColorMask;
 
     public static class CustomBossBars
     {
@@ -18,30 +17,43 @@ public sealed class AnomalyEffects : IContentLoader
         public static MiscShaderContainer RainbowJewel;
     }
 
+    public static class CustomItemTooltips
+    {
+        public static MiscShaderContainer EventideReunion;
+    }
+
     #region 处理逻辑
     void IContentLoader.PostSetupContent()
     {
-        LightingShader = LoadAndRegisterMiscShader("", nameof(LightingShader));
+        if (!AnomalyClientConfig.Instance.EnableShaders) //配置选项关闭时着色器不会加载
+            return;
 
-        foreach (FieldInfo field in typeof(CustomBossBars).GetFields(TOReflectionUtils.StaticBindingFlags))
-            field.SetValue(null, LoadAndRegisterMiscShader(nameof(CustomBossBars), field.Name));
+        SolidColorMask = LoadAndRegisterMiscShader("", nameof(SolidColorMask));
+
+        HandleType(typeof(CustomBossBars));
+        HandleType(typeof(CustomItemTooltips));
+
+        void HandleType(Type type)
+        {
+            foreach (FieldInfo field in type.GetFields(TOReflectionUtils.StaticBindingFlags))
+                field.SetValue(null, LoadAndRegisterMiscShader(type.Name, field.Name));
+        }
     }
 
     void IContentLoader.OnModUnload()
     {
         ClearType(typeof(AnomalyEffects));
         ClearType(typeof(CustomBossBars));
+        ClearType(typeof(CustomItemTooltips));
     }
 
     private static MiscShaderContainer LoadAndRegisterMiscShader(string subDirectory, string registrationName, string passName = "Pass0")
     {
-        AssetRepository assets = AnomalyMain.Instance.Assets;
-
         string path = "Assets/Effects/";
         if (!string.IsNullOrEmpty(subDirectory))
             path += subDirectory + "/";
         path += registrationName;
-        Asset<Effect> shader = assets.Request<Effect>(path);
+        Asset<Effect> shader = AnomalyMain.Instance.Assets.Request<Effect>(path);
         MiscShaderData data = new(shader, passName);
         GameShaders.Misc[$"Anomalies:{registrationName}"] = data;
 

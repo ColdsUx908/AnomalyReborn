@@ -28,6 +28,11 @@ Developer: {
 
 	TestItem: {
 		DisplayName: Test Item
+		Tooltip: Only for testing purposes
+	}
+
+	EventideReunion: {
+		DisplayName: Eventide Reunion
 		Tooltip: ""
 	}
 }
@@ -50,6 +55,8 @@ Contributor: {
 }
 
 DeveloperItemIdentifier: - Developer Item -
+DeveloperItemOwnerIdentifier: Developer: {0}
 ContributorItemIdentifier: - Contributor Item -
+ContributorItemOwnerIdentifier: Contributor: {0}
 LegendaryItemIdentifier: - Legendary Item -
 ShiftExpandIdentifier: Hold Shift to see an expanded description

@@ -5,14 +5,22 @@ namespace Anomalies.Bosses.EaterofWorlds;
 
 public sealed class EaterofWorldsHandler
 {
+    public static IEaterofWorldsSegment TryGetSegment(NPC npc) => npc.type switch
+    {
+        NPCID.EaterofWorldsHead => EaterofWorldsHead.GetInstance(npc),
+        NPCID.EaterofWorldsBody => EaterofWorldsBody.GetInstance(npc),
+        NPCID.EaterofWorldsTail => EaterofWorldsTail.GetInstance(npc),
+        _ => null
+    };
+
     public static void DestroySegment(NPC npc)
     {
         npc.life = 0;
-        npc.HitEffect(0, 10.0);
+        npc.HitEffect(0, 9999, true);
         npc.checkDead();
     }
 
-    public sealed class DeathEventChange : AnomalyGlobalItemBehavior, IContentLoader
+    public sealed class DefaultsChange : AnomalyGlobalItemBehavior, IContentLoader
     {
         public override void ModifyItemLoot(Item item, ItemLoot itemLoot)
         {
@@ -29,6 +37,10 @@ public sealed class EaterofWorldsHandler
         {
             On_NPC.DropEoWLoot += On_NPC_DropEoWLoot;
             On_NPC.NewNPC += On_NPC_NewNPC;
+
+            NPCID.Sets.TrailingMode[NPCID.EaterofWorldsHead] = 1;
+            NPCID.Sets.TrailingMode[NPCID.EaterofWorldsBody] = 1;
+            NPCID.Sets.TrailingMode[NPCID.EaterofWorldsTail] = 1;
         }
 
         private static void On_NPC_DropEoWLoot(On_NPC.orig_DropEoWLoot orig, NPC self, bool fromCheckDead)
@@ -48,26 +60,22 @@ public sealed class EaterofWorldsHandler
         private int On_NPC_NewNPC(On_NPC.orig_NewNPC orig, IEntitySource source, int X, int Y, int Type, int Start, float ai0, float ai1, float ai2, float ai3, int Target)
         {
             //拦截FTW世界吞噬怪头部死亡时的吞噬者生成
-
-            return orig(source, X, Y, Type, Start, ai0, ai1, ai2, ai3, Target);
-
             //TODO: 在1.4.5tml中这段代码应该可以工作。现版本的生成源用的是NaturalSpawn，无法追踪
-            /*
+
             if (!AnomalySharedData.Anomaly || !Main.getGoodWorld)
                 return orig(source, X, Y, Type, Start, ai0, ai1, ai2, ai3, Target);
 
             if (source is not EntitySource_Parent parentSource
                 || parentSource.Entity is not NPC npc
                 || npc.type != NPCID.EaterofWorldsHead
-                || X != (int)npc.Center.X
-                || Y != (int)(npc.position.Y + npc.height)
+                || Math.Abs(X - (int)npc.Center.X) <= 5 //引入容差，防止因坐标偏差导致的误判
+                || Math.Abs(Y - (int)(npc.position.Y + npc.height)) <= 5
                 || Type != NPCID.BigEater)
             {
                 return orig(source, X, Y, Type, Start, ai0, ai1, ai2, ai3, Target);
             }
 
             return Main.maxNPCs;
-            */
         }
     }
 

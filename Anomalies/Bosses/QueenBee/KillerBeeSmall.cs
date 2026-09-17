@@ -7,7 +7,7 @@ public sealed class KillerBeeSmall : AnomalyModProjectile
      * Projectile.ai
      * [0] 安全蜂巢的索引（若为-1表示无安全蜂巢）
      * [1] 旋转的角速度（单位：弧度/帧）
-     * [2] 仅在Dance攻击使用。为1表示圆圈舞，2表示摆尾舞
+     * [2] 仅在Swarm4攻击使用。为1表示从内出发，2表示从外出发
      */
 
     public override string LocalizationCategory => "Bosses.QueenBee";
@@ -43,7 +43,7 @@ public sealed class KillerBeeSmall : AnomalyModProjectile
             Projectile.rotation += MathHelper.Pi;
 
         int index = (int)Projectile.ai[0];
-        if (Projectile.TryGetProjectileFromIndex(index, out Projectile safeCombCell) && safeCombCell.active && safeCombCell.ModProjectile is CombCell combCell)
+        if (Projectile.TryGetProjectileFromIndex(index, out Projectile specialCombCell) && specialCombCell.active && specialCombCell.ModProjectile is CombCell combCell)
         {
             if (combCell.BehaviorType == CombCell.Behavior.BeeSwarm2_Safe)
             {
@@ -51,35 +51,28 @@ public sealed class KillerBeeSmall : AnomalyModProjectile
                 hitBox.CircumRadius *= 1.1f;
                 if (hitBox.Collides(Projectile.Hitbox))
                     Projectile.Kill();
-                else if (safeCombCell.Timer2 > 10)
+                else if (specialCombCell.Timer2 > 10)
                 {
-                    Vector2 targetVelocity = safeCombCell.GetVelocityTowards(Projectile.Center, 15f);
+                    Vector2 targetVelocity = specialCombCell.GetVelocityTowards(Projectile.Center, 15f);
                     Projectile.velocity = Vector2.Lerp(Projectile.velocity, targetVelocity, 0.08f);
                 }
                 else if (Timer1 is >= 30 and <= 120)
                     Projectile.velocity.Rotation += Projectile.ai[1];
             }
-            else if (combCell.BehaviorType == CombCell.Behavior.Dance2)
+            else if (combCell.BehaviorType == CombCell.Behavior.BeeSwarm4_Huge)
             {
                 Hexagon hitBox = combCell.HitBox;
                 switch ((int)Projectile.ai[2])
                 {
                     case 1:
-                        if (!Projectile.honeyWet)
+                        if (!hitBox.Contains(Projectile.Hitbox))
                             Projectile.Kill();
-                        if (hitBox.Collides(Projectile.Hitbox))
-                            Projectile.Kill();
-                        return;
+                        break;
                     case 2:
-                        if (Projectile.honeyWet)
+                        if (hitBox.Contains(Projectile.Hitbox))
                             Projectile.Kill();
-                        hitBox.CircumRadius *= 0.9f;
-                        if (hitBox.Collides(Projectile.Hitbox))
-                            Projectile.Kill();
-                        return;
+                        break;
                 }
-
-                Projectile.velocity *= 1.05f;
             }
         }
 
@@ -89,9 +82,28 @@ public sealed class KillerBeeSmall : AnomalyModProjectile
     public override bool CanHitPlayer(Player target)
     {
         int index = (int)Projectile.ai[0];
-        if (Projectile.TryGetProjectileFromIndex(index, out Projectile safeCombCell) && safeCombCell.active && safeCombCell.ModProjectile is CombCell combCell && combCell.BehaviorType == CombCell.Behavior.BeeSwarm2_Safe && combCell.HitBox.Collides(Projectile.Hitbox))
-            return false;
-
+        {
+            if (Projectile.TryGetProjectileFromIndex(index, out Projectile specialCombCell)
+                && specialCombCell.active
+                && specialCombCell.ModProjectile is CombCell combCell
+                && combCell.BehaviorType == CombCell.Behavior.BeeSwarm2_Safe
+                && combCell.HitBox.Contains(target.Hitbox))
+                return false;
+        }
+        {
+            if (Projectile.TryGetProjectileFromIndex(index, out Projectile specialCombCell)
+                && specialCombCell.active
+                && specialCombCell.ModProjectile is CombCell combCell
+                && combCell.BehaviorType == CombCell.Behavior.BeeSwarm4_Huge)
+            {
+                return (int)Projectile.ai[2] switch
+                {
+                    1 => combCell.HitBox.Collides(target.Hitbox), //从内出发时，若目标位于巨型蜂巢外，返回false
+                    2 => !combCell.HitBox.Contains(target.Hitbox), //从外出发时，若目标位于巨型蜂巢内，返回false
+                    _ => true
+                };
+            }
+        }
         return true;
     }
 

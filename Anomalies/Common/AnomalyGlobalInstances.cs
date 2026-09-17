@@ -126,45 +126,6 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
         }
     }
 
-    public bool CanHaveBossHealthBar
-    {
-        get => InternalAnomalyAI32[0].bits[1];
-        set
-        {
-            if (InternalAnomalyAI32[0].bits[1] != value)
-            {
-                InternalAnomalyAI32[0].bits[1] = value;
-                InternalAIChanged32[0] = true;
-            }
-        }
-    }
-
-    public bool CurrentlyIncreasingDefenseOrDR
-    {
-        get => InternalAnomalyAI32[0].bits[2];
-        set
-        {
-            if (InternalAnomalyAI32[0].bits[2] != value)
-            {
-                InternalAnomalyAI32[0].bits[2] = value;
-                InternalAIChanged32[0] = true;
-            }
-        }
-    }
-
-    public bool CurrentlyEnraged
-    {
-        get => InternalAnomalyAI32[0].bits[3];
-        set
-        {
-            if (InternalAnomalyAI32[0].bits[3] != value)
-            {
-                InternalAnomalyAI32[0].bits[3] = value;
-                InternalAIChanged32[0] = true;
-            }
-        }
-    }
-
     public bool Debuff_DimensionalRend
     {
         get => InternalAnomalyAI32[1].bits[0];
@@ -220,6 +181,12 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
 
     public int AnomalyUltraAITimer;
     public int AnomalyUltraBarTimer;
+
+    public bool CanHaveBossHealthBar;
+    public bool CurrentlyIncreasingDefenseOrDR;
+    public bool CurrentlyEnraged;
+    public bool CurrentlyImmune;
+    public bool BossHealthBarIsSmall;
 
     public List<HPThresholdIndicator> HPThresholdIndicators = [];
 

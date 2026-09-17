@@ -34,9 +34,9 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
         PhaseChange_1To2,
 
-        Phase2_BeeSwarm3,
         Phase2_Stinger,
-        Phase2_Dance,
+        Phase2_BeeSwarm3,
+        Phase2_BeeSwarm4,
     }
 
     public const string AnomalyQueenBeePath = AnomalySharedData.ModPath + "Bosses/QueenBee/";
@@ -45,7 +45,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
     public const float EnrageDistance = 1250f;
 
     public const float Phase1_2LifeRatio_Anomaly = 0.5f;
-    public const float Phase1_2LifeRatio_Ultra = 0.55f;
+    public const float Phase1_2LifeRatio_Ultra = 0.65f;
     public const float Phase2LifeRatio_Anomaly = 0f;
     public const float Phase2LifeRatio_Ultra = 0.1f;
     public const float Phase2_2LifeRatio_Anomaly = 0f;
@@ -93,6 +93,9 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
     public bool Phase1_2 => CurrentPhase == Phase.Phase1_2;
     public bool Phase2 => CurrentPhase is Phase.Phase2 or Phase.Phase2_2;
     public bool Phase2_2 => CurrentPhase == Phase.Phase2_2;
+
+    public float LifeRatioForPhase2 => Math.Min(NPC.LifeRatio * 2f, 1f);
+    public float LostLifeRatioForPhase2 => 1f - LifeRatioForPhase2;
 
     public Behavior CurrentBehavior
     {
@@ -199,7 +202,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
         }
     }
 
-    public bool AttackRandomVariation_Dance
+    public bool LastPhase1BeeSwarmAttackIsType2
     {
         get => AnomalyNPC.AnomalyAI32[0].bits[6];
         set
@@ -207,6 +210,19 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
             if (AnomalyNPC.AnomalyAI32[0].bits[6] != value)
             {
                 AnomalyNPC.AnomalyAI32[0].bits[6] = value;
+                AnomalyNPC.AIChanged32[0] = true;
+            }
+        }
+    }
+
+    public bool AttackRandomVariation_BeeSwarmPhase2
+    {
+        get => AnomalyNPC.AnomalyAI32[0].bits[7];
+        set
+        {
+            if (AnomalyNPC.AnomalyAI32[0].bits[7] != value)
+            {
+                AnomalyNPC.AnomalyAI32[0].bits[7] = value;
                 AnomalyNPC.AIChanged32[0] = true;
             }
         }
@@ -225,7 +241,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
             }
         }
     }
-    public bool OwnCombCell => OwnedCombCell.active && OwnedCombCell.ModProjectile is CombCell combCell;
+    public bool OwnCombCell => OwnedCombCell.active && OwnedCombCell.ModProjectile is CombCell;
     public CombCell ModOwnedCombCell => OwnedCombCell.GetModProjectile<CombCell>();
 
     public Projectile SpecialCombCell
@@ -241,7 +257,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
             }
         }
     }
-    public bool HasSpecialCombCell => SpecialCombCell.active && SpecialCombCell.ModProjectile is CombCell combCell;
+    public bool HasSpecialCombCell => SpecialCombCell.active && SpecialCombCell.ModProjectile is CombCell;
 
     public int CurrentAttackCounter
     {
@@ -286,7 +302,8 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
      *       bits[3] AttackRandomVariation_Charge
      *       bits[4] AttackRandomVariation_Stinger
      *       bits[5] AttackRandomVariation_BeeSwarm
-     *       bits[6] AttackRandomVariation_Dance
+     *       bits[6] LastPhase1BeeSwarmAttackIsType2
+     *       bits[7] AttackRandomVariation_BeeSwarmPhase2
      *   [1].i OwnedCombCell
      *   [2].i SpecialCombCell
      *   [3].i CurrentAttackCounter
@@ -308,7 +325,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
     public override void SetDefaults()
     {
         AttackRandomVariation_BeeSwarm = Main.rand.NextBool();
-        AttackRandomVariation_Dance = Main.rand.NextBool();
+        AttackRandomVariation_BeeSwarmPhase2 = Main.rand.NextBool();
 
         AnomalyNPC.DynamicDRHandler = new TimedDDRHandler(
             new TimedDDRHandler.SingleDDRHandler(1f, Phase2LifeRatio, null, n => GetInstance(n).CurrentPhase >= Phase.PhaseChange_1To2, 60),
@@ -322,7 +339,9 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
     public override void SetDefaultsFinal()
     {
-        NPC.lifeMax = CalamityEnabled ? 7500 : 6000;
+        NPC.lifeMax = CalamityEnabled ? 9000 : 6000;
+        NPC.damage = 40;
+        BridgeUtils.ApplyCalamityHealthBoost(NPC);
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
@@ -387,7 +406,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
             .UseImage1(AnomalyTextures.Noise._Milky)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
             .SetCustomParameter("uScreenRatio", TODrawUtils.ScreenRatio)
-            .SetCustomParameter("uPosition", destinationRentangle.BottomLeft())
+            .SetCustomParameter("uPosition", destinationRentangle.TopLeft())
             .Apply();
     }
 }

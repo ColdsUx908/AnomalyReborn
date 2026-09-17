@@ -187,6 +187,22 @@ public sealed partial class DukeFishron
                         SelectNextBehavior();
                         break;
                 }
+
+                if (Phase3)
+                {
+                    if (Main.rand.NextBool(Ultra ? 15 : 20))
+                    {
+                        NPC.NewNPCAction(SourceAI, Target.Center + new Vector2(Main.rand.NextFloat(-2000f, 2000f), Main.rand.NextFloat(-1500f, -1000f)), NPCID.Sharkron2, action: n =>
+                        {
+                            n.ai[0] = 1f;
+                            n.TargetClosest(false);
+                            n.SetVelocityandRotation(new Vector2(Main.rand.NextFloat(-10f, 10f), Main.rand.NextFloat(8, 10f)));
+                            n.direction = (n.velocity.X > 0f).ToDirectionInt();
+                            n.spriteDirection = n.direction;
+                            n.timeLeft = 300;
+                        });
+                    };
+                }
             }
 
             void SelectNextBehavior()
@@ -312,7 +328,7 @@ public sealed partial class DukeFishron
                 switch (CurrentAttackPhase)
                 {
                     case 0:
-                        NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target.Center, GetChargeSpeed()));
+                        NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, GetChargeSpeed()));
                         CurrentAttackPhase = 1;
 
                         int playerFaceDirection = GetPlayerDirection();
@@ -430,7 +446,7 @@ public sealed partial class DukeFishron
                             SoundEngine.PlaySound(RoarSound, NPC.Center);
 
                             float bubbleSpinPhaseVelocity = Ultra ? 50f : 25f;
-                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target.Center, bubbleSpinPhaseVelocity));
+                            NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, bubbleSpinPhaseVelocity));
 
                             int phase2SpriteFaceDirection = GetPlayerDirection();
                             if (phase2SpriteFaceDirection != 0)

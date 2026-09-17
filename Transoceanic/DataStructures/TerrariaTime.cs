@@ -304,7 +304,7 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     /// </summary>
     /// <value>非负整数，表示从零时刻开始经过的刻数。</value>
     /// <exception cref="ArgumentOutOfRangeException">当设置的值小于 0 时抛出。</exception>
-    public int TotalTicks
+    public long TotalTicks
     {
         get;
         private set
@@ -320,7 +320,7 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     /// </summary>
     /// <value>非负整数分钟数。设置此属性将保留秒和刻的部分不变。</value>
     /// <exception cref="ArgumentOutOfRangeException">当设置的值小于 0 时抛出。</exception>
-    public int Minute
+    public long Minute
     {
         readonly get => TotalTicks / 3600;
         set
@@ -338,12 +338,12 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     /// <exception cref="ArgumentOutOfRangeException">当设置的值小于 0 或大于 59 时抛出。</exception>
     public int Second
     {
-        readonly get => TotalTicks / 60 % 60;
+        readonly get => (int)(TotalTicks / 60 % 60);
         set
         {
             if (value is < 0 or >= 60)
                 throw new ArgumentOutOfRangeException(nameof(value), TerrariaTimeHelper.SecondError);
-            TotalTicks = value * 60 + TotalTicks % 60;
+            TotalTicks = value * 60L + TotalTicks % 60;
         }
     }
 
@@ -354,7 +354,7 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     /// <exception cref="ArgumentOutOfRangeException">当设置的值小于 0 或大于 59 时抛出。</exception>
     public int Tick
     {
-        readonly get => TotalTicks % 60;
+        readonly get => (int)(TotalTicks % 60);
         set
         {
             if (value is < 0 or >= 60)
@@ -373,7 +373,23 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     /// </summary>
     /// <param name="totalTicks">总游戏刻数，必须为非负值。</param>
     /// <exception cref="ArgumentOutOfRangeException">当 <paramref name="totalTicks"/> 小于 0 时抛出。</exception>
-    public TerrariaTimer(int totalTicks) => TotalTicks = totalTicks;
+    public TerrariaTimer(long totalTicks) => TotalTicks = totalTicks;
+
+    /// <summary>
+    /// 使用 <see cref="TimeSpan"/> 初始化 <see cref="TerrariaTimer"/> 结构的新实例。
+    /// </summary>
+    /// <param name="timeSpan">要表示的时间间隔，必须为非负。</param>
+    /// <exception cref="ArgumentOutOfRangeException">当 <paramref name="timeSpan"/> 为负值或转换后的刻数超出范围时抛出。</exception>
+    public TerrariaTimer(TimeSpan timeSpan)
+    {
+        if (timeSpan < TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(timeSpan), TerrariaTimeHelper.TotalTicksError);
+        // 1 秒 = 60 刻，向下取整到最接近的完整刻数
+        double total = timeSpan.TotalSeconds * 60.0;
+        if (total > long.MaxValue)
+            throw new ArgumentOutOfRangeException(nameof(timeSpan), TerrariaTimeHelper.TotalTicksError);
+        TotalTicks = (long)Math.Floor(total);
+    }
 
     /// <summary>
     /// 使用分钟、秒和游戏刻初始化 <see cref="TerrariaTimer"/> 结构的新实例。
@@ -386,7 +402,7 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     /// 或 <paramref name="second"/> 不在 0 到 59 之间，
     /// 或 <paramref name="tick"/> 不在 0 到 59 之间时抛出。
     /// </exception>
-    public TerrariaTimer(int minute = 0, int second = 0, int tick = 0)
+    public TerrariaTimer(long minute = 0, int second = 0, int tick = 0)
     {
         Minute = minute;
         Second = second;
@@ -463,7 +479,7 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     /// <param name="minutes">解构后的分钟部分。</param>
     /// <param name="seconds">解构后的秒钟部分。</param>
     /// <param name="ticks">解构后的刻部分。</param>
-    public readonly void Deconstruct(out int totalTicks, out int minutes, out int seconds, out int ticks)
+    public readonly void Deconstruct(out long totalTicks, out long minutes, out int seconds, out int ticks)
     {
         totalTicks = TotalTicks;
         minutes = Minute;
@@ -507,7 +523,7 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     /// <param name="left">要比较的计时器实例。</param>
     /// <param name="right">要比较的整数值。</param>
     /// <returns>如果计时器的 <see cref="TotalTicks"/> 等于 <paramref name="right"/>，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
-    public static bool operator ==(TerrariaTimer left, int right) => left.TotalTicks == right;
+    public static bool operator ==(TerrariaTimer left, long right) => left.TotalTicks == right;
 
     /// <summary>
     /// 确定 <see cref="TerrariaTimer"/> 实例的总刻数是否与指定整数不相等。
@@ -515,7 +531,7 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     /// <param name="left">要比较的计时器实例。</param>
     /// <param name="right">要比较的整数值。</param>
     /// <returns>如果计时器的 <see cref="TotalTicks"/> 不等于 <paramref name="right"/>，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
-    public static bool operator !=(TerrariaTimer left, int right) => !(left == right);
+    public static bool operator !=(TerrariaTimer left, long right) => !(left == right);
 
     /// <summary>
     /// 返回此实例的哈希代码。
@@ -553,22 +569,22 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     /// <summary>
     /// 确定 <see cref="TerrariaTimer"/> 的总刻数是否大于指定整数。
     /// </summary>
-    public static bool operator >(TerrariaTimer left, int right) => left.TotalTicks > right;
+    public static bool operator >(TerrariaTimer left, long right) => left.TotalTicks > right;
 
     /// <summary>
     /// 确定 <see cref="TerrariaTimer"/> 的总刻数是否小于指定整数。
     /// </summary>
-    public static bool operator <(TerrariaTimer left, int right) => left.TotalTicks < right;
+    public static bool operator <(TerrariaTimer left, long right) => left.TotalTicks < right;
 
     /// <summary>
     /// 确定 <see cref="TerrariaTimer"/> 的总刻数是否大于或等于指定整数。
     /// </summary>
-    public static bool operator >=(TerrariaTimer left, int right) => left.TotalTicks >= right;
+    public static bool operator >=(TerrariaTimer left, long right) => left.TotalTicks >= right;
 
     /// <summary>
     /// 确定 <see cref="TerrariaTimer"/> 的总刻数是否小于或等于指定整数。
     /// </summary>
-    public static bool operator <=(TerrariaTimer left, int right) => left.TotalTicks <= right;
+    public static bool operator <=(TerrariaTimer left, long right) => left.TotalTicks <= right;
 
     /// <summary>
     /// 将 <see cref="TerrariaTimer"/> 实例的总刻数递增 1。
@@ -620,7 +636,7 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     /// 将整数隐式转换为具有相应总刻数的 <see cref="TerrariaTimer"/>。
     /// </summary>
     /// <param name="totalTicks">总刻数。</param>
-    public static implicit operator TerrariaTimer(int totalTicks) => new(totalTicks);
+    public static implicit operator TerrariaTimer(long totalTicks) => new(totalTicks);
 
     /// <summary>
     /// 将分钟和秒的元组隐式转换为 <see cref="TerrariaTimer"/>。
@@ -635,17 +651,24 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     public static implicit operator TerrariaTimer((int minutes, int seconds, int ticks) time) => new(time.minutes, time.seconds, time.ticks);
 
     /// <summary>
-    /// 返回表示当前对象的字符串，格式为 "MM:SS:TT"。
+    /// 返回表示当前对象的字符串，格式为 "(H:)MM:SS:TT"。
     /// </summary>
     /// <returns>零填充的分钟:秒:刻字符串。</returns>
-    public override readonly string ToString() => $"{Minute}:{Second:D2}:{Tick:D2}";
+    public override readonly string ToString() => ToString(true, true);
 
     /// <summary>
-    /// 返回表示当前对象的字符串，格式为 "MM:SS" 或 "MM:SS:TT"，取决于 <paramref name="includeTicks"/> 的值。
+    /// 返回表示当前对象的字符串，格式为 "(H:)MM:SS" 或 "(H:)MM:SS:TT"，取决于 <paramref name="includeTicks"/> 的值。
     /// </summary>
+    /// <param name="includeHoursIfPossible">一个布尔值，指示是否在可能的情况下包含小时数。</param>
     /// <param name="includeTicks">一个布尔值，指示是否包含刻数。</param>
     /// <returns>格式化的字符串。</returns>
-    public readonly string ToString(bool includeTicks) => includeTicks ? ToString() : $"{Minute}:{Second:D2}";
+    public readonly string ToString(bool includeHoursIfPossible, bool includeTicks) => (includeHoursIfPossible, includeTicks) switch
+    {
+        (true, true) => Minute >= 60 ? $"{Minute / 60}:{Minute % 60:D2}:{Second:D2}:{Tick:D2}" : $"{Minute}:{Second:D2}:{Tick:D2}",
+        (true, false) => Minute >= 60 ? $"{Minute / 60}:{Minute % 60:D2}:{Second:D2}" : $"{Minute}:{Second:D2}",
+        (false, true) => $"{Minute}:{Second:D2}:{Tick:D2}",
+        (false, false) => $"{Minute}:{Second:D2}",
+    };
 }
 
 /// <summary>
@@ -679,9 +702,10 @@ public static class TerrariaTimeHelper
     public const string TickError = "Tick must be between 0 and 59.";
 
     /// <summary>
-    /// 总游戏刻数为负数的错误消息。
+    /// 总游戏刻数超出范围的错误消息。
+    /// <br/>在总游戏刻为负数或大于 <see langword="long"/> 类型的最大值时使用。
     /// </summary>
-    public const string TotalTicksError = "Total ticks must be non-negative.";
+    public const string TotalTicksError = "Total ticks must be non-negative and less than long.MaxValue.";
 
     /// <summary>
     /// <see cref="TerrariaTime"/> 字符串格式错误的提示。

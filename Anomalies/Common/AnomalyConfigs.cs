@@ -45,6 +45,7 @@ public sealed class AnomalyClientConfig : ModConfig
     /// 是否启用 Anomalies 的着色器。
     /// </summary>
     [DefaultValue(true)]
+    [ReloadRequired]
     public bool EnableShaders;
 
     [Header("BaseBoosts")]

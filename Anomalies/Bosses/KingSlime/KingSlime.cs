@@ -431,7 +431,8 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public override void SetDefaultsFinal()
     {
-        NPC.lifeMax = CalamityEnabled ? 5400 : 4200;
+        NPC.lifeMax = CalamityEnabled ? 5400 : 3600;
+        BridgeUtils.ApplyCalamityHealthBoost(NPC);
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
@@ -496,7 +497,7 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
         AnomalyEffects.CustomBossBars.KingSlime.Data
             .UseImage1(AnomalyTextures.Noise._Turbulence)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
-            .SetCustomParameter("uPosition", destinationRentangle.BottomLeft())
+            .SetCustomParameter("uPosition", destinationRentangle.TopLeft())
             .Apply();
     }
 }

@@ -113,6 +113,18 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
     public static DynamicSpriteFont ItemStackFont => FontAssets.ItemStack?.Value;
 
     /// <summary>
+    /// 血条锁动画帧数。
+    /// <br/>此数值不包含空帧。因此，调用 <see cref="Utils.Frame(Texture2D, int, int, int, int, int, int)"/> 方法时请使用 <c>LockAnimationFrameCount + 1</c> 作为总帧数参数。
+    /// </summary>
+    public const int LockAnimationFrameCount = 14;
+
+    /// <summary>
+    /// 血条锁动画速度，单位为帧。
+    /// <br/>该值表示血条动画推进一帧所需的游戏帧数，值越小动画越快。
+    /// </summary>
+    public const int LockAnimationSpeed = 2;
+
+    /// <summary>
     /// 本地化前缀，用于在多语言环境下正确加载血条相关文本。
     /// </summary>
     public string LocalizationPrefix => AnomalySharedData.ModLocalizationPrefix + "Visuals.BossHealthBar";
@@ -133,7 +145,7 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
     public int CloseAnimationTimer;
 
     /// <summary>
-    /// 激怒状态过渡计时器，用于平滑颜色变化。
+    /// 激怒状态过渡计时器。
     /// </summary>
     public int EnrageTimer;
 
@@ -141,6 +153,11 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
     /// 防御/伤害减免提升状态过渡计时器。
     /// </summary>
     public int IncreasingDefenseOrDRTimer;
+
+    /// <summary>
+    /// 无敌（或几乎无敌）状态过渡计时器。
+    /// </summary>
+    public int ImmunityTimer;
 
     /// <summary>
     /// 连击伤害显示倒计时，控制白色残影条的持续时长。
@@ -193,6 +210,11 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
     public int NPCType => NPC.type;
 
     /// <summary>
+    /// 指示此血条是否使用小尺寸布局（封装 AnomalyNPC.BossHealthBarIsSmall）。
+    /// </summary>
+    public bool IsSmall => AnomalyNPC.BossHealthBarIsSmall;
+
+    /// <summary>
     /// 记录的初始最大生命值，用于计算生命比例，避免因最大生命值动态变化导致血条比例跳动。
     /// </summary>
     public long InitialMaxLife;
@@ -237,10 +259,22 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
     public bool NPCIsIncreasingDefenseOrDR => Valid && NPC.active && (AnomalyNPC.CurrentlyIncreasingDefenseOrDR || (HasOneToMany && CustomOneToMany.Values.Any(n => n.Anomaly.CurrentlyIncreasingDefenseOrDR)));
 
     /// <summary>
+    /// 当前 Boss（或附属 NPC）是否处于无敌（或几乎无敌）状态。
+    /// </summary>
+    public bool NPCIsImmune
+    {
+        get
+        {
+            return Valid && NPC.active && (CheckImmune(NPC) || (HasOneToMany && CustomOneToMany.Values.Any(CheckImmune)));
+            static bool CheckImmune(NPC npc) => npc.Anomaly.CurrentlyImmune || npc.dontTakeDamage || npc.immortal;
+        }
+    }
+
+    /// <summary>
     /// 获取血条区域的高度（像素），用于布局排列。
     /// </summary>
     /// <param name="isFancy">是否为华丽样式。</param>
-    public static int GetHeight(bool isFancy) => isFancy ? 120 : 85;
+    public int GetHeight(bool isFancy) => isFancy ? (IsSmall ? 76 : 100) : 84;
 
     /// <summary>
     /// 开启/关闭动画的完成比例，用于控制主血条透明度。
@@ -302,6 +336,8 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
 
                 EnrageTimer = Math.Clamp(EnrageTimer + (NPCIsEnraged ? 1 : -4), 0, 120);
                 IncreasingDefenseOrDRTimer = Math.Clamp(IncreasingDefenseOrDRTimer + (NPCIsIncreasingDefenseOrDR ? 1 : -4), 0, 120);
+                ImmunityTimer = Math.Clamp(ImmunityTimer + (NPCIsImmune ? 1 : -1), 0, LockAnimationFrameCount * LockAnimationSpeed);
+
                 CloseAnimationTimer = Math.Clamp(CloseAnimationTimer - 2, 0, 120);
             }
             else
@@ -310,6 +346,7 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
 
                 EnrageTimer = Math.Clamp(EnrageTimer - 4, 0, 120);
                 IncreasingDefenseOrDRTimer = Math.Clamp(EnrageTimer - 4, 0, 120);
+                ImmunityTimer = Math.Clamp(ImmunityTimer - LockAnimationSpeed, 0, LockAnimationFrameCount * LockAnimationSpeed);
                 CloseAnimationTimer++;
             }
 
@@ -437,8 +474,10 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
     {
         if (PreDraw(spriteBatch, ref x, ref y))
         {
+            int fancyOffsetY = IsSmall ? 26 : 20;
+
             if (isFancy)
-                DrawFancyBar(spriteBatch, x, y + 25, NPC);
+                DrawFancyBar(spriteBatch, x, y + fancyOffsetY, NPC);
             else
                 DrawRetroBar(spriteBatch, x, y);
 
@@ -492,9 +531,12 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
 
             if (isFancy)
             {
-                DrawNPCName(spriteBatch, x + 430, y + 37, null, mainColor, borderColor, borderWidth);
-                DrawBigLifeText(spriteBatch, x + 36, y + 38);
-                DrawExtraSmallText(spriteBatch, x + 38, y + 63, true);
+                bool small = IsSmall;
+                int x2 = small ? x + 100 : x;
+                int y2 = small ? y + fancyOffsetY - 6 : y + fancyOffsetY;
+                DrawNPCName(spriteBatch, x + 430, y2 + 12, null, mainColor, borderColor, borderWidth);
+                DrawBigLifeText(spriteBatch, x2 + 36, y2 + 13);
+                DrawExtraSmallText(spriteBatch, x2 + 38, y2 + 38, true);
             }
             else
             {
@@ -560,27 +602,31 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
     /// <param name="newColor">可覆盖的颜色值。</param>
     public void DrawFancyBar(SpriteBatch spriteBatch, int adjustedX, int adjustedY, NPC npc)
     {
+        bool small = IsSmall;
+        if (small)
+            adjustedX += 100;
+
         //背景板
 
         Vector2 position = new(adjustedX, adjustedY);
 
-        const int BarOffsetX = 34;
-        const int BarOffsetY = 18;
-        Vector2 barBasePosition = position + new Vector2(BarOffsetX, BarOffsetY);
+        int fillerOffsetX = 34;
+        int fillerOffsetY = small ? 16 : 18;
+        Vector2 barBasePosition = position + new Vector2(fillerOffsetX, fillerOffsetY);
 
         float baseBarOpacity = Math.Clamp(AnimationCompletionRatio * 3f, 0f, 1f);
-        spriteBatch.Draw(BossBarTextures.Fancy.BaseBarFiller, barBasePosition, Color.White * baseBarOpacity);
+        spriteBatch.Draw(small ? BossBarTextures.Fancy.BaseBarFillerSmall : BossBarTextures.Fancy.BaseBarFiller, barBasePosition, Color.White * baseBarOpacity);
 
         //主血条和连击残影条
 
-        const float TotalWidth = 404f;
-        float mainBarWidth = TotalWidth * Math.Min(AnimationCompletionRatio2, NPCLifeRatio);
-        float comboBarWidth = Math.Max(TotalWidth * HealthAtStartOfCombo / InitialMaxLife * (AnimationCompletionRatio - 0.5f) * 2f - mainBarWidth, 0);
+        float totalWidth = small ? 304f : 404f;
+        float mainBarWidth = totalWidth * Math.Min(AnimationCompletionRatio2, NPCLifeRatio);
+        float comboBarWidth = Math.Max(totalWidth * HealthAtStartOfCombo / InitialMaxLife * (AnimationCompletionRatio - 0.5f) * 2f - mainBarWidth, 0);
         if (ComboDamageCountdown < 6)
             comboBarWidth = comboBarWidth * ComboDamageCountdown / 6;
 
-        Rectangle mainBarDestinationRectangle = new(adjustedX + BarOffsetX, adjustedY + BarOffsetY, (int)mainBarWidth, 10);
-        Rectangle comboBarDestinationRectangle = new(adjustedX + BarOffsetX + (int)mainBarWidth, adjustedY + BarOffsetY, (int)comboBarWidth, 10);
+        Rectangle mainBarDestinationRectangle = new(adjustedX + fillerOffsetX, adjustedY + fillerOffsetY, (int)mainBarWidth, 10);
+        Rectangle comboBarDestinationRectangle = new(adjustedX + fillerOffsetX + (int)mainBarWidth, adjustedY + fillerOffsetY, (int)comboBarWidth, 10);
 
         if (AnomalySharedData.ShouldUseShaders)
         {
@@ -608,13 +654,19 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
 
         spriteBatch.Draw(TOTextures.FillerTexture, comboBarDestinationRectangle, Color.Red);
 
-        //血条外框
+        //血条外框及血条锁
 
-        spriteBatch.Draw(BossBarTextures.Fancy.BaseBar, position, Color.White * baseBarOpacity);
+        spriteBatch.Draw(small ? BossBarTextures.Fancy.BaseBarSmall : BossBarTextures.Fancy.BaseBar, position, null, Color.White * baseBarOpacity, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+        if (!small && ImmunityTimer > 0)
+        {
+            Texture2D lockTexture = BossBarTextures.Fancy.BarLock;
+            Rectangle frame = Utils.Frame(lockTexture, 1, LockAnimationFrameCount + 1, 0, ImmunityTimer / LockAnimationSpeed);
+            spriteBatch.Draw(lockTexture, position, frame, Color.White * baseBarOpacity, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+        }
 
         //Boss图标
 
-        if (TextureAssets.NpcHeadBoss.TryGetValue(npc.GetBossHeadTextureIndex(), out Asset<Texture2D> headAsset) && headAsset?.Value is not null)
+        if (!small && TextureAssets.NpcHeadBoss.TryGetValue(TONPCUtils.GetBossHeadTextureIndexBetter(npc), out Asset<Texture2D> headAsset) && headAsset?.Value is not null)
         {
             Vector2 bossHeadOffset = new(461f, 23f);
             spriteBatch.DrawFromCenter(headAsset.Value, position + bossHeadOffset, null, Color.White * AnimationCompletionRatio2);
@@ -628,7 +680,7 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
         if (AnomalyNPC.IsRunningAnomalyAI)
         {
             Vector2 indicatorBasePosition = barBasePosition + new Vector2(2f, 5f);
-            const float TotalWidth2 = 400f;
+            float TotalWidth2 = small ? 300f : 400f;
 
             foreach (HPThresholdIndicator indicator in AnomalyNPC.HPThresholdIndicators)
             {
@@ -771,7 +823,7 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
     {
         string bigLifeText = overrideText ?? (NPCLifeRatio == 0f ? "0%" : (NPCLifeRatio * 100f).ToString("N1") + "%");
         Vector2 bigLifeTextSize = BossBarTextures.BigLifeFont.MeasureString(bigLifeText);
-        TODrawUtils.DrawBorderString(spriteBatch, BossBarTextures.BigLifeFont, bigLifeText, new Vector2(adjustedX, adjustedY - bigLifeTextSize.Y), MainColor * AnimationCompletionRatio2, MainBorderColor * 0.25f * AnimationCompletionRatio2);
+        TODrawUtils.DrawStringWithBorder(spriteBatch, BossBarTextures.BigLifeFont, bigLifeText, new Vector2(adjustedX, adjustedY - bigLifeTextSize.Y), MainColor * AnimationCompletionRatio2, MainBorderColor * 0.25f * AnimationCompletionRatio2);
     }
 
     /// <summary>
@@ -811,7 +863,7 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
     Orig:
         smallText = $"{CombinedNPCLife} / {InitialMaxLife}" + smallText;
     Draw:
-        TODrawUtils.DrawBorderString(spriteBatch, ItemStackFont, smallText, new Vector2(adjustedX, adjustedY), Color.White * (float)AnimationCompletionRatio2, Color.Black * (float)AnimationCompletionRatio2 * 0.24f, scale: 0.8f);
+        TODrawUtils.DrawStringWithBorder(spriteBatch, ItemStackFont, smallText, new Vector2(adjustedX, adjustedY), Color.White * (float)AnimationCompletionRatio2, Color.Black * (float)AnimationCompletionRatio2 * 0.24f, scale: 0.8f);
     }
 
     /// <summary>
@@ -835,9 +887,9 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
         if (mainColor is not null && borderColor is not null && borderWidth > 0f)
         {
             for (int i = 0; i < round; i++)
-                TODrawUtils.DrawBorderString(spriteBatch, font, text, baseDrawPosition + new PolarVector2(borderWidth, MathHelper.TwoPi / round * i), mainColor.Value, borderColor.Value, scale: scale);
+                TODrawUtils.DrawStringWithBorder(spriteBatch, font, text, baseDrawPosition + new PolarVector2(borderWidth, MathHelper.TwoPi / round * i), mainColor.Value, borderColor.Value, scale: scale);
         }
-        TODrawUtils.DrawBorderString(spriteBatch, font, text, baseDrawPosition, mainColor2, borderColor2, scale: scale);
+        TODrawUtils.DrawStringWithBorder(spriteBatch, font, text, baseDrawPosition, mainColor2, borderColor2, scale: scale);
     }
     #endregion
 

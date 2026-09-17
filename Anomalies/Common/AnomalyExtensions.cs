@@ -25,7 +25,7 @@ public static class AnomalyExtensions
         public void ApplyIfUsingShader(DrawData? drawData = null)
         {
             if (AnomalySharedData.ShouldUseShaders)
-                data.Apply();
+                data.Apply(drawData);
         }
     }
 

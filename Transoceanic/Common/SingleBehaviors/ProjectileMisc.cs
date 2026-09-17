@@ -19,7 +19,7 @@ public sealed class ProjectileMisc : TOGlobalProjectileBehavior
         TOGlobalProjectile ocean = projectile.Ocean;
         foreach (AfterimageParticle afterimage in ocean.Afterimages)
             ParticleHandler.UpdateParticle(afterimage);
-        ocean.Afterimages.RemoveAll(a => a.Timer >= a.Lifetime);
+        ocean.Afterimages.RemoveAll(a => a.Timer > a.Lifetime);
     }
 
     public override bool PreDraw(Projectile projectile, ref Color lightColor)
