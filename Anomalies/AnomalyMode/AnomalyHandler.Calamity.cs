@@ -163,7 +163,7 @@ public sealed class AnomalyHandler_Calamity : IContentLoader
                     Texture2D outlineTexture = mode.OutlineTexture.Value;
                     Color chatTextColor = mode.ChatTextColor;
                     if (mode is AnomalyDifficulty && !Main.zenithWorld) //修改点：针对异象模式调整为渐变色
-                        chatTextColor = Ultra ? AnomalySharedData.UltraIdentifierColor : AnomalySharedData.IdentifierColor;
+                        chatTextColor = Ultra ? AnomalySharedData.AnomalyUltramundaneTitleColor : AnomalySharedData.AnomalyTitleColor;
                     spriteBatch.Draw(outlineTexture, iconPosition, null, chatTextColor * progressMult, 0f, outlineTexture.Size() * 0.5f, 1f, SpriteEffects.None, 0f);
                 }
 

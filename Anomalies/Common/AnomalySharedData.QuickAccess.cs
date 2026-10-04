@@ -22,5 +22,8 @@ public sealed partial class AnomalySharedData : ModSystem
 
         /// <inheritdoc cref="StoryMode"/>
         public static bool Story => StoryMode;
+
+        /// <inheritdoc cref="EXMode"/>
+        public static bool EX => EXMode;
     }
 }

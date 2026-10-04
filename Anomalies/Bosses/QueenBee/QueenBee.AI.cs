@@ -32,7 +32,7 @@ public sealed partial class QueenBee
         AnomalyNPC.CurrentlyImmune = InvalidPhase1;
         AnomalyNPC.DR = Ultra
             && CurrentBehavior is Behavior.Phase1_BeeSwarm or Behavior.Phase1_BeeSwarm2 or Behavior.Phase2_BeeSwarm3 or Behavior.Phase2_BeeSwarm4
-            && CurrentAttackPhase >= 1
+            && CurrentLocalPhase >= 1
             ? 0.3f : 0f;
 
         switch (CurrentPhase)
@@ -90,7 +90,7 @@ public sealed partial class QueenBee
             if (Vector2.Distance(stingerSpawnLocation, hoverDestination) > 40f || !canHitTarget)
                 NPC.SimpleFlyMovement(idealVelocity, moveAcceleration);
 
-            NPC.FaceTarget(Target);
+            NPC.Face(Target);
             NPC.spriteDirection = NPC.direction;
         }
 
@@ -191,7 +191,7 @@ public sealed partial class QueenBee
             {
                 Timer1 = 0;
                 Timer2 = 0;
-                CurrentAttackPhase = 0;
+                CurrentLocalPhase = 0;
                 ShouldDecelerate = false;
                 HasBeenEnraged = false;
 
@@ -255,7 +255,7 @@ public sealed partial class QueenBee
                 {
                     CurrentPhase = Phase.PhaseChange_1To2;
                     CurrentBehavior = Behavior.PhaseChange_1To2;
-                    CurrentAttackPhase = 0;
+                    CurrentLocalPhase = 0;
                     Timer1 = 0;
                     Timer2 = 0;
                     return true;
@@ -271,7 +271,7 @@ public sealed partial class QueenBee
 
             void NormalCharge()
             {
-                switch (CurrentAttackPhase)
+                switch (CurrentLocalPhase)
                 {
                     case 0:
                         NPC.damage = 0;
@@ -282,11 +282,11 @@ public sealed partial class QueenBee
                         {
                             NPC.damage = NPC.defDamage;
                             IsCharging = true;
-                            CurrentAttackPhase = 1;
+                            CurrentLocalPhase = 1;
 
                             NPC.velocity = NPC.GetVelocityTowards(Target, ChargeSpeed);
 
-                            NPC.FaceTarget(Target);
+                            NPC.Face(Target);
                             NPC.spriteDirection = NPC.direction;
                             SoundEngine.PlaySound(ChargeSound, NPC.Center);
                         }
@@ -328,7 +328,7 @@ public sealed partial class QueenBee
                             if (NPC.velocity.X > approachVelocityX)
                                 NPC.velocity.X = approachVelocityX;
 
-                            NPC.FaceTarget(Target);
+                            NPC.Face(Target);
                             NPC.spriteDirection = NPC.direction;
                         }
                         break;
@@ -385,7 +385,7 @@ public sealed partial class QueenBee
 
             void DirectCharge()
             {
-                switch (CurrentAttackPhase)
+                switch (CurrentLocalPhase)
                 {
                     case 0:
                         ChargeStartDistance = NPC.Center - Target.Center;
@@ -393,12 +393,12 @@ public sealed partial class QueenBee
                         float speed = ChargeSpeed * Utils.Remap(Vector2.Distance(NPC.Center, Target.Center), ChargeDistanceX, ChargeDistanceX * 2f, 1f, 1.3f);
                         NPC.damage = NPC.defDamage;
                         IsCharging = true;
-                        CurrentAttackPhase = 1;
+                        CurrentLocalPhase = 1;
 
                         Vector2 velocity = NPC.GetVelocityTowards(Target, speed);
                         NPC.velocity = velocity;
 
-                        NPC.FaceTarget(Target);
+                        NPC.Face(Target);
                         NPC.spriteDirection = NPC.direction;
                         SoundEngine.PlaySound(ChargeSound, NPC.Center);
 
@@ -502,10 +502,10 @@ public sealed partial class QueenBee
 
                 Timer1++;
 
-                NPC.FaceTarget(Target);
+                NPC.Face(Target);
                 NPC.spriteDirection = NPC.direction;
 
-                switch (CurrentAttackPhase)
+                switch (CurrentLocalPhase)
                 {
                     case 0:
                         TryMoveAboveTarget();
@@ -513,14 +513,14 @@ public sealed partial class QueenBee
                         if (Timer1 >= 40 && NPC.Bottom.Y < Target.Top.Y && Math.Abs(NPC.Center.X - Target.Center.X) <= 300f)
                         {
                             Timer1 = 0;
-                            CurrentAttackPhase = 1;
+                            CurrentLocalPhase = 1;
                         }
 
                         CheckPhaseChange();
                         break;
                     case 1:
                         StopMovement(0.85f);
-                        NPC.FaceTarget(Target);
+                        NPC.Face(Target);
                         NPC.spriteDirection = NPC.direction;
 
                         switch (Timer1)
@@ -533,7 +533,7 @@ public sealed partial class QueenBee
                                 break;
                             case 50:
                                 Timer1 = 0;
-                                CurrentAttackPhase = 2;
+                                CurrentLocalPhase = 2;
                                 break;
                         }
                         break;
@@ -620,7 +620,7 @@ public sealed partial class QueenBee
                             if (num >= 120)
                             {
                                 Timer1 = 0;
-                                CurrentAttackPhase = 3;
+                                CurrentLocalPhase = 3;
                             }
                         }
                         break;
@@ -643,10 +643,10 @@ public sealed partial class QueenBee
 
                 Timer1++;
 
-                NPC.FaceTarget(Target);
+                NPC.Face(Target);
                 NPC.spriteDirection = NPC.direction;
 
-                switch (CurrentAttackPhase)
+                switch (CurrentLocalPhase)
                 {
                     case 0:
                         TryMoveAboveTarget();
@@ -654,7 +654,7 @@ public sealed partial class QueenBee
                         if (Timer1 >= 40 && NPC.Bottom.Y < Target.Top.Y && Math.Abs(NPC.Center.X - Target.Center.X) <= 300f)
                         {
                             Timer1 = 0;
-                            CurrentAttackPhase = 1;
+                            CurrentLocalPhase = 1;
                         }
 
                         CheckPhaseChange();
@@ -662,7 +662,7 @@ public sealed partial class QueenBee
                     case 1:
                         StopMovement(0.85f);
 
-                        NPC.FaceTarget(Target);
+                        NPC.Face(Target);
                         NPC.spriteDirection = NPC.direction;
 
                         switch (Timer1)
@@ -754,14 +754,14 @@ public sealed partial class QueenBee
 
                             case 345:
                                 Timer1 = 0;
-                                CurrentAttackPhase = 2;
+                                CurrentLocalPhase = 2;
                                 break;
                         }
                         break;
                     case 2:
                         if (!HasSpecialCombCell)
                         {
-                            CurrentAttackPhase = 3;
+                            CurrentLocalPhase = 3;
                             break;
                         }
 
@@ -790,7 +790,7 @@ public sealed partial class QueenBee
                             if (num >= 120)
                             {
                                 Timer1 = 0;
-                                CurrentAttackPhase = 3;
+                                CurrentLocalPhase = 3;
                             }
                         }
                         break;
@@ -810,10 +810,10 @@ public sealed partial class QueenBee
         {
             Timer1++;
 
-            NPC.FaceTarget(Target);
+            NPC.Face(Target);
             NPC.spriteDirection = NPC.direction;
 
-            switch (CurrentAttackPhase)
+            switch (CurrentLocalPhase)
             {
                 case 0:
                     TryMoveAboveTarget(420f);
@@ -821,12 +821,12 @@ public sealed partial class QueenBee
                     if (Timer1 >= 40 && NPC.Bottom.Y < Target.Top.Y)
                     {
                         Timer1 = 0;
-                        CurrentAttackPhase = 1;
+                        CurrentLocalPhase = 1;
                     }
                     break;
                 case 1:
                     StopMovement(0.85f);
-                    NPC.FaceTarget(Target);
+                    NPC.Face(Target);
                     NPC.spriteDirection = NPC.direction;
 
                     switch (Timer1)
@@ -838,20 +838,12 @@ public sealed partial class QueenBee
                         case 90:
                             SoundEngine.PlaySound(SoundID.ForceRoar, NPC.Center);
                             if (TOSharedData.NotClient)
-                            {
-                                Projectile.NewProjectileAction<BeeShockwave>(SourceAI, NPC.Center, Vector2.Zero, 100, 0f, action: p =>
-                                {
-                                    p.scale = 0f;
-                                    BeeShockwave modP = p.GetModProjectile<BeeShockwave>();
-                                    modP.Master = NPC;
-                                });
-                            }
-                            ;
+                                Projectile.NewProjectileAction<BeeShockwave>(SourceAI, NPC.Center, Vector2.Zero, 100, 0f, action: p => p.scale = 0f);
                             break;
                         case 161:
                             CurrentPhase = Phase.Phase2;
                             CurrentBehavior = Behavior.Phase2_BeeSwarm3;
-                            CurrentAttackPhase = 0;
+                            CurrentLocalPhase = 0;
                             Timer1 = 0;
                             Timer2 = 0;
                             FinishedBehaviorCounter = 0;
@@ -864,7 +856,7 @@ public sealed partial class QueenBee
                             {
                                 CombCell modCombCell = ModOwnedCombCell;
                                 modCombCell.BehaviorType = CombCell.Behavior.BeeSwarm3;
-                                CurrentAttackPhase = 1;
+                                CurrentLocalPhase = 1;
                                 Timer1 = 1; //跳过生成蜂巢的阶段
                             }
                             break;
@@ -912,7 +904,7 @@ public sealed partial class QueenBee
             {
                 Timer1 = 0;
                 Timer2 = 0;
-                CurrentAttackPhase = 0;
+                CurrentLocalPhase = 0;
                 ShouldDecelerate = false;
                 HasBeenEnraged = false;
 
@@ -946,7 +938,7 @@ public sealed partial class QueenBee
                 NPC.damage = 0;
 
                 Timer1++;
-                switch (CurrentAttackPhase)
+                switch (CurrentLocalPhase)
                 {
                     case 0:
                         TryMoveAboveTarget();
@@ -975,7 +967,7 @@ public sealed partial class QueenBee
 
                                 if (Phase2_2)
                                 {
-                                    CurrentAttackPhase = 1;
+                                    CurrentLocalPhase = 1;
                                     Timer1 = 0;
                                 }
                                 else
@@ -1034,10 +1026,10 @@ public sealed partial class QueenBee
 
                 Timer1++;
 
-                NPC.FaceTarget(Target);
+                NPC.Face(Target);
                 NPC.spriteDirection = NPC.direction;
 
-                switch (CurrentAttackPhase)
+                switch (CurrentLocalPhase)
                 {
                     case 0:
                         TryMoveAboveTarget(420f);
@@ -1045,7 +1037,7 @@ public sealed partial class QueenBee
                         if (Timer1 >= 40 && NPC.Bottom.Y < Target.Top.Y && Math.Abs(NPC.Center.X - Target.Center.X) <= 300f)
                         {
                             Timer1 = 0;
-                            CurrentAttackPhase = 1;
+                            CurrentLocalPhase = 1;
                         }
 
                         CheckPhaseChange();
@@ -1053,7 +1045,7 @@ public sealed partial class QueenBee
                     case 1:
                         StopMovement(0.85f);
 
-                        NPC.FaceTarget(Target);
+                        NPC.Face(Target);
                         NPC.spriteDirection = NPC.direction;
 
                         switch (Timer1)
@@ -1078,7 +1070,7 @@ public sealed partial class QueenBee
 
                             case 120:
                                 Timer1 = 0;
-                                CurrentAttackPhase = 2;
+                                CurrentLocalPhase = 2;
                                 break;
                         }
 
@@ -1097,7 +1089,7 @@ public sealed partial class QueenBee
                             if (num >= attackAmount)
                             {
                                 Timer1 = 0;
-                                CurrentAttackPhase = 3;
+                                CurrentLocalPhase = 3;
                             }
                             else if (TOSharedData.NotClient)
                             {
@@ -1130,10 +1122,10 @@ public sealed partial class QueenBee
 
                 Timer1++;
 
-                NPC.FaceTarget(Target);
+                NPC.Face(Target);
                 NPC.spriteDirection = NPC.direction;
 
-                switch (CurrentAttackPhase)
+                switch (CurrentLocalPhase)
                 {
                     case 0:
                         TryMoveAboveTarget(450f);
@@ -1141,7 +1133,7 @@ public sealed partial class QueenBee
                         if (Timer1 >= 40 && NPC.Bottom.Y < Target.Top.Y && Math.Abs(NPC.Center.X - Target.Center.X) <= 300f)
                         {
                             Timer1 = 0;
-                            CurrentAttackPhase = 1;
+                            CurrentLocalPhase = 1;
                         }
 
                         CheckPhaseChange();
@@ -1149,7 +1141,7 @@ public sealed partial class QueenBee
                     case 1:
                         StopMovement(0.85f);
 
-                        NPC.FaceTarget(Target);
+                        NPC.Face(Target);
                         NPC.spriteDirection = NPC.direction;
 
                         switch (Timer1)
@@ -1162,7 +1154,7 @@ public sealed partial class QueenBee
                                 break;
                             case 150:
                                 Timer1 = 0;
-                                CurrentAttackPhase = 2;
+                                CurrentLocalPhase = 2;
                                 break;
                         }
 
@@ -1177,7 +1169,7 @@ public sealed partial class QueenBee
                         if (Timer1 >= attackAmount)
                         {
                             Timer1 = 0;
-                            CurrentAttackPhase = 3;
+                            CurrentLocalPhase = 3;
                         }
                         else if (TOSharedData.NotClient)
                         {

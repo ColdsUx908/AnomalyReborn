@@ -28,7 +28,7 @@ public sealed partial class EaterofWorldsHead
             EaterofWorldsHead headBehavior = HeadBehavior;
             CurrentPhase = headBehavior.CurrentPhase;
             CurrentBehavior = headBehavior.CurrentBehavior;
-            CurrentAttackPhase = headBehavior.CurrentAttackPhase;
+            CurrentLocalPhase = headBehavior.CurrentLocalPhase;
         }
 
         HandleDiggingEffect();
@@ -338,7 +338,7 @@ public sealed partial class EaterofWorldsHead
             if (!IsFirstSegment)
                 CoilingCenter = HeadBehavior.CoilingCenter;
 
-            switch (CurrentAttackPhase)
+            switch (CurrentLocalPhase)
             {
                 case 0: //选定盘绕地点
                     Timer1++;
@@ -358,7 +358,7 @@ public sealed partial class EaterofWorldsHead
                     else if (Timer1 == 60)
                     {
                         Timer1 = 0;
-                        CurrentAttackPhase = 1;
+                        CurrentLocalPhase = 1;
                     }
                     break;
 
@@ -378,7 +378,7 @@ public sealed partial class EaterofWorldsHead
                             direction.Modulus = radius;
                         NPC.Center = CoilingCenter + direction;
 
-                        CurrentAttackPhase = 2;
+                        CurrentLocalPhase = 2;
 
                         goto case 2;
                     }
@@ -394,7 +394,7 @@ public sealed partial class EaterofWorldsHead
 
                     if (Timer1 >= 300)
                     {
-                        CurrentAttackPhase = 0;
+                        CurrentLocalPhase = 0;
                         Timer1 = 0;
                         CurrentBehavior = Behavior.Phase1_Normal;
 

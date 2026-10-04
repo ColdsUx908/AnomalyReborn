@@ -1,0 +1,66 @@
+Developer: {
+	AscendantWings: {
+		DisplayName: 上界之翼
+		Tooltip:
+			'''
+			飞翔于天空的传奇之翼
+			雷鸣暴雪之夜，以雷击金雕之羽而成
+			抟扶摇，上九霄，弹指可至任意弦
+			'''
+	}
+
+	ColdheartIcicle: {
+		DisplayName: 寒心冰柱
+		Tooltip: ""
+	}
+
+	ColdheartIcicleDream.DisplayName: 寒心幻梦
+	ColdheartIcicleIceRain.DisplayName: 寒心冰雨
+	ColdheartIcicleProj.DisplayName: 寒心冰柱
+	ColdheartIcicleSnowflake.DisplayName: 寒心雪降
+
+	Permafrost: {
+		Spawn: 至尊大法师，永冻已苏醒！
+		Welcome1: 感谢游玩Calamity Anomalies！
+		Welcome2: 现在你要面对的是，真正的最终挑战。
+		Beginning: 将你的真正实力展示在我面前！
+	}
+
+	TestItem: {
+		DisplayName: 测试物品
+		Tooltip: 仅用于测试
+	}
+
+	EventideReunion: {
+		DisplayName: 落日遗逢
+		Tooltip:
+			'''
+			太阳燃尽万物，轮回编织因果；生命绽放新芽，死亡收割终局；神圣裁决罪孽，恒星坍缩成核
+			六相轮转，终焉日升
+			'''
+	}
+}
+
+Contributor: {
+	ImmaculateWhite: {
+		DisplayName: 纯白
+		Tooltip: 发射纯白之光，高速追踪敌人
+		Tooltip1: 纯白之光会分裂为更多的纯白之光
+		Tooltip2: 右键点击发射可穿透的纯白之光
+	}
+
+	VacuousBlack: {
+		DisplayName: 纯黑
+		Tooltip: 召唤纯黑之暗，吞噬一切
+	}
+
+	VacuousBlackBuff.Description: 它渴望吞噬一切，甚至连你也不例外。
+	ImmaculateBolt.DisplayName: 纯白之光
+}
+
+DeveloperItemIdentifier: - 开发者物品 -
+DeveloperItemOwnerIdentifier: 开发者: {0}
+ContributorItemIdentifier: - 贡献者物品 -
+ContributorItemOwnerIdentifier: 贡献者: {0}
+DonorItemIdentifier: - 捐赠者物品 -
+DonorItemOwnerIdentifier: 捐赠者: {0}

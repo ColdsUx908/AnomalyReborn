@@ -19,7 +19,7 @@ public sealed partial class AnomalySharedData : ModSystem
     public static readonly List<Color> ColorList = [MainColor, SecondaryColor, MainColor];
     public static readonly List<Color> ColorList2 = [MainColor, TOSharedData.CelestialColor, MainColor];
 
-    public static readonly Color AnomalyUltramundaneColor = new(0xE8, 0x97, 0xFF);
+    public static readonly Color AnomalyUltramundaneColor = new(232, 151, 255);
 
     public static readonly List<Color> ColorList3 = [MainColor, AnomalyUltramundaneColor, MainColor];
 
@@ -27,8 +27,8 @@ public sealed partial class AnomalySharedData : ModSystem
 
     public static readonly Color RebornColor = new(0xff, 0xa5, 0x00);
 
-    public static Color UltraIdentifierColor => Color.LerpMany(ColorList3, TOMathUtils.Interpolation.QuadraticEaseIn(TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 3f, unsigned: true)) / 1.5f);
-    public static Color IdentifierColor => Color.LerpMany(ColorList2, TOMathUtils.Interpolation.QuadraticEaseIn(TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 2.5f, unsigned: true)) / 2f);
+    public static Color AnomalyTitleColor => Color.LerpMany(ColorList2, TOMathUtils.Interpolation.QuadraticEaseIn(TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 2.5f, unsigned: true)) / 2f);
+    public static Color AnomalyUltramundaneTitleColor => Color.LerpMany(ColorList3, TOMathUtils.Interpolation.QuadraticEaseIn(TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 3f, unsigned: true)) / 1.5f);
 
     public static Assembly Assembly => field ??= AnomalyMain.Instance.Code;
 
@@ -124,6 +124,11 @@ public sealed partial class AnomalySharedData : ModSystem
     /// 故事模式。
     /// </summary>
     public static bool StoryMode { get; internal set; }
+
+    /// <summary>
+    /// 极限模式。
+    /// </summary>
+    public static bool EXMode { get; internal set; }
 
     public override void OnWorldLoad()
     {

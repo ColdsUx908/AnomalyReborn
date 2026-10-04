@@ -129,7 +129,7 @@ public sealed class AmethystJewel : JewelNPC
 
     public static bool CheckMasterJump(QueenSlime behavior) =>
         behavior.CurrentBehavior is QueenSlime.Behavior.Phase1_FirstJump or QueenSlime.Behavior.Phase1_HighJump
-        && behavior.CurrentAttackPhase == 0;
+        && behavior.CurrentLocalPhase == 0;
 
     public static bool CheckShoot(QueenSlime behavior) => CheckMasterJump(behavior) && behavior.Timer1 == QueenSlime.JumpDelay;
 

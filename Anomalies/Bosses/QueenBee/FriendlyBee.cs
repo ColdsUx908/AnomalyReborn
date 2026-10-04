@@ -18,8 +18,7 @@ public sealed class FriendlyBee : AnomalyModProjectile
     */
 
     public const byte Behavior_SwarmReminder = 1;
-    public const byte Behavior_RoundDanceReminder = 2;
-    public const byte Behavior_WaggleDanceReminder = 3;
+    public const byte Behavior_Pet = byte.MaxValue;
 
     /* 数组使用约定
      * 
@@ -31,7 +30,7 @@ public sealed class FriendlyBee : AnomalyModProjectile
 
     public override string LocalizationCategory => "Bosses.QueenBee";
 
-    public override void SetStaticDefaults() => Main.projFrames[Projectile.type] = 2;
+    public override void SetStaticDefaults() => Main.projFrames[Type] = 2;
 
     public override void SetDefaults()
     {
@@ -41,20 +40,19 @@ public sealed class FriendlyBee : AnomalyModProjectile
         Projectile.hostile = false;
         Projectile.tileCollide = false;
         Projectile.timeLeft = 1200;
+        Projectile.netImportant = true;
     }
 
     public override void AI()
     {
         Timer1++;
 
-        if (++Projectile.frameCounter >= 3)
+        if (++Projectile.frameCounter >= 5)
         {
             Projectile.frameCounter = 0;
             if (++Projectile.frame >= 2)
                 Projectile.frame = 0;
         }
-
-        Projectile.spriteDirection = (Projectile.velocity.X >= 0f).ToDirectionInt();
 
         switch ((byte)Projectile.ai[0])
         {
@@ -69,10 +67,26 @@ public sealed class FriendlyBee : AnomalyModProjectile
                     Projectile.Kill();
                 break;
 
+            case Behavior_Pet:
+                Projectile.damage = 0;
+
+                Player player = Owner;
+                if (!Owner.Alive)
+                {
+                    Projectile.timeLeft = 2;
+                    break;
+                }
+
+                Projectile.FloatingPetAI(false, 0.03f);
+                Projectile.timeLeft = 300;
+                break;
+
             default:
                 Projectile.Kill();
                 break;
         }
+
+        Projectile.spriteDirection = (Projectile.velocity.X >= 0f).ToDirectionInt();
     }
 
     public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI) => behindNPCs.Add(index);

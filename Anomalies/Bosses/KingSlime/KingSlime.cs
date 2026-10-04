@@ -97,7 +97,7 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
         }
     }
 
-    public int CurrentAttackPhase
+    public int CurrentLocalPhase
     {
         get => (int)NPC.ai[1];
         set => NPC.ai[1] = value;
@@ -367,7 +367,7 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
      *   [0]. (Union)
      *       byte0 CurrentPhase
      *       byte1 CurrentBehavior
-     *   [1] CurrentAttackPhase
+     *   [1] CurrentLocalPhase
      *   [1] LastSpawnSlimeLife
      * 
      * AnomalyAI32
@@ -494,7 +494,7 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public override void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle)
     {
-        AnomalyEffects.CustomBossBars.KingSlime.Data
+        AnomalyEffects.BossBars.KingSlime.Data
             .UseImage1(AnomalyTextures.Noise._Turbulence)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
             .SetCustomParameter("uPosition", destinationRentangle.TopLeft())

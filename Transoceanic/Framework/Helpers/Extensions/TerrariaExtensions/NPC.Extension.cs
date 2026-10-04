@@ -144,7 +144,7 @@ public static partial class TOExtensions
         /// 使 NPC 面向指定实体。
         /// </summary>
         /// <param name="target">要面向的目标实体。</param>
-        public void FaceTarget(Entity target)
+        public void Face(Entity target)
         {
             npc.direction = Math.Sign(target.Center.X - npc.Center.X) switch
             {
@@ -213,7 +213,7 @@ public static partial class TOExtensions
                 {
                     npc.target = player.whoAmI;
                     if (faceTarget)
-                        npc.FaceTarget(player);
+                        npc.Face(player);
                     return true;
                 }
             }

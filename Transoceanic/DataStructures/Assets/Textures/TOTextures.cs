@@ -33,5 +33,9 @@ public static class TOTextures
         [LoadTexture(Path + "BasicCircle")]
         internal static Asset<Texture2D> _BasicCircle;
         public static Texture2D BasicCircle => _BasicCircle?.Value;
+
+        [LoadTexture(Path + "BloomLineThick")]
+        internal static Asset<Texture2D> _BloomLineThick;
+        public static Texture2D BloomLineThick => _BloomLineThick?.Value;
     }
 }

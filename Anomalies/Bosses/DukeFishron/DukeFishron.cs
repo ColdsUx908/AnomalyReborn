@@ -94,7 +94,7 @@ public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
         }
     }
 
-    public int CurrentAttackPhase
+    public int CurrentLocalPhase
     {
         get
         {

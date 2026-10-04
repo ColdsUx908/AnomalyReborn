@@ -137,7 +137,7 @@ public sealed class AnomalyHandler : ModSystem, IContentLoader
         //世界难度显示（渐变色）
         On_AWorldListItem.GetDifficulty += On_AWorldListItem_GetDifficulty;
 
-        void On_AWorldListItem_GetDifficulty(On_AWorldListItem.orig_GetDifficulty orig, AWorldListItem self, out string expertText, out Color gameModeColor)
+        static void On_AWorldListItem_GetDifficulty(On_AWorldListItem.orig_GetDifficulty orig, AWorldListItem self, out string expertText, out Color gameModeColor)
         {
             orig(self, out expertText, out gameModeColor);
 
@@ -147,7 +147,7 @@ public sealed class AnomalyHandler : ModSystem, IContentLoader
             if (self.Data.TryGetHeaderData<AnomalySharedData>(out TagCompound tag) && tag.GetBool("Anomaly"))
             {
                 expertText = Language.GetTextValue(LocalizationPrefix + "Name");
-                gameModeColor = AnomalySharedData.IdentifierColor;
+                gameModeColor = AnomalySharedData.AnomalyTitleColor;
             }
         }
     }

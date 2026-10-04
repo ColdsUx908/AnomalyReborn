@@ -146,7 +146,7 @@ public sealed partial class DukeFishron
                 CurrentBehavior = Behavior.Charge;
                 Timer1 = 0;
                 Timer5 = 0;
-                CurrentAttackPhase = 0;
+                CurrentLocalPhase = 0;
                 CurrentAttackPhaseForIdle = 0;
                 CurrentPhase = Phase.Phase1;
             }
@@ -209,7 +209,7 @@ public sealed partial class DukeFishron
             {
                 Timer1 = 0;
                 Timer5 = 0;
-                CurrentAttackPhase = 0;
+                CurrentLocalPhase = 0;
                 CurrentAttackPhaseForIdle = 0;
 
                 if (InvalidPhase1)
@@ -325,11 +325,11 @@ public sealed partial class DukeFishron
             {
                 NPC.damage = NPC.defDamage;
 
-                switch (CurrentAttackPhase)
+                switch (CurrentLocalPhase)
                 {
                     case 0:
                         NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, GetChargeSpeed()));
-                        CurrentAttackPhase = 1;
+                        CurrentLocalPhase = 1;
 
                         int playerFaceDirection = GetPlayerDirection();
                         if (playerFaceDirection != 0)
@@ -395,12 +395,12 @@ public sealed partial class DukeFishron
             {
                 if (Phase1)
                 {
-                    switch (CurrentAttackPhase)
+                    switch (CurrentLocalPhase)
                     {
                         case 0:
                             OffsetX = 300 * Math.Sign((NPC.Center - Target.Center).X);
                             SoundEngine.PlaySound(RoarSound, NPC.Center);
-                            CurrentAttackPhase = 1;
+                            CurrentLocalPhase = 1;
                             break;
                         case 1:
                             float bubbleBelchPhaseVelocity = 10f;
@@ -440,7 +440,7 @@ public sealed partial class DukeFishron
                 }
                 else //二阶段
                 {
-                    switch (CurrentAttackPhase)
+                    switch (CurrentLocalPhase)
                     {
                         case 0:
                             SoundEngine.PlaySound(RoarSound, NPC.Center);
@@ -459,7 +459,7 @@ public sealed partial class DukeFishron
                                 NPC.spriteDirection = -NPC.direction;
                             }
 
-                            CurrentAttackPhase = 1;
+                            CurrentLocalPhase = 1;
                             break;
                         case 1:
                             int bubbleSpinPhaseTimer = Ultra ? 60 : 80;
@@ -611,7 +611,7 @@ public sealed partial class DukeFishron
                 CurrentBehavior = Behavior.Charge;
                 Timer1 = 0;
                 Timer5 = 0;
-                CurrentAttackPhase = 0;
+                CurrentLocalPhase = 0;
                 CurrentAttackPhaseForIdle = 0;
 
                 CurrentPhase = CurrentPhase switch

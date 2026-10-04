@@ -4,7 +4,6 @@ namespace Anomalies.Bosses.EyeofCthulhu;
 
 public sealed class BloodShockwave : BaseShockwaveProjectile, IContentLoader
 {
-    public override bool Hostile => false;
     public override List<int> NPCTypesToHit => _NpcTypesToHit;
     public override int LifeTime => 150;
     public override float FinalScale => 2.5f;

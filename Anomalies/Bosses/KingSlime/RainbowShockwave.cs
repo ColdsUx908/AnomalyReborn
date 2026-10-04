@@ -4,7 +4,6 @@ namespace Anomalies.Bosses.KingSlime;
 
 public sealed class RainbowShockwave : BaseShockwaveProjectile, IContentLoader
 {
-    public override bool Hostile => false;
     public override List<int> NPCTypesToHit => _NpcTypesToHit;
     public override int LifeTime => 150;
     public override float FinalScale => 3.5f;

@@ -355,7 +355,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
 
     public void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle)
     {
-        AnomalyEffects.CustomBossBars.RainbowJewel.Data
+        AnomalyEffects.BossBars.RainbowJewel.Data
             .UseImage1(AnomalyTextures.Noise._Turbulence)
             .UseImage2(AnomalyTextures.Noise._Perlin)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)

@@ -7,7 +7,7 @@ public sealed class AnomalyEffects : IContentLoader
 
     public static MiscShaderContainer SolidColorMask;
 
-    public static class CustomBossBars
+    public static class BossBars
     {
         public static MiscShaderContainer EaterofWorlds;
         public static MiscShaderContainer EyeofCthulhu;
@@ -15,10 +15,13 @@ public sealed class AnomalyEffects : IContentLoader
         public static MiscShaderContainer QueenBee;
         public static MiscShaderContainer QueenSlime;
         public static MiscShaderContainer RainbowJewel;
+        public static MiscShaderContainer Skeletron;
     }
 
-    public static class CustomItemTooltips
+    public static class Texts
     {
+        public static MiscShaderContainer AnomalyTitle;
+        public static MiscShaderContainer AnomalyUltramundaneTitle;
         public static MiscShaderContainer EventideReunion;
     }
 
@@ -30,8 +33,8 @@ public sealed class AnomalyEffects : IContentLoader
 
         SolidColorMask = LoadAndRegisterMiscShader("", nameof(SolidColorMask));
 
-        HandleType(typeof(CustomBossBars));
-        HandleType(typeof(CustomItemTooltips));
+        HandleType(typeof(BossBars));
+        HandleType(typeof(Texts));
 
         void HandleType(Type type)
         {
@@ -43,8 +46,8 @@ public sealed class AnomalyEffects : IContentLoader
     void IContentLoader.OnModUnload()
     {
         ClearType(typeof(AnomalyEffects));
-        ClearType(typeof(CustomBossBars));
-        ClearType(typeof(CustomItemTooltips));
+        ClearType(typeof(BossBars));
+        ClearType(typeof(Texts));
     }
 
     private static MiscShaderContainer LoadAndRegisterMiscShader(string subDirectory, string registrationName, string passName = "Pass0")

@@ -14,5 +14,5 @@ public interface ILegendaryItem
     /// <param name="player"></param>
     public abstract void LegendaryUpdate(Player player);
 
-    public static void AddLegendaryItemIdentifier(Mod mod, List<TooltipLine> tooltips, int index) => tooltips.Insert(index, new TooltipLine(mod, "Tooltip_CALegendaryItemIdentifier", Language.GetTextValue(AnomalySharedData.ModLocalizationPrefix + "GameContents.LegendaryItemIdentifier")) { OverrideColor = AnomalySharedData.IdentifierColor });
+    public static void AddLegendaryItemIdentifier(Mod mod, List<TooltipLine> tooltips, int index) => tooltips.Insert(index, new TooltipLine(mod, "Tooltip_CALegendaryItemIdentifier", Language.GetTextValue(AnomalySharedData.ModLocalizationPrefix + "GameContents.LegendaryItemIdentifier")) { OverrideColor = AnomalySharedData.AnomalyTitleColor });
 }

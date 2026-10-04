@@ -305,7 +305,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
                 int teleportDuration = firstCharge ? EyeofCthulhuHandler.NormalTeleportDuration + 30 : EyeofCthulhuHandler.NormalTeleportDuration;
 
-                switch (masterBehavior.CurrentAttackPhase)
+                switch (masterBehavior.CurrentLocalPhase)
                 {
                     case 1 when masterBehavior.Timer1 == 20:
                         float targetRotationSpeed = MasterPhase3_2 ? NormalRotationSpeed : 0f;
@@ -322,7 +322,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
             void FirstRapidCharge()
             {
-                switch (masterBehavior.CurrentAttackPhase)
+                switch (masterBehavior.CurrentLocalPhase)
                 {
                     case 1: //调整竞技场半径，一次性生成4个高光
                         switch (masterBehavior.Timer1)
@@ -351,7 +351,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
 
             int index1 = masterBehavior.UsedEyeIndex1;
 
-            int attackPhase = masterBehavior.CurrentAttackPhase;
+            int attackPhase = masterBehavior.CurrentLocalPhase;
             int timer1 = masterBehavior.Timer1;
 
             switch (attackPhase)
@@ -505,7 +505,7 @@ public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoa
         SpriteBatch spriteBatch = Main.spriteBatch;
 
         #region 绘制旋转攻击预警粒子
-        if (masterBehavior.CurrentBehavior == EyeofCthulhu.Behavior.Phase3_EyeSpin && masterBehavior.CurrentAttackPhase == 1)
+        if (masterBehavior.CurrentBehavior == EyeofCthulhu.Behavior.Phase3_EyeSpin && masterBehavior.CurrentLocalPhase == 1)
         {
             //逐渐睁开的眼睛
 

@@ -26,12 +26,8 @@
       </Reference>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="GameContents\Developer\HiganbanaPyre\" />
-    </ItemGroup>
-
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-      <Exec Command="call $(ProjectDir)PreBuild\EasyXnb\EasyXnb.exe" />
+      <Exec Command="call $(ProjectDir)PreBuild\EffectCompiler\EffectCompiler.exe" />
     </Target>
 
 </Project>

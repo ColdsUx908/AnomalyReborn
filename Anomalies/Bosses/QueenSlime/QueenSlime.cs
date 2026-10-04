@@ -129,7 +129,7 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
         }
     }
 
-    public int CurrentAttackPhase
+    public int CurrentLocalPhase
     {
         get => (int)NPC.ai[1];
         set => NPC.ai[1] = value;
@@ -502,7 +502,7 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
         /*
         if (CurrentBehavior == Behavior.Phase1_SlamDown && NPC.velocity.Y != 0f)
         {
-            float streakScale = (CurrentAttackPhase == 2) ? 6f : 1f;
+            float streakScale = (CurrentLocalPhase == 2) ? 6f : 1f;
             for (int i = 7; i >= 0; i--)
             {
                 float alphaFactor = 1f - i / 8f;
@@ -581,7 +581,7 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
 
     public override void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle)
     {
-        AnomalyEffects.CustomBossBars.QueenSlime.Data
+        AnomalyEffects.BossBars.QueenSlime.Data
             .UseImage1(AnomalyTextures.Noise._Turbulence)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
             .SetCustomParameter("uPosition", destinationRentangle.TopLeft())

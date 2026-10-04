@@ -4,7 +4,7 @@ public abstract class JewelNPC : AnomalyModNPC
 {
     public const float DespawnDistance = 5000f;
 
-    public int CurrentAttackPhase
+    public int CurrentLocalPhase
     {
         get => (int)NPC.ai[1];
         set => NPC.ai[1] = value;

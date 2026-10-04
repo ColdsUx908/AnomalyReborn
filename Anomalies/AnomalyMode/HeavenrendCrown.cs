@@ -4,12 +4,11 @@ using Terraria.GameContent.Creative;
 
 namespace Anomalies.AnomalyMode;
 
-public sealed class HeavenrendCrown : AnomalyModItem, ILocalizationPrefix
+public sealed class HeavenrendCrown : AnomalyModItem
 {
     public const int Lifetime = 300;
 
     public override string LocalizationCategory => "AnomalyMode";
-    public string LocalizationPrefix => AnomalySharedData.ModLocalizationPrefix + "AnomalyMode";
 
     public static EnchantedParticleSet EnchantmentEnergyParticles = new(-1, 0.5f,
         () => Main.rand.NextFloat() switch
@@ -62,7 +61,7 @@ public sealed class HeavenrendCrownHoldout : AnomalyModProjectile
     public override void AI()
     {
         Timer1++;
-        Lighting.AddLight(Projectile.Center, AnomalySharedData.UltraIdentifierColor.ToVector3());
+        Lighting.AddLight(Projectile.Center, AnomalySharedData.AnomalyUltramundaneTitleColor.ToVector3());
 
         if (Projectile.IsOnOwnerClient)
         {

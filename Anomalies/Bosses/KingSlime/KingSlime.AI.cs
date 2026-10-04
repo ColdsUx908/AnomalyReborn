@@ -11,7 +11,7 @@ public sealed partial class KingSlime
             return false;
         }
         else
-            NPC.FaceTarget(Target);
+            NPC.Face(Target);
 
         NPC.noTileCollide = false;
         NPC.noGravity = false;
@@ -118,7 +118,7 @@ public sealed partial class KingSlime
                     }
                 }
             }
-            CurrentAttackPhase = 0;
+            CurrentLocalPhase = 0;
             DirectionChangeCounter = 0;
             Timer1 = 0;
             Timer2 = 0;
@@ -347,7 +347,7 @@ public sealed partial class KingSlime
             bool rapidJump = CurrentBehavior == Behavior.RapidJump;
             bool highJump = CurrentBehavior == Behavior.HighJump;
 
-            switch (CurrentAttackPhase)
+            switch (CurrentLocalPhase)
             {
                 case 0: //静止一段时间后起跳
                     Timer2++;
@@ -367,7 +367,7 @@ public sealed partial class KingSlime
                         NPC.damage = NPC.defDamage;
                         NPC.netUpdate = true;
                         NPC.velocity = GetInitialVelocity();
-                        CurrentAttackPhase = 1;
+                        CurrentLocalPhase = 1;
 
                         if (highJump) //凝胶弹幕
                         {
@@ -428,12 +428,12 @@ public sealed partial class KingSlime
                     }
                     else
                         NPC.velocity.X = Math.Min(Math.Abs(NPC.velocity.X) + GetDeltaVelocityX(), GetMaxVelocityX()) * Math.Sign(NPC.velocity.X);
-                    switch (CurrentAttackPhase)
+                    switch (CurrentLocalPhase)
                     {
                         case 1:
                             NPC.noTileCollide = true; //上升时无视物块
                             if (NPC.velocity.Y >= 0) //检测是否已过最高点
-                                CurrentAttackPhase = 2;
+                                CurrentLocalPhase = 2;
                             break;
                         case 2:
                             if (NPC.velocity.Y == 0f)
@@ -520,7 +520,7 @@ public sealed partial class KingSlime
         void Teleport()
         {
             NPC.damage = 0;
-            switch (CurrentAttackPhase)
+            switch (CurrentLocalPhase)
             {
                 case 0: //寻的
                     Vector2? destination = null;
@@ -561,7 +561,7 @@ public sealed partial class KingSlime
                     }
 
                     TeleportDestination = destination ?? Target.Bottom;
-                    CurrentAttackPhase = 1;
+                    CurrentLocalPhase = 1;
 
                     if (JewelEmeraldAlive)
                     {
@@ -584,13 +584,13 @@ public sealed partial class KingSlime
                         else
                             NPC.Bottom = TeleportDestination;
 
-                        CurrentAttackPhase = 2;
+                        CurrentLocalPhase = 2;
 
                         if (JewelEmeraldAlive)
                         {
                             EmeraldJewel emerald = JewelEmerald.GetModNPC<EmeraldJewel>();
-                            if (emerald.CurrentBehavior == EmeraldJewel.Behavior.Charge && emerald.CurrentAttackPhase == 0)
-                                emerald.CurrentAttackPhase = 1;
+                            if (emerald.CurrentBehavior == EmeraldJewel.Behavior.Charge && emerald.CurrentLocalPhase == 0)
+                                emerald.CurrentLocalPhase = 1;
                         }
                     }
                     break;

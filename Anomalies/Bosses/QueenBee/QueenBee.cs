@@ -1,6 +1,8 @@
 ﻿using Anomalies.Assets.Effects;
 using Anomalies.DataStructures;
+using Anomalies.GameContents.AnomalyItems.HoneyedWildbloom;
 using Anomalies.Visuals.BossBar;
+using Terraria.GameContent.ItemDropRules;
 
 namespace Anomalies.Bosses.QueenBee;
 
@@ -68,7 +70,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
     public float ChargeDistanceX => MathHelper.Lerp(Ultra ? 500f : 600f, Ultra ? 400f : 480f, NPC.LostLifeRatio);
     public static float ChargeDistanceY => 25f;
 
-    public int StingerProjectileType => Aroma ? ProjectileID.FlamingWood : ProjectileID.QueenBeeStinger;
+    public static int StingerProjectileType => Aroma ? ProjectileID.FlamingWood : ProjectileID.QueenBeeStinger;
 
     public static ProjectileDamageContainer _StingerDamage = new(40, 72, 96, 132, 96, 132);
     public static int StingerDamage => _StingerDamage.Value;
@@ -112,7 +114,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
         }
     }
 
-    public int CurrentAttackPhase
+    public int CurrentLocalPhase
     {
         get => (int)NPC.ai[1];
         set => NPC.ai[1] = value;
@@ -291,7 +293,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
      *   [0]. (Union)
      *       byte0 CurrentPhase
      *       byte1 CurrentBehavior
-     *   [1] CurrentAttackPhase
+     *   [1] CurrentLocalPhase
      *   [2] FinishedBehaviorCounter
      * 
      * AnomalyAI32
@@ -329,7 +331,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
         AnomalyNPC.DynamicDRHandler = new TimedDDRHandler(
             new TimedDDRHandler.SingleDDRHandler(1f, Phase2LifeRatio, null, n => GetInstance(n).CurrentPhase >= Phase.PhaseChange_1To2, 60),
-            new TimedDDRHandler.SingleDDRHandler(0.5f, 0f, n => GetInstance(n).Phase2, null, 30)
+            new TimedDDRHandler.SingleDDRHandler(0.5f, 0f, n => GetInstance(n).Phase2, null, 45)
         );
 
         NPC.AddAnomalyHPIndicator(Phase1_2LifeRatio_Anomaly, Phase1_2LifeRatio_Ultra, true);
@@ -402,7 +404,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
     public override void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle)
     {
-        AnomalyEffects.CustomBossBars.QueenBee.Data
+        AnomalyEffects.BossBars.QueenBee.Data
             .UseImage1(AnomalyTextures.Noise._Milky)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
             .SetCustomParameter("uScreenRatio", TODrawUtils.ScreenRatio)

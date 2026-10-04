@@ -145,7 +145,7 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
         }
     }
 
-    public int CurrentAttackPhase
+    public int CurrentLocalPhase
     {
         get => (int)NPC.ai[1];
         set => NPC.ai[1] = value;
@@ -407,7 +407,7 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
      *   [0]. (Union)
      *       byte0 CurrentPhase
      *       byte1 CurrentBehavior
-     *   [1] CurrentAttackPhase
+     *   [1] CurrentLocalPhase
      * 
      * AnomalyAI32
      *   [0].
@@ -565,7 +565,7 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public override void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle)
     {
-        AnomalyEffects.CustomBossBars.EyeofCthulhu.Data
+        AnomalyEffects.BossBars.EyeofCthulhu.Data
             .UseImage1(AnomalyTextures.Noise._Vein)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
             .SetCustomParameter("uPosition", destinationRentangle.TopLeft())

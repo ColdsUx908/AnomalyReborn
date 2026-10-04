@@ -28,6 +28,14 @@ QueenBee: {
 	BeeShockwave.DisplayName: Bee Shockwave
 }
 
+Skeletron: {
+	Legend: {
+		LegendShockwave.DisplayName: Legend Shockwave
+		SlimeMount.DisplayName: Slime Mount
+		FallenStar.DisplayName: Fallen Star
+	}
+}
+
 QueenSlime: {
 	GFBSummon: Queen Slime has cloned itself!
 	AmethystJewel.DisplayName: Amethyst Jewel

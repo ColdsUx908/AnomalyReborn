@@ -8,3 +8,13 @@ StoryMode: {
 		'''
 	Disable: Story mode has been disabled.
 }
+
+EXMode: {
+	Enable:
+		'''
+		Extreme mode has been enabled.
+		In this mode, all terrifying features of Anomaly mode will be fully effective.
+		Note: This mode will not be saved to the world file and must be re-enabled each time you enter the world.
+		'''
+	Disable: Extreme mode has been disabled.
+}

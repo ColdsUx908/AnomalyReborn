@@ -154,7 +154,7 @@ public sealed partial class EyeofCthulhu
 
             void SelectNextBehavior()
             {
-                CurrentAttackPhase = 0;
+                CurrentLocalPhase = 0;
                 Timer1 = 0;
                 Timer2 = 0;
                 switch (CurrentBehavior)
@@ -188,7 +188,7 @@ public sealed partial class EyeofCthulhu
                 NPC.damage = 0;
                 CurrentPhase = Phase.PhaseChange_1To2;
                 CurrentBehavior = Behavior.PhaseChange_1To2;
-                CurrentAttackPhase = 0;
+                CurrentLocalPhase = 0;
                 Timer1 = -60; //60帧缓冲时间
                 AttackCounter = 0;
 
@@ -262,7 +262,7 @@ public sealed partial class EyeofCthulhu
 
             void Charge()
             {
-                if (CurrentAttackPhase == 0) //冲刺
+                if (CurrentLocalPhase == 0) //冲刺
                 {
                     NPC.damage = SetDamage;
 
@@ -274,7 +274,7 @@ public sealed partial class EyeofCthulhu
                     if (AttackCounter >= 2)
                         chargeSpeed *= 1.1f;
 
-                    CurrentAttackPhase = 1;
+                    CurrentLocalPhase = 1;
                 }
                 else //冲刺中
                 {
@@ -407,13 +407,13 @@ public sealed partial class EyeofCthulhu
                             NPC.NewNPCAction<BloodlettingServant>(SourceAI, NPC.Center, NPC.whoAmI, n => n.velocity = Main.rand.NextPolarVector2(10f, 15f));
                     }
 
-                    CurrentAttackPhase = 1;
+                    CurrentLocalPhase = 1;
                     break;
 
                 case PhaseChangeTime_1To2: //进入二阶段
                     CurrentPhase = Phase.Phase2;
                     CurrentBehavior = Behavior.Phase2_Hover;
-                    CurrentAttackPhase = 0;
+                    CurrentLocalPhase = 0;
                     Timer1 = -15; //15帧缓冲时间
                     break;
             }
@@ -450,7 +450,7 @@ public sealed partial class EyeofCthulhu
 
             void SelectNextBehavior()
             {
-                CurrentAttackPhase = 0;
+                CurrentLocalPhase = 0;
                 Timer1 = 0;
                 Timer2 = 0;
                 switch (CurrentBehavior)
@@ -522,7 +522,7 @@ public sealed partial class EyeofCthulhu
                     NPC.damage = 0;
                     CurrentPhase = Phase.PhaseChange_2To3;
                     CurrentBehavior = Behavior.PhaseChange_2To3;
-                    CurrentAttackPhase = 0;
+                    CurrentLocalPhase = 0;
                     Timer1 = -60; //60帧缓冲时间
                     AttackCounter = 0;
                     return true;
@@ -596,7 +596,7 @@ public sealed partial class EyeofCthulhu
 
             void NormalCharge()
             {
-                if (CurrentAttackPhase == 0) //冲刺
+                if (CurrentLocalPhase == 0) //冲刺
                 {
                     NPC.damage = SetDamage;
 
@@ -616,7 +616,7 @@ public sealed partial class EyeofCthulhu
                     Vector2 chargeVelocity = NPC.GetVelocityTowards(Target, chargeSpeed);
 
                     NPC.SetVelocityandRotation(chargeVelocity, -MathHelper.PiOver2);
-                    CurrentAttackPhase++;
+                    CurrentLocalPhase++;
                 }
                 else //冲刺中
                 {
@@ -652,7 +652,7 @@ public sealed partial class EyeofCthulhu
             {
                 NPC.SpawnAfterimage(4, Phase3Color, DrawOffset);
 
-                switch (CurrentAttackPhase) //冲刺
+                switch (CurrentLocalPhase) //冲刺
                 {
                     case 0:
                         NPC.damage = SetDamage;
@@ -723,7 +723,7 @@ public sealed partial class EyeofCthulhu
 
                         NPC.VelocityToRotation(-MathHelper.PiOver2);
 
-                        CurrentAttackPhase = 1;
+                        CurrentLocalPhase = 1;
                         break;
 
                     case 1:
@@ -749,14 +749,14 @@ public sealed partial class EyeofCthulhu
 
             void Hover2()
             {
-                switch (CurrentAttackPhase)
+                switch (CurrentLocalPhase)
                 {
                     case 0:
                         int direction = NextChargeTypeIsHorizontal ? Math.Sign(AttackCounter2 == 0 ? -Target.velocity.X : NPC.Center.X - Target.Center.X) : Math.Sign(NPC.Center.Y - Target.Center.Y);
                         if (direction == 0)
                             direction = Main.rand.NextBool(2) ? 1 : -1;
                         Hover2Direction = direction;
-                        CurrentAttackPhase = 1;
+                        CurrentLocalPhase = 1;
                         break;
 
                     case 1:
@@ -855,7 +855,7 @@ public sealed partial class EyeofCthulhu
             {
                 NPC.SpawnAfterimage(4, NPC.GetAlpha(Color.White), DrawOffset);
 
-                switch (CurrentAttackPhase)
+                switch (CurrentLocalPhase)
                 {
                     case 0:
                         NPC.damage = SetDamage;
@@ -866,7 +866,7 @@ public sealed partial class EyeofCthulhu
                         float chargeSpeed = (baseChargeSpeed + speedBoost) * speedMultiplier;
 
                         NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, chargeSpeed), -MathHelper.PiOver2);
-                        CurrentAttackPhase++;
+                        CurrentLocalPhase++;
                         break;
 
                     case 1:
@@ -1062,13 +1062,13 @@ public sealed partial class EyeofCthulhu
                         n.netUpdate = true;
                     });
 
-                    CurrentAttackPhase = 1;
+                    CurrentLocalPhase = 1;
                     break;
 
                 case PhaseChangeTime_2To3: //进入三阶段
                     CurrentPhase = Phase.Phase3;
                     CurrentBehavior = Behavior.Phase3_Charge;
-                    CurrentAttackPhase = 0;
+                    CurrentLocalPhase = 0;
                     Timer1 = 15;
                     Timer2 = 0;
                     break;
@@ -1100,7 +1100,7 @@ public sealed partial class EyeofCthulhu
 
             void SelectNextBehavior()
             {
-                CurrentAttackPhase = 0;
+                CurrentLocalPhase = 0;
                 Timer1 = 0;
                 Timer2 = 0;
                 Timer3 = 0;
@@ -1173,9 +1173,9 @@ public sealed partial class EyeofCthulhu
                     NPC.VelocityToRotation(-MathHelper.PiOver2);
                     NPC.SpawnAfterimage(7, Phase3Color, DrawOffset);
 
-                    if (CurrentAttackPhase == firstAttackPhase && NPC.Distance(ArenaProjectile.Center) <= ArenaModProjectile.Radius + 20f)
-                        CurrentAttackPhase = firstAttackPhase + 1;
-                    if ((CurrentAttackPhase == firstAttackPhase + 1 && NPC.Distance(ArenaProjectile.Center) > ArenaModProjectile.Radius + 100f) || Timer2 > 0)
+                    if (CurrentLocalPhase == firstAttackPhase && NPC.Distance(ArenaProjectile.Center) <= ArenaModProjectile.Radius + 20f)
+                        CurrentLocalPhase = firstAttackPhase + 1;
+                    if ((CurrentLocalPhase == firstAttackPhase + 1 && NPC.Distance(ArenaProjectile.Center) > ArenaModProjectile.Radius + 100f) || Timer2 > 0)
                     {
                         StopMovement();
                         Timer2++;
@@ -1196,10 +1196,10 @@ public sealed partial class EyeofCthulhu
 
                     int teleportDuration = firstCharge ? EyeofCthulhuHandler.NormalTeleportDuration + 30 : EyeofCthulhuHandler.NormalTeleportDuration;
 
-                    switch (CurrentAttackPhase)
+                    switch (CurrentLocalPhase)
                     {
                         case 0: //初始化
-                            CurrentAttackPhase = 1;
+                            CurrentLocalPhase = 1;
 
                             NPC.damage = ReducedSetDamage;
                             if (firstCharge)
@@ -1222,7 +1222,7 @@ public sealed partial class EyeofCthulhu
                             if (Timer1 == teleportDuration)
                             {
                                 Timer1 = 0;
-                                CurrentAttackPhase = 2;
+                                CurrentLocalPhase = 2;
                             }
                             break;
 
@@ -1239,7 +1239,7 @@ public sealed partial class EyeofCthulhu
                             EyeofCthulhuHandler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 120);
                             EyeofCthulhuHandler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
 
-                            CurrentAttackPhase = 3;
+                            CurrentLocalPhase = 3;
                             break;
 
                         case 3 or 4: //冲刺中
@@ -1250,10 +1250,10 @@ public sealed partial class EyeofCthulhu
 
                 void FirstRapidCharge()
                 {
-                    switch (CurrentAttackPhase)
+                    switch (CurrentLocalPhase)
                     {
                         case 0: //初始化：一次性生成4个Index
-                            CurrentAttackPhase = 1;
+                            CurrentLocalPhase = 1;
 
                             NPC.damage = ReducedSetDamage;
                             int usedIndex1 = Main.rand.Next(0, 32);
@@ -1281,7 +1281,7 @@ public sealed partial class EyeofCthulhu
                             {
                                 case 96: //进入传送冲刺阶段
                                     Timer1 = 0;
-                                    CurrentAttackPhase = 2;
+                                    CurrentLocalPhase = 2;
                                     break;
                             }
                             break;
@@ -1299,7 +1299,7 @@ public sealed partial class EyeofCthulhu
                             if (Timer1 == teleportDuration)
                             {
                                 Timer1 = 0;
-                                CurrentAttackPhase = 3;
+                                CurrentLocalPhase = 3;
                             }
                             break;
 
@@ -1315,7 +1315,7 @@ public sealed partial class EyeofCthulhu
                             EyeofCthulhuHandler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 90);
                             EyeofCthulhuHandler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
 
-                            CurrentAttackPhase = 4;
+                            CurrentLocalPhase = 4;
                             break;
 
                         case 4 or 5: //冲刺中
@@ -1333,7 +1333,7 @@ public sealed partial class EyeofCthulhu
                         _ => UsedEyeIndex1
                     };
 
-                    switch (CurrentAttackPhase)
+                    switch (CurrentLocalPhase)
                     {
                         case 0: //传送
                             Timer1++;
@@ -1348,7 +1348,7 @@ public sealed partial class EyeofCthulhu
                             if (Timer1 == teleportDuration)
                             {
                                 Timer1 = 0;
-                                CurrentAttackPhase = 1;
+                                CurrentLocalPhase = 1;
                             }
                             break;
 
@@ -1364,7 +1364,7 @@ public sealed partial class EyeofCthulhu
                             EyeofCthulhuHandler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 90);
                             EyeofCthulhuHandler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
 
-                            CurrentAttackPhase = 2;
+                            CurrentLocalPhase = 2;
                             break;
 
                         case 2 or 3: //冲刺中
@@ -1377,7 +1377,7 @@ public sealed partial class EyeofCthulhu
                 {
                     int usedIndex = UsedEyeIndex4;
 
-                    switch (CurrentAttackPhase)
+                    switch (CurrentLocalPhase)
                     {
                         case 0: //传送
                             Timer1++;
@@ -1392,7 +1392,7 @@ public sealed partial class EyeofCthulhu
                             if (Timer1 == teleportDuration)
                             {
                                 Timer1 = 0;
-                                CurrentAttackPhase = 1;
+                                CurrentLocalPhase = 1;
                             }
                             break;
 
@@ -1408,7 +1408,7 @@ public sealed partial class EyeofCthulhu
                             EyeofCthulhuHandler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 90);
                             EyeofCthulhuHandler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
 
-                            CurrentAttackPhase = 2;
+                            CurrentLocalPhase = 2;
                             break;
 
                         case 2 or 3: //冲刺中
@@ -1450,13 +1450,13 @@ public sealed partial class EyeofCthulhu
 
                 void FirstEyeSpin()
                 {
-                    switch (CurrentAttackPhase)
+                    switch (CurrentLocalPhase)
                     {
                         case 0:
                             int usedIndex1 = Main.rand.Next(0, 32);
                             UsedEyeIndex1 = usedIndex1;
                             SendCommandToArena(BehaviorCommand_Arena.EyeSpin);
-                            CurrentAttackPhase = 1;
+                            CurrentLocalPhase = 1;
                             goto case 1;
                         case 1:
                             Timer1++;
@@ -1480,13 +1480,13 @@ public sealed partial class EyeofCthulhu
 
                 void SecondEyeSpin()
                 {
-                    switch (CurrentAttackPhase)
+                    switch (CurrentLocalPhase)
                     {
                         case 0:
                             int usedIndex1 = (int)TOMathUtils.NormalizeWithPeriod(UsedEyeIndex1 + Main.rand.Next(5, 12) * Main.rand.NextBool(2).ToDirectionInt(), 32);
                             UsedEyeIndex1 = usedIndex1;
                             SendCommandToArena(BehaviorCommand_Arena.EyeSpin);
-                            CurrentAttackPhase = 1;
+                            CurrentLocalPhase = 1;
                             goto case 1;
                         case 1:
                             Timer1++;
@@ -1512,13 +1512,13 @@ public sealed partial class EyeofCthulhu
 
                 void LastEyeSpin()
                 {
-                    switch (CurrentAttackPhase)
+                    switch (CurrentLocalPhase)
                     {
                         case 0:
                             int usedIndex1 = (int)TOMathUtils.NormalizeWithPeriod(UsedEyeIndex1 + Main.rand.Next(5, 12) * Main.rand.NextBool(2).ToDirectionInt(), 32);
                             UsedEyeIndex1 = usedIndex1;
                             SendCommandToArena(BehaviorCommand_Arena.EyeSpinLast);
-                            CurrentAttackPhase = 1;
+                            CurrentLocalPhase = 1;
                             goto case 1;
                         case 1:
                             Timer1++;

@@ -20,12 +20,6 @@ public sealed class AnomalyPlayer : ModPlayer
         set => field = MathHelper.Clamp(value, 0f, 1f);
     }
 
-    public int ImmaculateWhite_Timer
-    {
-        get;
-        set => field = Math.Max(0, value);
-    }
-
     public bool Minion_VacuousBlack;
 
     public override ModPlayer Clone(Player newEntity)
@@ -40,15 +34,12 @@ public sealed class AnomalyPlayer : ModPlayer
 
         clone.DarknessIntensity = DarknessIntensity;
 
-        clone.ImmaculateWhite_Timer = ImmaculateWhite_Timer;
-
         return clone;
     }
 
     public override void ResetEffects()
     {
         Debuff_DimensionalRend = false;
-        ImmaculateWhite_Timer--;
         Minion_VacuousBlack = false;
         DarknessIntensity = MathHelper.Max(DarknessIntensity - 0.05f, 0);
     }
@@ -74,6 +65,12 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
     public readonly Union32[] AnomalyAI32 = new Union32[AISlot];
     public readonly Union64[] AnomalyAI64 = new Union64[AISlot2];
 
+    /// <summary>
+    /// 特殊标志位，供外部判定使用。
+    /// <br/>每帧都会被重置为默认值，外部判定需要在每帧内使用。
+    /// </summary>
+    public BitArray64 SpecialFlags = default;
+
     public ref BitArray32 AIChanged32 => ref AnomalyAI32[^2].bits;
     public ref BitArray32 AIChanged32_2 => ref AnomalyAI32[^1].bits;
     public ref BitArray64 AIChanged64 => ref AnomalyAI64[^1].bits;
@@ -83,6 +80,11 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
 
     private ref BitArray32 InternalAIChanged32 => ref InternalAnomalyAI32[^1].bits;
     private ref BitArray64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;
+
+    public override void ResetEffects(NPC npc)
+    {
+        SpecialFlags = default;
+    }
 
     public override GlobalNPC Clone(NPC from, NPC to)
     {
@@ -172,8 +174,6 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
             }
         }
     }
-
-    public int AnomalyKilltime;
 
     public int AnomalyAITimer;
 

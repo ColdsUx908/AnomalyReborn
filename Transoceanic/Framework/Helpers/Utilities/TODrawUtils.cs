@@ -179,4 +179,33 @@ public static class TODrawUtils
         spriteBatch.End();
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
     }
+
+    /// <summary>
+    /// 尝试使用自定义着色器绘制物品名称。
+    /// </summary>
+    /// <param name="line">要绘制的可绘制工具提示行。</param>
+    /// <param name="shaderApplication">应用自定义着色器的操作。</param>
+    /// <returns>如果成功绘制物品名称，则返回 true；否则返回 false。</returns>
+    public static bool TryDrawItemNameWithCustomShader(DrawableTooltipLine line, Action<DrawableTooltipLine> shaderApplication)
+    {
+        if (line.Mod == "Terraria" && line.Name == "ItemName")
+        {
+            SpriteBatch spriteBatch = Main.spriteBatch;
+            DynamicSpriteFont font = line.Font;
+            string text = line.Text;
+            Vector2 baseDrawPosition = new(line.X, line.Y);
+            Vector2 baseScale = line.BaseScale;
+            float rotation = line.Rotation;
+
+            DrawBorderString(spriteBatch, font, text, baseDrawPosition, Color.Black, 4, 1f, baseScale, rotation);
+            using (spriteBatch.Scope(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp))
+            {
+                shaderApplication?.Invoke(line);
+                spriteBatch.DrawString(font, text, baseDrawPosition, Color.White, 0f, Vector2.Zero, baseScale, SpriteEffects.None, 0f);
+            }
+            return true;
+        }
+
+        return false;
+    }
 }

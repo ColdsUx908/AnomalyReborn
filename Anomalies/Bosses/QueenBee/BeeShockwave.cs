@@ -4,8 +4,6 @@ namespace Anomalies.Bosses.QueenBee;
 
 public sealed class BeeShockwave : BaseShockwaveProjectile, IContentLoader
 {
-    public override bool Hostile => false;
-    public override List<int> NPCTypesToHit => null;
     public override int LifeTime => 150;
     public override float FinalScale => 2.5f;
     public override bool UseHDTexture => true;

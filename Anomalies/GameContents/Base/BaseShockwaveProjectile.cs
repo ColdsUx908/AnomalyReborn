@@ -13,7 +13,7 @@ public abstract class BaseShockwaveProjectile : AnomalyModProjectile
     /// 若为 <see langword="true"/>，则弹幕对玩家造成伤害（<see cref="Projectile.hostile"/> 为 <see langword="true"/>）；
     /// 否则，弹幕对敌怪友善（<see cref="Projectile.friendly"/> 为 <see langword="true"/>）。
     /// </value>
-    public abstract bool Hostile { get; }
+    public virtual bool Hostile => false;
 
     /// <summary>
     /// 获取此冲击波能够命中的 NPC 类型 ID 列表。
@@ -22,7 +22,7 @@ public abstract class BaseShockwaveProjectile : AnomalyModProjectile
     /// 一个 <see cref="List{Int32}"/>，包含允许被此弹幕命中的 NPC 类型。
     /// 若为 <see langword="null"/> 或空列表，则 <see cref="CanHitNPC"/> 将默认返回 <see langword="false"/>。
     /// </value>
-    public abstract List<int> NPCTypesToHit { get; }
+    public virtual List<int> NPCTypesToHit => null;
 
     /// <summary>
     /// 获取此冲击波的完整生命周期长度，以游戏刻（ticks）为单位。
@@ -93,8 +93,8 @@ public abstract class BaseShockwaveProjectile : AnomalyModProjectile
     public override void AI()
     {
         Timer1++;
-        Projectile.scale = MathHelper.Lerp(0f, FinalScale, TOMathUtils.Interpolation.ExponentialEaseOut(LifeCompletion, 2.5f));
-        Projectile.Opacity = TOMathUtils.Interpolation.QuadraticEaseInOut((1f - LifeCompletion) / 0.15f);
+        Projectile.scale = MathHelper.Lerp(0f, FinalScale, TOMathUtils.Interpolation.ExponentialEaseOut(LifeCompletion, 1.3f));
+        Projectile.Opacity = TOMathUtils.Interpolation.ExponentialEaseOut((1f - LifeCompletion) / 0.25f, 1.5f);
     }
 
     /// <summary>

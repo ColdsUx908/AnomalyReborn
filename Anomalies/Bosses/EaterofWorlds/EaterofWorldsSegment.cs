@@ -107,7 +107,7 @@ public abstract class EaterofWorldsSegment<TBehavior> : AnomalyNPCBehavior<TBeha
     {
         EaterofWorldsHead headBehavior = HeadBehavior;
 
-        float amount = headBehavior.CurrentBehavior is EaterofWorldsHead.Behavior.Phase1_Split or EaterofWorldsHead.Behavior.Phase1_Combine && headBehavior.CurrentAttackPhase >= 2
+        float amount = headBehavior.CurrentBehavior is EaterofWorldsHead.Behavior.Phase1_Split or EaterofWorldsHead.Behavior.Phase1_Combine && headBehavior.CurrentLocalPhase >= 2
             ? Math.Clamp(headBehavior.Timer1 / 60f, 0f, 1f) : 0f;
 
         NPC.velocity = Vector2.Lerp(GetVelocity_Chain(), GetVelocity_Coil(), amount);

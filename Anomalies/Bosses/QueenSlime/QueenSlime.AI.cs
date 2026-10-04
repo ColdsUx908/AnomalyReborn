@@ -13,7 +13,7 @@ public sealed partial class QueenSlime
             return false;
         }
         else
-            NPC.FaceTarget(Target);
+            NPC.Face(Target);
 
         switch (CurrentPhase)
         {
@@ -375,7 +375,7 @@ public sealed partial class QueenSlime
                             break;
                     }
                 }
-                CurrentAttackPhase = 0;
+                CurrentLocalPhase = 0;
                 DirectionChangeCounter = 0;
                 Timer1 = 0;
                 Timer2 = 0;
@@ -385,7 +385,7 @@ public sealed partial class QueenSlime
             {
                 bool highJump = CurrentBehavior == Behavior.Phase1_HighJump;
 
-                switch (CurrentAttackPhase)
+                switch (CurrentLocalPhase)
                 {
                     case 0: //静止一段时间后起跳
                         Timer2++;
@@ -402,7 +402,7 @@ public sealed partial class QueenSlime
                             NPC.damage = NPC.defDamage;
                             NPC.netUpdate = true;
                             NPC.velocity = GetInitialVelocity();
-                            CurrentAttackPhase = 1;
+                            CurrentLocalPhase = 1;
 
                             if (highJump) //凝胶弹幕
                             {
@@ -455,12 +455,12 @@ public sealed partial class QueenSlime
                         }
                         else
                             NPC.velocity.X = Math.Min(Math.Abs(NPC.velocity.X) + GetDeltaVelocityX(), GetMaxVelocityX()) * Math.Sign(NPC.velocity.X);
-                        switch (CurrentAttackPhase)
+                        switch (CurrentLocalPhase)
                         {
                             case 1:
                                 NPC.noTileCollide = true; //上升时无视物块
                                 if (NPC.velocity.Y >= 0) //检测是否已过最高点
-                                    CurrentAttackPhase = 2;
+                                    CurrentLocalPhase = 2;
                                 break;
                             case 2:
                                 if (NPC.velocity.Y == 0f)
@@ -523,7 +523,7 @@ public sealed partial class QueenSlime
 
             void SlamDown() //将原本的下砸攻击和凝胶攻击合并，使攻击更紧凑
             {
-                switch (CurrentAttackPhase)
+                switch (CurrentLocalPhase)
                 {
                     case 0: //停留一段时间后爆发起跳
                         StopHorizontalMovement();
@@ -537,7 +537,7 @@ public sealed partial class QueenSlime
                             Vector2 destination = Target.Center + new Vector2(0f, -384f);
                             NPC.velocity = NPC.GetVelocityTowards(destination, 28f);
                             Timer1 = 0;
-                            CurrentAttackPhase = 1;
+                            CurrentLocalPhase = 1;
 
                             //将凝胶弹幕合并至此
 
@@ -575,7 +575,7 @@ public sealed partial class QueenSlime
                             if (Timer2 > delay2)
                             {
                                 NPC.noGravity = false;
-                                CurrentAttackPhase = 2;
+                                CurrentLocalPhase = 2;
                             }
                         }
                         else if (Timer1 == 30)
@@ -640,7 +640,7 @@ public sealed partial class QueenSlime
             void Teleport()
             {
                 NPC.damage = 0;
-                switch (CurrentAttackPhase)
+                switch (CurrentLocalPhase)
                 {
                     case 0: //寻的
                         Vector2? destination = null;
@@ -681,7 +681,7 @@ public sealed partial class QueenSlime
                         }
 
                         TeleportDestination = destination ?? Target.Bottom;
-                        CurrentAttackPhase = 1;
+                        CurrentLocalPhase = 1;
                         break;
 
                     case 1: //停止水平移动并缩小体型，满足条件时传送
@@ -697,7 +697,7 @@ public sealed partial class QueenSlime
                             else
                                 NPC.Bottom = TeleportDestination;
 
-                            CurrentAttackPhase = 2;
+                            CurrentLocalPhase = 2;
                         }
                         break;
 
@@ -820,7 +820,7 @@ public sealed partial class QueenSlime
                 if (NPC.LifeRatio <= Phase2LifeRatio)
                 {
                     CurrentPhase = Phase.Phase2;
-                    CurrentAttackPhase = 0;
+                    CurrentLocalPhase = 0;
                     Timer1 = 0;
                     Timer2 = 0;
                     Timer5 = 0;
@@ -862,7 +862,7 @@ public sealed partial class QueenSlime
 
             void SelectNextBehavior()
             {
-                CurrentAttackPhase = 0;
+                CurrentLocalPhase = 0;
                 Timer1 = 0;
                 Timer2 = 0;
                 Timer5 = 0;

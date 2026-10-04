@@ -105,7 +105,7 @@ public sealed class EmeraldJewel : JewelNPC
         {
             NPC.knockBackResist = 0f;
 
-            switch (CurrentAttackPhase)
+            switch (CurrentLocalPhase)
             {
                 case 0:
                     if (CanAttack)
@@ -124,7 +124,7 @@ public sealed class EmeraldJewel : JewelNPC
                     ParticleHandler.SpawnParticle(new SquashParticle(NPC.Center - dustVelocity * Main.rand.NextFloat(20, 25), dustVelocity, 15, Main.rand.NextFloat(0.9f, 1.2f), JewelHandler.EmeraldColor, baseSize: null, noGravity: true) { FadeIn = 0.5f });
 
                     if (Timer1 > 150) //正常情况下这里不应该被触发，因为开始冲刺由史莱姆王控制
-                        CurrentAttackPhase = 1;
+                        CurrentLocalPhase = 1;
                     break;
 
                 case 1: //冲刺
@@ -172,7 +172,7 @@ public sealed class EmeraldJewel : JewelNPC
                     }
 
                     Timer1 = 0;
-                    CurrentAttackPhase = 2;
+                    CurrentLocalPhase = 2;
                     break;
 
                 case 2: //冲刺中
@@ -190,7 +190,7 @@ public sealed class EmeraldJewel : JewelNPC
                         for (int i = 0; i < 15; i++)
                             JewelHandler.SpawnOrbParticle(NPC, Main.rand.NextFloat(2f, 3f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.4f, 0.7f));
                         SoundEngine.PlaySound(SoundID.Item8, NPC.Center);
-                        CurrentAttackPhase = 0;
+                        CurrentLocalPhase = 0;
                         CurrentBehavior = Behavior.None;
                         Timer1 = 0;
                         NPC.velocity = Vector2.Zero;

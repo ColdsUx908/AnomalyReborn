@@ -28,6 +28,14 @@ QueenBee: {
 	BeeShockwave.DisplayName: 蜜蜂冲击波
 }
 
+Skeletron: {
+	Legend: {
+		LegendShockwave.DisplayName: 传奇冲击波
+		SlimeMount.DisplayName: 史莱姆鞍
+		FallenStar.DisplayName: 坠落之星
+	}
+}
+
 QueenSlime: {
 	GFBSummon: 史莱姆皇后克隆了自己！
 	AmethystJewel.DisplayName: 王冠紫晶

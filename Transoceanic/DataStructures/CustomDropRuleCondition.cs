@@ -43,6 +43,7 @@ public sealed class CustomDropRuleCondition : IItemDropRuleCondition
     /// <inheritdoc/>
     public bool CanShowItemDropInUI() => _CanShowItemDropInUI?.Invoke() ?? false;
 
+    //TODO: 1.4.5将移除这个接口方法
     /// <inheritdoc/>
     public string GetConditionDescription() => _GetConditionDescription?.Invoke() ?? "";
 }
