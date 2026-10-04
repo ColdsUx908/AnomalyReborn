@@ -24,7 +24,7 @@ public static partial class TOExtensions
             DepthStencilState depthStencilState = null,
             RasterizerState rasterizerState = null,
             Effect customEffect = null,
-            Matrix? transformMatrix = null, 
+            Matrix? transformMatrix = null,
             bool effectIsNull = false)
         {
             SpriteBatchSnapshot copy = new(spriteBatch);

@@ -1,7 +1,4 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using Terraria;
-
-namespace Transoceanic.DataStructures.Rendering;
+﻿namespace Transoceanic.DataStructures.Rendering;
 
 /// <summary>
 ///     Handles preserving the contents of <see cref="RenderTarget2D" />s.

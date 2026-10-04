@@ -49,7 +49,7 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
 
                     SoundEngine.PlaySound(SoundID.Item81, NPC.Center);
 
-                    for (int i = 0; i <= 300;i++)
+                    for (int i = 0; i <= 300; i++)
                     {
                         Dust.NewDustAction(NPC.Center, 10, 10, DustID.TintableDustLighted, action: d =>
                         {

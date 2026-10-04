@@ -12,7 +12,7 @@ public sealed class AnomalyStartingItems : AnomalyPlayerBehavior
 
         result.Add(Item.CreateItem<HeavenrendCrown>()); //用于在游戏初期即能开启异象模式
 
-        if (Player.name == "人间小天使") 
+        if (Player.name == "人间小天使")
         {
             result.Add(Item.CreateItem<ImmaculateWhite>()); //纯白
             result.Add(Item.CreateItem<VacuousBlack>()); //纯黑

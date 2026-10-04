@@ -1,1 +1,1 @@
-﻿global using CalamityMod_ = CalamityMod.CalamityMod;
+﻿

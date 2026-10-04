@@ -1,8 +1,4 @@
-﻿using System;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-
-namespace Transoceanic.DataStructures.Rendering;
+﻿namespace Transoceanic.DataStructures.Rendering;
 
 /// <summary>
 ///     Manages the scope of a render target to be rendered to, swapping out the

@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using Terraria.Graphics.Effects;
+﻿using Terraria.Graphics.Effects;
 
 namespace Anomalies.Bosses.Skeletron.SkeletronLegend;
 

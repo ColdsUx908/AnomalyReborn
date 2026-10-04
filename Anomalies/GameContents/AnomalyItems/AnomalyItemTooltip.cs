@@ -73,7 +73,7 @@ public sealed class AnomalyItemTooltip : AnomalyGlobalItemBehavior
             if (difficultyIndex == -1)
                 return;
 
-            tooltips.Insert(++difficultyIndex, new TooltipLine(Mod, "AnomalyIdentifier", Language.GetTextValue(AnomalySharedData.ModLocalizationPrefix + "AnomalyMode.Name")) { OverrideColor = AnomalySharedData.RebornColor});
+            tooltips.Insert(++difficultyIndex, new TooltipLine(Mod, "AnomalyIdentifier", Language.GetTextValue(AnomalySharedData.ModLocalizationPrefix + "AnomalyMode.Name")) { OverrideColor = AnomalySharedData.RebornColor });
         }
     }
 }

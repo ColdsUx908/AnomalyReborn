@@ -175,7 +175,7 @@ public class TypeDetourGenerator : IIncrementalGenerator
 
             string parameterDeclarationString = string.Join(", ", [$"{typeInfo.FirstTypeParameterName} self", .. methodSymbolInfo.ParameterDeclarationsWithObjectForNonPublic]);
             string parameterNameString = string.Join(", ", ["self", .. methodSymbolInfo.ParameterNamesForCall]);
-                localBuilder.Append($$"""
+            localBuilder.Append($$"""
                 // {{name}}
                 {{GeneratedCodeMarker}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
@@ -189,8 +189,8 @@ public class TypeDetourGenerator : IIncrementalGenerator
             applyMethodBuilder.AppendLine($"ApplySingleDetour({methodName});");
         }
 
-            typeBuilder.Append(
-            $$"""
+        typeBuilder.Append(
+        $$"""
 
             {{GeneratedCodeMarker}}
             public unsafe override void ApplyDetour()

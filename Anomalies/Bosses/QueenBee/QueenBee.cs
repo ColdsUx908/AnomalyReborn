@@ -1,8 +1,6 @@
 ﻿using Anomalies.Assets.Effects;
 using Anomalies.DataStructures;
-using Anomalies.GameContents.AnomalyItems.HoneyedWildbloom;
 using Anomalies.Visuals.BossBar;
-using Terraria.GameContent.ItemDropRules;
 
 namespace Anomalies.Bosses.QueenBee;
 

@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using CalamityMod;
-using static Anomalies.ModCompatibility.BridgeUtils;
 
 namespace Anomalies.ModCompatibility;
 

@@ -201,7 +201,8 @@ public sealed partial class DukeFishron
                             n.spriteDirection = n.direction;
                             n.timeLeft = 300;
                         });
-                    };
+                    }
+                    ;
                 }
             }
 

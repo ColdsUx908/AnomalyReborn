@@ -1,7 +1,6 @@
 ﻿using Anomalies.Assets.Effects;
 using Anomalies.DataStructures;
 using Anomalies.Visuals.BossBar;
-using Newtonsoft.Json;
 
 namespace Anomalies.Bosses.EyeofCthulhu;
 

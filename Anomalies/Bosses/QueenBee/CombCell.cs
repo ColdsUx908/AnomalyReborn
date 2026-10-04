@@ -272,7 +272,7 @@ public sealed class CombCell : AnomalyModProjectile
                     break;
             }
         }
-        
+
         void Behavior_Dance()
         {
             HasContactDamage = BehaviorType == Behavior.BeeSwarm4;

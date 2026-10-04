@@ -1,10 +1,12 @@
 ﻿using Terraria.Graphics.Shaders;
 
 namespace Anomalies.Assets.Effects;
+
 public sealed class AnomalyEffects : IContentLoader
 {
     public sealed record MiscShaderContainer(Asset<Effect> Asset, MiscShaderData Data);
 
+    public static MiscShaderContainer SolidColor;
     public static MiscShaderContainer SolidColorMask;
 
     public static class BossBars
@@ -31,8 +33,7 @@ public sealed class AnomalyEffects : IContentLoader
         if (!AnomalyClientConfig.Instance.EnableShaders) //配置选项关闭时着色器不会加载
             return;
 
-        SolidColorMask = LoadAndRegisterMiscShader("", nameof(SolidColorMask));
-
+        HandleType(typeof(AnomalyEffects));
         HandleType(typeof(BossBars));
         HandleType(typeof(Texts));
 
