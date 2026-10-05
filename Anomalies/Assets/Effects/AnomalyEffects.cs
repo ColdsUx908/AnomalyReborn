@@ -33,14 +33,14 @@ public sealed class AnomalyEffects : IContentLoader
         if (!AnomalyClientConfig.Instance.EnableShaders) //配置选项关闭时着色器不会加载
             return;
 
-        HandleType(typeof(AnomalyEffects));
+        HandleType(typeof(AnomalyEffects), true);
         HandleType(typeof(BossBars));
         HandleType(typeof(Texts));
 
-        void HandleType(Type type)
+        void HandleType(Type type, bool isRoot = false)
         {
             foreach (FieldInfo field in type.GetFields(TOReflectionUtils.StaticBindingFlags))
-                field.SetValue(null, LoadAndRegisterMiscShader(type.Name, field.Name));
+                field.SetValue(null, LoadAndRegisterMiscShader(isRoot ? "" : type.Name, field.Name));
         }
     }
 
