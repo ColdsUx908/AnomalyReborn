@@ -2,9 +2,9 @@
 using Terraria.Graphics.Effects;
 using Transoceanic.DataStructures.Rendering;
 
-namespace Anomalies.Visuals;
+namespace Anomalies.Visuals.Overlays;
 
-public class EnhancedDarknessSystem : ModSystem, IContentLoader
+public class EnhancedDarknessSystem : CustomOverlay, IContentLoader
 {
     public class LightSource
     {
@@ -35,27 +35,33 @@ public class EnhancedDarknessSystem : ModSystem, IContentLoader
 
     public static List<LightSource> Lights = [];
 
-    private static void On_OverlayManager_Draw(On_OverlayManager.orig_Draw orig, OverlayManager self, SpriteBatch spriteBatch, RenderLayers layer, bool beginSpriteBatch)
+    public override void Update()
     {
-        orig(self, spriteBatch, layer, beginSpriteBatch);
-
-        if (AnomalySharedData.ShouldUseShaders)
-            DrawShadowOverlay(spriteBatch, layer, beginSpriteBatch);
+        // Every frame, the light sources are determined by what was added on that frame only. Therefore, we decrement lifetime each frame.
+        // Lifetime smooths out sources that aren't added every frame to prevent flicker.
+        for (int i = 0; i < Lights.Count; i++)
+        {
+            LightSource item = Lights[i];
+            item.lifetime--;
+            if (item.lifetime <= 0)
+            {
+                Lights.Remove(item);
+                i--;
+            }
+        }
     }
 
-    private static void DrawShadowOverlay(SpriteBatch spriteBatch, RenderLayers layer, bool beginSpriteBatch)
+    public override void Draw(SpriteBatch spriteBatch, RenderLayers layer, bool beginSpriteBatch)
     {
-        //This ensures that the shadows only draw
-        //  - In the world
-        //  - Right before UI is drawn (and right before the hideUI check), as that's where RenderLayers.All is drawn
-        //  - 
+        // This ensures that the shadows only draw in the world and at the appropriate render layer.
         if (Main.gameMenu || layer != RenderLayers.All)
             return;
 
         AnomalyPlayer anomalyPlayer = Main.LocalPlayer.Anomaly;
-
         if (anomalyPlayer.DarknessIntensity <= 0)
             return;
+
+        _DefaultTexture ??= ParticleHandler.GetTexture<BloomParticle>();
 
         GraphicsDevice device = Main.instance.GraphicsDevice;
         using RenderTargetLease lease = RenderTargetPool.Shared.Rent(
@@ -74,28 +80,12 @@ public class EnhancedDarknessSystem : ModSystem, IContentLoader
         }
 
         spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-        AnomalyEffects.SolidColorMask.Data
+        AnomalyEffects.Overlays.SolidColorMask.Data
             .UseColor(Color.Black)
             .UseOpacity(anomalyPlayer.DarknessIntensity)
             .Apply();
         spriteBatch.Draw(lease.Target, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, 0, 0);
         spriteBatch.End();
-    }
-
-    public override void PreUpdateEntities()
-    {
-        //Every frame, the light sources are determined by what was added on that frame only. Therefore, we reset the light list every frame.
-        //Lifetime is provided to smooth out things that don't run every frame consistently to prevent flickering, such as the abyss torches.
-        for (int i = 0; i < Lights.Count; i++)
-        {
-            LightSource item = Lights[i];
-            item.lifetime--;
-            if (item.lifetime <= 0)
-            {
-                Lights.Remove(item);
-                i--;
-            }
-        }
     }
 
     public static void AddLightSource(Vector2? center = null, Texture2D texture = null, float scale = 1f, float rotation = 0, Vector2? vectorScale = null, float opacity = 1) =>
@@ -111,7 +101,6 @@ public class EnhancedDarknessSystem : ModSystem, IContentLoader
 
     void IContentLoader.PostSetupContent()
     {
-        On_OverlayManager.Draw += On_OverlayManager_Draw;
         _DefaultTexture = ParticleHandler.GetTexture<BloomParticle>();
     }
 

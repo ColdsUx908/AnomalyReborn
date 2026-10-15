@@ -54,11 +54,15 @@ public sealed partial class AnomalySharedData : ModSystem
     public static bool[] TweakedProjectiles { get; private set; }
     public static bool[] TweakedItems { get; private set; }
 
+    public static bool[] DontApplyAnomalyRarityShaderItems { get; private set; }
+
     public override void ResizeArrays()
     {
         TweakedNPCs = NPCID.Sets.Factory.CreateBoolSet(false);
         TweakedProjectiles = ProjectileID.Sets.Factory.CreateBoolSet(false);
         TweakedItems = ItemID.Sets.Factory.CreateBoolSet(false);
+
+        DontApplyAnomalyRarityShaderItems = ItemID.Sets.Factory.CreateBoolSet(false);
     }
     #endregion
 

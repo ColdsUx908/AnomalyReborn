@@ -1,9 +1,10 @@
 ﻿using Anomalies.GameContents.Base;
+using Anomalies.Visuals.Overlays;
 using Transoceanic.DataStructures.Rendering;
 
 namespace Anomalies.Bosses.EyeofCthulhu;
 
-public sealed partial class EyeofCthulhuArena : BaseArenaProjectile, IContentLoader
+public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IContentLoader
 {
     #region 数据
     public static int EyeSpawnGateValue => 15;

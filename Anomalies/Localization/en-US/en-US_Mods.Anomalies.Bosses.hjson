@@ -29,10 +29,36 @@ QueenBee: {
 }
 
 Skeletron: {
-	Legend: {
+	LegendaryNight: {
+		Summon: The legendary night has begun!
+		SummonFailed: Legendary night has failed to begin. It requires an Ultramundane night.
+		LegendaryNightRitual.DisplayName: Legendary Night Ritual
+		LegendaryNightArena.DisplayName: Legendary Night Arena
 		LegendShockwave.DisplayName: Legend Shockwave
 		SlimeMount.DisplayName: Slime Mount
-		FallenStar.DisplayName: Fallen Star
+		FallingStar.DisplayName: Falling Star
+		Meteor.DisplayName: Meteor
+		PlatinumCoin.DisplayName: Platinum Coin
+		ShadowPlayer.DisplayName: Shadow Player
+
+		FallenStarEssence: {
+			DisplayName: Fallen Star Essence
+			Tooltip:
+				'''
+				The material required to recreate the legendary night
+				It has fallen countless times
+				'''
+		}
+
+		AncientBattlefieldAltarItem: {
+			DisplayName: Altar of the Ancient Battlefield
+			Tooltip: The altar required to recreate the legendary night
+		}
+
+		MemoryofAstraeus: {
+			DisplayName: Memory of Astraeus
+			Tooltip: Place it on the altar to recreate the legendary night
+		}
 	}
 }
 

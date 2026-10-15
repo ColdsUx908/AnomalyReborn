@@ -4,6 +4,11 @@ public sealed class AnomalyTextures
 {
     public const string TexturePathPrefix = "Anomalies/Assets/Textures/";
 
+    public const string LilyWhitePath = TexturePathPrefix + "LilyWhite";
+    [LoadTexture(LilyWhitePath)]
+    internal static Asset<Texture2D> _LilyWhite;
+    public static Texture2D LilyWhite => _LilyWhite?.Value;
+
     public static class Config
     {
         public const string Path = TexturePathPrefix + "Config/";
@@ -29,7 +34,6 @@ public sealed class AnomalyTextures
         internal static Asset<Texture2D> _CrystalTextSparkle;
         public static Texture2D CrystalTextSparkle => _CrystalTextSparkle?.Value;
     }
-
 
     public static class Noise
     {
@@ -57,6 +61,10 @@ public sealed class AnomalyTextures
         [LoadTexture(Path + "Vein")]
         internal static Asset<Texture2D> _Vein;
         public static Texture2D Vein => _Vein?.Value;
+
+        [LoadTexture(Path + "Wave")]
+        internal static Asset<Texture2D> _Wave;
+        public static Texture2D Wave => _Wave?.Value;
     }
 
     public static class Touhou

@@ -1,10 +1,35 @@
 AnomalyItems: {
 	AnomalyLoot: 异象模式掉落
+	AnomalyUltramundaneLoot: 异象超凡掉落
 
 	HoneyedWildbloom: {
 		DisplayName: 蜜渍野花
 		Tooltip: 一朵被蜂蜜浸渍的野花，更粘稠，更有韧性
 		BuffDescription: ""
+	}
+}
+
+Drinks: {
+	BubbleTea: {
+		DisplayName: 珍珠奶茶
+		Tooltip:
+			'''
+			来自异世界的绝妙饮品
+			如此超超超大杯的奶茶，你真的喝得完吗……
+			'''
+		BuffDescription: 能量爆棚
+	}
+
+	PlumGreenTea: {
+		DisplayName: 青梅绿茶
+		Tooltip: 来自异世界的绝妙饮品
+		BuffDescription: 能量爆棚
+	}
+
+	RaspberryBlackTea: {
+		DisplayName: 树莓红茶
+		Tooltip: 来自异世界的绝妙饮品
+		BuffDescription: 能量爆棚
 	}
 }
 

@@ -22,6 +22,12 @@ public readonly record struct ProjectileDamageContainer(
     int AnomalyDamage, int AnomalyUltramundaneDamage)
 {
     /// <summary>
+    /// 为所有难度设置相同的预设伤害，适用于仅在异象超凡下使用的独立伤害容器。
+    /// </summary>
+    /// <param name="damage">预设伤害，异象超凡下须为 6 的倍数。</param>
+    public ProjectileDamageContainer(int damage) : this(damage, damage, damage, damage, damage, damage) { }
+
+    /// <summary>
     /// 专家模式下接触伤害的原版乘数。
     /// </summary>
     public const float ExpertContactVanillaMultiplier = 2f;

@@ -142,6 +142,23 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
     }
 
     /// <summary>
+    /// 自定义AI类型，仅供NPC的变种AI使用。
+    /// <br/>如果不使用变种AI，请不要修改此值。
+    /// </summary>
+    public int CustomAIType
+    {
+        get => InternalAnomalyAI32[2].i;
+        set
+        {
+            if (InternalAnomalyAI32[2].i != value)
+            {
+                InternalAnomalyAI32[2].i = value;
+                InternalAIChanged32[2] = true;
+            }
+        }
+    }
+
+    /// <summary>
     /// 伤害减免，在计算伤害时会被应用。
     /// </summary>
     /// <remarks>谨慎使用。</remarks>
@@ -175,6 +192,7 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
         }
     }
 
+    #region 本地数据
     public int AnomalyAITimer;
 
     public bool IsRunningAnomalyAI => AnomalyAITimer > 0;
@@ -191,6 +209,7 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
     public List<HPThresholdIndicator> HPThresholdIndicators = [];
 
     public IDynamicDRHandler DynamicDRHandler;
+    #endregion 本地数据
     #endregion 额外数据
 }
 

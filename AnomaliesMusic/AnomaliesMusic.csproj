@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\..\tModLoader.targets" />
+
+    <PropertyGroup>
+        <LangVersion>preview</LangVersion>
+        <TargetFramework>net8.0</TargetFramework>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+        <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <NoWarn>1701;1702;649</NoWarn>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <NoWarn>1701;1702;649</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="CalamityMod">
+            <HintPath>..\..\CalamityMod\CalamityMod.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Music\" />
+    </ItemGroup>
+
+</Project>

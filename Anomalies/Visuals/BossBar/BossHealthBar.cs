@@ -626,7 +626,7 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
             comboBarWidth = comboBarWidth * ComboDamageCountdown / 6;
 
         Rectangle mainBarDestinationRectangle = new(adjustedX + fillerOffsetX, adjustedY + fillerOffsetY, (int)mainBarWidth, 10);
-        Rectangle comboBarDestinationRectangle = new(adjustedX + fillerOffsetX + (int)mainBarWidth, adjustedY + fillerOffsetY, (int)comboBarWidth, 10);
+        //Rectangle comboBarDestinationRectangle = new(adjustedX + fillerOffsetX + (int)mainBarWidth, adjustedY + fillerOffsetY, (int)comboBarWidth, 10);
 
         if (AnomalySharedData.ShouldUseShaders)
         {
@@ -635,7 +635,7 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
                 using (spriteBatch.Scope(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp))
                 {
                     anomalyNPCWithCustomShader.ApplyCustomMainBossBarShader(this, spriteBatch, mainBarDestinationRectangle);
-                    DrawHPBar(spriteBatch, mainBarDestinationRectangle, true);
+                    DrawHPBar(spriteBatch, mainBarDestinationRectangle);
                 }
             }
             else if (NPC.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.ApplyCustomMainBossBarShader)))
@@ -643,16 +643,16 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
                 using (spriteBatch.Scope(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp))
                 {
                     npcBehavior.ApplyCustomMainBossBarShader(this, spriteBatch, mainBarDestinationRectangle);
-                    DrawHPBar(spriteBatch, mainBarDestinationRectangle, true);
+                    DrawHPBar(spriteBatch, mainBarDestinationRectangle);
                 }
             }
             else
-                DrawHPBar(spriteBatch, mainBarDestinationRectangle, false);
+                DrawHPBar(spriteBatch, mainBarDestinationRectangle);
         }
         else
-            DrawHPBar(spriteBatch, mainBarDestinationRectangle, false);
+            DrawHPBar(spriteBatch, mainBarDestinationRectangle);
 
-        spriteBatch.Draw(TOTextures.FillerTexture, comboBarDestinationRectangle, Color.Red);
+        //spriteBatch.Draw(TOTextures.FillerTexture, comboBarDestinationRectangle, Color.Red);
 
         //血条外框及血条锁
 
@@ -672,8 +672,8 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
             spriteBatch.DrawFromCenter(headAsset.Value, position + bossHeadOffset, null, Color.White * AnimationCompletionRatio2);
         }
 
-        void DrawHPBar(SpriteBatch spriteBatch, Rectangle destinationRectangle, bool useWhiteColor) =>
-            spriteBatch.Draw(TOTextures.FillerTexture, destinationRectangle, useWhiteColor ? Color.White : new Color(0xE4, 0xCD, 0x42));
+        void DrawHPBar(SpriteBatch spriteBatch, Rectangle destinationRectangle) =>
+            spriteBatch.Draw(BossBarTextures.Fancy.DefaultHealthBar, destinationRectangle, Color.White);
 
         //阈值指示器
 

@@ -1,11 +1,28 @@
 ﻿namespace Anomalies.GameContents.Base;
 
+public abstract class BaseArenaProjectile : AnomalyModProjectile
+{
+    /// <summary>
+    /// 获取此竞技场弹幕当前锁定的目标玩家。
+    /// 若无锁定玩家，应返回 <see langword="null"/>。
+    /// </summary>
+    public abstract Player Target { get; }
+
+    /// <summary>
+    /// 判断此弹幕是否能伤害指定玩家。
+    /// 仅当玩家为当前锁定的 <see cref="Target"/> 时返回 <see langword="true"/>，否则为 <see langword="false"/>。
+    /// </summary>
+    /// <param name="target">待检测的玩家。</param>
+    /// <returns>如果可以伤害则返回 <see langword="true"/>，否则 <see langword="false"/>。</returns>
+    public override bool CanHitPlayer(Player target) => target == Target;
+}
+
 /// <summary>
 /// 环形竞技场弹幕的抽象基类，用于将玩家限制在以弹幕中心为圆心的环形区域内。
 /// 当玩家试图越过边界时，会以递增的速度将其拉回，并在距离过远时剥夺控制权。
 /// 子类需提供具体的半径 (<see cref="Radius"/>) 并可通过重写虚成员定制行为。
 /// </summary>
-public abstract class BaseArenaProjectile : AnomalyModProjectile
+public abstract class BaseRingArenaProjectile : BaseArenaProjectile
 {
     /// <summary>
     /// 竞技场环形边界的中心半径（从弹幕中心到环心中线的距离）。
@@ -46,7 +63,7 @@ public abstract class BaseArenaProjectile : AnomalyModProjectile
     /// 使用 <see cref="Annulus"/> 定义以弹幕中心为圆心、内半径为 <see cref="InnerRadius"/>、外半径为 <see cref="OuterRadius"/> 的环形。
     /// 用于碰撞检测与伤害判定。
     /// </summary>
-    public Annulus ArenaRing => new(Projectile.Center, InnerRadius, OuterRadius);
+    public Annulus ArenaHitbox => new(Projectile.Center, InnerRadius, OuterRadius);
 
     /// <summary>
     /// 记录玩家持续超出环形边界的累计时间（帧数）。
@@ -54,12 +71,6 @@ public abstract class BaseArenaProjectile : AnomalyModProjectile
     /// 用于计算逐步递增的拉回速度。
     /// </summary>
     public int OutofArenaTimer;
-
-    /// <summary>
-    /// 获取此竞技场当前锁定的目标玩家。
-    /// 若无锁定玩家，应返回 <see langword="null"/>。
-    /// </summary>
-    public abstract Player Target { get; }
 
     /// <summary>
     /// 拉回玩家的基础速度（像素/帧）。
@@ -130,20 +141,11 @@ public abstract class BaseArenaProjectile : AnomalyModProjectile
     }
 
     /// <summary>
-    /// 判断此弹幕是否能伤害指定玩家。
-    /// 仅当玩家为当前锁定的 <see cref="Target"/> 时返回 <see langword="true"/>，否则为 <see langword="false"/>。
-    /// </summary>
-    /// <param name="target">待检测的玩家。</param>
-    /// <returns>如果可以伤害则返回 <see langword="true"/>，否则 <see langword="false"/>。</returns>
-    public override bool CanHitPlayer(Player target) => target == Target;
-
-    /// <summary>
     /// 检测玩家的碰撞箱是否与竞技场环形边界发生碰撞。
-    /// 通过 <see cref="ArenaRing"/> 进行环形碰撞测试。
+    /// 通过 <see cref="ArenaHitbox"/> 进行环形碰撞测试。
     /// </summary>
     /// <param name="projHitbox">弹幕自身的碰撞矩形（未使用，因为使用环形判定）。</param>
     /// <param name="targetHitbox">目标玩家的碰撞矩形。</param>
     /// <returns>如果玩家碰撞箱与环形区域重叠则返回 <see langword="true"/>，否则返回 <see langword="false"/>。永不返回 <see langword="null"/>。</returns>
-    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => ArenaRing.Collides(targetHitbox);
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => ArenaHitbox.Collides(targetHitbox);
 }
-

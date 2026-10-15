@@ -29,10 +29,36 @@ QueenBee: {
 }
 
 Skeletron: {
-	Legend: {
+	LegendaryNight: {
+		Summon: 传说之夜开始了！
+		SummonFailed: 传说之夜未能开始。它需要一个超凡的夜晚。
+		LegendaryNightRitual.DisplayName: 传说之夜仪式
+		LegendaryNightArena.DisplayName: 传说之夜竞技场
 		LegendShockwave.DisplayName: 传奇冲击波
 		SlimeMount.DisplayName: 史莱姆鞍
-		FallenStar.DisplayName: 坠落之星
+		FallingStar.DisplayName: 坠落之星
+		Meteor.DisplayName: 陨石
+		PlatinumCoin.DisplayName: 铂金币
+		ShadowPlayer.DisplayName: 暗影套玩家
+
+		FallenStarEssence: {
+			DisplayName: 坠星精华
+			Tooltip:
+				'''
+				复现传说之夜所必需的材料
+				它曾经历无数次的坠落
+				'''
+		}
+
+		AncientBattlefieldAltarItem: {
+			DisplayName: 古战场祭坛
+			Tooltip: 复现传说之夜所必须的祭坛
+		}
+
+		MemoryofAstraeus: {
+			DisplayName: 星星之神的记忆
+			Tooltip: 放置在祭坛上即可复现传说之夜
+		}
 	}
 }
 

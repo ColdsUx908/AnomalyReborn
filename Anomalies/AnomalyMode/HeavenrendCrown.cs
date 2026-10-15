@@ -32,6 +32,8 @@ public sealed class HeavenrendCrown : AnomalyModItem
         Item.noUseGraphic = true;
     }
 
+    public override void ModifyResearchSorting(ref ContentSamples.CreativeHelper.ItemGroup itemGroup) => itemGroup = ContentSamples.CreativeHelper.ItemGroup.EventItem;
+
     public override bool CanUseItem(Player player)
     {
         bool result = Main.GameMode != GameModeID.Creative
@@ -48,8 +50,8 @@ public sealed class HeavenrendCrown : AnomalyModItem
 
         EnchantmentEnergyParticles.Update();
         EnchantmentEnergyParticles.DrawSet(particleDrawCenter + Main.screenPosition);
-        TODrawUtils.DrawInInventoryWithCustomSize(spriteBatch, position, frame, drawColor, origin, texture, 0.5f);
-        return false;
+        //TODrawUtils.DrawInInventoryWithCustomSize(spriteBatch, position, frame, drawColor, origin, texture, 0.5f);
+        return true;
     }
 }
 

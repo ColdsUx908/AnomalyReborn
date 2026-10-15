@@ -1,10 +1,35 @@
 AnomalyItems: {
 	AnomalyLoot: Anomaly Mode Loot
+	AnomalyUltramundaneLoot: Anomaly Ultramundane Loot
 
 	HoneyedWildbloom: {
 		DisplayName: Honeyed Wildbloom
 		Tooltip: A wildbloom that has been infused with honey, stickier and more resilient
 		BuffDescription: ""
+	}
+}
+
+Drinks: {
+	BubbleTea: {
+		DisplayName: Bubble Tea
+		Tooltip:
+			'''
+			A delightful beverage from another world
+			Such an extra extra extra large cup of bubble tea, can you really finish it...
+			'''
+		BuffDescription: Energy Overload
+	}
+
+	PlumGreenTea: {
+		DisplayName: Plum Green Tea
+		Tooltip: A delightful beverage from another world
+		BuffDescription: Energy Overload
+	}
+
+	RaspberryBlackTea: {
+		DisplayName: Raspberry Black Tea
+		Tooltip: A delightful beverage from another world
+		BuffDescription: Energy Overload
 	}
 }
 

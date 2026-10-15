@@ -60,21 +60,13 @@ public sealed class ImmaculateWhite : AnomalyModItem, ILegendaryItem, ILocalizat
     {
         float multiplier = phase switch
         {
-            3 => subPhase switch //月后
-            {
-                6 => 300f,    //万物的焦点
-                5 => 50f,     //丛林龙后
-                4 => 27.5f,   //神明吞噬者后
-                3 => 20f,     //噬魂幽花后
-                2 => 17.5f,   //亵渎天神后
-                _ => 13.5f
-            },
+            3 => 20f,
             2 => subPhase switch //肉后
             {
-                5 => 9f,      //教徒后
-                4 => 7f,      //石巨人后
-                3 => 6f,      //世纪之花后
-                2 => 4f,      //机械三王后
+                5 => 10f,      //教徒后
+                4 => 8f,      //石巨人后
+                3 => 6.5f,      //世纪之花后
+                2 => 4.5f,      //机械三王后
                 _ => 3f
             },
             1 => subPhase switch //肉前
@@ -123,6 +115,8 @@ public sealed class ImmaculateWhite : AnomalyModItem, ILegendaryItem, ILocalizat
         Item.value = Celestial.CelestialPrice;
         Item.noUseGraphic = true;
     }
+
+    public override void ModifyResearchSorting(ref ContentSamples.CreativeHelper.ItemGroup itemGroup) => itemGroup = ContentSamples.CreativeHelper.ItemGroup.RangedWeapon;
 
     public override bool CanUseItem(Player player) => player.ownedProjectileCounts[Item.shoot] <= 0;
 

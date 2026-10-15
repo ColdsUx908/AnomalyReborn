@@ -285,7 +285,7 @@ public sealed class ImmaculateBolt : AnomalyModProjectile
             {
                 for (int i = 0; i < 2; i++)
                 {
-                    Projectile.NewProjectileAction<ImmaculateBolt>(Projectile.GetSource_FromAI(), Projectile.Center, Main.rand.NextPolarVector2(2f, 2.5f), Projectile.damage / 3, Projectile.knockBack * 0.4f, Projectile.owner, p =>
+                    Projectile.NewProjectileAction<ImmaculateBolt>(SourceAI, Projectile.Center, Main.rand.NextPolarVector2(2f, 2.5f), Projectile.damage / 3, Projectile.knockBack * 0.4f, Projectile.owner, p =>
                     {
                         ImmaculateBolt modP = p.GetModProjectile<ImmaculateBolt>();
 

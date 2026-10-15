@@ -76,9 +76,9 @@ public sealed class SkeletronHead : AnomalyNPCBehavior<SkeletronHead>
         }
     }
 
-    public static void FireSkull(NPC npc, Player target, int amount, float radian, float skullProjSpeed, int damage, bool fireFromMouth = true, int ai0 = 0)
+    public static void FireSkull(NPC npc, Player target, int amount, float radian, float skullProjSpeed, int damage, bool fireFromMouth = true, bool addNPCVelocity = true, int ai0 = 0)
     {
-        Vector2 velocity = npc.GetVelocityTowards(target, skullProjSpeed) + npc.velocity;
+        Vector2 velocity = npc.GetVelocityTowards(target, skullProjSpeed) + (addNPCVelocity ? npc.velocity : Vector2.Zero);
         Vector2 position = npc.Center + velocity;
         if (fireFromMouth)
             position += new Vector2(0f, 25f * npc.scale).RotatedBy(npc.rotation);

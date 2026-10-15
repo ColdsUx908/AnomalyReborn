@@ -6,9 +6,6 @@ public sealed class AnomalyEffects : IContentLoader
 {
     public sealed record MiscShaderContainer(Asset<Effect> Asset, MiscShaderData Data);
 
-    public static MiscShaderContainer SolidColor;
-    public static MiscShaderContainer SolidColorMask;
-
     public static class BossBars
     {
         public static MiscShaderContainer EaterofWorlds;
@@ -20,11 +17,19 @@ public sealed class AnomalyEffects : IContentLoader
         public static MiscShaderContainer Skeletron;
     }
 
+    public static class Overlays
+    {
+        public static MiscShaderContainer LegendaryNightOverlay;
+        public static MiscShaderContainer SolidColor;
+        public static MiscShaderContainer SolidColorMask;
+    }
+
     public static class Texts
     {
         public static MiscShaderContainer AnomalyTitle;
         public static MiscShaderContainer AnomalyUltramundaneTitle;
         public static MiscShaderContainer EventideReunion;
+        public static MiscShaderContainer LegendaryNightGold;
     }
 
     #region 处理逻辑
@@ -35,6 +40,7 @@ public sealed class AnomalyEffects : IContentLoader
 
         HandleType(typeof(AnomalyEffects), true);
         HandleType(typeof(BossBars));
+        HandleType(typeof(Overlays));
         HandleType(typeof(Texts));
 
         void HandleType(Type type, bool isRoot = false)

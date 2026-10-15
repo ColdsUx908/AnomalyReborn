@@ -1,7 +1,6 @@
 sampler uImage0 : register(s0);
 sampler uImage1 : register(s1);
 float2 uScreenResolution;
-float uScreenRatio; //Width / Height
 float2 uPosition;
 float uTime;
 
@@ -9,8 +8,9 @@ float3 HexCoordRatioAndID(float2 uv)
 {
     const float sqrt3 = 1.7320508;
     
-    // 如果 uScreenRatio = width / height，使用 uv.x *= uScreenRatio 可以拉伸 X 轴使其保持正六边形
-    uv.x *= uScreenRatio;
+    // 定义 screenRatio = width / height，使用 uv.x *= screenRatio 可以拉伸 X 轴使其保持正六边形
+    float screenRatio = uScreenResolution.x / uScreenResolution.y;
+    uv.x *= screenRatio;
     
     // 尖顶六边形（竖直边）的仿射变换
     float2x2 M = float2x2(sqrt3, -1.0, 0.0, 2.0);

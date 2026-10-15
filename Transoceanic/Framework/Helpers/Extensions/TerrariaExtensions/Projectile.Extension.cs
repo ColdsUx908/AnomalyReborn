@@ -157,9 +157,9 @@ public static partial class TOExtensions
             yDist += Main.rand.NextFloat(-10, 20);
             xDist += Main.rand.NextFloat(-10, 20);
             //Light pets lead the player, normal pets trail the player
-            xDist += 60f * (lightPet ? (float)player.direction : -(float)player.direction);
+            xDist += 60f * (lightPet ? player.direction : -(float)player.direction);
             yDist -= 60f;
-            Vector2 playerVector = new Vector2(xDist, yDist);
+            Vector2 playerVector = new(xDist, yDist);
             float playerDist = playerVector.Length();
             float returnSpeed = 18f;
 
@@ -559,5 +559,18 @@ public static partial class TOExtensions
             IEntitySource source, Vector2 position, Vector2 centerVelocity, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
             where T : ModProjectile =>
             Projectile.NewProjectilesArc(amount, radian, source, position, centerVelocity, ModContent.ProjectileType<T>(), damage, knockback, owner, action);
+
+        /// <summary>
+        /// 清除所有满足指定条件的弹幕。
+        /// </summary>
+        /// <param name="predicate">用于判断弹幕是否应被清除的条件。</param>
+        public static void KillAll(Func<Projectile, bool> predicate)
+        {
+            foreach (Projectile projectile in Projectile.ActiveProjectiles)
+            {
+                if (predicate(projectile))
+                    projectile.Kill();
+            }
+        }
     }
 }

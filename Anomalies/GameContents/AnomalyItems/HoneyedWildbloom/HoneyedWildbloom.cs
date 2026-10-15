@@ -11,6 +11,8 @@ public sealed class HoneyedWildbloom : AnomalyModItem
         Item.value = AnomalyRarity.AnomalyPrice;
     }
 
+    public override void ModifyResearchSorting(ref ContentSamples.CreativeHelper.ItemGroup itemGroup) => itemGroup = ContentSamples.CreativeHelper.ItemGroup.VanityPet;
+
     public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback) => false;
 
     public override void UseStyle(Player player, Rectangle heldItemFrame)

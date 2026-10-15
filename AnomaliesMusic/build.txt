@@ -1,0 +1,6 @@
+displayName = Anomalies Music
+author = ColdsUx
+version = 0.1
+hideCode = true
+side = Client
+buildIgnore = .vs\*, Properties\*, obj\*, bin\*

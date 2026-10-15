@@ -3,6 +3,7 @@
     <File Path=".editorconfig" />
   </Folder>
   <Project Path="Anomalies/Anomalies.csproj" />
+  <Project Path="AnomaliesMusic/AnomaliesMusic.csproj" />
   <Project Path="Transoceanic/Transoceanic.csproj" />
   <Project Path="TransoceanicCodeAssist/TransoceanicCodeAssist.csproj" />
 </Solution>

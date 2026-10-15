@@ -125,7 +125,7 @@ public sealed class QueenSlimeSmash : AnomalyProjectileBehavior<QueenSlimeSmash>
                 }
                 else
                 {
-                    Gore gore = Gore.NewGoreDirect(Projectile.GetSource_FromAI(), Projectile.position, Vector2.Zero, 61 + Main.rand.Next(3), 1f - num4 * 0.15f + num7 * 0.5f);
+                    Gore gore = Gore.NewGoreDirect(SourceAI, Projectile.position, Vector2.Zero, 61 + Main.rand.Next(3), 1f - num4 * 0.15f + num7 * 0.5f);
                     gore.velocity.Y -= 0.1f + num4 * 0.5f + num7 * num4 * 1f;
                     gore.velocity.Y *= Main.rand.NextFloat();
                     gore.position = new Vector2(i * 16 + 20, j * 16 + 20);

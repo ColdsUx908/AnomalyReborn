@@ -78,7 +78,7 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
     private static readonly ProjectileDamageContainer _BloodDamage = new(30, 60, 75, 90, 120, 150);
     public static int BloodDamage => _BloodDamage.Value;
 
-    private static readonly ProjectileDamageContainer _ArenaDamage = new(30, 60, 90, 90, 90, 150);
+    private static readonly ProjectileDamageContainer _ArenaDamage = new(150);
     public static int ArenaDamage => _ArenaDamage.Value;
 
     public static readonly Color Phase3Color = Color.Lerp(Color.DarkRed, Color.Tomato, 0.4f);

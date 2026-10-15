@@ -4,7 +4,7 @@ namespace Anomalies.GameContents.AnomalyItems;
 
 public sealed class AnomalyItemTooltip : AnomalyGlobalItemBehavior
 {
-    private static string[] RevTooltipInsertionPositions =
+    public static readonly List<string> RarityTooltipInsertionPositions =
     [
         "Master",
         "Expert",
@@ -30,39 +30,46 @@ public sealed class AnomalyItemTooltip : AnomalyGlobalItemBehavior
 
     public override bool PreDrawTooltipLine(Item item, DrawableTooltipLine line, ref int yOffset)
     {
-        if (item.rare == ModContent.RarityType<AnomalyRarity>())
+        bool result = true;
+
+        if (!AnomalySharedData.DontApplyAnomalyRarityShaderItems[item.type])
         {
-            if (TODrawUtils.TryDrawItemNameWithCustomShader(line, l => AnomalyEffects.Texts.AnomalyTitle.Data
-                .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
-                .SetCustomParameter("uScreenRatio", TODrawUtils.ScreenRatio)
-                .SetCustomParameter("uPosition", new Vector2(l.X, l.Y))
-                .Apply()))
+            if (item.rare == ModContent.RarityType<AnomalyRarity>())
             {
-                return false;
+                if (TODrawUtils.TryDrawItemNameWithCustomShader(line, l => AnomalyEffects.Texts.AnomalyTitle.Data
+                    .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
+                    .SetCustomParameter("uScreenRatio", TODrawUtils.ScreenRatio)
+                    .SetCustomParameter("uPosition", new Vector2(l.X, l.Y))
+                    .Apply()))
+                {
+                    result = false;
+                }
             }
-        }
-        else if (item.rare == ModContent.RarityType<AnomalyUltramundaneRarity>())
-        {
-            if (TODrawUtils.TryDrawItemNameWithCustomShader(line, l => AnomalyEffects.Texts.AnomalyUltramundaneTitle.Data
-                .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
-                .SetCustomParameter("uScreenRatio", TODrawUtils.ScreenRatio)
-                .SetCustomParameter("uPosition", new Vector2(l.X, l.Y))
-                .Apply()))
+            else if (item.rare == ModContent.RarityType<AnomalyUltramundaneRarity>())
             {
-                return false;
+                if (TODrawUtils.TryDrawItemNameWithCustomShader(line, l => AnomalyEffects.Texts.AnomalyUltramundaneTitle.Data
+                    .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
+                    .SetCustomParameter("uScreenRatio", TODrawUtils.ScreenRatio)
+                    .SetCustomParameter("uPosition", new Vector2(l.X, l.Y))
+                    .Apply()))
+                {
+                    result = false;
+                }
             }
         }
 
-        return true;
+        return result;
     }
 
     public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
     {
-        if (item.rare == ModContent.RarityType<AnomalyRarity>())
+        int anomalyRarity = ModContent.RarityType<AnomalyRarity>();
+        int anomalyUltramundaneRarity = ModContent.RarityType<AnomalyUltramundaneRarity>();
+        if (item.rare == anomalyRarity || item.rare == anomalyUltramundaneRarity)
         {
             AnomalyItemTooltipModifier modifier = new(item, tooltips);
             int difficultyIndex = -1;
-            foreach (string name in RevTooltipInsertionPositions)
+            foreach (string name in RarityTooltipInsertionPositions)
             {
                 if (modifier.TryGet(null, name, out difficultyIndex, out _))
                     break;
@@ -73,7 +80,10 @@ public sealed class AnomalyItemTooltip : AnomalyGlobalItemBehavior
             if (difficultyIndex == -1)
                 return;
 
-            tooltips.Insert(++difficultyIndex, new TooltipLine(Mod, "AnomalyIdentifier", Language.GetTextValue(AnomalySharedData.ModLocalizationPrefix + "AnomalyMode.Name")) { OverrideColor = AnomalySharedData.RebornColor });
+            tooltips.Insert(++difficultyIndex, new TooltipLine(Mod,
+                "Anomaly" + (item.rare == anomalyRarity ? "Identifier" : "UltramundaneIdentifier"),
+                Language.GetTextValue(AnomalySharedData.ModLocalizationPrefix + "AnomalyMode." + (item.rare == anomalyRarity ? "Name" : "UltraName")))
+            { OverrideColor = AnomalySharedData.RebornColor });
         }
     }
 }

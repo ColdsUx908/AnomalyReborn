@@ -1,6 +1,6 @@
 ﻿namespace Transoceanic.DataStructures;
 
-public sealed class ModReference : IContentLoader
+public sealed class ModReference : ITOLoader
 {
     /// <summary>
     /// 检测特定Mod是否已加载，可获取实例。
@@ -29,6 +29,7 @@ public sealed class ModReference : IContentLoader
 
     //按字母顺序排列
     public static Container Anomalies { get; private set; }
+    public static Container AnomaliesMusic { get; private set; }
     public static Container Calamity { get; private set; }
     public static Container CalDemutation { get; private set; }
     public static Container CALegacy { get; private set; }
@@ -67,10 +68,10 @@ public sealed class ModReference : IContentLoader
     public static Container TO { get; private set; }
     public static Container WrathoftheGods { get; private set; }
 
-    [LoadPriority(10)]
-    void IContentLoader.PostSetupContent()
+    void ITOLoader.Load()
     {
         Anomalies = new("Anomalies");
+        AnomaliesMusic = new("AnomaliesMusic");
         Calamity = new("CalamityMod");
         CalDemutation = new("CalamityDemutation");
         CALegacy = new("CAnomalies");
@@ -110,9 +111,10 @@ public sealed class ModReference : IContentLoader
         WrathoftheGods = new("NoxusBoss");
     }
 
-    void IContentLoader.OnModUnload()
+    void ITOLoader.Unload()
     {
         Anomalies = null;
+        AnomaliesMusic = null;
         Calamity = null;
         CalDemutation = null;
         CALegacy = null;

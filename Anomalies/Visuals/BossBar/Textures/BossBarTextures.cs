@@ -42,6 +42,13 @@ public sealed class BossBarTextures : IContentLoader
         /// </summary>
         public static Texture2D BaseBarFillerSmall => _BaseBarFillerSmall.Value;
 
+        [LoadTexture(Path + "DefaultHealthBar")]
+        /// <summary>
+        /// 默认血条纹理。
+        /// </summary>
+        internal static Asset<Texture2D> _DefaultHealthBar;
+        public static Texture2D DefaultHealthBar => _DefaultHealthBar?.Value;
+
         [LoadTexture(Path + "PhaseIndicator")]
         internal static Asset<Texture2D> _PhaseIndicator;
         /// <summary>

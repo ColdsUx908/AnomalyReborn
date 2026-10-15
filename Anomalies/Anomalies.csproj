@@ -16,6 +16,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\AnomaliesMusic\AnomaliesMusic.csproj" />
         <ProjectReference Include="..\Transoceanic\Transoceanic.csproj" />
         <ProjectReference Include="..\TransoceanicCodeAssist\TransoceanicCodeAssist.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
@@ -26,8 +27,12 @@
       </Reference>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="GameContents\MusicBoxes\" />
+    </ItemGroup>
+
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-      <Exec Command="call $(ProjectDir)PreBuild\EffectCompiler\EffectCompiler.exe" />
+      <Exec Command="call &quot;$(ProjectDir)PreBuild\EffectCompiler\EffectCompiler.exe&quot;" />
     </Target>
 
 </Project>

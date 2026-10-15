@@ -405,7 +405,6 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
         AnomalyEffects.BossBars.QueenBee.Data
             .UseImage1(AnomalyTextures.Noise._Milky)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
-            .SetCustomParameter("uScreenRatio", TODrawUtils.ScreenRatio)
             .SetCustomParameter("uPosition", destinationRentangle.TopLeft())
             .Apply();
     }

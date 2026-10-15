@@ -168,7 +168,7 @@ public sealed partial class EventideReunionHoldout : AnomalyModProjectile
                     float angle = originalRotation;// + angleOffset;
                     Vector2 projectileSpawnCenter = originalProjectileSpawnCenter + new PolarVector2(10f, angle);
 
-                    Projectile.NewProjectileAction<ImmaculateBolt>(Projectile.GetSource_FromAI(), projectileSpawnCenter, new PolarVector2(Main.rand.NextFloat(2f, 2.5f), angle), Projectile.damage, knockback, player.whoAmI, p =>
+                    Projectile.NewProjectileAction<ImmaculateBolt>(SourceAI, projectileSpawnCenter, new PolarVector2(Main.rand.NextFloat(2f, 2.5f), angle), Projectile.damage, knockback, player.whoAmI, p =>
                     {
                         ImmaculateBolt modP = p.GetModProjectile<ImmaculateBolt>();
 

@@ -17,7 +17,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
     }
 
 
-    private static readonly ProjectileDamageContainer _RainbowJewelProjectileDamage = new(40, 60, 90, 120, 120, 150);
+    private static readonly ProjectileDamageContainer _RainbowJewelProjectileDamage = new(150);
     public static int RainbowJewelProjectileDamage => _RainbowJewelProjectileDamage.Value;
 
     public const float MaxProjectileSpeed = 18f;

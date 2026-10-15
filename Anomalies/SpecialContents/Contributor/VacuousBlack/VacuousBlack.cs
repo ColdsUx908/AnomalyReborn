@@ -45,6 +45,8 @@ public sealed class VacuousBlack : AnomalyModItem, ILegendaryItem, ILocalization
         Item.noUseGraphic = true;
     }
 
+    public override void ModifyResearchSorting(ref ContentSamples.CreativeHelper.ItemGroup itemGroup) => itemGroup = ContentSamples.CreativeHelper.ItemGroup.SummonWeapon;
+
     public override bool CanUseItem(Player player)
     {
         return player.AvailableMinionSlots >= 1;

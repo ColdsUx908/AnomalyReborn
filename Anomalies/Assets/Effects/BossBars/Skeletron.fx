@@ -11,7 +11,7 @@ float3 GetColor(float2 screenCoords)
     
     float coords = sin(screenCoords.x * 30 + uTime * 2.4) * 0.5 + 0.5;
     float txt = tex2D(uImage1, screenCoords * float2(1.5, 3) + float2(uTime * -0.07, uTime * -0.12)).r;
-    float txtVal = pow(txt, 1.2);
+    float txtVal = pow(max(txt, 0), 1.2);
     float3 gradientColor = lerp(colorBase, colorTop, coords) * min(1.4, 0.75 + txtVal * 0.7);
     return gradientColor;
 }

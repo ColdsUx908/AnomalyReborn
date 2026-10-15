@@ -1,5 +1,5 @@
 ﻿#if DEBUG
-using Anomalies.Bosses.Skeletron.SkeletronLegend;
+using Anomalies.Bosses.Skeletron.LegendaryNight;
 using Anomalies.GameContents;
 
 namespace Anomalies.SpecialContents.Developer;
@@ -28,9 +28,13 @@ public sealed class TestItem : AnomalyModItem, IDeveloperItem
         Item.noMelee = true;
         Item.rare = ModContent.RarityType<Celestial>();
         Item.value = Celestial.CelestialPrice;
-        Item.shoot = ModContent.ProjectileType<FallenStar>();
+        Item.shoot = ModContent.ProjectileType<PlatinumCoin>();
         Item.shootSpeed = 15f;
     }
+
+    public override bool CanResearch() => false;
+
+    public override bool AltFunctionUse(Player player) => true;
 
     public override bool CanUseItem(Player player)
     {
@@ -39,9 +43,16 @@ public sealed class TestItem : AnomalyModItem, IDeveloperItem
 
     public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
     {
+        if (player.altFunctionUse == 2)
+        {
+            Projectile.NewProjectile(source, Main.MouseWorld, Vector2.Zero,
+                ModContent.ProjectileType<ShadowPlayer>(), damage, 0f, player.whoAmI, ai0: player.whoAmI + 1);
+            return false;
+        }
+
         Projectile.NewProjectileAction(source, position, velocity, type, damage, knockback, action: p =>
         {
-            p.scale = 0.1f;
+            p.scale = 1f;
         });
         return false;
     }

@@ -1,10 +1,23 @@
 ﻿namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
-/// 提供与绘图相关的工具方法，例如屏幕坐标计算、自定义尺寸物品绘制以及描边效果。
+/// 提供与绘图相关的工具字段和方法，例如屏幕坐标计算、自定义尺寸物品绘制以及描边效果。
 /// </summary>
 public static class TODrawUtils
 {
+    /// <summary>
+    /// 一个用于擦除绘制的混合状态，适用于需要将源颜色完全覆盖目标颜色的场景。
+    /// </summary>
+    public static readonly BlendState EraseBlend = new()
+    {
+        ColorSourceBlend = Blend.Zero,
+        ColorDestinationBlend = Blend.InverseSourceAlpha,
+        ColorBlendFunction = BlendFunction.Add,
+        AlphaSourceBlend = Blend.Zero,
+        AlphaDestinationBlend = Blend.InverseSourceAlpha,
+        AlphaBlendFunction = BlendFunction.Add
+    };
+
     /// <summary>
     /// 获取当前屏幕的宽高比（宽度 / 高度）。
     /// </summary>
