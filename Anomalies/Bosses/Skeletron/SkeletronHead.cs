@@ -4,7 +4,7 @@ public sealed class SkeletronHead : AnomalyNPCBehavior<SkeletronHead>
 {
     public override int ApplyingType => NPCID.SkeletronHead;
 
-    public override bool ShouldProcess => false;
+    public override bool ShouldProcess => /*base.ShouldProcess && AnomalyNPC.CustomAIType != 1;*/ false;
 
     public static void NormalMovement(NPC npc, Player target, float maxSpeedX, float maxSpeedY, float accelerationX, float accelerationY, float targetDistanceAboveTarget, float rotationFactor = 15f)
     {
@@ -89,8 +89,6 @@ public sealed class SkeletronHead : AnomalyNPCBehavior<SkeletronHead>
             Projectile.NewProjectileAction(npc.GetSource_FromAI(), position, velocity, type, damage, 0f, action: FireSkullAction);
         else
             Projectile.NewProjectilesArc(amount, radian, npc.GetSource_FromAI(), position, velocity, type, damage, 0f, action: FireSkullAction);
-
-        npc.netUpdate = true;
 
         void FireSkullAction(Projectile p)
         {

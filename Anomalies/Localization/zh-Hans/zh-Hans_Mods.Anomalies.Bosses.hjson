@@ -31,15 +31,20 @@ QueenBee: {
 Skeletron: {
 	LegendaryNight: {
 		Summon: 传说之夜开始了！
+		AstralBlessing: 神秘的星神之力祝福着你，你获得了无限飞行的能力。
 		SummonFailed: 传说之夜未能开始。它需要一个超凡的夜晚。
 		LegendaryNightRitual.DisplayName: 传说之夜仪式
 		LegendaryNightArena.DisplayName: 传说之夜竞技场
 		LegendShockwave.DisplayName: 传奇冲击波
+		SkullWarning.DisplayName: 骷髅预警
 		SlimeMount.DisplayName: 史莱姆鞍
+		FlyingSlime.DisplayName: 飞翔史莱姆
 		FallingStar.DisplayName: 坠落之星
 		Meteor.DisplayName: 陨石
+		DemonShadow.DisplayName: 恶魔之影
 		PlatinumCoin.DisplayName: 铂金币
-		ShadowPlayer.DisplayName: 暗影套玩家
+		CoinRoulette.DisplayName: 钱币轮盘
+		CoinJudgment.DisplayName: 钱币审判
 
 		FallenStarEssence: {
 			DisplayName: 坠星精华

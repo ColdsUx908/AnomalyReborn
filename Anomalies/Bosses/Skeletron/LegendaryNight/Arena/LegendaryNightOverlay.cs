@@ -41,7 +41,8 @@ public sealed class LegendaryNightOverlay : CustomOverlay
             AnomalyEffects.Overlays.LegendaryNightOverlay.Data
                 .UseImage1(AnomalyTextures.Noise._Wave)
                 .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
-                .SetCustomParameter("uPosition", Vector2.Zero)
+                .SetCustomParameter("uScreenPosition", Main.screenPosition)
+                .SetCustomParameter("uInverseViewMatrix", Matrix.Invert(Main.GameViewMatrix.TransformationMatrix))
                 .Apply();
 
             spriteBatch.Draw(TOTextures.FillerTexture, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White);

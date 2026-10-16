@@ -95,6 +95,8 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
         }
         set
         {
+            if (CurrentPhase != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_0;
             union.byte0 = (byte)value;
             AI_Union_0 = union;
@@ -123,6 +125,8 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
         }
         set
         {
+            if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_0;
             union.byte1 = (byte)value;
             AI_Union_0 = union;
@@ -132,7 +136,15 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
     public int CurrentLocalPhase
     {
         get => (int)NPC.ai[1];
-        set => NPC.ai[1] = value;
+        set
+        {
+            if (NPC.ai[1] != value)
+            {
+                NPC.ai[1] = value;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
+            }
+        }
     }
 
     public int LastSpawnSlimeLife

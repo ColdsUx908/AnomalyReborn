@@ -80,6 +80,8 @@ public partial class BloodlettingServant : AnomalyModNPC
 
         if (!NPC.TryGetMaster(NPCID.EyeofCthulhu, out NPC master))
         {
+            if (!TOSharedData.NotClient)
+                return;
             NPC.life = 0;
             NPC.HitEffect();
             NPC.active = false;
@@ -586,8 +588,9 @@ public partial class BloodlettingServant : AnomalyModNPC
     }
     #endregion Zenith
 
-    public override void SendExtraAI(BinaryWriter writer)
+    protected override void SendAnomalyExtraAI(BinaryWriter writer)
     {
+        base.SendAnomalyExtraAI(writer);
         writer.Write((int)Place);
         writer.Write(PositionRotation);
         writer.Write((int)MasterCommandReceiver);
@@ -595,8 +598,9 @@ public partial class BloodlettingServant : AnomalyModNPC
         writer.Write(ArenaRadius);
     }
 
-    public override void ReceiveExtraAI(BinaryReader reader)
+    protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
     {
+        base.ReceiveAnomalyExtraAI(reader);
         Place = (ServantPlace)reader.ReadInt32();
         PositionRotation = reader.ReadSingle();
         MasterCommandReceiver = (BehaviorCommand_Servant)reader.ReadInt32();

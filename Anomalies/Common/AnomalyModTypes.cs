@@ -35,6 +35,22 @@ public abstract class AnomalyModNPC : TOModNPC, IAnomalyModNPC
 {
     public AnomalyGlobalNPC AnomalyNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => NPC.Anomaly; }
 
+    // Seal the public pair so a derived payload cannot accidentally skip shared state.
+    public sealed override void SendExtraAI(BinaryWriter writer)
+    {
+        AnomalyEntityNetState.WriteNPC(writer, NPC);
+        SendAnomalyExtraAI(writer);
+    }
+
+    public sealed override void ReceiveExtraAI(BinaryReader reader)
+    {
+        AnomalyEntityNetState.ReadNPC(reader, NPC);
+        ReceiveAnomalyExtraAI(reader);
+    }
+
+    protected virtual void SendAnomalyExtraAI(BinaryWriter writer) { }
+    protected virtual void ReceiveAnomalyExtraAI(BinaryReader reader) { }
+
     public virtual bool PreUpdateCalBossBar(BossHealthBar newBar) => true;
     public virtual void PostUpdateCalBossBar(BossHealthBar newBar) { }
     public virtual bool PreDrawCalBossBar(BossHealthBar newBar, SpriteBatch spriteBatch, ref int x, ref int y) => true;
@@ -49,6 +65,21 @@ public interface IAnomalyModProjectile
 public abstract class AnomalyModProjectile : TOModProjectile, IAnomalyModProjectile
 {
     public AnomalyGlobalProjectile AnomalyProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Projectile.Anomaly; }
+
+    public sealed override void SendExtraAI(BinaryWriter writer)
+    {
+        AnomalyEntityNetState.WriteProjectile(writer, Projectile);
+        SendAnomalyExtraAI(writer);
+    }
+
+    public sealed override void ReceiveExtraAI(BinaryReader reader)
+    {
+        AnomalyEntityNetState.ReadProjectile(reader, Projectile);
+        ReceiveAnomalyExtraAI(reader);
+    }
+
+    protected virtual void SendAnomalyExtraAI(BinaryWriter writer) { }
+    protected virtual void ReceiveAnomalyExtraAI(BinaryReader reader) { }
 
     public virtual void ModifyHitNPC_DR(NPC target, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 }

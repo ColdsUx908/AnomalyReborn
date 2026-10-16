@@ -1,9 +1,13 @@
-﻿namespace Anomalies.Bosses.EyeofCthulhu;
+﻿using Anomalies.DataStructures;
+
+namespace Anomalies.Bosses.EyeofCthulhu;
 
 public sealed partial class EyeofCthulhu
 {
     public override bool PreAI()
     {
+        using BossNetUpdateScope netUpdate = new(NPC);
+
         bool valid = Phase3
             ? NPC.TargetIfInvalid(true, p => ArenaProjectileAlive && new Circle(ArenaProjectile.Center, ArenaModProjectile.Radius * 2f).Collides(p.Hitbox))
             : NPC.TargetClosestIfInvalid(true, DespawnDistance);
@@ -63,8 +67,6 @@ public sealed partial class EyeofCthulhu
                 Phase3AI();
                 break;
         }
-
-        NPC.netUpdate = true;
 
         return false;
 
@@ -154,6 +156,9 @@ public sealed partial class EyeofCthulhu
 
             void SelectNextBehavior()
             {
+                if (!TOSharedData.NotClient)
+                    return;
+
                 CurrentLocalPhase = 0;
                 Timer1 = 0;
                 Timer2 = 0;
@@ -450,6 +455,9 @@ public sealed partial class EyeofCthulhu
 
             void SelectNextBehavior()
             {
+                if (!TOSharedData.NotClient)
+                    return;
+
                 CurrentLocalPhase = 0;
                 Timer1 = 0;
                 Timer2 = 0;
@@ -512,7 +520,6 @@ public sealed partial class EyeofCthulhu
 
                 ExecuteActionToServants((n, modN) => modN.ShouldUsePhase2Frame = CurrentBehavior is Behavior.Phase2_NormalCharge or Behavior.Phase2_RapidCharge or Behavior.Phase2_HorizontalCharge);
             }
-
 
             bool CheckPhaseChange()
             {
@@ -752,6 +759,8 @@ public sealed partial class EyeofCthulhu
                 switch (CurrentLocalPhase)
                 {
                     case 0:
+                        if (!TOSharedData.NotClient)
+                            return;
                         int direction = NextChargeTypeIsHorizontal ? Math.Sign(AttackCounter2 == 0 ? -Target.velocity.X : NPC.Center.X - Target.Center.X) : Math.Sign(NPC.Center.Y - Target.Center.Y);
                         if (direction == 0)
                             direction = Main.rand.NextBool(2) ? 1 : -1;
@@ -1100,6 +1109,9 @@ public sealed partial class EyeofCthulhu
 
             void SelectNextBehavior()
             {
+                if (!TOSharedData.NotClient)
+                    return;
+
                 CurrentLocalPhase = 0;
                 Timer1 = 0;
                 Timer2 = 0;
@@ -1199,6 +1211,8 @@ public sealed partial class EyeofCthulhu
                     switch (CurrentLocalPhase)
                     {
                         case 0: //初始化
+                            if (!TOSharedData.NotClient)
+                                return;
                             CurrentLocalPhase = 1;
 
                             NPC.damage = ReducedSetDamage;
@@ -1253,6 +1267,8 @@ public sealed partial class EyeofCthulhu
                     switch (CurrentLocalPhase)
                     {
                         case 0: //初始化：一次性生成4个Index
+                            if (!TOSharedData.NotClient)
+                                return;
                             CurrentLocalPhase = 1;
 
                             NPC.damage = ReducedSetDamage;
@@ -1453,6 +1469,8 @@ public sealed partial class EyeofCthulhu
                     switch (CurrentLocalPhase)
                     {
                         case 0:
+                            if (!TOSharedData.NotClient)
+                                return;
                             int usedIndex1 = Main.rand.Next(0, 32);
                             UsedEyeIndex1 = usedIndex1;
                             SendCommandToArena(BehaviorCommand_Arena.EyeSpin);
@@ -1483,6 +1501,8 @@ public sealed partial class EyeofCthulhu
                     switch (CurrentLocalPhase)
                     {
                         case 0:
+                            if (!TOSharedData.NotClient)
+                                return;
                             int usedIndex1 = (int)TOMathUtils.NormalizeWithPeriod(UsedEyeIndex1 + Main.rand.Next(5, 12) * Main.rand.NextBool(2).ToDirectionInt(), 32);
                             UsedEyeIndex1 = usedIndex1;
                             SendCommandToArena(BehaviorCommand_Arena.EyeSpin);
@@ -1515,6 +1535,8 @@ public sealed partial class EyeofCthulhu
                     switch (CurrentLocalPhase)
                     {
                         case 0:
+                            if (!TOSharedData.NotClient)
+                                return;
                             int usedIndex1 = (int)TOMathUtils.NormalizeWithPeriod(UsedEyeIndex1 + Main.rand.Next(5, 12) * Main.rand.NextBool(2).ToDirectionInt(), 32);
                             UsedEyeIndex1 = usedIndex1;
                             SendCommandToArena(BehaviorCommand_Arena.EyeSpinLast);

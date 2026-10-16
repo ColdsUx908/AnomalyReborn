@@ -59,6 +59,14 @@ public sealed class ImmaculateWhiteBow : AnomalyModProjectile
         bool canUseItem = !player.CanNotUseHoldOut() && player.HasAmmo(player.HeldItem);
         Vector2 actualPlayerPosition = player.RotatedRelativePoint(player.MountedCenter, true);
 
+        if (!Projectile.IsOnOwnerClient)
+        {
+            Projectile.Center = actualPlayerPosition + Projectile.velocity * new Vector2(13f, 20f);
+            Projectile.rotation = Projectile.velocity.ToRotation() + (Projectile.spriteDirection == -1 ? MathHelper.Pi : 0f);
+            Projectile.timeLeft = 30;
+            player.heldProj = Projectile.whoAmI;
+        }
+
         if (Projectile.IsOnOwnerClient)
         {
             if (canUseItem)
@@ -66,7 +74,10 @@ public sealed class ImmaculateWhiteBow : AnomalyModProjectile
                 Vector2 direction = Main.MouseWorld - actualPlayerPosition;
                 if (player.gravDir == -1f)
                     direction.Y = Main.screenHeight - Main.mouseY + Main.screenPosition.Y - actualPlayerPosition.Y;
-                Projectile.velocity = direction.SafeNormalize();
+                Vector2 velocity = direction.SafeNormalize();
+                if (Vector2.DistanceSquared(Projectile.velocity, velocity) > 0.0025f)
+                    Projectile.netUpdate = true;
+                Projectile.velocity = velocity;
                 float originalRotation = direction.ToRotation();
 
                 Vector2 positionOffset = Projectile.velocity * 20f;
@@ -122,6 +133,18 @@ public sealed class ImmaculateWhiteBow : AnomalyModProjectile
                 Projectile.Kill();
             }
         }
+    }
+
+    protected override void SendAnomalyExtraAI(BinaryWriter writer)
+    {
+        base.SendAnomalyExtraAI(writer);
+        writer.Write(ShootSpeedMultiplier);
+    }
+
+    protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
+    {
+        base.ReceiveAnomalyExtraAI(reader);
+        ShootSpeedMultiplier = reader.ReadSingle();
     }
 
     public override bool? CanHitNPC(NPC target) => false;

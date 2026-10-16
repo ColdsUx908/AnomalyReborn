@@ -31,15 +31,20 @@ QueenBee: {
 Skeletron: {
 	LegendaryNight: {
 		Summon: The legendary night has begun!
+		AstralBlessing: The mysterious power of the Star God blesses you, granting you unlimited flight.
 		SummonFailed: Legendary night has failed to begin. It requires an Ultramundane night.
 		LegendaryNightRitual.DisplayName: Legendary Night Ritual
 		LegendaryNightArena.DisplayName: Legendary Night Arena
 		LegendShockwave.DisplayName: Legend Shockwave
+		SkullWarning.DisplayName: Skull Warning
 		SlimeMount.DisplayName: Slime Mount
+		FlyingSlime.DisplayName: Flying Slime
 		FallingStar.DisplayName: Falling Star
 		Meteor.DisplayName: Meteor
+		DemonShadow.DisplayName: Demon Shadow
 		PlatinumCoin.DisplayName: Platinum Coin
-		ShadowPlayer.DisplayName: Shadow Player
+		CoinRoulette.DisplayName: Coin Roulette
+		CoinJudgment.DisplayName: Coin Judgment
 
 		FallenStarEssence: {
 			DisplayName: Fallen Star Essence

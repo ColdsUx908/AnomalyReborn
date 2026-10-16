@@ -87,6 +87,8 @@ public static class JewelHandler
     /// <param name="jewel">宝石。</param>
     public static void Despawn(NPC jewel)
     {
+        if (!TOSharedData.NotClient)
+            return;
         jewel.life = 0;
         jewel.HitEffect();
         jewel.active = false;

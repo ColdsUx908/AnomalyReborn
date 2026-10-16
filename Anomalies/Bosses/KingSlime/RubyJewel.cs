@@ -21,6 +21,8 @@ public sealed class RubyJewel : JewelNPC
         get => (Behavior)AI_Union_0.byte0;
         set
         {
+            if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_0;
             union.byte0 = (byte)value;
             AI_Union_0 = union;
@@ -54,6 +56,8 @@ public sealed class RubyJewel : JewelNPC
 
     public override bool PreAI()
     {
+        using BossNetUpdateScope netUpdate = new(NPC);
+
         if (MasterDead)
         {
             JewelHandler.Kill(NPC);
@@ -104,8 +108,6 @@ public sealed class RubyJewel : JewelNPC
             JewelHandler.Move(NPC, master.Center, 13f, 13f, 0.2f, 0.175f, 150f, -150f, 0f, -200f);
             CurrentBehavior = Behavior.None;
         }
-
-        NPC.netUpdate = true;
 
         return false;
 

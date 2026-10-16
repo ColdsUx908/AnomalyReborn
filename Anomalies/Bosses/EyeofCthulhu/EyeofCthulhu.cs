@@ -116,6 +116,8 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
         }
         set
         {
+            if (CurrentPhase != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_0;
             union.byte0 = (byte)value;
             AI_Union_0 = union;
@@ -138,6 +140,8 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
         }
         set
         {
+            if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_0;
             union.byte1 = (byte)value;
             AI_Union_0 = union;
@@ -147,7 +151,15 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
     public int CurrentLocalPhase
     {
         get => (int)NPC.ai[1];
-        set => NPC.ai[1] = value;
+        set
+        {
+            if (NPC.ai[1] != value)
+            {
+                NPC.ai[1] = value;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
+            }
+        }
     }
 
     public bool Hover2DirectionIsNegative
@@ -159,6 +171,8 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
             {
                 AnomalyNPC.AnomalyAI32[0].bits[0] = value;
                 AnomalyNPC.AIChanged32[0] = true;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
             }
         }
     }
@@ -178,6 +192,8 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
             {
                 AnomalyNPC.AnomalyAI32[0].bits[1] = value;
                 AnomalyNPC.AIChanged32[0] = true;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
             }
         }
     }
@@ -245,6 +261,8 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
             {
                 AnomalyNPC.AnomalyAI32[7].byte0 = temp;
                 AnomalyNPC.AIChanged32[7] = true;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
             }
         }
     }
@@ -259,6 +277,8 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
             {
                 AnomalyNPC.AnomalyAI32[7].byte1 = temp;
                 AnomalyNPC.AIChanged32[7] = true;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
             }
         }
     }
@@ -273,6 +293,8 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
             {
                 AnomalyNPC.AnomalyAI32[7].byte2 = temp;
                 AnomalyNPC.AIChanged32[7] = true;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
             }
         }
     }
@@ -287,6 +309,8 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
             {
                 AnomalyNPC.AnomalyAI32[7].byte3 = temp;
                 AnomalyNPC.AIChanged32[7] = true;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
             }
         }
     }
@@ -300,6 +324,8 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
             {
                 AnomalyNPC.AnomalyAI64[0].SetValue(value);
                 AnomalyNPC.AIChanged64[0] = true;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
             }
         }
     }
@@ -385,16 +411,8 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
     /// </summary>
     public Projectile ArenaProjectile
     {
-        get => Projectile.GetProjectileFromIndex(AnomalyNPC.AnomalyAI32[2].i);
-        set
-        {
-            int temp = value?.whoAmI ?? -1;
-            if (AnomalyNPC.AnomalyAI32[2].i != temp)
-            {
-                AnomalyNPC.AnomalyAI32[2].i = temp;
-                AnomalyNPC.AIChanged32[2] = true;
-            }
-        }
+        get => AnomalyNPC.GetProjectileReference(1);
+        set => AnomalyNPC.SetProjectileReference(NPC, 1, value);
     }
     public bool ArenaProjectileAlive => ArenaProjectile.active && ArenaProjectile.ModProjectile is EyeofCthulhuArena arena && arena.Master == NPC;
     public EyeofCthulhuArena ArenaModProjectile => ArenaProjectile.GetModProjectile<EyeofCthulhuArena>();
@@ -418,7 +436,7 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
      *   [1].
      *       byte0 ServantLeft
      *       byte1 ServantRight
-     *   [2].i ArenaProjectile
+     *   [2] 保留（ArenaProjectile 改用 AI64 网络引用）
      *   [3].i ServantSpawnCounter
      *   [4].i AttackCounter
      *   [5].i AttackCounter2
@@ -431,6 +449,7 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
      * 
      * AnomalyAI64
      *   [0] (Vector2) Phase3ArenaCenter
+     *   [1] (owner + identity) ArenaProjectile
      */
     #endregion 数据
 

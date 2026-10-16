@@ -84,16 +84,21 @@ public sealed class HeavenrendCrownHoldout : AnomalyModProjectile
         switch (Timer1)
         {
             case 1:
+                SoundEngine.PlaySound(AnomalyHandler.ActivationSound);
+                if (!TOSharedData.NotClient)
+                    break;
                 if (!AnomalySharedData.Anomaly)
                 {
-                    SoundEngine.PlaySound(AnomalyHandler.ActivationSound);
                     if (Main.GameMode != GameModeID.Creative)
+                    {
                         Main.GameMode = GameModeID.Master;
+                        if (Main.netMode == NetmodeID.Server)
+                            NetMessage.SendData(MessageID.WorldData);
+                    }
                     AnomalySharedData.Anomaly = true;
                 }
                 else
                 {
-                    SoundEngine.PlaySound(AnomalyHandler.ActivationSound);
                     AnomalySharedData.Anomaly = false;
                 }
                 break;

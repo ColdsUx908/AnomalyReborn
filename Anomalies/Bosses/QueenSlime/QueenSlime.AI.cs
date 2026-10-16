@@ -1,4 +1,5 @@
 ﻿using Anomalies.Bosses.KingSlime;
+using Anomalies.DataStructures;
 
 namespace Anomalies.Bosses.QueenSlime;
 
@@ -6,6 +7,8 @@ public sealed partial class QueenSlime
 {
     public override bool PreAI()
     {
+        using BossNetUpdateScope netUpdate = new(NPC);
+
         if (CurrentBehavior == Behavior.Despawn || !NPC.TargetClosestIfInvalid(true, DespawnDistance))
         {
             Despawn();
@@ -334,6 +337,9 @@ public sealed partial class QueenSlime
 
             void SelectNextBehavior()
             {
+                if (!TOSharedData.NotClient)
+                    return;
+
                 Timer5 = 0;
 
                 if (TeleportTimer > 1500f || !NPC.WithinRange(Target.Center, 2400f))
@@ -643,6 +649,8 @@ public sealed partial class QueenSlime
                 switch (CurrentLocalPhase)
                 {
                     case 0: //寻的
+                    if (!TOSharedData.NotClient)
+                        return;
                         Vector2? destination = null;
 
                         if (!Phase1_2)
@@ -862,6 +870,9 @@ public sealed partial class QueenSlime
 
             void SelectNextBehavior()
             {
+                if (!TOSharedData.NotClient)
+                    return;
+
                 CurrentLocalPhase = 0;
                 Timer1 = 0;
                 Timer2 = 0;

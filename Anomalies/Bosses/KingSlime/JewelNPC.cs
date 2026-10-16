@@ -7,7 +7,15 @@ public abstract class JewelNPC : AnomalyModNPC
     public int CurrentLocalPhase
     {
         get => (int)NPC.ai[1];
-        set => NPC.ai[1] = value;
+        set
+        {
+            if (NPC.ai[1] != value)
+            {
+                NPC.ai[1] = value;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
+            }
+        }
     }
 
     public bool HasInitialized
@@ -15,6 +23,8 @@ public abstract class JewelNPC : AnomalyModNPC
         get => AI_Union_2.bits[0];
         set
         {
+            if (HasInitialized != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_2;
             union.bits[0] = value;
             AI_Union_2 = union;
@@ -26,6 +36,8 @@ public abstract class JewelNPC : AnomalyModNPC
         get => AI_Union_2.bits[1];
         set
         {
+            if (HasEnteredPhase2 != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_2;
             union.bits[1] = value;
             AI_Union_2 = union;
@@ -37,6 +49,8 @@ public abstract class JewelNPC : AnomalyModNPC
         get => AI_Union_2.bits[2];
         set
         {
+            if (CanAttack != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_2;
             union.bits[2] = value;
             AI_Union_2 = union;
@@ -48,6 +62,8 @@ public abstract class JewelNPC : AnomalyModNPC
         get => AI_Union_2.bits[3];
         set
         {
+            if (MasterDead != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_2;
             union.bits[3] = value;
             AI_Union_2 = union;

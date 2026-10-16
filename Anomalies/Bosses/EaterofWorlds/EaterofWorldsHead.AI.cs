@@ -1,4 +1,6 @@
-﻿namespace Anomalies.Bosses.EaterofWorlds;
+﻿using Anomalies.DataStructures;
+
+namespace Anomalies.Bosses.EaterofWorlds;
 
 public sealed partial class EaterofWorldsHead
 {
@@ -6,11 +8,14 @@ public sealed partial class EaterofWorldsHead
 
     public override bool PreAI()
     {
+        using BossNetUpdateScope netUpdate = new(NPC);
+
         if (IsFirstSegment)
         {
             if (!NPC.TargetClosestIfInvalid(true, DespawnDistance))
             {
-                NPC.active = false;
+                if (TOSharedData.NotClient)
+                    NPC.active = false;
                 return false;
             }
         }
@@ -18,17 +23,17 @@ public sealed partial class EaterofWorldsHead
         {
             if (!ValidHead)
             {
-                NPC.active = false;
+                if (TOSharedData.NotClient)
+                    NPC.active = false;
                 return false;
             }
 
             NPC.realLife = Head.whoAmI;
             NPC.target = Head.target;
 
-            EaterofWorldsHead headBehavior = HeadBehavior;
-            CurrentPhase = headBehavior.CurrentPhase;
-            CurrentBehavior = headBehavior.CurrentBehavior;
-            CurrentLocalPhase = headBehavior.CurrentLocalPhase;
+            // Read the parent NPC directly: GetInstance(Head) would rebind this singleton.
+            NPC.ai[2] = Head.ai[2];
+            NPC.ai[3] = Head.ai[3];
         }
 
         HandleDiggingEffect();
@@ -47,15 +52,6 @@ public sealed partial class EaterofWorldsHead
 
         NPC.VelocityToRotation(MathHelper.PiOver2);
 
-        // 触发网络同步（若状态变化）
-
-        if (((NPC.velocity.X > 0f && NPC.oldVelocity.X < 0f) || (NPC.velocity.X < 0f && NPC.oldVelocity.X > 0f)
-            || (NPC.velocity.Y > 0f && NPC.oldVelocity.Y < 0f) || (NPC.velocity.Y < 0f && NPC.oldVelocity.Y > 0f))
-            && !NPC.justHit)
-        {
-            NPC.netUpdate = true;
-        }
-
         OnRunningPreAI?.Invoke(this);
 
         return false;
@@ -63,6 +59,8 @@ public sealed partial class EaterofWorldsHead
         #region 行为函数
         void Initialize()
         {
+            if (!TOSharedData.NotClient)
+                return;
             for (int i = 0; i < NPCID.Sets.TrailCacheLength[NPC.type]; i++)
                 NPC.oldPos[i] = NPC.position;
 
@@ -70,7 +68,8 @@ public sealed partial class EaterofWorldsHead
             {
                 Head = LocalHead = NPC;
                 SegmentIndex = 1; //头部为1号
-                List<EaterofWorldsSegmentContainer> allSegments = AllSegmentsDictionary[NPC.whoAmI] = [];
+                List<EaterofWorldsSegmentContainer> allSegments = AllSegments;
+                allSegments.Clear();
                 allSegments.Add(new EaterofWorldsSegmentContainer(NPC, this));
 
                 //生成体节
@@ -114,11 +113,10 @@ public sealed partial class EaterofWorldsHead
             {
                 //同步所属头部的状态
 
-                EaterofWorldsHead headBehavior = HeadBehavior;
-
-                Timer1 = headBehavior.Timer1;
-                Timer2 = headBehavior.Timer2;
-                Timer3 = headBehavior.Timer3;
+                NPC parentHead = Head;
+                Timer1 = parentHead.Timer1;
+                Timer2 = parentHead.Timer2;
+                Timer3 = parentHead.Timer3;
             }
         }
 
@@ -336,7 +334,7 @@ public sealed partial class EaterofWorldsHead
             float radius = 50f;
 
             if (!IsFirstSegment)
-                CoilingCenter = HeadBehavior.CoilingCenter;
+                CoilingCenter = Head.Anomaly.AnomalyAI64[0].GetValue<Vector2>();
 
             switch (CurrentLocalPhase)
             {
@@ -350,7 +348,11 @@ public sealed partial class EaterofWorldsHead
 
                         if (IsFirstSegment)
                         {
-                            CoilingCenter = Target.Center + Main.rand.NextPolarVector2(200f, 400f);
+                            if (TOSharedData.NotClient)
+                            {
+                                CoilingCenter = Target.Center + Main.rand.NextPolarVector2(200f, 400f);
+                                NPC.netUpdate = true;
+                            }
                             ParticleHandler.SpawnParticle(new BloomParticle(CoilingCenter, Vector2.Zero, Color.Lerp(Color.Purple, Color.Magenta, 0.05f), 0f, 4.5f, 450, 0.9f));
                             ParticleHandler.SpawnParticle(new BloomParticle(CoilingCenter, Vector2.Zero, Color.Lerp(Color.White, Color.Magenta, 0.05f), 0f, 3.5f, 450, 0.9f));
                         }
@@ -402,6 +404,8 @@ public sealed partial class EaterofWorldsHead
                         {
                             SoundEngine.PlaySound(SoundID.ForceRoar);
 
+                            if (!TOSharedData.NotClient)
+                                break;
                             List<NPC> list = TransformToWorms(amount);
                             PolarVector2 velocity = amount == 1 ? (PolarVector2)NPC.GetVelocityTowards(Target, 40f) : Main.rand.NextPolarVector2(40f);
                             for (int i = 0; i < list.Count; i++)
@@ -409,6 +413,7 @@ public sealed partial class EaterofWorldsHead
                                 NPC head = list[i];
                                 head.Center = CoilingCenter;
                                 head.velocity = velocity.RotatedBy(MathHelper.TwoPi / list.Count * i);
+                                head.netUpdate = true;
                             }
                         }
 

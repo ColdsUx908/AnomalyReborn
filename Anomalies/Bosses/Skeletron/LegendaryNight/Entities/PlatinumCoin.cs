@@ -1,10 +1,13 @@
-namespace Anomalies.Bosses.Skeletron.LegendaryNight;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 
 public sealed class PlatinumCoin : AnomalyModProjectile
 {
-    // ai[0]：目标玩家索引（1-based，0 表示未指定目标）。
+    public static readonly SoundStyle TossSound = SoundID.Item11 with { Volume = 0.75f };
+
+    // ai[0]：目标玩家索引（1-based，0 表示未指定目标）。ai[1]：重力加速度，0 保持匀速。
     private const int FrameCount = 8;
     private const int TicksPerFrame = 6;
+    private const int MidasDuration = 300;
 
     // 原版铂金币物品在世界中的动画贴图，区别于背包内的静态 Item_74。
     public override string Texture => "Terraria/Images/Coin_3";
@@ -29,6 +32,9 @@ public sealed class PlatinumCoin : AnomalyModProjectile
     {
         Lighting.AddLight(Projectile.Center, LegendaryNightHandler.PlatinumColor.ToVector3() * 0.6f);
 
+        if (Projectile.ai[1] > 0f)
+            Projectile.velocity.Y = Math.Min(Projectile.velocity.Y + Projectile.ai[1], 20f);
+
         if (Player.TryGetPlayerFromIndex((int)Projectile.ai[0] - 1, out Player target) && Projectile.Top.Y > target.Bottom.Y)
             Projectile.tileCollide = true;
 
@@ -40,6 +46,8 @@ public sealed class PlatinumCoin : AnomalyModProjectile
 
         Projectile.VelocityToRotation(MathHelper.PiOver2);
     }
+
+    public override void OnHitPlayer(Player target, Player.HurtInfo info) => target.AddBuff(BuffID.Midas, MidasDuration);
 
     public override void OnKill(int timeLeft)
     {

@@ -19,6 +19,29 @@ public sealed class LegendaryNightArena : BaseRingArenaProjectile
 
     public bool IsActivated;
 
+    private bool _PreviousActivation;
+
+    protected override void SendAnomalyExtraAI(BinaryWriter writer)
+    {
+        base.SendAnomalyExtraAI(writer);
+        writer.Write(IsActivated);
+        writer.Write(Intensity);
+    }
+
+    protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
+    {
+        base.ReceiveAnomalyExtraAI(reader);
+        IsActivated = reader.ReadBoolean();
+        Intensity = reader.ReadSingle();
+    }
+
+    public override void PostAI()
+    {
+        if (TOSharedData.NotClient && IsActivated != _PreviousActivation)
+            Projectile.netUpdate = true;
+        _PreviousActivation = IsActivated;
+    }
+
     public override string Texture => TOTextures.InvisibleTexturePath;
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
     public override float Radius { get; set; } = 1200f;
@@ -29,6 +52,7 @@ public sealed class LegendaryNightArena : BaseRingArenaProjectile
 
     public override void SetDefaults()
     {
+        Projectile.netImportant = true;
         Projectile.width = Projectile.height = 16;
         Projectile.penetrate = -1;
         Projectile.friendly = false;
@@ -43,7 +67,8 @@ public sealed class LegendaryNightArena : BaseRingArenaProjectile
     {
         if (!IsMasterValid)
         {
-            Projectile.Kill();
+            if (TOSharedData.NotClient)
+                Projectile.Kill();
             return;
         }
 

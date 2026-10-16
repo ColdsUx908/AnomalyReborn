@@ -1,13 +1,19 @@
 ﻿using Anomalies.GameContents.Base;
 
-namespace Anomalies.Bosses.Skeletron.LegendaryNight;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 
 public sealed class LegendShockwave : BaseShockwaveProjectile, IContentLoader
 {
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
 
     public override int LifeTime => 60;
-    public override float FinalScale => 1.5f;
+    // ai[1]：可同步的最终缩放；0 保留普通符卡冲击波的默认大小。
+    public float TargetScale
+    {
+        get => Projectile.ai[1] > 0f ? Projectile.ai[1] : 1.5f;
+        set => Projectile.ai[1] = value;
+    }
+    public override float FinalScale => TargetScale;
     public override bool UseHDTexture => true;
 
     public override Color? GetAlpha(Color lightColor) => (int)Projectile.ai[0] switch

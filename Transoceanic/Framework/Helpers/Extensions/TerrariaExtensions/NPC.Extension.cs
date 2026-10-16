@@ -743,6 +743,8 @@ public static partial class TOExtensions
         /// <param name="action">生成成功后对 NPC 执行的行为。</param>
         public static void NewNPCAction(IEntitySource source, Vector2 position, int type, int start = 0, Action<NPC> action = null)
         {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                return;
             int index = NPC.NewNPC(source, (int)position.X, (int)position.Y, type, start);
             if (index < Main.maxNPCs)
             {

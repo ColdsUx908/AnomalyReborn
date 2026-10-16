@@ -1,4 +1,6 @@
-﻿namespace Anomalies.Bosses.EyeofCthulhu;
+﻿using Anomalies.DataStructures;
+
+namespace Anomalies.Bosses.EyeofCthulhu;
 
 public class BloodOrbProjectile : AnomalyModProjectile
 {
@@ -10,7 +12,7 @@ public class BloodOrbProjectile : AnomalyModProjectile
      * Projectile.ai
      * [0] 行为类型（默认值0表示无行为，直线运动）
      * [1] 存储克苏鲁之眼Boss的NPC索引
-     * [2] 存储竞技场Projectile的索引
+     * 竞技场引用通过 ExtraAI 中的 owner + identity 同步。
      */
 
     public const int StillTime = 25;
@@ -27,10 +29,17 @@ public class BloodOrbProjectile : AnomalyModProjectile
         set => Projectile.ai[1] = value?.whoAmI ?? -1;
     }
 
+    private ProjectileNetReference _ArenaReference;
+
     public Projectile ArenaProjectile
     {
-        get => Projectile.GetProjectileFromIndex((int)Projectile.ai[2]);
-        set => Projectile.ai[2] = value?.whoAmI ?? -1;
+        get => _ArenaReference.Resolve();
+        set
+        {
+            _ArenaReference.Set(value);
+            if (TOSharedData.NotClient || Projectile.IsOnOwnerClient)
+                Projectile.netUpdate = true;
+        }
     }
     public bool ArenaProjectileAlive => ArenaProjectile.active && ArenaProjectile.ModProjectile is EyeofCthulhuArena arena && arena.Master == Master;
     public EyeofCthulhuArena ArenaModProjectile => ArenaProjectile.GetModProjectile<EyeofCthulhuArena>();
@@ -72,7 +81,11 @@ public class BloodOrbProjectile : AnomalyModProjectile
         if (BehaviorType is Behavior_Still or Behavior_Explode)
         {
             if (!ArenaProjectileAlive)
-                Projectile.Kill();
+            {
+                if (TOSharedData.NotClient)
+                    Projectile.Kill();
+                return;
+            }
 
             if (Timer2 <= 0)
             {
@@ -114,6 +127,21 @@ public class BloodOrbProjectile : AnomalyModProjectile
                 }
             }
         }
+    }
+
+    protected override void SendAnomalyExtraAI(BinaryWriter writer)
+    {
+        base.SendAnomalyExtraAI(writer);
+        _ArenaReference.Write(writer);
+        writer.Write(Destination.X);
+        writer.Write(Destination.Y);
+    }
+
+    protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
+    {
+        base.ReceiveAnomalyExtraAI(reader);
+        _ArenaReference = ProjectileNetReference.Read(reader);
+        Destination = new Vector2(reader.ReadSingle(), reader.ReadSingle());
     }
 
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(Projectile.Center, 27f * Projectile.scale).Collides(targetHitbox);

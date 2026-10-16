@@ -5,6 +5,88 @@
 /// </summary>
 public static class TONetUtils
 {
+    // ExtraAI 也会为后加入玩家、单独接收者和弹幕转发分别序列化。
+    // 这些包不能依赖“上一个接收者已收到”的增量状态；每包携带完整的稀疏快照。
+    public static void WriteAI32Snapshot(BinaryWriter writer, Union32[] array, int tailCount)
+    {
+        int length = GetDataLength(array.Length, tailCount, 32);
+        int count = 0;
+        for (int i = 0; i < length; i++)
+            if (array[i].i != 0)
+                count++;
+        writer.Write(count);
+        for (int i = 0; i < length; i++)
+        {
+            if (array[i].i == 0)
+                continue;
+            writer.Write(i);
+            writer.Write(array[i].i);
+        }
+    }
+
+    public static void ReadAI32Snapshot(BinaryReader reader, Union32[] array, int tailCount)
+    {
+        int length = GetDataLength(array.Length, tailCount, 32);
+        int count = reader.ReadInt32();
+        if ((uint)count > (uint)length)
+            throw new InvalidDataException("Invalid AI32 snapshot count.");
+        Union32[] snapshot = new Union32[array.Length];
+        int previousIndex = -1;
+        for (int i = 0; i < count; i++)
+        {
+            int index = reader.ReadInt32();
+            if ((uint)index >= (uint)length || index <= previousIndex)
+                throw new InvalidDataException("Invalid AI32 snapshot index.");
+            snapshot[index].i = reader.ReadInt32();
+            previousIndex = index;
+        }
+        Array.Copy(snapshot, array, array.Length);
+    }
+
+    public static void WriteAI64Snapshot(BinaryWriter writer, Union64[] array, int tailCount)
+    {
+        int length = GetDataLength(array.Length, tailCount, 64);
+        int count = 0;
+        for (int i = 0; i < length; i++)
+            if (array[i].l != 0)
+                count++;
+        writer.Write(count);
+        for (int i = 0; i < length; i++)
+        {
+            long bits = array[i].l;
+            if (bits == 0)
+                continue;
+            writer.Write(i);
+            writer.Write(bits);
+        }
+    }
+
+    public static void ReadAI64Snapshot(BinaryReader reader, Union64[] array, int tailCount)
+    {
+        int length = GetDataLength(array.Length, tailCount, 64);
+        int count = reader.ReadInt32();
+        if ((uint)count > (uint)length)
+            throw new InvalidDataException("Invalid AI64 snapshot count.");
+        Union64[] snapshot = new Union64[array.Length];
+        int previousIndex = -1;
+        for (int i = 0; i < count; i++)
+        {
+            int index = reader.ReadInt32();
+            if ((uint)index >= (uint)length || index <= previousIndex)
+                throw new InvalidDataException("Invalid AI64 snapshot index.");
+            snapshot[index].l = reader.ReadInt64();
+            previousIndex = index;
+        }
+        Array.Copy(snapshot, array, array.Length);
+    }
+
+    private static int GetDataLength(int arrayLength, int tailCount, int groupSize)
+    {
+        if (tailCount <= 0 || tailCount >= arrayLength || arrayLength - tailCount > (long)tailCount * groupSize)
+            throw new ArgumentOutOfRangeException(nameof(tailCount));
+        return arrayLength - tailCount;
+    }
+
     /// <summary>
     /// 向 <see cref="BinaryWriter"/> 写入一个 <see cref="Union32"/> 数组中所有被标记为已更改的 AI 数据。
     /// </summary>
@@ -40,10 +122,10 @@ public static class TONetUtils
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(tailCount, 0);
 
-        int dataLength = array.Length - tailCount;
+        int dataLength = GetDataLength(array.Length, tailCount, 32);
         const int groupSize = 32; // 每个 BitArray32 固定管理 32 个数据槽
 
-        List<(int index, float value)> toSend = [];
+        List<(int index, int value)> toSend = [];
 
         for (int g = 0; g < tailCount; g++)
         {
@@ -57,13 +139,13 @@ public static class TONetUtils
             for (int i = 0; i < actualCount; i++)
             {
                 if (changedBits[i])
-                    toSend.Add((baseIndex + i, array[baseIndex + i].f));
+                    toSend.Add((baseIndex + i, array[baseIndex + i].i));
             }
         }
 
         // 先写入所有待同步数据
         writer.Write(toSend.Count);
-        foreach ((int index, float value) in toSend)
+        foreach ((int index, int value) in toSend)
         {
             writer.Write(index);
             writer.Write(value);
@@ -108,10 +190,10 @@ public static class TONetUtils
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(tailCount, 0);
 
-        int dataLength = array.Length - tailCount;
+        int dataLength = GetDataLength(array.Length, tailCount, 64);
         const int groupSize = 64; // 每个 BitArray64 固定管理 64 个数据槽
 
-        List<(int index, double value)> toSend = [];
+        List<(int index, long value)> toSend = [];
 
         for (int g = 0; g < tailCount; g++)
         {
@@ -124,13 +206,13 @@ public static class TONetUtils
             for (int i = 0; i < actualCount; i++)
             {
                 if (changedBits[i])
-                    toSend.Add((baseIndex + i, array[baseIndex + i].d));
+                    toSend.Add((baseIndex + i, array[baseIndex + i].l));
             }
         }
 
         // 先写入所有待同步数据
         writer.Write(toSend.Count);
-        foreach ((int index, double value) in toSend)
+        foreach ((int index, long value) in toSend)
         {
             writer.Write(index);
             writer.Write(value);
@@ -148,29 +230,37 @@ public static class TONetUtils
     /// <remarks>
     /// <para>
     /// 读取格式与 <see cref="WriteChangedAI32"/> 写入格式对应：首先读取一个 <see cref="int"/> 表示变化的条目数量，
-    /// 然后依次读取每一对索引（<see cref="int"/>）和单精度浮点值（<see cref="float"/>）。
-    /// 接收到的每个索引只要在数组有效范围内，就会直接覆盖对应槽位的浮点值。
+    /// 然后依次读取每一对索引（<see cref="int"/>）和原始 32 位整数位型（<see cref="int"/>）。
+    /// 接收到的每个索引只要在数组有效范围内，就会覆盖对应数据槽位的原始位型。
     /// 该方法不会重置任何改动位，适用于接收端直接应用同步数据。
     /// </para>
     /// <para>
-    /// 若数据流中包含越界索引，那些条目会被静默忽略，不会引发异常。
+    /// 负数、过大条目数、重复索引和标记槽索引会被拒绝；读取失败不会部分覆盖数组。
     /// </para>
     /// </remarks>
     /// <param name="reader">数据源读取器，其当前位置必须位于由 <see cref="WriteChangedAI32"/> 写入的序列开头。</param>
     /// <param name="array">要接收数据的目标 <see cref="Union32"/> 数组。</param>
+    /// <param name="tailCount">数组尾部保留的改动标记槽数量，不作为可接收的数据槽。</param>
     /// <exception cref="EndOfStreamException">读取器在期望的位置意外到达流末尾。</exception>
     /// <exception cref="ObjectDisposedException">读取器已关闭。</exception>
     /// <exception cref="IOException">发生 I/O 错误。</exception>
-    public static void ReadChangedAI32(BinaryReader reader, Union32[] array)
+    public static void ReadChangedAI32(BinaryReader reader, Union32[] array, int tailCount = 1)
     {
+        int length = GetDataLength(array.Length, tailCount, 32);
         int count = reader.ReadInt32();
+        if ((uint)count > (uint)length)
+            throw new InvalidDataException("Invalid AI32 delta count.");
+        Union32[] updated = (Union32[])array.Clone();
+        HashSet<int> indices = [];
         for (int i = 0; i < count; i++)
         {
             int index = reader.ReadInt32();
-            float value = reader.ReadSingle();
-            if (index >= 0 && index < array.Length)
-                array[index].f = value;
+            if ((uint)index >= (uint)length || !indices.Add(index))
+                throw new InvalidDataException("Invalid AI32 delta index.");
+            int value = reader.ReadInt32();
+            updated[index].i = value;
         }
+        Array.Copy(updated, array, array.Length);
     }
 
     /// <summary>
@@ -180,24 +270,32 @@ public static class TONetUtils
     /// <remarks>
     /// <para>
     /// 读取格式与 <see cref="WriteChangedAI64"/> 写入格式对应：首先读取条目数量（<see cref="int"/>），
-    /// 然后读取每一条目的索引（<see cref="int"/>）和双精度浮点值（<see cref="double"/>）。
-    /// 有效索引范围内的槽位会被直接覆盖。越界索引会被忽略。
+    /// 然后读取每一条目的索引（<see cref="int"/>）和原始 64 位整数位型（<see cref="long"/>）。
+    /// 有效数据槽会被覆盖；越界、重复索引及标记槽索引会被拒绝。
     /// </para>
     /// </remarks>
     /// <param name="reader">数据源读取器，其当前位置必须位于由 <see cref="WriteChangedAI64"/> 写入的序列开头。</param>
     /// <param name="array">要接收数据的目标 <see cref="Union64"/> 数组。</param>
+    /// <param name="tailCount">数组尾部保留的改动标记槽数量，不作为可接收的数据槽。</param>
     /// <exception cref="EndOfStreamException">读取器在期望的位置意外到达流末尾。</exception>
     /// <exception cref="ObjectDisposedException">读取器已关闭。</exception>
     /// <exception cref="IOException">发生 I/O 错误。</exception>
-    public static void ReadChangedAI64(BinaryReader reader, Union64[] array)
+    public static void ReadChangedAI64(BinaryReader reader, Union64[] array, int tailCount = 1)
     {
+        int length = GetDataLength(array.Length, tailCount, 64);
         int count = reader.ReadInt32();
+        if ((uint)count > (uint)length)
+            throw new InvalidDataException("Invalid AI64 delta count.");
+        Union64[] updated = (Union64[])array.Clone();
+        HashSet<int> indices = [];
         for (int i = 0; i < count; i++)
         {
             int index = reader.ReadInt32();
-            double value = reader.ReadDouble();
-            if (index >= 0 && index < array.Length)
-                array[index].d = value;
+            if ((uint)index >= (uint)length || !indices.Add(index))
+                throw new InvalidDataException("Invalid AI64 delta index.");
+            long value = reader.ReadInt64();
+            updated[index].l = value;
         }
+        Array.Copy(updated, array, array.Length);
     }
 }

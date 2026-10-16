@@ -102,6 +102,7 @@ public sealed class CombCell : AnomalyModProjectile
 
     public override void SetDefaults()
     {
+        Projectile.netImportant = true;
         Projectile.width = 200;
         Projectile.height = 200;
         Projectile.hostile = true;
@@ -113,6 +114,12 @@ public sealed class CombCell : AnomalyModProjectile
 
     public override void AI()
     {
+        if (Master is not { active: true, type: NPCID.QueenBee })
+        {
+            if (TOSharedData.NotClient)
+                Projectile.Kill();
+            return;
+        }
         Lighting.AddLight(Projectile.Center, 1f, 0.6f, 0f);
 
         Timer1++;
@@ -302,11 +309,27 @@ public sealed class CombCell : AnomalyModProjectile
         }
     }
 
+    protected override void SendAnomalyExtraAI(BinaryWriter writer)
+    {
+        base.SendAnomalyExtraAI(writer);
+        writer.Write(FinalScale);
+        writer.Write(ExtraUnion0.i);
+        writer.Write(ExtraUnion1.i);
+    }
+
+    protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
+    {
+        base.ReceiveAnomalyExtraAI(reader);
+        FinalScale = reader.ReadSingle();
+        ExtraUnion0.i = reader.ReadInt32();
+        ExtraUnion1.i = reader.ReadInt32();
+    }
+
     public override void OnKill(int timeLeft)
     {
         QueenBeeHandler.SpawnGores(this);
 
-        if (Aroma)
+        if (Aroma && TOSharedData.NotClient)
         {
             int amount = Main.rand.Next(1, 4);
             for (int i = 0; i < amount; i++)

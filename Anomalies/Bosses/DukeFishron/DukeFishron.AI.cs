@@ -1,9 +1,13 @@
-﻿namespace Anomalies.Bosses.DukeFishron;
+﻿using Anomalies.DataStructures;
+
+namespace Anomalies.Bosses.DukeFishron;
 
 public sealed partial class DukeFishron
 {
     public override bool PreAI()
     {
+        using BossNetUpdateScope netUpdate = new(NPC);
+
         if (!NPC.TargetClosestIfInvalid(false, DespawnDistance))
         {
             NPC.velocity.Y -= 0.4f;
@@ -190,7 +194,7 @@ public sealed partial class DukeFishron
 
                 if (Phase3)
                 {
-                    if (Main.rand.NextBool(Ultra ? 15 : 20))
+                    if (TOSharedData.NotClient && Main.rand.NextBool(Ultra ? 15 : 20))
                     {
                         NPC.NewNPCAction(SourceAI, Target.Center + new Vector2(Main.rand.NextFloat(-2000f, 2000f), Main.rand.NextFloat(-1500f, -1000f)), NPCID.Sharkron2, action: n =>
                         {
@@ -208,6 +212,9 @@ public sealed partial class DukeFishron
 
             void SelectNextBehavior()
             {
+                if (!TOSharedData.NotClient)
+                    return;
+
                 Timer1 = 0;
                 Timer5 = 0;
                 CurrentLocalPhase = 0;

@@ -4,8 +4,10 @@ public sealed class DangerousTreeAndCactus : GlobalTile
 {
     public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
     {
-        if (!EX)
+        if (!EX || Main.netMode == NetmodeID.MultiplayerClient)
             return;
+
+        //不仅破坏会生成蜜蜂，破损也会
 
         if (type == TileID.Trees)
         {

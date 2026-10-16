@@ -26,6 +26,7 @@ public sealed class LegendaryNightRitual : AnomalyModProjectile
 
     public override void SetDefaults()
     {
+        Projectile.netImportant = true;
         Projectile.width = Projectile.height = 2;
         Projectile.tileCollide = false;
         Projectile.ignoreWater = true;
@@ -43,7 +44,7 @@ public sealed class LegendaryNightRitual : AnomalyModProjectile
             if (NPC.TryGetNPCFromIndex(SummonedSkeletronHeadIndex, out NPC skeletronHead) && skeletronHead.active && skeletronHead.type == NPCID.SkeletronHead)
             {
             }
-            else
+            else if (TOSharedData.NotClient)
                 Projectile.Kill();
 
             Projectile.Center = RitualCenter + new Vector2(0f, 8f * MathF.Sin((Timer1 - RitualTime) / 60f)); //上下摆动
@@ -86,10 +87,10 @@ public sealed class LegendaryNightRitual : AnomalyModProjectile
                 for (int i = 0; i < 100; i++)
                     ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Main.rand.NextPolarVector2(15f, 40f), Main.rand.Next(40, 60), Main.rand.NextFloat(1f, 1.6f), Color.Lerp(LegendaryNightHandler.StarColor, Color.White, Main.rand.NextFloat(0.5f))));
 
-                TOLocalizationUtils.ChatLocalizedText(AnomalySharedData.ModLocalizationPrefix + LocalizationCategory + ".Summon", LegendaryNightHandler.StarColor);
-
                 if (TOSharedData.NotClient)
                 {
+                    TOLocalizationUtils.ChatLocalizedText(AnomalySharedData.ModLocalizationPrefix + LocalizationCategory + ".Summon", LegendaryNightHandler.StarColor);
+
                     NPC.NewNPCAction(new EntitySource_BossSpawn(Projectile.FindTargetWithinRange(2000f)), Projectile.Center, NPCID.SkeletronHead, action: n =>
                     {
                         n.Center = Projectile.Center;
@@ -104,6 +105,8 @@ public sealed class LegendaryNightRitual : AnomalyModProjectile
                     });
                 }
                 
+                if (TOSharedData.NotClient)
+                    Projectile.netUpdate = true;
                 IsSummoningSkeletron = false;
                 break;
             case > 300 and <= 360: //向下移动
@@ -112,6 +115,23 @@ public sealed class LegendaryNightRitual : AnomalyModProjectile
                 break;
         }
         #endregion 召唤仪式
+    }
+
+    protected override void SendAnomalyExtraAI(BinaryWriter writer)
+    {
+        base.SendAnomalyExtraAI(writer);
+        writer.Write(AltarTopLeftCoordinate.X);
+        writer.Write(AltarTopLeftCoordinate.Y);
+        writer.Write(SummonedSkeletronHeadIndex);
+        writer.Write(IsSummoningSkeletron);
+    }
+
+    protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
+    {
+        base.ReceiveAnomalyExtraAI(reader);
+        AltarTopLeftCoordinate = new Point(reader.ReadInt32(), reader.ReadInt32());
+        SummonedSkeletronHeadIndex = reader.ReadInt32();
+        IsSummoningSkeletron = reader.ReadBoolean();
     }
 
     public override bool PreDraw(ref Color lightColor)

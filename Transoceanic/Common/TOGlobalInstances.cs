@@ -104,8 +104,8 @@ public sealed class TOGlobalNPC : GlobalNPC, ITOLoader
     private const int AISlot = 33;
     private const int AISlot2 = 17;
 
-    internal readonly Union32[] OceanAI32 = new Union32[AISlot];
-    internal readonly Union64[] OceanAI64 = new Union64[AISlot2];
+    internal Union32[] OceanAI32 { get; private set; } = new Union32[AISlot];
+    internal Union64[] OceanAI64 { get; private set; } = new Union64[AISlot2];
 
     internal ref BitArray32 AIChanged32 => ref OceanAI32[^1].bits;
     internal ref BitArray64 AIChanged64 => ref OceanAI64[^1].bits;
@@ -115,8 +115,8 @@ public sealed class TOGlobalNPC : GlobalNPC, ITOLoader
         TOGlobalNPC clone = (TOGlobalNPC)base.Clone(from, to);
 
         clone.SpawnTime = SpawnTime;
-        Array.Copy(OceanAI32, clone.OceanAI32, AISlot);
-        Array.Copy(OceanAI64, clone.OceanAI64, AISlot2);
+        clone.OceanAI32 = (Union32[])OceanAI32.Clone();
+        clone.OceanAI64 = (Union64[])OceanAI64.Clone();
 
         return clone;
     }
@@ -126,8 +126,8 @@ public sealed class TOGlobalNPC : GlobalNPC, ITOLoader
         if (!TOSharedData.SyncEnabled)
             return;
 
-        TONetUtils.WriteChangedAI32(binaryWriter, OceanAI32, 1);
-        TONetUtils.WriteChangedAI64(binaryWriter, OceanAI64, 1);
+        TONetUtils.WriteAI32Snapshot(binaryWriter, OceanAI32, 1);
+        TONetUtils.WriteAI64Snapshot(binaryWriter, OceanAI64, 1);
     }
 
     public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
@@ -135,8 +135,8 @@ public sealed class TOGlobalNPC : GlobalNPC, ITOLoader
         if (!TOSharedData.SyncEnabled)
             return;
 
-        TONetUtils.ReadChangedAI32(binaryReader, OceanAI32);
-        TONetUtils.ReadChangedAI64(binaryReader, OceanAI64);
+        TONetUtils.ReadAI32Snapshot(binaryReader, OceanAI32, 1);
+        TONetUtils.ReadAI64Snapshot(binaryReader, OceanAI64, 1);
     }
 
     void ITOLoader.Load() => _IdentifierAllocator = 0;
@@ -153,8 +153,8 @@ public sealed class TOGlobalProjectile : GlobalProjectile
     private const int AISlot = 33;
     private const int AISlot2 = 17;
 
-    internal readonly Union32[] OceanAI32 = new Union32[AISlot];
-    internal readonly Union64[] OceanAI64 = new Union64[AISlot2];
+    internal Union32[] OceanAI32 { get; private set; } = new Union32[AISlot];
+    internal Union64[] OceanAI64 { get; private set; } = new Union64[AISlot2];
 
     internal ref BitArray32 AIChanged32 => ref OceanAI32[^1].bits;
     internal ref BitArray64 AIChanged64 => ref OceanAI64[^1].bits;
@@ -163,8 +163,8 @@ public sealed class TOGlobalProjectile : GlobalProjectile
     {
         TOGlobalProjectile clone = (TOGlobalProjectile)base.Clone(from, to);
 
-        Array.Copy(OceanAI32, clone.OceanAI32, AISlot);
-        Array.Copy(OceanAI64, clone.OceanAI64, AISlot2);
+        clone.OceanAI32 = (Union32[])OceanAI32.Clone();
+        clone.OceanAI64 = (Union64[])OceanAI64.Clone();
 
         return clone;
     }
@@ -174,8 +174,8 @@ public sealed class TOGlobalProjectile : GlobalProjectile
         if (!TOSharedData.SyncEnabled)
             return;
 
-        TONetUtils.WriteChangedAI32(binaryWriter, OceanAI32, 1);
-        TONetUtils.WriteChangedAI64(binaryWriter, OceanAI64, 1);
+        TONetUtils.WriteAI32Snapshot(binaryWriter, OceanAI32, 1);
+        TONetUtils.WriteAI64Snapshot(binaryWriter, OceanAI64, 1);
     }
 
     public override void ReceiveExtraAI(Projectile projectile, BitReader bitReader, BinaryReader binaryReader)
@@ -183,8 +183,8 @@ public sealed class TOGlobalProjectile : GlobalProjectile
         if (!TOSharedData.SyncEnabled)
             return;
 
-        TONetUtils.ReadChangedAI32(binaryReader, OceanAI32);
-        TONetUtils.ReadChangedAI64(binaryReader, OceanAI64);
+        TONetUtils.ReadAI32Snapshot(binaryReader, OceanAI32, 1);
+        TONetUtils.ReadAI64Snapshot(binaryReader, OceanAI64, 1);
     }
 }
 

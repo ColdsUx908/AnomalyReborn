@@ -75,6 +75,12 @@ public sealed partial class AnomalySharedData : ModSystem
         get;
         internal set
         {
+            if (Main.netMode == NetmodeID.MultiplayerClient && !AnomalySynchronization.ReceivingWorldState)
+            {
+                AnomalySynchronization.RequestAnomalyMode(value);
+                return;
+            }
+
             if (field == value)
                 return;
 
@@ -83,13 +89,13 @@ public sealed partial class AnomalySharedData : ModSystem
 
             field = value;
 
-            if (TOSharedData.NotClient)
+            if (TOSharedData.NotClient && !AnomalySynchronization.ReceivingWorldState)
             {
                 string key = ModLocalizationPrefix + "AnomalyMode." + (Main.zenithWorld ? "Aromaly." : "") + (value ? "Activate" : "Deactivate");
                 Color color = Main.zenithWorld ? AromalyColor : MainColor;
                 TOLocalizationUtils.ChatLocalizedText(key, color);
             }
-            if (value)
+            if (value && !AnomalySynchronization.ReceivingWorldState)
                 AnomalyHandler.CheckAnomalyUltra();
 
             OnAnomalyModeToggled?.Invoke(value);
@@ -106,14 +112,17 @@ public sealed partial class AnomalySharedData : ModSystem
         get;
         internal set
         {
+            if (Main.netMode == NetmodeID.MultiplayerClient && !AnomalySynchronization.ReceivingWorldState)
+                return;
             if (field == value)
                 return;
 
             field = value;
-            if (TOSharedData.NotClient)
+            if (TOSharedData.NotClient && !AnomalySynchronization.ReceivingWorldState)
                 TOLocalizationUtils.ChatLocalizedText(ModLocalizationPrefix + "AnomalyMode." + (value ? "UltraActivate" : "UltraDeactivate"), Color.Red);
 
             OnAnomalyUltramundaneToggled?.Invoke(value);
+            AnomalySynchronization.SyncAnomalyMode();
         }
     }
     public static event Action<bool> OnAnomalyUltramundaneToggled;
@@ -127,21 +136,51 @@ public sealed partial class AnomalySharedData : ModSystem
     /// <summary>
     /// 故事模式。
     /// </summary>
-    public static bool StoryMode { get; internal set; }
+    public static bool StoryMode
+    {
+        get;
+        internal set
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient && !AnomalySynchronization.ReceivingWorldState || field == value)
+                return;
+            field = value;
+            AnomalySynchronization.SyncAnomalyMode();
+        }
+    }
 
     /// <summary>
     /// 极限模式。
     /// </summary>
-    public static bool EXMode { get; internal set; }
+    public static bool EXMode
+    {
+        get;
+        internal set
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient && !AnomalySynchronization.ReceivingWorldState || field == value)
+                return;
+            field = value;
+            AnomalySynchronization.SyncAnomalyMode();
+        }
+    }
+
+    public override void NetSend(BinaryWriter writer) => AnomalySynchronization.WriteWorldState(writer);
+
+    public override void NetReceive(BinaryReader reader) => AnomalySynchronization.ReadWorldState(reader);
 
     public override void OnWorldLoad()
     {
-        AnomalyUltramundane = false;
+        ResetWorldState();
     }
 
     public override void OnWorldUnload()
     {
-        AnomalyUltramundane = false;
+        ResetWorldState();
+    }
+
+    private static void ResetWorldState()
+    {
+        // Reset through the receive path: no packets are sent while entering/leaving a world.
+        AnomalySynchronization.ApplyWorldState(default);
     }
 
     public override void SaveWorldData(TagCompound tag)

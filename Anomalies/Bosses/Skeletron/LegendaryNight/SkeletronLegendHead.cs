@@ -8,10 +8,20 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLegendHead>
 {
+    // 手的 SetDefaults 执行时，Master 和 CustomAIType 尚未由召唤方赋值。
+    public bool IsSummoningHands { get; private set; }
+
+    public bool StarGodBlessingActive => CurrentBaseBehavior != BaseBehavior.Despawn
+        && (Phase2 || CurrentPhase == Phase.PhaseChange_1To2 && Timer1 >= PhaseChangeBlessingTime);
+
+    public float StarGodBlessingOpacity => !StarGodBlessingActive ? 0f : Phase2 ? 1f
+        : MathHelper.Clamp((Timer1 - PhaseChangeBlessingTime) / 20f, 0f, 1f);
+
     public enum Phase : byte
     {
         Initialize,
         Phase1,
+        PhaseChange_1To2,
         Phase2,
     }
 
@@ -35,6 +45,24 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
     }
 
     public const float DespawnDistance = 10000f;
+    public const float Phase2LifeRatio = 0.1f;
+    public const int Phase2ExpectedTimeInSeconds = 180;
+    public const int Phase2MinimumDuration = Phase2ExpectedTimeInSeconds * 60;
+
+    // AnomalyAI32[4].i：二阶段总运行时间，独立于攻击状态机计时器。
+    public int Phase2ElapsedTime
+    {
+        get => AnomalyNPC.AnomalyAI32[4].i;
+        private set
+        {
+            if (AnomalyNPC.AnomalyAI32[4].i == value)
+                return;
+            AnomalyNPC.AnomalyAI32[4].i = value;
+            AnomalyNPC.AIChanged32[4] = true;
+        }
+    }
+
+    public bool Phase2DeathLocked => Phase2 && Phase2ElapsedTime < Phase2MinimumDuration;
 
     private static readonly ProjectileDamageContainer _SkullDamage = new(60);
     public static int SkullDamage => _SkullDamage.Value;
@@ -51,22 +79,17 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
     private static readonly ProjectileDamageContainer _PlatinumCoinDamage = new(60);
     public static int PlatinumCoinDamage => _PlatinumCoinDamage.Value;
 
+    private static readonly ProjectileDamageContainer _CoinJudgmentDamage = new(396);
+    public static int CoinJudgmentDamage => _CoinJudgmentDamage.Value;
+
     private static readonly ProjectileDamageContainer _ArenaDamage = new(60);
     public static int ArenaDamage => _ArenaDamage.Value;
 
     // AnomalyAI32[0].i：竞技场弹幕索引。
     public Projectile ArenaProjectile
     {
-        get => Projectile.GetProjectileFromIndex(AnomalyNPC.AnomalyAI32[0].i);
-        set
-        {
-            int index = value?.whoAmI ?? -1;
-            if (AnomalyNPC.AnomalyAI32[0].i != index)
-            {
-                AnomalyNPC.AnomalyAI32[0].i = index;
-                AnomalyNPC.AIChanged32[0] = true;
-            }
-        }
+        get => AnomalyNPC.GetProjectileReference(1);
+        set => AnomalyNPC.SetProjectileReference(NPC, 1, value);
     }
 
     public bool ArenaProjectileAlive => ArenaProjectile.active && ArenaProjectile.ModProjectile is LegendaryNightArena arena && arena.Master == NPC;
@@ -81,6 +104,8 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         }
         set
         {
+            if (CurrentPhase != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_0;
             union.byte0 = (byte)value;
             AI_Union_0 = union;
@@ -108,6 +133,8 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         }
         set
         {
+            if (CurrentBaseBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_0;
             union.byte1 = (byte)value;
             AI_Union_0 = union;
@@ -123,6 +150,8 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         }
         set
         {
+            if (CurrentSpell != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_0;
             union.byte2 = (byte)value;
             AI_Union_0 = union;
@@ -144,10 +173,27 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
     public int CurrentLocalPhase
     {
         get => (int)NPC.ai[1];
-        set => NPC.ai[1] = value;
+        set
+        {
+            if (NPC.ai[1] != value)
+            {
+                NPC.ai[1] = value;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
+            }
+        }
     }
 
     public override int ApplyingType => NPCID.SkeletronHead;
+
+    private void StopMovement(float factor = 0.9f)
+    {
+        NPC.velocity *= factor;
+        if (NPC.velocity.Length() < 0.1f)
+            NPC.velocity = Vector2.Zero;
+    }
+
+    public override bool CanHitPlayer(Player target, ref int cooldownSlot) => CurrentPhase != Phase.PhaseChange_1To2;
 
     public override bool ShouldProcess
     {
@@ -176,14 +222,25 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         _ => true,
     };
 
+    public override void SetDefaults()
+    {
+        NPC.AddAnomalyHPIndicator(Phase2LifeRatio, Phase2LifeRatio);
+        AnomalyNPC.DynamicDRHandler = new TimedDDRHandler(
+            new TimedDDRHandler.SingleDDRHandler(1f, 0f,
+                n => GetInstance(n).Phase2 && GetInstance(n).Phase2ElapsedTime > 0,
+                n => GetInstance(n).Phase2ElapsedTime >= Phase2MinimumDuration,
+                Phase2ExpectedTimeInSeconds, storyModeOnly: false));
+    }
+
     public override void SetDefaultsFinal()
     {
         ArenaProjectile = Projectile.DummyProjectile;
-        NPC.lifeMax = 15000;
+        NPC.lifeMax = 7500;
         BridgeUtils.ApplyCalamityHealthBoost(NPC);
         CurrentAvatar = Avatar.None;
         AvatarTimer = 0;
         AvatarRotation = 0f;
+        Phase2ElapsedTime = 0;
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
@@ -194,6 +251,8 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
 
     public override bool PreAI()
     {
+        using BossNetUpdateScope netUpdate = new(NPC);
+
         // 默认关闭，由需要竞技场的符卡在本帧显式激活。
         if (ArenaProjectileAlive)
             ArenaModProjectile.IsActivated = false;
@@ -205,6 +264,11 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
             NPC.netUpdate = true;
             return false;
         }
+
+        if (CurrentPhase == Phase.Phase1 && NPC.LifeRatio < Phase2LifeRatio)
+            BeginPhaseChange_1To2();
+
+        AnomalyNPC.CurrentlyImmune = CurrentPhase == Phase.PhaseChange_1To2;
 
         switch (CurrentPhase)
         {
@@ -220,9 +284,18 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
             case Phase.Phase1:
                 Phase1AI();
                 break;
+            case Phase.PhaseChange_1To2:
+                PhaseChange_1To2AI();
+                break;
+            case Phase.Phase2:
+                Phase2AI();
+                break;
         }
 
-        UpdateAvatar(RequestedAvatar);
+        if (!Main.dedServ && Phase2GlowOpacity > 0f)
+            Lighting.AddLight(NPC.Center, LegendaryNightHandler.StarColor.ToVector3() * Phase2GlowOpacity);
+
+        UpdateAvatar(CurrentPhase == Phase.PhaseChange_1To2 && Timer1 < PhaseChangeAvatarFadeDuration ? CurrentAvatar : RequestedAvatar);
         if (CurrentAvatar == Avatar.None)
             NPC.Opacity = 1f;
         if (CurrentAvatar != Avatar.None)
@@ -237,6 +310,26 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
             Lighting.AddLight(NPC.Center, lightColor.ToVector3());
         }
         return false;
+    }
+
+    public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
+    {
+        if (!Phase2)
+            modifiers.SetMaxDamage(Math.Max(1, (int)(NPC.life - NPC.lifeMax * Phase2LifeRatio + 1)));
+        else if (Phase2DeathLocked)
+            modifiers.SetMaxDamage(Math.Max(1, NPC.life - 1));
+    }
+
+    public override bool CheckDead()
+    {
+        if (!Phase2 || Phase2DeathLocked)
+        {
+            NPC.life = 1;
+            NPC.active = true;
+            NPC.netUpdate = true;
+            return false;
+        }
+        return true;
     }
 
     public override void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle)

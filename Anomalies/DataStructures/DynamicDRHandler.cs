@@ -121,6 +121,11 @@ public sealed class TimedDDRHandler : IDynamicDRHandler
         public float DRFactor;
 
         /// <summary>
+        /// 是否仅在故事模式下启用，默认为 true。
+        /// </summary>
+        public bool StoryModeOnly;
+
+        /// <summary>
         /// 标记该阶段是否已经结束。结束后不再更新计时器，也不再参与动态减伤计算。
         /// </summary>
         public bool PhaseEnded;
@@ -138,7 +143,8 @@ public sealed class TimedDDRHandler : IDynamicDRHandler
         /// <param name="phaseEndFunction">判定阶段结束的函数，若为 <see langword="null"/> 则默认始终返回 false。</param>
         /// <param name="expectedPhaseTimeInSecond">预期阶段持续时间（秒），内部会乘以 60 转换为帧数。</param>
         /// <param name="drFactor">伤害减免因子，默认为 <see cref="DefaultDRFactor"/>。</param>
-        public SingleDDRHandler(float phaseStartLifeRatio = 1f, float phaseEndLifeRatio = 0f, Func<NPC, bool> phaseStartFunction = null, Func<NPC, bool> phaseEndFunction = null, int expectedPhaseTimeInSecond = 0, float drFactor = DefaultDRFactor)
+        /// <param name="storyModeOnly">是否仅在故事模式生效，默认为 true。</param>
+        public SingleDDRHandler(float phaseStartLifeRatio = 1f, float phaseEndLifeRatio = 0f, Func<NPC, bool> phaseStartFunction = null, Func<NPC, bool> phaseEndFunction = null, int expectedPhaseTimeInSecond = 0, float drFactor = DefaultDRFactor, bool storyModeOnly = true)
         {
             PhaseStartLifeRatio = phaseStartLifeRatio;
             PhaseEndLifeRatio = phaseEndLifeRatio;
@@ -146,11 +152,12 @@ public sealed class TimedDDRHandler : IDynamicDRHandler
             PhaseEndFunction = phaseEndFunction ?? (_ => false);
             ExpectedPhaseTime = expectedPhaseTimeInSecond * 60;
             DRFactor = drFactor;
+            StoryModeOnly = storyModeOnly;
         }
 
         /// <summary>
         /// 计算当前帧的动态伤害减免值（Dynamic Damage Reduction）。
-        /// <br/>该值仅在故事模式且非 Boss Rush 活动中，且预期时间大于 0、计时器未超过预期时间时才会计算。
+        /// <br/>满足模式限制、预期时间大于 0 且计时器未超过预期时间时才会计算。
         /// <para/>算法：
         /// <br/>1. 根据当前生命比例计算生命值完成度 <c>lifeCompletion</c>（在阶段生命区间内的线性插值）。
         /// <br/>2. 根据已用时间与预期时间计算时间完成度 <c>timeCompletion</c>。
@@ -168,7 +175,7 @@ public sealed class TimedDDRHandler : IDynamicDRHandler
             int expectedTime = ExpectedPhaseTime;
             int aiTimer = PhaseTimer;
 
-            if (factor > 0f && expectedTime > 0 && aiTimer < expectedTime && Story)
+            if (factor > 0f && expectedTime > 0 && aiTimer < expectedTime && (!StoryModeOnly || Story))
             {
                 float lifeCompletion = Utils.GetLerpValue(PhaseStartLifeRatio, PhaseEndLifeRatio, npc.LifeRatio);
                 float timeCompletion = (float)aiTimer / expectedTime;

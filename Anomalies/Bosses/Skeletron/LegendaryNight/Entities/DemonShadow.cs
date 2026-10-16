@@ -1,9 +1,6 @@
-namespace Anomalies.Bosses.Skeletron.LegendaryNight;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 
-/// <summary>
-/// Star 符卡使用的暗影套玩家。独立的 Player 仅用于外观和动画，不参与真实玩家更新。
-/// </summary>
-public sealed class ShadowPlayer : AnomalyModProjectile
+public sealed class DemonShadow : AnomalyModProjectile
 {
     private const int ShotInterval = 12;
     private const float ShotSpeed = 14f;
@@ -24,6 +21,7 @@ public sealed class ShadowPlayer : AnomalyModProjectile
 
     public override void SetDefaults()
     {
+        Projectile.netImportant = true;
         Projectile.width = 20;
         Projectile.height = 42;
         Projectile.friendly = false;

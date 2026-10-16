@@ -56,6 +56,8 @@ public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
         }
         set
         {
+            if (CurrentPhase != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_1;
             union.byte0 = (byte)value;
             AI_Union_1 = union;
@@ -79,6 +81,8 @@ public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
         }
         set
         {
+            if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_1;
             union.byte1 = (byte)value;
             AI_Union_1 = union;
@@ -133,6 +137,8 @@ public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
             {
                 AnomalyNPC.AnomalyAI32[1].f = value;
                 AnomalyNPC.AIChanged32[1] = true;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
             }
         }
     }

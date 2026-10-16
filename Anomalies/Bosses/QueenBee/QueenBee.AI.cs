@@ -1,9 +1,13 @@
-﻿namespace Anomalies.Bosses.QueenBee;
+﻿using Anomalies.DataStructures;
+
+namespace Anomalies.Bosses.QueenBee;
 
 public sealed partial class QueenBee
 {
     public override bool PreAI()
     {
+        using BossNetUpdateScope netUpdate = new(NPC);
+
         float despawnDistance = DespawnDistance;
         if (CurrentBehavior == Behavior.Despawn || !NPC.TargetClosestIfInvalid(true, despawnDistance))
         {
@@ -51,9 +55,6 @@ public sealed partial class QueenBee
                 Phase2AI();
                 break;
         }
-
-        if (Main.dedServ)
-            NPC.netUpdate = true;
 
         return false;
 
@@ -189,6 +190,9 @@ public sealed partial class QueenBee
 
             void SelectNextBehavior()
             {
+                if (!TOSharedData.NotClient)
+                    return;
+
                 Timer1 = 0;
                 Timer2 = 0;
                 CurrentLocalPhase = 0;
@@ -781,7 +785,7 @@ public sealed partial class QueenBee
                                     Vector2 velocity = Main.rand.NextPolarVector2(15f, 25f);
                                     Projectile.NewProjectileAction<KillerBeeSmall>(SourceAI, NPC.Center, velocity, BeeDamage, 0f, action: p =>
                                     {
-                                        p.ai[0] = SpecialCombCell.whoAmI;
+                                        p.GetModProjectile<KillerBeeSmall>().SpecialCombCell = SpecialCombCell;
                                         p.ai[1] = Main.rand.NextFloat(0.01f, 0.07f) * Main.rand.NextDirectionInt();
                                     });
                                 }
@@ -902,6 +906,9 @@ public sealed partial class QueenBee
 
             void SelectNextBehavior()
             {
+                if (!TOSharedData.NotClient)
+                    return;
+
                 Timer1 = 0;
                 Timer2 = 0;
                 CurrentLocalPhase = 0;
@@ -1209,7 +1216,7 @@ public sealed partial class QueenBee
 
                         Projectile.NewProjectileAction<KillerBeeSmall>(SourceAI, position, velocity, BeeDamage, 0f, action: p =>
                         {
-                            p.ai[0] = SpecialCombCell.whoAmI;
+                            p.GetModProjectile<KillerBeeSmall>().SpecialCombCell = SpecialCombCell;
                             p.ai[1] = 0f;
                             p.ai[2] = outside ? 2f : 1f;
                         });

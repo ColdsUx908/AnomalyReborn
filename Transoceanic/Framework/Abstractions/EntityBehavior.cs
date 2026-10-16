@@ -38,6 +38,10 @@ public interface IEntityBehavior : ILoadable, IContentLoader
 /// <summary>
 /// 实体行为的抽象基类，为所有行为提供默认实现，并维护对当前关联实体实例的引用。
 /// </summary>
+/// <remarks>
+/// 行为对象按类型单例存储，不能用实例字段或自动属性保存实体状态；应将状态存入实体的 AI 或 Global 实例。
+/// 获取另一个实体的同类型行为会重新绑定当前上下文，因此不能长期缓存行为引用。
+/// </remarks>
 /// <typeparam name="TEntity">行为所附加的实体类型，必须派生自 <see cref="Entity"/>。</typeparam>
 public abstract class EntityBehavior<TEntity> : IEntityBehavior where TEntity : Entity
 {

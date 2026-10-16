@@ -2,10 +2,30 @@
 
 public sealed class KillerBeeSmall : AnomalyModProjectile
 {
+    private Anomalies.DataStructures.ProjectileNetReference _SpecialCombCellReference;
+
+    public Projectile SpecialCombCell
+    {
+        get => _SpecialCombCellReference.Resolve();
+        set => _SpecialCombCellReference.Set(value);
+    }
+
+    protected override void SendAnomalyExtraAI(BinaryWriter writer)
+    {
+        base.SendAnomalyExtraAI(writer);
+        _SpecialCombCellReference.Write(writer);
+    }
+
+    protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
+    {
+        base.ReceiveAnomalyExtraAI(reader);
+        _SpecialCombCellReference = Anomalies.DataStructures.ProjectileNetReference.Read(reader);
+    }
+
     /* 数组使用约定
      * 
      * Projectile.ai
-     * [0] 安全蜂巢的索引（若为-1表示无安全蜂巢）
+     * [0] 保留。安全蜂巢改用 ExtraAI 中的 owner + identity 网络引用。
      * [1] 旋转的角速度（单位：弧度/帧）
      * [2] 仅在Swarm4攻击使用。为1表示从内出发，2表示从外出发
      */
@@ -42,8 +62,8 @@ public sealed class KillerBeeSmall : AnomalyModProjectile
         if (Projectile.spriteDirection == 1)
             Projectile.rotation += MathHelper.Pi;
 
-        int index = (int)Projectile.ai[0];
-        if (Projectile.TryGetProjectileFromIndex(index, out Projectile specialCombCell) && specialCombCell.active && specialCombCell.ModProjectile is CombCell combCell)
+        Projectile specialCombCell = SpecialCombCell;
+        if (specialCombCell.active && specialCombCell.ModProjectile is CombCell combCell)
         {
             if (combCell.BehaviorType == CombCell.Behavior.BeeSwarm2_Safe)
             {
@@ -81,18 +101,16 @@ public sealed class KillerBeeSmall : AnomalyModProjectile
 
     public override bool CanHitPlayer(Player target)
     {
-        int index = (int)Projectile.ai[0];
+        Projectile specialCombCell = SpecialCombCell;
         {
-            if (Projectile.TryGetProjectileFromIndex(index, out Projectile specialCombCell)
-                && specialCombCell.active
+            if (specialCombCell.active
                 && specialCombCell.ModProjectile is CombCell combCell
                 && combCell.BehaviorType == CombCell.Behavior.BeeSwarm2_Safe
                 && combCell.HitBox.Contains(target.Hitbox))
                 return false;
         }
         {
-            if (Projectile.TryGetProjectileFromIndex(index, out Projectile specialCombCell)
-                && specialCombCell.active
+            if (specialCombCell.active
                 && specialCombCell.ModProjectile is CombCell combCell
                 && combCell.BehaviorType == CombCell.Behavior.BeeSwarm4_Huge)
             {

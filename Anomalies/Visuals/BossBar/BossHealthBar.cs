@@ -919,6 +919,28 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
             [NPCID.PirateShip] = new BossEntityExtension(this.GetText("ExtensionName.Cannons"), NPCID.PirateShipCannon),
         };
 
+        // 传说之夜骷髅王仅统计头部，无法摧毁的双手不计入血量。
+        LifeFunctions.Add(b =>
+        {
+            NPC npc = b.NPC;
+            if (npc.type == NPCID.SkeletronHead && npc.Anomaly.CustomAIType == 1)
+            {
+                b.CombinedNPCMaxLife = b.InitialMaxLife = npc.lifeMax;
+                b.CombinedNPCLife = npc.life;
+                return true;
+            }
+
+            return false;
+        });
+
+        // 保留原始生命值文本，仅拦截传说之夜骷髅王的剩余手部数量。
+        SmallTextFunctions.Add((BossHealthBar b, out string text, out bool disableOrig) =>
+        {
+            text = "";
+            disableOrig = false;
+            return b.NPC.type == NPCID.SkeletronHead && b.NPC.Anomaly.CustomAIType == 1;
+        });
+
         // 月球领主血量合并
         LifeFunctions.Add(b =>
         {

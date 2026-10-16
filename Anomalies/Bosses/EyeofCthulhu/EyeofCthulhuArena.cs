@@ -92,7 +92,11 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
     public void ChangeArenaRadius(float deltaArenaRadius, int duration, bool linear = false)
     {
         if (deltaArenaRadius != 0f)
+        {
             ArenaStatModifiers.Add(new ArenaStatModifier(ArenaStatModifier.ModifierType.ArenaRadius, duration, deltaArenaRadius, linear));
+            if (TOSharedData.NotClient)
+                Projectile.netUpdate = true;
+        }
     }
 
     public void ChangeArenaRadiusTo(float targetArenaRadius, int duration)
@@ -109,7 +113,11 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
     public void ChangeRotationSpeed(float deltaRotationSpeed, int duration, bool linear = false)
     {
         if (deltaRotationSpeed != 0f)
+        {
             ArenaStatModifiers.Add(new ArenaStatModifier(ArenaStatModifier.ModifierType.RotationSpeed, duration, deltaRotationSpeed, linear));
+            if (TOSharedData.NotClient)
+                Projectile.netUpdate = true;
+        }
     }
 
     public void ChangeRotationSpeedTo(float targetRotationSpeed, int duration)
@@ -128,7 +136,11 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
         index = (int)TOMathUtils.NormalizeWithPeriod(index, 32);
         ArenaEye eye = Eyes[index];
         if (eye is not null)
+        {
             action?.Invoke(eye);
+            if (TOSharedData.NotClient)
+                Projectile.netUpdate = true;
+        }
     }
 
     public void AddHighlightTo(int index, int lifetime, bool playSound = false)
@@ -145,6 +157,7 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
 
     public override void SetDefaults()
     {
+        Projectile.netImportant = true;
         Projectile.width = 16;
         Projectile.height = 16;
         Projectile.penetrate = -1;
@@ -160,7 +173,11 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
     public override void AI()
     {
         if (Master is null || !Master.active || Master.type != NPCID.EyeofCthulhu)
-            Projectile.Kill();
+        {
+            if (TOSharedData.NotClient)
+                Projectile.Kill();
+            return;
+        }
 
         EyeofCthulhu masterBehavior = MasterBehavior;
         Projectile.Center = masterBehavior.Phase3ArenaCenter;
@@ -370,20 +387,12 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
                             if (!buff)
                             {
                                 e.ShouldUseCustomRotation = true;
-                                int iClone = i;
-                                e.CustomFindRotationFunction = e1 =>
-                                {
-                                    Vector2 originalVector = GetEyeCenterDirection(index1) * (Radius - 15f);
-                                    float rotationOffset = TOMathUtils.PiOver16 * iClone;
-                                    Vector2 destination = Projectile.Center + EyeofCthulhuHandler.EyeShapeHelper.GetVector(originalVector, rotationOffset);
-                                    Vector2 center = e1.Center;
-                                    return (destination - center).ToRotation(MathHelper.Pi);
-                                };
+                                e.CustomRotationOriginIndex = index1;
                             }
                             else
                             {
                                 e.ShouldUseCustomRotation = false;
-                                e.CustomFindRotationFunction = null;
+                                e.CustomRotationOriginIndex = -1;
                             }
                         });
                     }
@@ -483,7 +492,7 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
                             ExecuteActionToArenaEye(index1 + i, e =>
                             {
                                 e.ShouldUseCustomRotation = false;
-                                e.CustomFindRotationFunction = null;
+                                e.CustomRotationOriginIndex = -1;
                                 e.ShouldFaceTarget = false;
                             });
                         }
@@ -638,18 +647,53 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
 
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => Timer1 > EyeofCthulhu.PhaseChangeGateValue_2To3_1 && base.Colliding(projHitbox, targetHitbox) == true;
 
-    public override void SendExtraAI(BinaryWriter writer)
+    protected override void SendAnomalyExtraAI(BinaryWriter writer)
     {
+        base.SendAnomalyExtraAI(writer);
         writer.Write((int)MasterCommandReceiver);
         writer.Write(UnmodifiedRadius);
         writer.Write(UnmodifiedRotationSpeed);
+        writer.Write(RotationSpeed);
+        writer.Write(ArenaStatModifiers.Count);
+        foreach (ArenaStatModifier modifier in ArenaStatModifiers)
+        {
+            writer.Write((byte)modifier.Type);
+            writer.Write(modifier.LifeTime);
+            writer.Write(modifier.UseLerp);
+            writer.Write(modifier.Delta);
+            writer.Write(modifier.Timer);
+        }
+        foreach (ArenaEye eye in Eyes)
+        {
+            writer.Write(eye is not null);
+            eye?.Write(writer);
+        }
     }
 
-    public override void ReceiveExtraAI(BinaryReader reader)
+    protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
     {
+        base.ReceiveAnomalyExtraAI(reader);
         MasterCommandReceiver = (BehaviorCommand_Arena)reader.ReadInt32();
         UnmodifiedRadius = reader.ReadSingle();
         UnmodifiedRotationSpeed = reader.ReadSingle();
+        RotationSpeed = reader.ReadSingle();
+        int count = reader.ReadInt32();
+        if ((uint)count > 256)
+            throw new InvalidDataException("Invalid arena modifier count.");
+        ArenaStatModifiers.Clear();
+        for (int i = 0; i < count; i++)
+        {
+            ArenaStatModifier.ModifierType type = (ArenaStatModifier.ModifierType)reader.ReadByte();
+            int lifetime = reader.ReadInt32();
+            bool linear = reader.ReadBoolean();
+            float delta = reader.ReadSingle();
+            int timer = reader.ReadInt32();
+            if (type is not (ArenaStatModifier.ModifierType.ArenaRadius or ArenaStatModifier.ModifierType.RotationSpeed) || lifetime <= 0)
+                throw new InvalidDataException("Invalid arena modifier.");
+            ArenaStatModifiers.Add(new ArenaStatModifier(type, lifetime, delta, linear) { Timer = timer });
+        }
+        for (int i = 0; i < Eyes.Length; i++)
+            Eyes[i] = reader.ReadBoolean() ? ArenaEye.Read(reader, this, i) : null;
     }
 }
 

@@ -1,4 +1,5 @@
-﻿using Terraria.Graphics.Effects;
+﻿using Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+using Terraria.Graphics.Effects;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight.Misc;
 

@@ -18,8 +18,16 @@ public sealed partial class EventideReunionHoldout : AnomalyModProjectile
 
     public Vector2 InitialCenter;
 
-    public int Phase;
-    public bool FaceRight;
+    public int Phase
+    {
+        get => (int)Projectile.ai[1];
+        set => Projectile.ai[1] = value;
+    }
+    public bool FaceRight
+    {
+        get => Projectile.ai[2] != 0f;
+        set => Projectile.ai[2] = value ? 1f : 0f;
+    }
 
     public override void SetDefaults()
     {
@@ -41,14 +49,11 @@ public sealed partial class EventideReunionHoldout : AnomalyModProjectile
     {
         Lighting.AddLight(Projectile.Center, 1f, 1f, 1f);
 
-        if (!Projectile.IsOnOwnerClient)
-            return;
-
         Player player = Projectile.Owner;
         bool canUseItem = !player.CanNotUseHoldOut() && player.HasAmmo(player.HeldItem);
         Vector2 actualPlayerPosition = player.RotatedRelativePoint(player.MountedCenter, true);
 
-        if (!canUseItem)
+        if (Projectile.IsOnOwnerClient && !canUseItem)
         {
             Projectile.Kill();
             return;
@@ -60,14 +65,19 @@ public sealed partial class EventideReunionHoldout : AnomalyModProjectile
         player.itemTime = 30;
         player.itemAnimation = 30;
 
-        Vector2 direction = Main.MouseWorld - actualPlayerPosition;
-        if (player.gravDir == -1f)
+        Vector2 direction = Projectile.IsOnOwnerClient ? Main.MouseWorld - actualPlayerPosition : Projectile.velocity;
+        if (Projectile.IsOnOwnerClient && player.gravDir == -1f)
             direction.Y = Main.screenHeight - Main.mouseY + Main.screenPosition.Y - actualPlayerPosition.Y;
         Vector2 initialCenter = actualPlayerPosition + new PolarVector2(60f * Projectile.scale, Projectile.rotation) + new Vector2(0f, 10f);
+
+        if (Phase != 0)
+            Projectile.rotation = Projectile.velocity.ToRotation();
 
         switch (Phase)
         {
             case 0:
+                if (!Projectile.IsOnOwnerClient)
+                    break;
                 Projectile.velocity = direction.SafeNormalize();
                 FaceRight = direction.X >= 0;
                 float originalRotation = direction.ToRotation();
@@ -75,6 +85,7 @@ public sealed partial class EventideReunionHoldout : AnomalyModProjectile
                 Projectile.Center = initialCenter;
 
                 Phase = 1;
+                Projectile.netUpdate = true;
                 break;
             case 1:
                 float a = 5f;

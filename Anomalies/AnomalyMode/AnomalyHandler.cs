@@ -50,6 +50,9 @@ public sealed class AnomalyHandler : ModSystem, IContentLoader
 
     public override void PreUpdateWorld()
     {
+        if (Main.netMode == NetmodeID.MultiplayerClient)
+            return;
+
         if (AnomalySharedData.Anomaly)
         {
             if (Main.netMode != NetmodeID.SinglePlayer) //暂不支持多人

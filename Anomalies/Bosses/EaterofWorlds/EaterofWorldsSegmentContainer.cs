@@ -3,18 +3,17 @@
 public sealed class EaterofWorldsSegmentContainer
 {
     public NPC NPC { get; }
-    public IEaterofWorldsSegment SegmentBehavior { get; }
+    // Behavior is a singleton: reacquire it to bind the correct NPC on every access.
+    public IEaterofWorldsSegment SegmentBehavior => EaterofWorldsHandler.TryGetSegment(NPC);
 
     public EaterofWorldsSegmentContainer(NPC npc)
     {
         NPC = npc;
-        SegmentBehavior = EaterofWorldsHandler.TryGetSegment(npc);
     }
 
     public EaterofWorldsSegmentContainer(NPC npc, IEaterofWorldsSegment segmentBehavior)
     {
         NPC = npc;
-        SegmentBehavior = segmentBehavior;
     }
 
     public void Deconstruct(out NPC npc, out IEaterofWorldsSegment segmentBehavior)

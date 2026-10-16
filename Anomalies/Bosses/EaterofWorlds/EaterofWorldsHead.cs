@@ -1,4 +1,4 @@
-﻿using Anomalies.Assets.Effects;
+using Anomalies.Assets.Effects;
 using Anomalies.DataStructures;
 using Anomalies.Visuals.BossBar;
 
@@ -49,14 +49,15 @@ public sealed partial class EaterofWorldsHead : EaterofWorldsSegment<EaterofWorl
     private static readonly ProjectileDamageContainer _CursedFireBallDamage = new(50, 80, 120, 150, 144, 180);
     public static int CursedFireballDamage => _CursedFireBallDamage.Value;
 
-    public static Dictionary<int, List<EaterofWorldsSegmentContainer>> AllSegmentsDictionary = [];
-    public List<EaterofWorldsSegmentContainer> AllSegments => AllSegmentsDictionary[NPC.whoAmI];
+    public List<EaterofWorldsSegmentContainer> AllSegments => AnomalyNPC.EaterOfWorldsSegments;
 
     public Phase CurrentPhase
     {
         get => (Phase)AI_Union_2.byte0;
         set
         {
+            if (CurrentPhase != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_2;
             union.byte0 = (byte)value;
             AI_Union_2 = union;
@@ -74,6 +75,8 @@ public sealed partial class EaterofWorldsHead : EaterofWorldsSegment<EaterofWorl
         get => (Behavior)AI_Union_2.byte1;
         set
         {
+            if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_2;
             union.byte1 = (byte)value;
             AI_Union_2 = union;
@@ -83,7 +86,15 @@ public sealed partial class EaterofWorldsHead : EaterofWorldsSegment<EaterofWorl
     public int CurrentLocalPhase
     {
         get => (int)NPC.ai[3];
-        set => NPC.ai[3] = value;
+        set
+        {
+            if (NPC.ai[3] != value)
+            {
+                NPC.ai[3] = value;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
+            }
+        }
     }
 
     public bool CurrentlySplit
@@ -187,7 +198,7 @@ public sealed partial class EaterofWorldsHead : EaterofWorldsSegment<EaterofWorl
     /// <returns>由所有转换后的独立蠕虫的头部组成的列表，按顺序排列。</returns>
     public List<NPC> TransformToWorms(int amount)
     {
-        if (!IsFirstSegment) //只有真正的头部能执行转换操作
+        if (!TOSharedData.NotClient || !IsFirstSegment) //只有服务端的真正头部能执行转换操作
             return [];
 
         int segmentCount = TotalSegmentCount;
@@ -201,41 +212,53 @@ public sealed partial class EaterofWorldsHead : EaterofWorldsSegment<EaterofWorl
             return [];
 
         List<NPC> heads = [];
+        NPC owner = NPC;
+        List<EaterofWorldsSegmentContainer> allSegments = AllSegments;
 
-        for (int i = 0; i < amount; i++)
+        try
         {
-            int offset = i * segmentPerSplit;
-
-            //转换头部
-
-            (NPC head, IEaterofWorldsSegment segmentHead) = AllSegments[offset];
-            segmentHead.LocalHead = head;
-            if (head.type != NPCID.EaterofWorldsHead)
+            for (int i = 0; i < amount; i++)
             {
-                head.type = NPCID.EaterofWorldsHead;
-                SoundEngine.PlaySound(SoundID.NPCDeath1, head.Center);
+                int offset = i * segmentPerSplit;
+
+                //转换头部
+
+                (NPC head, IEaterofWorldsSegment segmentHead) = allSegments[offset];
+                segmentHead.LocalHead = head;
+                if (head.type != NPCID.EaterofWorldsHead)
+                {
+                    head.type = NPCID.EaterofWorldsHead;
+                    SoundEngine.PlaySound(SoundID.NPCDeath1, head.Center);
+                }
+                allSegments[offset] = new EaterofWorldsSegmentContainer(head);
+                heads.Add(head);
+                head.netUpdate = true;
+
+                //转换身体
+
+                for (int j = 1; j <= segmentPerSplit - 2; j++)
+                {
+                    int index = offset + j;
+                    (NPC body, IEaterofWorldsSegment segmentBody) = allSegments[index];
+                    segmentBody.LocalHead = head;
+                    body.type = NPCID.EaterofWorldsBody;
+                    body.netUpdate = true;
+                    allSegments[index] = new EaterofWorldsSegmentContainer(body);
+                }
+
+                //转换尾部
+
+                int indexTail = offset + segmentPerSplit - 1;
+                (NPC tail, IEaterofWorldsSegment segmentTail) = allSegments[indexTail];
+                segmentTail.LocalHead = head;
+                tail.type = NPCID.EaterofWorldsTail;
+                tail.netUpdate = true;
+                allSegments[indexTail] = new EaterofWorldsSegmentContainer(tail);
             }
-            AllSegments[offset] = new EaterofWorldsSegmentContainer(head);
-            heads.Add(head);
-
-            //转换身体
-
-            for (int j = 1; j <= segmentPerSplit - 2; j++)
-            {
-                int index = offset + j;
-                (NPC body, IEaterofWorldsSegment segmentBody) = AllSegments[index];
-                segmentBody.LocalHead = head;
-                body.type = NPCID.EaterofWorldsBody;
-                AllSegments[index] = new EaterofWorldsSegmentContainer(body);
-            }
-
-            //转换尾部
-
-            int indexTail = offset + segmentPerSplit - 1;
-            (NPC tail, IEaterofWorldsSegment segmentTail) = AllSegments[indexTail];
-            segmentTail.LocalHead = head;
-            tail.type = NPCID.EaterofWorldsTail;
-            AllSegments[indexTail] = new EaterofWorldsSegmentContainer(tail);
+        }
+        finally
+        {
+            _Entity = owner;
         }
 
         return heads;

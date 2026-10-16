@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.Skeletron.LegendaryNight;
+﻿namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 
 public sealed class FallingStar : AnomalyModProjectile
 {
@@ -8,27 +8,27 @@ public sealed class FallingStar : AnomalyModProjectile
     /// <summary>Timer1 超过此值后开始加速。</summary>
     public int AccelerationStartTime = 420;
 
-    [LoadTexture(LegendaryNightHandler.LegendaryNightPath + "FallingStarLight")]
+    [LoadTexture(LegendaryNightHandler.LegendaryNightEntityPath + "FallingStarLight")]
     private static Asset<Texture2D> _LightTexture;
     public static Texture2D LightTexture => _LightTexture.Value;
 
-    [LoadTexture(LegendaryNightHandler.LegendaryNightPath + "FallingStar")]
+    [LoadTexture(LegendaryNightHandler.LegendaryNightEntityPath + "FallingStar")]
     private static Asset<Texture2D> _StarTexture;
     public static Texture2D StarTexture => _StarTexture.Value;
 
-    [LoadTexture(LegendaryNightHandler.LegendaryNightPath + "FallingStar_Medium")]
+    [LoadTexture(LegendaryNightHandler.LegendaryNightEntityPath + "FallingStar_Medium")]
     private static Asset<Texture2D> _MediumTexture;
     public static Texture2D MediumTexture => _MediumTexture.Value;
 
-    [LoadTexture(LegendaryNightHandler.LegendaryNightPath + "FallingStar_Glow")]
+    [LoadTexture(LegendaryNightHandler.LegendaryNightEntityPath + "FallingStar_Glow")]
     private static Asset<Texture2D> _GlowTexture;
     public static new Texture2D GlowTexture => _GlowTexture.Value;
 
-    [LoadTexture(LegendaryNightHandler.LegendaryNightPath + "FallingStar_MediumGlow")]
+    [LoadTexture(LegendaryNightHandler.LegendaryNightEntityPath + "FallingStar_MediumGlow")]
     private static Asset<Texture2D> _MediumGlowTexture;
     public static Texture2D MediumGlowTexture => _MediumGlowTexture.Value;
 
-    [LoadTexture(LegendaryNightHandler.LegendaryNightPath + "FallingStar_Hard")]
+    [LoadTexture(LegendaryNightHandler.LegendaryNightEntityPath + "FallingStar_Hard")]
     private static Asset<Texture2D> _HardTexture;
     public static Texture2D HardTexture => _HardTexture.Value;
 
@@ -81,14 +81,16 @@ public sealed class FallingStar : AnomalyModProjectile
         }
     }
 
-    public override void SendExtraAI(BinaryWriter writer)
+    protected override void SendAnomalyExtraAI(BinaryWriter writer)
     {
+        base.SendAnomalyExtraAI(writer);
         writer.Write(TrailType);
         writer.Write(AccelerationStartTime);
     }
 
-    public override void ReceiveExtraAI(BinaryReader reader)
+    protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
     {
+        base.ReceiveAnomalyExtraAI(reader);
         TrailType = reader.ReadInt32();
         AccelerationStartTime = reader.ReadInt32();
     }
@@ -144,12 +146,23 @@ public sealed class FallingStar : AnomalyModProjectile
                     float progress = (float)i / trailSamples;
                     float strength = 1f - progress;
                     Vector2 trailPosition = oldPositions[i] + trailOffset - Main.screenPosition;
+                    Vector2 nextPosition = i == 0 ? position
+                        : oldPositions[i - 1] != Vector2.Zero ? oldPositions[i - 1] + trailOffset - Main.screenPosition : trailPosition;
+                    Vector2 segment = nextPosition - trailPosition;
+                    float segmentLength = segment.Length();
+                    float segmentRotation = segment.ToRotation();
+                    Vector2 segmentCenter = (trailPosition + nextPosition) * 0.5f;
                     float diameter = MathHelper.Lerp(12f, 240f, strength) * sizeFactor;
                     float intensity = strength * strength * MathHelper.Clamp(speed / 2f, 0f, 1f);
                     Color outerColor = new Color(255, 90, 10, 0) * (intensity * 0.12f);
                     Color innerColor = new Color(255, 225, 100, 0) * (intensity * 0.18f);
-                    Main.spriteBatch.DrawFromCenter(bloom, trailPosition, null, outerColor, 0f, diameter / bloom.Width, SpriteEffects.None, 0f);
-                    Main.spriteBatch.DrawFromCenter(bloom, trailPosition, null, innerColor, 0f, diameter * 0.45f / bloom.Width, SpriteEffects.None, 0f);
+                    // 将每个光斑置于相邻采样点中间，沿轨迹拉长；额外重叠抵消光斑边缘的淡出。
+                    // 内芯也独立补足线段长度，避免随外层一起缩小后再次出现断点。
+                    Vector2 outerScale = new((diameter + segmentLength * 2f) / bloom.Width, diameter / bloom.Height);
+                    float innerDiameter = diameter * 0.45f;
+                    Vector2 innerScale = new((innerDiameter + segmentLength * 2f) / bloom.Width, innerDiameter / bloom.Height);
+                    Main.spriteBatch.DrawFromCenter_VectorScale(bloom, segmentCenter, null, outerColor, segmentRotation, outerScale);
+                    Main.spriteBatch.DrawFromCenter_VectorScale(bloom, segmentCenter, null, innerColor, segmentRotation, innerScale);
                 }
                 break;
         }

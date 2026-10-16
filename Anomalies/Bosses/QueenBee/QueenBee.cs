@@ -82,6 +82,8 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
         }
         set
         {
+            if (CurrentPhase != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_0;
             union.byte0 = (byte)value;
             AI_Union_0 = union;
@@ -106,6 +108,8 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
         }
         set
         {
+            if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
             Union32 union = AI_Union_0;
             union.byte1 = (byte)value;
             AI_Union_0 = union;
@@ -115,7 +119,15 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
     public int CurrentLocalPhase
     {
         get => (int)NPC.ai[1];
-        set => NPC.ai[1] = value;
+        set
+        {
+            if (NPC.ai[1] != value)
+            {
+                NPC.ai[1] = value;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
+            }
+        }
     }
 
     public int FinishedBehaviorCounter
@@ -172,6 +184,8 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
             {
                 AnomalyNPC.AnomalyAI32[0].bits[3] = value;
                 AnomalyNPC.AIChanged32[0] = true;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
             }
         }
     }
@@ -185,6 +199,8 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
             {
                 AnomalyNPC.AnomalyAI32[0].bits[4] = value;
                 AnomalyNPC.AIChanged32[0] = true;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
             }
         }
     }
@@ -198,6 +214,8 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
             {
                 AnomalyNPC.AnomalyAI32[0].bits[5] = value;
                 AnomalyNPC.AIChanged32[0] = true;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
             }
         }
     }
@@ -224,38 +242,24 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
             {
                 AnomalyNPC.AnomalyAI32[0].bits[7] = value;
                 AnomalyNPC.AIChanged32[0] = true;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    NPC.netUpdate = true;
             }
         }
     }
 
     public Projectile OwnedCombCell
     {
-        get => Projectile.GetProjectileFromIndex(AnomalyNPC.AnomalyAI32[1].i);
-        set
-        {
-            int temp = value?.whoAmI ?? -1;
-            if (AnomalyNPC.AnomalyAI32[1].i != temp)
-            {
-                AnomalyNPC.AnomalyAI32[1].i = temp;
-                AnomalyNPC.AIChanged32[1] = true;
-            }
-        }
+        get => AnomalyNPC.GetProjectileReference(1);
+        set => AnomalyNPC.SetProjectileReference(NPC, 1, value);
     }
     public bool OwnCombCell => OwnedCombCell.active && OwnedCombCell.ModProjectile is CombCell;
     public CombCell ModOwnedCombCell => OwnedCombCell.GetModProjectile<CombCell>();
 
     public Projectile SpecialCombCell
     {
-        get => Projectile.GetProjectileFromIndex(AnomalyNPC.AnomalyAI32[2].i);
-        set
-        {
-            int temp = value?.whoAmI ?? -1;
-            if (AnomalyNPC.AnomalyAI32[2].i != temp)
-            {
-                AnomalyNPC.AnomalyAI32[2].i = temp;
-                AnomalyNPC.AIChanged32[2] = true;
-            }
-        }
+        get => AnomalyNPC.GetProjectileReference(2);
+        set => AnomalyNPC.SetProjectileReference(NPC, 2, value);
     }
     public bool HasSpecialCombCell => SpecialCombCell.active && SpecialCombCell.ModProjectile is CombCell;
 
@@ -304,12 +308,14 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
      *       bits[5] AttackRandomVariation_BeeSwarm
      *       bits[6] LastPhase1BeeSwarmAttackIsType2
      *       bits[7] AttackRandomVariation_BeeSwarmPhase2
-     *   [1].i OwnedCombCell
-     *   [2].i SpecialCombCell
+     *   [1] 保留（OwnedCombCell 改用 AI64 网络引用）
+     *   [2] 保留（SpecialCombCell 改用 AI64 网络引用）
      *   [3].i CurrentAttackCounter
      * 
      * AnomalyAI64
      *   [0] (Vector2) ChargeStartDistance
+     *   [1] (owner + identity) OwnedCombCell
+     *   [2] (owner + identity) SpecialCombCell
      */
     #endregion 数据
 
@@ -324,8 +330,11 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
     public override void SetDefaults()
     {
-        AttackRandomVariation_BeeSwarm = Main.rand.NextBool();
-        AttackRandomVariation_BeeSwarmPhase2 = Main.rand.NextBool();
+        if (TOSharedData.NotClient)
+        {
+            AttackRandomVariation_BeeSwarm = Main.rand.NextBool();
+            AttackRandomVariation_BeeSwarmPhase2 = Main.rand.NextBool();
+        }
 
         AnomalyNPC.DynamicDRHandler = new TimedDDRHandler(
             new TimedDDRHandler.SingleDDRHandler(1f, Phase2LifeRatio, null, n => GetInstance(n).CurrentPhase >= Phase.PhaseChange_1To2, 60),

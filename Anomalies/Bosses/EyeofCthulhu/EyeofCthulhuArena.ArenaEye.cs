@@ -4,7 +4,7 @@ public sealed partial class EyeofCthulhuArena
 {
     /// <summary>
     /// 竞技场边缘的眼睛单体。
-    /// <br/>不同步。
+    /// <br/>随竞技场同步状态和高光预警，不传输绘制缓存或委托。
     /// </summary>
     public sealed class ArenaEye
     {
@@ -12,7 +12,7 @@ public sealed partial class EyeofCthulhuArena
         public int Index;
         public float Rotation;
         public bool ShouldUseCustomRotation;
-        public Func<ArenaEye, float> CustomFindRotationFunction;
+        public int CustomRotationOriginIndex = -1;
         public bool ShouldFaceTarget;
         public int Timer;
         public int Timer2;
@@ -35,7 +35,7 @@ public sealed partial class EyeofCthulhuArena
         {
             Timer++;
 
-            float targetRotation = (ShouldUseCustomRotation ? CustomFindRotationFunction?.Invoke(this) : null)
+            float targetRotation = (ShouldUseCustomRotation && CustomRotationOriginIndex >= 0 ? GetCustomRotation() : (float?)null)
                 ?? (ShouldFaceTarget ? (Target.Center - Master.GetEyeCenter(Index)).ToRotation(MathHelper.Pi) : Master.GetEyeRotation(Index));
             float rotationSpeed = Math.Max(Master.RotationSpeed + 0.1f, 0.3f);
             EyeofCthulhuHandler.UpdateRotation(ref Rotation, targetRotation, rotationSpeed);
@@ -44,6 +44,69 @@ public sealed partial class EyeofCthulhuArena
                 highlight?.Update();
 
             Highlights.RemoveAll(hightlight => hightlight is null || hightlight.ShouldBeRemoved);
+        }
+
+        private float GetCustomRotation()
+        {
+            Vector2 originalVector = Master.GetEyeCenterDirection(CustomRotationOriginIndex) * (Master.Radius - 15f);
+            int offset = (Index - CustomRotationOriginIndex + 32) % 32;
+            Vector2 destination = MasterProjectile.Center + EyeofCthulhuHandler.EyeShapeHelper.GetVector(originalVector, TOMathUtils.PiOver16 * offset);
+            return (destination - Center).ToRotation(MathHelper.Pi);
+        }
+
+        public void Write(BinaryWriter writer)
+        {
+            writer.Write(Rotation);
+            writer.Write(ShouldUseCustomRotation);
+            writer.Write(CustomRotationOriginIndex);
+            writer.Write(ShouldFaceTarget);
+            writer.Write(Timer);
+            writer.Write(Timer2);
+            writer.Write(MasterPhase3_2);
+            writer.Write(Highlights.Count);
+            foreach (EyeHighlight highlight in Highlights)
+            {
+                writer.Write(highlight.LifeTime);
+                writer.Write(highlight.AnimationTime);
+                writer.Write(highlight.FinalBorderWidth);
+                writer.Write(highlight.FadeBeginTimer ?? -1);
+                writer.Write(highlight.Timer);
+            }
+        }
+
+        public static ArenaEye Read(BinaryReader reader, EyeofCthulhuArena master, int index)
+        {
+            ArenaEye eye = new(master, index)
+            {
+                Rotation = reader.ReadSingle(),
+                ShouldUseCustomRotation = reader.ReadBoolean(),
+                CustomRotationOriginIndex = reader.ReadInt32(),
+                ShouldFaceTarget = reader.ReadBoolean(),
+                Timer = reader.ReadInt32(),
+                Timer2 = reader.ReadInt32(),
+                MasterPhase3_2 = reader.ReadBoolean()
+            };
+            if (eye.CustomRotationOriginIndex is < -1 or >= 32)
+                throw new InvalidDataException("Invalid eye rotation origin.");
+            int count = reader.ReadInt32();
+            if ((uint)count > 256)
+                throw new InvalidDataException("Invalid eye highlight count.");
+            for (int i = 0; i < count; i++)
+            {
+                int lifetime = reader.ReadInt32();
+                int animationTime = reader.ReadInt32();
+                float borderWidth = reader.ReadSingle();
+                int fadeBegin = reader.ReadInt32();
+                int timer = reader.ReadInt32();
+                if (lifetime <= 0 || animationTime <= 0 || fadeBegin < -1)
+                    throw new InvalidDataException("Invalid eye highlight.");
+                eye.Highlights.Add(new EyeHighlight(lifetime, animationTime, borderWidth)
+                {
+                    FadeBeginTimer = fadeBegin == -1 ? null : fadeBegin,
+                    Timer = timer
+                });
+            }
+            return eye;
         }
 
         public void Draw(SpriteBatch spriteBatch, Texture2D texture, Rectangle frame, Color color)

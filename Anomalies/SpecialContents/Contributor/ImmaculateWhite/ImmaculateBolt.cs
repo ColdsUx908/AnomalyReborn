@@ -7,7 +7,16 @@ public sealed class ImmaculateBolt : AnomalyModProjectile
     public NPC Target
     {
         get => NPC.GetNPCFromIndex((int)Projectile.ai[0]);
-        set => Projectile.ai[0] = value?.whoAmI ?? -1;
+        set
+        {
+            int index = value?.whoAmI ?? -1;
+            if (Projectile.ai[0] != index)
+            {
+                Projectile.ai[0] = index;
+                if (Projectile.IsOnOwnerClient)
+                    Projectile.netUpdate = true;
+            }
+        }
     }
 
     public bool IsSmallProjectile
@@ -122,7 +131,7 @@ public sealed class ImmaculateBolt : AnomalyModProjectile
                 }
 
                 float homingRatio = Utils.Remap(Timer1, starTime, LifeTime / 4, 0.2f, 0.7f);
-                if (!targetIsValid && Projectile.IsFinalUpdate)
+                if (!targetIsValid && Projectile.IsFinalUpdate && Projectile.IsOnOwnerClient)
                     Target = TOKinematicUtils.GetNPCTarget_Advanced(Projectile.Center, 8000f, ignoreTiles: true, respectImmuneFrames: true, projectile: Projectile, ignoreChaseable: true, bossPriority: true);
 
                 if (Target is not null && targetIsValid)
@@ -144,7 +153,7 @@ public sealed class ImmaculateBolt : AnomalyModProjectile
             if (Timer1 > starTime)
             {
                 float homingRatio = Utils.Remap(Timer1, starTime, LifeTime / 2, 0.2f, 0.7f);
-                if (Target is null || !Target.CanBeChasedBy() || !Projectile.HomeIn(Target, HomingAlgorithm.SmootherStep, homingRatio, 8000f, MathHelper.TwoPi, false) && Projectile.IsFinalUpdate)
+                if ((Target is null || !Target.CanBeChasedBy() || !Projectile.HomeIn(Target, HomingAlgorithm.SmootherStep, homingRatio, 8000f, MathHelper.TwoPi, false) && Projectile.IsFinalUpdate) && Projectile.IsOnOwnerClient)
                     Target = TOKinematicUtils.GetNPCTarget(Projectile.Center, 8000f, ignoreTiles: true);
             }
         }
@@ -278,10 +287,12 @@ public sealed class ImmaculateBolt : AnomalyModProjectile
         if (IsInfiniteProjectile)
         {
             Projectile.damage = (int)Math.Round(Projectile.damage * 0.96f);
+            if (Projectile.IsOnOwnerClient)
+                Projectile.netUpdate = true;
         }
         else
         {
-            if (IsSplittableProjectile && !IsSmallProjectile)
+            if (Projectile.IsOnOwnerClient && IsSplittableProjectile && !IsSmallProjectile)
             {
                 for (int i = 0; i < 2; i++)
                 {

@@ -26,6 +26,10 @@ public sealed class AnomalyTextures
         internal static Asset<Texture2D> _BasicCircle;
         public static Texture2D BasicCircle => _BasicCircle?.Value;
 
+        [LoadTexture(Path + "BasicCircleLarge")]
+        internal static Asset<Texture2D> _BasicCircleLarge;
+        public static Texture2D BasicCircleLarge => _BasicCircleLarge?.Value;
+
         [LoadTexture(Path + "CrystalTextGlow")]
         internal static Asset<Texture2D> _CrystalTextGlow;
         public static Texture2D CrystalTextGlow => _CrystalTextGlow?.Value;
@@ -33,6 +37,10 @@ public sealed class AnomalyTextures
         [LoadTexture(Path + "CrystalTextSparkle")]
         internal static Asset<Texture2D> _CrystalTextSparkle;
         public static Texture2D CrystalTextSparkle => _CrystalTextSparkle?.Value;
+
+        [LoadTexture(Path + "LaserTelegraphBeam")]
+        internal static Asset<Texture2D> _LaserTelegraphBeam;
+        public static Texture2D LaserTelegraphBeam => _LaserTelegraphBeam?.Value;
     }
 
     public static class Noise

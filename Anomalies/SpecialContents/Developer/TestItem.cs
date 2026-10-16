@@ -1,5 +1,5 @@
 ﻿#if DEBUG
-using Anomalies.Bosses.Skeletron.LegendaryNight;
+using Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 using Anomalies.GameContents;
 
 namespace Anomalies.SpecialContents.Developer;
@@ -46,7 +46,7 @@ public sealed class TestItem : AnomalyModItem, IDeveloperItem
         if (player.altFunctionUse == 2)
         {
             Projectile.NewProjectile(source, Main.MouseWorld, Vector2.Zero,
-                ModContent.ProjectileType<ShadowPlayer>(), damage, 0f, player.whoAmI, ai0: player.whoAmI + 1);
+                ModContent.ProjectileType<DemonShadow>(), damage, 0f, player.whoAmI, ai0: player.whoAmI + 1);
             return false;
         }
 

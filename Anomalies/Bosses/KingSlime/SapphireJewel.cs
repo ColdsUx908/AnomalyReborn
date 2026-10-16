@@ -1,4 +1,6 @@
-﻿namespace Anomalies.Bosses.KingSlime;
+﻿using Anomalies.DataStructures;
+
+namespace Anomalies.Bosses.KingSlime;
 
 public sealed class SapphireJewel : JewelNPC
 {
@@ -29,6 +31,8 @@ public sealed class SapphireJewel : JewelNPC
 
     public override void AI()
     {
+        using BossNetUpdateScope netUpdate = new(NPC);
+
         if (MasterDead)
         {
             JewelHandler.Kill(NPC);
@@ -58,8 +62,6 @@ public sealed class SapphireJewel : JewelNPC
         }
 
         JewelHandler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.5f, 150f, -150f, 50f, -250f);
-
-        NPC.netUpdate = true;
     }
 
     public override bool CheckDead()

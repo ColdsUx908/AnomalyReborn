@@ -1,4 +1,5 @@
-﻿using Anomalies.DataStructures;
+﻿using Anomalies.Bosses.EaterofWorlds;
+using Anomalies.DataStructures;
 using Anomalies.Visuals.BossBar;
 using Transoceanic.Framework.Helpers.Utilities;
 
@@ -20,7 +21,12 @@ public sealed class AnomalyPlayer : ModPlayer
         set => field = MathHelper.Clamp(value, 0f, 1f);
     }
 
+    public Item LegendaryNightVirtualBoneWings;
+
     public bool Minion_VacuousBlack;
+
+    public bool StarGodBlessingActive;
+    public float StarGodBlessingOpacity;
 
     public override ModPlayer Clone(Player newEntity)
     {
@@ -33,6 +39,9 @@ public sealed class AnomalyPlayer : ModPlayer
         clone.DownedBoss = DownedBoss;
 
         clone.DarknessIntensity = DarknessIntensity;
+        clone.LegendaryNightVirtualBoneWings = LegendaryNightVirtualBoneWings?.Clone();
+        clone.StarGodBlessingActive = StarGodBlessingActive;
+        clone.StarGodBlessingOpacity = StarGodBlessingOpacity;
 
         return clone;
     }
@@ -41,6 +50,8 @@ public sealed class AnomalyPlayer : ModPlayer
     {
         Debuff_DimensionalRend = false;
         Minion_VacuousBlack = false;
+        StarGodBlessingActive = false;
+        StarGodBlessingOpacity = 0f;
         DarknessIntensity = MathHelper.Max(DarknessIntensity - 0.05f, 0);
     }
 }
@@ -62,8 +73,8 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
     private const int AISlot3 = 33;
     private const int AISlot4 = 17;
 
-    public readonly Union32[] AnomalyAI32 = new Union32[AISlot];
-    public readonly Union64[] AnomalyAI64 = new Union64[AISlot2];
+    public Union32[] AnomalyAI32 { get; private set; } = new Union32[AISlot];
+    public Union64[] AnomalyAI64 { get; private set; } = new Union64[AISlot2];
 
     /// <summary>
     /// 特殊标志位，供外部判定使用。
@@ -75,8 +86,38 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
     public ref BitArray32 AIChanged32_2 => ref AnomalyAI32[^1].bits;
     public ref BitArray64 AIChanged64 => ref AnomalyAI64[^1].bits;
 
-    private readonly Union32[] InternalAnomalyAI32 = new Union32[AISlot3];
-    private readonly Union64[] InternalAnomalyAI64 = new Union64[AISlot4];
+    // Per-NPC local lookup hints. The authoritative owner/identity remains in AnomalyAI64.
+    private ProjectileNetReference[] _ProjectileReferenceCache = new ProjectileNetReference[AISlot2 - 1];
+
+    public Projectile GetProjectileReference(int slot)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(slot);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _ProjectileReferenceCache.Length);
+        ref ProjectileNetReference reference = ref _ProjectileReferenceCache[slot];
+        reference.SetPackedValue(AnomalyAI64[slot].l);
+        return reference.Resolve();
+    }
+
+    public void SetProjectileReference(NPC npc, int slot, Projectile projectile)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(slot);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _ProjectileReferenceCache.Length);
+        ref ProjectileNetReference reference = ref _ProjectileReferenceCache[slot];
+        reference.Set(projectile);
+        long packed = reference.PackedValue;
+        if (AnomalyAI64[slot].l == packed)
+            return;
+        AnomalyAI64[slot].l = packed;
+        AIChanged64[slot] = true;
+        if (TOSharedData.NotClient)
+            npc.netUpdate = true;
+    }
+
+    // The worm's segment graph is server-local entity state, not singleton Behavior state.
+    internal List<EaterofWorldsSegmentContainer> EaterOfWorldsSegments { get; private set; } = [];
+
+    private Union32[] InternalAnomalyAI32 { get; set; } = new Union32[AISlot3];
+    private Union64[] InternalAnomalyAI64 { get; set; } = new Union64[AISlot4];
 
     private ref BitArray32 InternalAIChanged32 => ref InternalAnomalyAI32[^1].bits;
     private ref BitArray64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;
@@ -90,28 +131,30 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
     {
         AnomalyGlobalNPC clone = (AnomalyGlobalNPC)base.Clone(from, to);
 
-        Array.Copy(AnomalyAI32, clone.AnomalyAI32, AISlot);
-        Array.Copy(AnomalyAI64, clone.AnomalyAI64, AISlot2);
-        Array.Copy(InternalAnomalyAI32, clone.InternalAnomalyAI32, AISlot3);
-        Array.Copy(InternalAnomalyAI32, clone.InternalAnomalyAI32, AISlot4);
+        clone.AnomalyAI32 = (Union32[])AnomalyAI32.Clone();
+        clone.AnomalyAI64 = (Union64[])AnomalyAI64.Clone();
+        clone.InternalAnomalyAI32 = (Union32[])InternalAnomalyAI32.Clone();
+        clone.InternalAnomalyAI64 = (Union64[])InternalAnomalyAI64.Clone();
+        clone._ProjectileReferenceCache = (ProjectileNetReference[])_ProjectileReferenceCache.Clone();
+        clone.EaterOfWorldsSegments = [with(EaterOfWorldsSegments)];
 
         return clone;
     }
 
     public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
     {
-        TONetUtils.WriteChangedAI32(binaryWriter, AnomalyAI32, 1);
-        TONetUtils.WriteChangedAI64(binaryWriter, AnomalyAI64, 1);
-        TONetUtils.WriteChangedAI32(binaryWriter, InternalAnomalyAI32, 4);
-        TONetUtils.WriteChangedAI64(binaryWriter, InternalAnomalyAI64, 1);
+        TONetUtils.WriteAI32Snapshot(binaryWriter, AnomalyAI32, 2);
+        TONetUtils.WriteAI64Snapshot(binaryWriter, AnomalyAI64, 1);
+        TONetUtils.WriteAI32Snapshot(binaryWriter, InternalAnomalyAI32, 1);
+        TONetUtils.WriteAI64Snapshot(binaryWriter, InternalAnomalyAI64, 1);
     }
 
     public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
     {
-        TONetUtils.ReadChangedAI32(binaryReader, AnomalyAI32);
-        TONetUtils.ReadChangedAI64(binaryReader, AnomalyAI64);
-        TONetUtils.ReadChangedAI32(binaryReader, InternalAnomalyAI32);
-        TONetUtils.ReadChangedAI64(binaryReader, InternalAnomalyAI64);
+        TONetUtils.ReadAI32Snapshot(binaryReader, AnomalyAI32, 2);
+        TONetUtils.ReadAI64Snapshot(binaryReader, AnomalyAI64, 1);
+        TONetUtils.ReadAI32Snapshot(binaryReader, InternalAnomalyAI32, 1);
+        TONetUtils.ReadAI64Snapshot(binaryReader, InternalAnomalyAI64, 1);
     }
 
     #region 额外数据
@@ -136,7 +179,7 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
             if (InternalAnomalyAI32[1].bits[0] != value)
             {
                 InternalAnomalyAI32[1].bits[0] = value;
-                InternalAIChanged32[0] = true;
+                InternalAIChanged32[1] = true;
             }
         }
     }
@@ -228,14 +271,14 @@ public sealed class AnomalyGlobalProjectile : GlobalProjectile
     private const int AISlot = 33;
     private const int AISlot2 = 17;
 
-    public readonly Union32[] AnomalyAI32 = new Union32[AISlot];
-    public readonly Union64[] AnomalyAI64 = new Union64[AISlot2];
+    public Union32[] AnomalyAI32 { get; private set; } = new Union32[AISlot];
+    public Union64[] AnomalyAI64 { get; private set; } = new Union64[AISlot2];
 
     public ref BitArray32 AIChanged32 => ref AnomalyAI32[^1].bits;
     public ref BitArray64 AIChanged64 => ref AnomalyAI64[^1].bits;
 
-    private readonly Union32[] InternalAnomalyAI32 = new Union32[AISlot];
-    private readonly Union64[] InternalAnomalyAI64 = new Union64[AISlot2];
+    private Union32[] InternalAnomalyAI32 { get; set; } = new Union32[AISlot];
+    private Union64[] InternalAnomalyAI64 { get; set; } = new Union64[AISlot2];
 
     private ref BitArray32 InternalAIChanged32 => ref InternalAnomalyAI32[^1].bits;
     private ref BitArray64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;
@@ -244,28 +287,37 @@ public sealed class AnomalyGlobalProjectile : GlobalProjectile
     {
         AnomalyGlobalProjectile clone = (AnomalyGlobalProjectile)base.Clone(from, to);
 
-        Array.Copy(AnomalyAI32, clone.AnomalyAI32, AISlot);
-        Array.Copy(AnomalyAI64, clone.AnomalyAI64, AISlot2);
-        Array.Copy(InternalAnomalyAI32, clone.InternalAnomalyAI32, AISlot);
-        Array.Copy(InternalAnomalyAI32, clone.InternalAnomalyAI32, AISlot2);
+        clone.AnomalyAI32 = (Union32[])AnomalyAI32.Clone();
+        clone.AnomalyAI64 = (Union64[])AnomalyAI64.Clone();
+        clone.InternalAnomalyAI32 = (Union32[])InternalAnomalyAI32.Clone();
+        clone.InternalAnomalyAI64 = (Union64[])InternalAnomalyAI64.Clone();
 
         return clone;
     }
 
     public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
     {
-        TONetUtils.WriteChangedAI32(binaryWriter, AnomalyAI32, 1);
-        TONetUtils.WriteChangedAI64(binaryWriter, AnomalyAI64, 1);
-        TONetUtils.WriteChangedAI32(binaryWriter, InternalAnomalyAI32, 1);
-        TONetUtils.WriteChangedAI64(binaryWriter, InternalAnomalyAI64, 1);
+        // SyncProjectile does not include these fields, even when netUpdate is true.
+        binaryWriter.Write(projectile.scale);
+        binaryWriter.Write(projectile.timeLeft);
+        binaryWriter.Write(projectile.extraUpdates);
+        bitWriter.WriteBit(projectile.tileCollide);
+        TONetUtils.WriteAI32Snapshot(binaryWriter, AnomalyAI32, 1);
+        TONetUtils.WriteAI64Snapshot(binaryWriter, AnomalyAI64, 1);
+        TONetUtils.WriteAI32Snapshot(binaryWriter, InternalAnomalyAI32, 1);
+        TONetUtils.WriteAI64Snapshot(binaryWriter, InternalAnomalyAI64, 1);
     }
 
     public override void ReceiveExtraAI(Projectile projectile, BitReader bitReader, BinaryReader binaryReader)
     {
-        TONetUtils.ReadChangedAI32(binaryReader, AnomalyAI32);
-        TONetUtils.ReadChangedAI64(binaryReader, AnomalyAI64);
-        TONetUtils.ReadChangedAI32(binaryReader, InternalAnomalyAI32);
-        TONetUtils.ReadChangedAI64(binaryReader, InternalAnomalyAI64);
+        projectile.scale = binaryReader.ReadSingle();
+        projectile.timeLeft = binaryReader.ReadInt32();
+        projectile.extraUpdates = binaryReader.ReadInt32();
+        projectile.tileCollide = bitReader.ReadBit();
+        TONetUtils.ReadAI32Snapshot(binaryReader, AnomalyAI32, 1);
+        TONetUtils.ReadAI64Snapshot(binaryReader, AnomalyAI64, 1);
+        TONetUtils.ReadAI32Snapshot(binaryReader, InternalAnomalyAI32, 1);
+        TONetUtils.ReadAI64Snapshot(binaryReader, InternalAnomalyAI64, 1);
     }
 
     #region 额外数据
@@ -312,15 +364,15 @@ public sealed class AnomalyGlobalItem : GlobalItem
     private const int dataSlot = 64;
     private const int dataSlot2 = 32;
 
-    public readonly Union32[] Data = new Union32[dataSlot];
-    public readonly Union64[] Data2 = new Union64[dataSlot2];
+    public Union32[] Data { get; private set; } = new Union32[dataSlot];
+    public Union64[] Data2 { get; private set; } = new Union64[dataSlot2];
 
     public override GlobalItem Clone(Item from, Item to)
     {
         AnomalyGlobalItem clone = (AnomalyGlobalItem)base.Clone(from, to);
 
-        Array.Copy(Data, clone.Data, dataSlot);
-        Array.Copy(Data2, clone.Data2, dataSlot2);
+        clone.Data = (Union32[])Data.Clone();
+        clone.Data2 = (Union64[])Data2.Clone();
 
         return clone;
     }

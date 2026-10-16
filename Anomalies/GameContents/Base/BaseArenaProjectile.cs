@@ -24,6 +24,20 @@ public abstract class BaseArenaProjectile : AnomalyModProjectile
 /// </summary>
 public abstract class BaseRingArenaProjectile : BaseArenaProjectile
 {
+    protected override void SendAnomalyExtraAI(BinaryWriter writer)
+    {
+        base.SendAnomalyExtraAI(writer);
+        writer.Write(Radius);
+        writer.Write(OutofArenaTimer);
+    }
+
+    protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
+    {
+        base.ReceiveAnomalyExtraAI(reader);
+        Radius = reader.ReadSingle();
+        OutofArenaTimer = reader.ReadInt32();
+    }
+
     /// <summary>
     /// 竞技场环形边界的中心半径（从弹幕中心到环心中线的距离）。
     /// 子类必须实现此属性的读写访问器，可在运行时动态改变以调整边界大小。

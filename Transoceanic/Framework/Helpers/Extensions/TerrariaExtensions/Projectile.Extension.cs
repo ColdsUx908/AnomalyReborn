@@ -488,12 +488,16 @@ public static partial class TOExtensions
         /// <param name="action">生成成功后对弹幕执行的行为。</param>
         public static void NewProjectileAction(IEntitySource source, Vector2 position, Vector2 velocity, int type, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
         {
+            if (Main.netMode == NetmodeID.MultiplayerClient && source is EntitySource_Parent parent
+                && (parent.Entity is NPC || parent.Entity is Projectile { hostile: true }))
+                return;
             int index = Projectile.NewProjectile(source, position, velocity, type, damage, knockback, owner);
             if (index < Main.maxProjectiles)
             {
                 Projectile projectile = Main.projectile[index];
                 projectile.velocity = velocity;
                 action?.Invoke(projectile);
+                projectile.netUpdate = true;
             }
         }
 

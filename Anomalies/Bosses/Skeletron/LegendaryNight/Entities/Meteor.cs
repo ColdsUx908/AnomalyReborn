@@ -1,8 +1,11 @@
-namespace Anomalies.Bosses.Skeletron.LegendaryNight;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 
 public sealed class Meteor : AnomalyModProjectile
 {
     public const int TrailLength = 50;
+
+    public static readonly SoundStyle SummonSound = new(LegendaryNightHandler.LegendaryNightEntityPath + "MeteorSummon") { MaxInstances = 0 };
+    public static readonly SoundStyle ExplosionSound = new(LegendaryNightHandler.LegendaryNightEntityPath + "MeteorExplosion") { MaxInstances = 0 };
 
     // ai[0]：目标玩家索引（1-based，0 表示未指定目标）。
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
@@ -49,6 +52,7 @@ public sealed class Meteor : AnomalyModProjectile
     {
         if (!Main.dedServ)
         {
+            SoundEngine.PlaySound(ExplosionSound, Projectile.Center);
             for (int i = 0; i < 150; i++)
             {
                 Color color = Color.Lerp(new Color(255, 90, 10), LegendaryNightHandler.StarColor, Main.rand.NextFloat());
@@ -59,7 +63,7 @@ public sealed class Meteor : AnomalyModProjectile
         if (!TOSharedData.NotClient)
             return;
 
-        const int Amount = 80;
+        const int Amount = 100;
         const float MaxSpeed = 20f;
 
         // 与 RainbowJewel.Attack_Star 相同：按隔一个顶点的顺序连接五个顶点，
@@ -83,8 +87,9 @@ public sealed class Meteor : AnomalyModProjectile
             Projectile.NewProjectileAction<FallingStar>(Projectile.GetSource_Death(), Projectile.Center, velocity, SkeletronLegendHead.FallingStarDamage, Projectile.knockBack, action: p =>
             {
                 p.scale = 0.2f;
-                p.GetModProjectile<FallingStar>().TrailType = 2;
-                p.GetModProjectile<FallingStar>().AccelerationStartTime = 180;
+                FallingStar modP = p.GetModProjectile<FallingStar>();
+                modP.TrailType = 2;
+                modP.AccelerationStartTime = 90;
                 p.netUpdate = true;
             });
         }

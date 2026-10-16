@@ -65,6 +65,18 @@ public sealed class VacuousBlackMinion : AnomalyModProjectile
         Projectile.scale = GetInterpolation(0.4f, 0.1f) * TOMathUtils.Interpolation.QuadraticEaseOut(Timer1 / 10f);
     }
 
+    protected override void SendAnomalyExtraAI(BinaryWriter writer)
+    {
+        base.SendAnomalyExtraAI(writer);
+        writer.Write(Projectile.minionSlots);
+    }
+
+    protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
+    {
+        base.ReceiveAnomalyExtraAI(reader);
+        Projectile.minionSlots = reader.ReadSingle();
+    }
+
     public override bool PreDraw(ref Color lightColor)
     {
         SpriteBatch spriteBatch = Main.spriteBatch;

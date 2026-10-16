@@ -33,6 +33,8 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
 
     public static bool ResurrectionAI(NPC npc, AnomalyGlobalNPC anomalyNPC)
     {
+        using BossNetUpdateScope netUpdate = new(npc);
+
         // Difficulty bools.
         // 异象模式GFB不受BossRush影响，且自动视为大师模式和死亡模式。
 
@@ -206,12 +208,14 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                         targetDistance = maxVelocity;
 
                     npc.velocity = Vector2.Lerp(targetDirection.SafeNormalize(Vector2.Zero) * targetDistance, targetDirection / 6f, lerpValue);
-                    npc.netUpdate = true;
                 }
 
                 npc.velocity *= 0.92f;
                 npc.ai[1] += 1f;
                 if (!(npc.ai[1] >= idleTimer))
+                    break;
+
+                if (Main.netMode == NetmodeID.MultiplayerClient)
                     break;
 
                 int attackPatternLength = (int)npc.ai[2];
@@ -246,6 +250,8 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
 
                         // Adjust the upcoming Ethereal Lance attack depending on what random variable is chosen here.
                         anomalyNPC.AnomalyAI32[3].f = Main.rand.Next(2);
+                        anomalyNPC.AIChanged32[3] = true;
+                        npc.netUpdate = true;
                     }
 
                     if (attackPatternLength % attackIncrement == phase1Attack5)
@@ -263,7 +269,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
 
                         // Adjust the upcoming Ethereal Lance attack depending on what random variable is chosen here.
                         anomalyNPC.AnomalyAI32[3].f = Main.rand.Next(2);
-
+                        anomalyNPC.AIChanged32[3] = true;
                         npc.netUpdate = true;
                     }
 
@@ -296,7 +302,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
 
                         // Adjust the upcoming Ethereal Lance attack depending on what random variable is chosen here.
                         anomalyNPC.AnomalyAI32[2].f = Main.rand.Next(2);
-
+                        anomalyNPC.AIChanged32[2] = true;
                         npc.netUpdate = true;
                     }
 
@@ -320,7 +326,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
 
                             // Adjust the upcoming Ethereal Lance attack depending on what random variable is chosen here.
                             anomalyNPC.AnomalyAI32[2].f = Main.rand.Next(2);
-
+                            anomalyNPC.AIChanged32[2] = true;
                             npc.netUpdate = true;
                         }
                         else
@@ -335,7 +341,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
 
                             // Adjust the upcoming Ethereal Lance attack depending on what random variable is chosen here.
                             anomalyNPC.AnomalyAI32[3].f = Main.rand.Next(2);
-
+                            anomalyNPC.AIChanged32[3] = true;
                             npc.netUpdate = true;
                         }
                         else
@@ -348,7 +354,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
 
                         // Adjust the upcoming Ethereal Lance attack depending on what random variable is chosen here.
                         anomalyNPC.AnomalyAI32[3].f = Main.rand.Next(2);
-
+                        anomalyNPC.AIChanged32[3] = true;
                         npc.netUpdate = true;
                     }
 
@@ -596,8 +602,6 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                     npc.ai[1] = 0f;
                     anomalyNPC.AnomalyAI32[3].f = 0f;
                     npc.netUpdate = true;
-
-                    npc.netUpdate = true;
                 }
 
                 break;
@@ -750,7 +754,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                 if (npc.Distance(destination + etherealLanceDistance) > movementDistanceGateValue)
                     npc.SimpleFlyMovement(npc.DirectionTo(destination + etherealLanceDistance).SafeNormalize(Vector2.Zero) * velocity * 0.4f, acceleration);
 
-                if ((int)npc.ai[1] % lanceWallSpawnGateValue == 0f && npc.ai[1] < lanceWallPhaseTime)
+                if (Main.netMode != NetmodeID.MultiplayerClient && (int)npc.ai[1] % lanceWallSpawnGateValue == 0f && npc.ai[1] < lanceWallPhaseTime)
                 {
                     SoundEngine.PlaySound(SoundID.Item162, npc.Center);
 
@@ -841,7 +845,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                     }
 
                     // Chance to stop using the lance walls and switch to a different attack after 3 lance walls are used.
-                    if (Main.rand.NextBool(5 - ((int)anomalyNPC.AnomalyAI32[1].f - 2)) && anomalyNPC.AnomalyAI32[1].f >= 2f)
+                    if (anomalyNPC.AnomalyAI32[1].f >= 2f && Main.rand.NextBool(Math.Max(1, 7 - (int)anomalyNPC.AnomalyAI32[1].f)))
                     {
                         npc.ai[1] = lanceWallPhaseTime;
                         npc.netUpdate = true;

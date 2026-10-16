@@ -1,7 +1,8 @@
 sampler uImage0 : register(s0);
 sampler uImage1 : register(s1);
 float2 uScreenResolution;
-float2 uPosition;
+float2 uScreenPosition;
+float4x4 uInverseViewMatrix;
 float uTime;
 
 float3 GetColor(float2 screenCoords)
@@ -20,7 +21,9 @@ float3 GetColor(float2 screenCoords)
 
 float4 Main(float4 screenPos : VPOS, float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
 {
-    float2 screenCoords = (screenPos.xy - uPosition) / uScreenResolution;
+    // Undo the camera transform before sampling noise in world space.
+    float2 worldPosition = mul(float4(screenPos.xy, 0, 1), uInverseViewMatrix).xy + uScreenPosition;
+    float2 screenCoords = worldPosition / uScreenResolution;
     float alpha = tex2D(uImage0, coords).a;
     float3 gradientColor = GetColor(screenCoords);
     return float4(gradientColor, 1.0) * alpha * sampleColor;

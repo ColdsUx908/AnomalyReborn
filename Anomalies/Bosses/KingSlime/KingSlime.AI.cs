@@ -1,9 +1,13 @@
-﻿namespace Anomalies.Bosses.KingSlime;
+﻿using Anomalies.DataStructures;
+
+namespace Anomalies.Bosses.KingSlime;
 
 public sealed partial class KingSlime
 {
     public override bool PreAI()
     {
+        using BossNetUpdateScope netUpdate = new(NPC);
+
         if (CurrentBehavior == Behavior.Despawn || !NPC.TargetClosestIfInvalid(true, DespawnDistance))
         {
             Despawn();
@@ -78,13 +82,14 @@ public sealed partial class KingSlime
 
         NPC.GraphicAlpha = (byte)(255 * TOMathUtils.Interpolation.ExponentialEaseOut(TeleportScaleMultiplier * 3f, 4f));
 
-        NPC.netUpdate = true;
-
         return false;
 
         #region 行为函数
         void SelectNextBehavior()
         {
+            if (!TOSharedData.NotClient)
+                return;
+
             if (InvalidPhase1)
             {
                 CurrentPhase = Phase.PhaseChange_1To2;
@@ -397,7 +402,7 @@ public sealed partial class KingSlime
                             ruby.CurrentBehavior = firstJump || highJump ? RubyJewel.Behavior.BuffedAttack : RubyJewel.Behavior.NormalAttack;
                         }
 
-                        if (JewelRainbowAlive)
+                        if (JewelRainbowAlive && TOSharedData.NotClient)
                         {
                             RainbowJewel rainbow = JewelRainbow.GetModNPC<RainbowJewel>();
                             rainbow.CurrentBehavior = firstJump ? (Main.rand.NextBool() ? RainbowJewel.Behavior.TriangleAttack : RainbowJewel.Behavior.StarAttack)
@@ -523,6 +528,8 @@ public sealed partial class KingSlime
             switch (CurrentLocalPhase)
             {
                 case 0: //寻的
+                    if (!TOSharedData.NotClient)
+                        return;
                     Vector2? destination = null;
 
                     if (!Phase2_2)

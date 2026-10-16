@@ -140,6 +140,12 @@ public sealed class AncientBattlefieldAltar : ModTile
         if (!Main.LocalPlayer.HasItem(ModContent.ItemType<MemoryofAstraeus>())) //没有召唤物品不允许召唤
             return true;
 
+        foreach (Projectile p in Projectile.ActiveProjectiles) //仪式已经存在，不允许重复召唤
+        {
+            if (p.ModProjectile is LegendaryNightRitual)
+                return true;
+        }
+
         if ((!Main.remixWorld && Main.dayTime) || !Ultra) //白天或者非超凡世界不允许召唤
         {
             TOLocalizationUtils.ChatLocalizedText(AnomalySharedData.ModLocalizationPrefix + LocalizationCategory + ".SummonFailed", LegendaryNightHandler.StarColor);
