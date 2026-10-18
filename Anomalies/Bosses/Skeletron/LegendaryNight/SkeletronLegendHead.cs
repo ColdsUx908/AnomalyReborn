@@ -1,6 +1,8 @@
-﻿using Anomalies.Assets.Effects;
-using Anomalies.Bosses.Skeletron.LegendaryNight.Summoning;
 using Anomalies.Bosses.Skeletron.LegendaryNight.Arena;
+using Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+using Anomalies.Bosses.Skeletron.LegendaryNight.Summoning;
+using Anomalies.Assets.Effects;
+
 using Anomalies.Visuals.BossBar;
 using Anomalies.DataStructures;
 
@@ -9,7 +11,23 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLegendHead>
 {
     // 手的 SetDefaults 执行时，Master 和 CustomAIType 尚未由召唤方赋值。
-    public bool IsSummoningHands { get; private set; }
+    // AnomalyAI32[5].bits[0]：正在召唤手。
+    public bool IsSummoningHands
+    {
+        get => AnomalyNPC.AnomalyAI32[5].bits[0];
+        private set
+        {
+            if (AnomalyNPC.AnomalyAI32[5].bits[0] == value)
+                return;
+            AnomalyNPC.AnomalyAI32[5].bits[0] = value;
+            AnomalyNPC.AIChanged32[5] = true;
+        }
+    }
+
+    public float SkyOrangeBlend => Phase2GlowOpacity;
+
+    public bool SuppressSkyClouds => Phase2
+        || CurrentPhase == Phase.PhaseChange_1To2 && Timer1 >= PhaseChangeHealStart;
 
     public bool StarGodBlessingActive => CurrentBaseBehavior != BaseBehavior.Despawn
         && (Phase2 || CurrentPhase == Phase.PhaseChange_1To2 && Timer1 >= PhaseChangeBlessingTime);
@@ -22,7 +40,11 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         Initialize,
         Phase1,
         PhaseChange_1To2,
-        Phase2,
+        Phase2_1,
+        Phase2_2,
+        Phase2_3,
+        Phase2_4,
+        Phase2_Finale,
     }
 
     public enum BaseBehavior : byte
@@ -82,6 +104,9 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
     private static readonly ProjectileDamageContainer _CoinJudgmentDamage = new(396);
     public static int CoinJudgmentDamage => _CoinJudgmentDamage.Value;
 
+    private static readonly ProjectileDamageContainer _SlapDamage = new(396);
+    public static int SlapDamage => _SlapDamage.Value;
+
     private static readonly ProjectileDamageContainer _ArenaDamage = new(60);
     public static int ArenaDamage => _ArenaDamage.Value;
 
@@ -94,6 +119,8 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
 
     public bool ArenaProjectileAlive => ArenaProjectile.active && ArenaProjectile.ModProjectile is LegendaryNightArena arena && arena.Master == NPC;
     public LegendaryNightArena ArenaModProjectile => ArenaProjectile.GetModProjectile<LegendaryNightArena>();
+    public bool Phase2ArenaProjectileAlive => ArenaProjectile.active
+        && ArenaProjectile.ModProjectile is LegendaryNightPhase2Arena arena && arena.Master == NPC;
 
     public Phase CurrentPhase
     {
@@ -112,17 +139,15 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         }
     }
 
-    public bool Phase2 => CurrentPhase >= Phase.Phase2;
+    public bool Phase2 => CurrentPhase >= Phase.Phase2_1;
 
-    /*
-    public bool ShouldEnterPhase2 => Ultra && NPC.LifeRatio < Phase2LifeRatio;
-    public bool InvalidPhase1 => ShouldEnterPhase2 && !Phase2;
-    public bool Phase1_2 => CurrentPhase == Phase.Phase1_2;
-    public bool Phase2_2 => CurrentPhase == Phase.Phase2_2;
+    public bool Phase2MusicActive => CurrentPhase >= Phase.PhaseChange_1To2;
 
-    public float LifeRatioForPhase2 => Math.Min(NPC.LifeRatio * 2f, 1f);
-    public float LostLifeRatioForPhase2 => 1f - LifeRatioForPhase2;
-    */
+    // 从二阶段音乐激活（转场开始）起累计的帧数，不随攻击或阶段状态重置。
+    public int Phase2MusicElapsedTime => Timer5;
+
+    public bool ShouldEnterPhase2 => NPC.LifeRatio < Phase2LifeRatio;
+    public bool InvalidPhase1 => CurrentPhase == Phase.Phase1 && ShouldEnterPhase2;
 
     public BaseBehavior CurrentBaseBehavior
     {
@@ -193,7 +218,7 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
             NPC.velocity = Vector2.Zero;
     }
 
-    public override bool CanHitPlayer(Player target, ref int cooldownSlot) => CurrentPhase != Phase.PhaseChange_1To2;
+    public override bool CanHitPlayer(Player target, ref int cooldownSlot) => CurrentPhase != Phase.PhaseChange_1To2 && !Mechanic2InBackground;
 
     public override bool ShouldProcess
     {
@@ -241,6 +266,8 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         AvatarTimer = 0;
         AvatarRotation = 0f;
         Phase2ElapsedTime = 0;
+        Timer5 = 0;
+        IsSummoningHands = false;
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
@@ -265,8 +292,11 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
             return false;
         }
 
-        if (CurrentPhase == Phase.Phase1 && NPC.LifeRatio < Phase2LifeRatio)
+        if (InvalidPhase1)
             BeginPhaseChange_1To2();
+
+        if (Phase2MusicActive)
+            Timer5++;
 
         AnomalyNPC.CurrentlyImmune = CurrentPhase == Phase.PhaseChange_1To2;
 
@@ -287,7 +317,7 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
             case Phase.PhaseChange_1To2:
                 PhaseChange_1To2AI();
                 break;
-            case Phase.Phase2:
+            case >= Phase.Phase2_1:
                 Phase2AI();
                 break;
         }
@@ -338,6 +368,7 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
             .UseImage1(AnomalyTextures.Noise._Vein)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
             .SetCustomParameter("uPosition", destinationRentangle.TopLeft())
+            .SetCustomParameter("uPhase2Fade", Phase2GlowOpacity)
             .Apply();
     }
 }

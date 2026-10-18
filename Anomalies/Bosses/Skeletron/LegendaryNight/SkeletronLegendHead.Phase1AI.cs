@@ -1,4 +1,4 @@
-﻿using Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+using Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
@@ -34,7 +34,7 @@ public sealed partial class SkeletronLegendHead
             Union32 pool = AI_Union_2;
             CurrentSpell = (Spell)DrawSpell((byte)CurrentSpell, ref pool.byte0);
             AI_Union_2 = pool;
-
+            CurrentSpell = Spell.PlatinumCoin;
             NPC.netUpdate = true;
 
             static byte DrawSpell(byte previousSpell, ref byte remainingSpells)
@@ -105,9 +105,9 @@ public sealed partial class SkeletronLegendHead
 
             if (shouldUseNormalMovement)
             {
-                float maxSpeedX = 20f;
+                float maxSpeedX = 17.5f;
                 float maxSpeedY = 8f;
-                float accelerationX = 0.2f;
+                float accelerationX = 0.175f;
                 float accelerationY = 0.08f;
                 float targetDistanceAboveTarget = 300f;
                 float rotationFactor = 20f;
@@ -172,7 +172,7 @@ public sealed partial class SkeletronLegendHead
                     }
                 }
 
-                if (adjustedTimer >= 400)
+                if (adjustedTimer >= 300)
                 {
                     CurrentBaseBehavior = BaseBehavior.Rotate;
                     Timer1 = 0;
@@ -181,29 +181,9 @@ public sealed partial class SkeletronLegendHead
 
             void NormalSpell_Star(int adjustedTimer, ref bool shouldUseNormalMovement)
             {
-                const int AttackInterval = 120;
-                const int MeteorCount = 3;
-                const float MeteorSpeed = 20f;
-                const int SummonSoundLeadTime = 5;
+                SummonStarMeteors(adjustedTimer);
 
-                int summonTimer = adjustedTimer + SummonSoundLeadTime;
-                if (!Main.dedServ && summonTimer >= AttackInterval && summonTimer <= AttackInterval * MeteorCount && summonTimer % AttackInterval == 0)
-                    SoundEngine.PlaySound(Meteor.SummonSound, Target.Center);
-
-                if (adjustedTimer >= AttackInterval && adjustedTimer <= AttackInterval * MeteorCount && adjustedTimer % AttackInterval == 0)
-                {
-                    if (TOSharedData.NotClient)
-                    {
-                        Vector2 spawnPosition = Target.Center + new Vector2(Main.rand.NextFloat(-500f, 500f), -1000f);
-                        Vector2 velocity = Target.GetVelocityTowards(spawnPosition, -MeteorSpeed);
-                        Projectile.NewProjectileAction<Meteor>(SourceAI, spawnPosition, velocity, MeteorDamage, 0f, action: p =>
-                        {
-                            p.ai[0] = NPC.target + 1;
-                        });
-                    }
-                }
-
-                if (adjustedTimer >= AttackInterval * MeteorCount + 200)
+                if (adjustedTimer >= 560)
                 {
                     CurrentBaseBehavior = BaseBehavior.Rotate;
                     Timer1 = 0;
@@ -212,8 +192,11 @@ public sealed partial class SkeletronLegendHead
 
             void NormalSpell_PlatinumCoin(int adjustedTimer, ref bool shouldUseNormalMovement)
             {
+                const int BufferDuration = 60;
+                // 只推迟竞技场和攻击时间轴；冲击波后的减速仍立即生效。
+                adjustedTimer -= BufferDuration;
                 if (ArenaProjectileAlive)
-                    ArenaModProjectile.IsActivated = adjustedTimer < 510;
+                    ArenaModProjectile.IsActivated = adjustedTimer is >= 0 and < 510;
 
                 const int RainStart = 60;
                 const int RainEnd = 480;
@@ -302,7 +285,7 @@ public sealed partial class SkeletronLegendHead
                     break;
                 case 1:
                     float rotationSpeed = 0.3f;
-                    float moveSpeed = 10f;
+                    float moveSpeed = 9f;
                     SkeletronHead.RotatingMovement(NPC, Target, rotationSpeed, moveSpeed);
 
                     Timer1++;
@@ -333,24 +316,9 @@ public sealed partial class SkeletronLegendHead
 
             void RotatingSpell_None()
             {
-                if (TOSharedData.NotClient && Timer1 % 60 == 0 && Timer1 <= 300)
-                {
-                    const int SkullCount = 4;
-                    float offset = Main.rand.NextFloat(MathHelper.TwoPi);
-                    for (int i = 0; i < SkullCount; i++)
-                    {
-                        Vector2 position = Target.Center + new Vector2(Main.rand.NextFloat(800f, 1000f), 0f)
-                            .RotatedBy(offset + MathHelper.TwoPi * i / SkullCount);
-                        Projectile.NewProjectileAction<SkullWarning>(SourceAI, position, Vector2.Zero, SkullDamage, 0f, action: p =>
-                        {
-                            p.ai[0] = NPC.target + 1;
-                            p.ai[2] = NPC.whoAmI + 1;
-                            p.netUpdate = true;
-                        });
-                    }
-                }
+                SummonRotatingSkullWarnings(Timer1);
 
-                if (Timer1 >= 300)
+                if (Timer1 >= 420)
                 {
                     FirstSpellCycleCompleted = true;
                     CurrentBaseBehavior = BaseBehavior.Normal;
@@ -366,22 +334,22 @@ public sealed partial class SkeletronLegendHead
 
                 if (TOSharedData.NotClient)
                 {
-                    // 固定生成位置并短暂等待，每轮只落下一个坐骑；下落后由坐骑绘制延伸预警。
-                    if (Timer1 >= 30 && Timer1 <= 450 && (Timer1 - 30) % 15 == 0)
+                    // 每轮生成一个立即下落的坐骑，并同步绘制延伸预警。
+                    if (Timer1 >= 30 && Timer1 <= 450 && (Timer1 - 30) % 20 == 0)
                     {
                         Vector2 position = Target.Center + new Vector2(Main.rand.NextFloat(-1200f, 1200f), -1000f);
-                        Projectile.NewProjectileAction<SlimeMount>(SourceAI, position, Vector2.Zero, SlimeMountDamage, 0f, action: p =>
+                        Projectile.NewProjectileAction<SlimeMount>(SourceAI, position, Vector2.UnitY * 0.75f, SlimeMountDamage, 0f, action: p =>
                         {
-                            p.ai[0] = 30f;
+                            p.ai[1] = 1f;
                             p.ai[2] = NPC.target + 1;
                             p.GetModProjectile<SlimeMount>().MasterIndex = NPC.whoAmI + 1;
                             p.netUpdate = true;
                         });
                     }
 
-                    if (Timer1 >= 90 && Timer1 <= 450 && (Timer1 - 90) % 30 == 0)
+                    if (Timer1 >= 90 && Timer1 <= 450 && (Timer1 - 90) % 40 == 0)
                     {
-                        SoundEngine.PlaySound(SoundID.Item81, NPC.Center);
+                        SoundEngine.PlaySound(SoundID.Item155, NPC.Center);
 
                         SlimeMount.SpawnSlimeMountDust(NPC.Center, 150, Vector2.Zero, d =>
                         {
@@ -420,7 +388,7 @@ public sealed partial class SkeletronLegendHead
                 ApplyAvatarOpacity(0.5f);
                 const int AttackInterval = 120;
                 const int StarCount = 25;
-                if (Timer1 % AttackInterval == 0)
+                if (Timer1 < 500 && Timer1 % AttackInterval == 0)
                 {
                     SoundEngine.PlaySound(SoundID.Item9, NPC.Center);
                     if (TOSharedData.NotClient)
@@ -450,7 +418,7 @@ public sealed partial class SkeletronLegendHead
                     }
                 }
 
-                if (Timer1 >= 540)
+                if (Timer1 >= 600)
                 {
                     FirstSpellCycleCompleted = true;
                     NPC.netUpdate = true;
@@ -464,7 +432,7 @@ public sealed partial class SkeletronLegendHead
             {
                 ApplyAvatarOpacity(0.5f);
                 if (Timer1 <= 420 && Timer1 % 6 == 0 && !Main.dedServ)
-                    SoundEngine.PlaySound(PlatinumCoin.TossSound, NPC.Center);
+                    SoundEngine.PlaySound(PlatinumCoin.UnlimitedTossSound, NPC.Center);
 
                 if (TOSharedData.NotClient)
                 {
@@ -498,7 +466,7 @@ public sealed partial class SkeletronLegendHead
                     }
                 }
 
-                if (Timer1 >= 540)
+                if (Timer1 >= 480)
                 {
                     FirstSpellCycleCompleted = true;
                     CurrentBaseBehavior = BaseBehavior.Normal;
@@ -510,7 +478,7 @@ public sealed partial class SkeletronLegendHead
         }
     }
 
-    private void ReleaseSpellShockwave()
+    private void ReleaseSpellShockwave(Spell? spell = null)
     {
         if (!TOSharedData.NotClient)
             return;
@@ -518,7 +486,7 @@ public sealed partial class SkeletronLegendHead
         Projectile.NewProjectileAction<LegendShockwave>(SourceAI, NPC.Center, Vector2.Zero, 0, 0f, action: p =>
         {
             p.scale = 0f;
-            p.ai[0] = CurrentSpell switch
+            p.ai[0] = (spell ?? CurrentSpell) switch
             {
                 Spell.Slime => 1f,
                 Spell.Star => 2f,
@@ -527,5 +495,54 @@ public sealed partial class SkeletronLegendHead
             };
             p.netUpdate = true;
         });
+    }
+
+    private void SummonStarMeteors(int timer, bool reducedStarCount = false)
+    {
+        const int AttackInterval = 120;
+        const int MeteorCount = 3;
+        const float MeteorSpeed = 20f;
+        const int SummonSoundLeadTime = 10;
+
+        int summonTimer = timer + SummonSoundLeadTime;
+        if (!Main.dedServ && summonTimer >= AttackInterval && summonTimer <= AttackInterval * MeteorCount && summonTimer % AttackInterval == 0)
+            SoundEngine.PlaySound(Meteor.SummonSound, Target.Center);
+
+        if (timer >= AttackInterval && timer <= AttackInterval * MeteorCount && timer % AttackInterval == 0)
+        {
+            if (TOSharedData.NotClient)
+            {
+                Vector2 spawnPosition = Target.Center + new Vector2(Main.rand.NextFloat(-500f, 500f), -1000f);
+                Vector2 velocity = Target.GetVelocityTowards(spawnPosition, -MeteorSpeed);
+                Projectile.NewProjectileAction<Meteor>(SourceAI, spawnPosition, velocity, MeteorDamage, 0f, action: p =>
+                {
+                    p.ai[0] = NPC.target + 1;
+                    p.ai[2] = NPC.whoAmI + 1;
+                    p.GetModProjectile<Meteor>().ReducedAttack = reducedStarCount;
+                });
+            }
+        }
+
+    }
+
+    private void SummonRotatingSkullWarnings(int timer)
+    {
+        if (TOSharedData.NotClient && timer % 75 == 0 && timer <= 300)
+        {
+            const int SkullCount = 4;
+            float offset = Main.rand.NextFloat(MathHelper.TwoPi);
+            for (int i = 0; i < SkullCount; i++)
+            {
+                Vector2 position = Target.Center + new Vector2(Main.rand.NextFloat(800f, 1000f), 0f)
+                    .RotatedBy(offset + MathHelper.TwoPi * i / SkullCount);
+                Projectile.NewProjectileAction<SkullWarning>(SourceAI, position, Vector2.Zero, SkullDamage, 0f, action: p =>
+                {
+                    p.ai[0] = NPC.target + 1;
+                    p.ai[2] = NPC.whoAmI + 1;
+                    p.netUpdate = true;
+                });
+            }
+        }
+
     }
 }

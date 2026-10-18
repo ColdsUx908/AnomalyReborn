@@ -22,6 +22,14 @@ public sealed class AnomalyTextures
     {
         public const string Path = TexturePathPrefix + "Extra/";
 
+        [LoadTexture(Path + "Vein2")]
+        internal static Asset<Texture2D> _Vein2;
+        public static Texture2D Vein2 => _Vein2?.Value;
+
+        [LoadTexture(Path + "Voronoi")]
+        internal static Asset<Texture2D> _Voronoi;
+        public static Texture2D Voronoi => _Voronoi?.Value;
+
         [LoadTexture(Path + "BasicCircle")]
         internal static Asset<Texture2D> _BasicCircle;
         public static Texture2D BasicCircle => _BasicCircle?.Value;

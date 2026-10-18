@@ -1,3 +1,8 @@
+StarPowerSuppression: {
+	DisplayName: Star Power Suppression
+	Description: Damage dealt is halved
+}
+
 DimensionalRend: {
 	DisplayName: Dimensional Rend
 	Description: The cost of transcending the bounds of space is losing control over reality

@@ -3,6 +3,7 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 public sealed class PlatinumCoin : AnomalyModProjectile
 {
     public static readonly SoundStyle TossSound = SoundID.Item11 with { Volume = 0.75f };
+    public static readonly SoundStyle UnlimitedTossSound = TossSound with { MaxInstances = 0 };
 
     // ai[0]：目标玩家索引（1-based，0 表示未指定目标）。ai[1]：重力加速度，0 保持匀速。
     private const int FrameCount = 8;

@@ -19,6 +19,26 @@ EyeofCthulhu: {
 	BloodOrbProjectile.DisplayName: 血珠
 }
 
+BrainofCthulhu: {
+	BrainBloodShot.DisplayName: 血弹
+	BrainIllusion.DisplayName: 大脑幻象
+	FalseBrain.DisplayName: 假脑
+	BloodBomb.DisplayName: 血炸弹
+	BloodBombRTS.DisplayName: 血炸弹
+	BloodScythe.DisplayName: 血镰
+	CirclingBloodScythe.DisplayName: 环状血镰
+	CrimsonEye.DisplayName: 猩红之眼
+	IchorShower.DisplayName: 灵液雨
+	TelekineticEnemyGrab.DisplayName: 念控邪物
+	TelekineticBlast.DisplayName: 念能波
+
+	Death: {
+		BrainIllusion1: "{0}没有看穿幻象。"
+		BrainIllusion2: "{0}上当了。"
+		BrainIllusion3: "{0}需要再仔细看看。"
+	}
+}
+
 QueenBee: {
 	BeeProjectile.DisplayName: 蜜蜂
 	CombCell.DisplayName: 蜂巢单元
@@ -45,6 +65,7 @@ Skeletron: {
 		PlatinumCoin.DisplayName: 铂金币
 		CoinRoulette.DisplayName: 钱币轮盘
 		CoinJudgment.DisplayName: 钱币审判
+		Mechanic2Star.DisplayName: 星神落雨
 
 		FallenStarEssence: {
 			DisplayName: 坠星精华
@@ -64,6 +85,9 @@ Skeletron: {
 			DisplayName: 星星之神的记忆
 			Tooltip: 放置在祭坛上即可复现传说之夜
 		}
+
+		LegendaryNightPhase2Arena.DisplayName: 星神法阵
+		// Mechanic3Star.DisplayName: Mechanic3 Star
 	}
 }
 

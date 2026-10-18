@@ -10,10 +10,10 @@ public sealed partial class SkeletronLegendHead
     private const int PhaseChangeGlowFadeDuration = 90;
     private const int PhaseChangeShockwaveTime = 180;
     private const int PhaseChangeHealStart = PhaseChangeStarSpawnTime + PhaseChangeStarFallDuration;
-    private const int PhaseChangeHandsTime = 260;
-    private const int PhaseChangeBlessingTime = 360;
-    private const int PhaseChangeDuration = 420;
-    private const float PhaseChangeShockwaveScale = 6f;
+    private const int PhaseChangeHandsTime = 290;
+    private const int PhaseChangeBlessingTime = 370;
+    private const int PhaseChangeDuration = 475;
+    private const float PhaseChangeShockwaveScale = 2.5f;
 
     public void ResetPhaseState()
     {
@@ -22,7 +22,7 @@ public sealed partial class SkeletronLegendHead
         CurrentLocalPhase = 0;
         AI_Union_2 = default;
         AI_Union_3 = default;
-        Timer1 = Timer2 = Timer3 = Timer4 = Timer5 = 0;
+        Timer1 = Timer2 = Timer3 = Timer4 = 0;
         Timer6 = Timer7 = Timer8 = 0f;
         NPC.netUpdate = true;
     }
@@ -30,6 +30,7 @@ public sealed partial class SkeletronLegendHead
     public void BeginPhaseChange_1To2()
     {
         ResetPhaseState();
+        Timer5 = 0;
         Timer2 = NPC.life; // 保存回血插值的起始血量。
         CurrentPhase = Phase.PhaseChange_1To2;
         NPC.dontTakeDamage = true;
@@ -67,7 +68,7 @@ public sealed partial class SkeletronLegendHead
                 SoundEngine.PlaySound(Meteor.ExplosionSound, impactPosition);
         }
 
-        if (Timer1 >= PhaseChangeHealStart && Timer1 <= PhaseChangeHandsTime)
+        if (Timer1 is >= PhaseChangeHealStart and <= PhaseChangeHandsTime)
         {
             float completion = (Timer1 - PhaseChangeHealStart) / (float)(PhaseChangeHandsTime - PhaseChangeHealStart);
             int newLife = Timer1 == PhaseChangeHandsTime ? NPC.lifeMax
@@ -103,17 +104,18 @@ public sealed partial class SkeletronLegendHead
                 IsSummoningHands = true;
                 try
                 {
+                    NPC master = NPC;
                     for (int side = -1; side <= 1; side += 2)
                     {
-                        int index = NPC.NewNPC(SourceAI, (int)NPC.Center.X, (int)NPC.Center.Y, NPCID.SkeletronHand, NPC.whoAmI,
-                            ai0: side, ai1: NPC.whoAmI);
-                        if (index < Main.maxNPCs)
+                        NPC.NewNPCAction(SourceAI, master.Center, NPCID.SkeletronHand, master.whoAmI, action: hand =>
                         {
-                            Main.npc[index].Master = NPC;
-                            Main.npc[index].Anomaly.CustomAIType = 1;
-                            Main.npc[index].target = NPC.target;
-                            Main.npc[index].netUpdate = true;
-                        }
+                            hand.ai[0] = side;
+                            hand.ai[1] = master.whoAmI;
+                            hand.Master = master;
+                            hand.Anomaly.CustomAIType = 1;
+                            hand.target = master.target;
+                            hand.netUpdate = true;
+                        });
                     }
                 }
                 finally
@@ -141,8 +143,7 @@ public sealed partial class SkeletronLegendHead
         {
             ResetPhaseState();
             Phase2ElapsedTime = 0;
-            CurrentPhase = Phase.Phase2;
-            CurrentBaseBehavior = BaseBehavior.Normal;
+            CurrentPhase = Phase.Phase2_1;
             AnomalyNPC.CurrentlyImmune = false;
             NPC.dontTakeDamage = false;
             NPC.Opacity = 1f;

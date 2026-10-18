@@ -38,7 +38,7 @@ public sealed class PlayerBaseStatBoosts : AnomalyPlayerBehavior, IContentLoader
         {
             if (Player.pulley)
             {
-                int xPos = (int)(Player.position.X + (float)(Player.width / 2)) / 16;
+                int xPos = (int)(Player.position.X + Player.width / 2) / 16;
                 int yPos = (int)(Player.position.Y - 16f) / 16;
                 int yPos2 = (int)(Player.position.Y - 8f) / 16;
                 bool ropeAbove = true;
@@ -118,7 +118,7 @@ public sealed class PlayerBaseStatBoosts : AnomalyPlayerBehavior, IContentLoader
         const float ConfigBoostedBaseJumpSpeed = 5.71f;
 
         // Increase the base jump height of the player to make early game less of a slog.
-        ILCursor cursor = new ILCursor(il);
+        ILCursor cursor = new(il);
 
         // The jumpSpeed variable is set to this specific value before anything else occurs.
         if (!cursor.TryGotoNext(MoveType.Before, i => i.MatchLdcR4(VanillaBaseJumpSpeed)))

@@ -3,7 +3,7 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 public sealed class SkullWarning : AnomalyModProjectile
 {
     public const int WarningTime = 60;
-    private const float SkullSpeed = 16f;
+    private const float SkullSpeed = 18f;
 
     // ai[0]：目标玩家索引 + 1；ai[1]：预警计时；ai[2]：所属骷髅王索引 + 1。
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
@@ -55,7 +55,7 @@ public sealed class SkullWarning : AnomalyModProjectile
                 Projectile.damage, 0f, Projectile.owner, action: p =>
                 {
                     p.ai[0] = 1f;
-                    p.timeLeft = 180;
+                    p.timeLeft = 600;
                     p.netUpdate = true;
                 });
             Projectile.Kill();

@@ -8,6 +8,12 @@ public sealed class Meteor : AnomalyModProjectile
     public static readonly SoundStyle ExplosionSound = new(LegendaryNightHandler.LegendaryNightEntityPath + "MeteorExplosion") { MaxInstances = 0 };
 
     // ai[0]：目标玩家索引（1-based，0 表示未指定目标）。
+    // ai[1]：二阶段稀疏爆炸标志。ai[2]：所属骷髅王索引（1-based）。
+    public bool ReducedAttack
+    {
+        get => Projectile.ai[1] == 1f;
+        set => Projectile.ai[1] = value ? 1f : 0f;
+    }
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
 
     public override void SetStaticDefaults()
@@ -63,17 +69,25 @@ public sealed class Meteor : AnomalyModProjectile
         if (!TOSharedData.NotClient)
             return;
 
-        const int Amount = 100;
-        const float MaxSpeed = 20f;
+        if (ReducedAttack && Projectile.ai[2] > 0f)
+        {
+            NPC master = NPC.GetNPCFromIndex((int)Projectile.ai[2] - 1);
+            if (!master.active || master.type != NPCID.SkeletronHead || master.Anomaly.CustomAIType != 1
+                || SkeletronLegendHead.GetInstance(master).CurrentPhase != SkeletronLegendHead.Phase.Phase2_1)
+                return;
+        }
+
+        int amount = ReducedAttack ? 50 : 100;
+        float maxSpeed = ReducedAttack ? 16f : 20f;
 
         // 与 RainbowJewel.Attack_Star 相同：按隔一个顶点的顺序连接五个顶点，
         // 在五条线段上插值速度，使弹幕散开后组成五角星。
-        Vector2 velocityTowardsTarget = -Vector2.UnitY * MaxSpeed;
+        Vector2 velocityTowardsTarget = -Vector2.UnitY * maxSpeed;
         if (Player.TryGetPlayerFromIndex((int)Projectile.ai[0] - 1, out Player target))
         {
-            velocityTowardsTarget = Projectile.GetVelocityTowards(target, MaxSpeed);
+            velocityTowardsTarget = Projectile.GetVelocityTowards(target, maxSpeed);
             if (velocityTowardsTarget == Vector2.Zero)
-                velocityTowardsTarget = -Vector2.UnitY * MaxSpeed;
+                velocityTowardsTarget = -Vector2.UnitY * maxSpeed;
         }
         PolarVector2 originalVelocity = (PolarVector2)velocityTowardsTarget;
         List<Vector2> vertices = [];
@@ -81,12 +95,13 @@ public sealed class Meteor : AnomalyModProjectile
             vertices.Add(originalVelocity.RotatedBy(TOMathUtils.PiOver5 * 4 * i));
         vertices.Add(originalVelocity);
 
-        for (int i = 0; i < Amount; i++)
+        for (int i = 0; i < amount; i++)
         {
-            Vector2 velocity = Vector2.LerpMany(vertices, (float)i / Amount);
+            Vector2 velocity = Vector2.LerpMany(vertices, (float)i / amount);
             Projectile.NewProjectileAction<FallingStar>(Projectile.GetSource_Death(), Projectile.Center, velocity, SkeletronLegendHead.FallingStarDamage, Projectile.knockBack, action: p =>
             {
                 p.scale = 0.2f;
+                p.ai[2] = Projectile.ai[2];
                 FallingStar modP = p.GetModProjectile<FallingStar>();
                 modP.TrailType = 2;
                 modP.AccelerationStartTime = 90;
@@ -94,6 +109,8 @@ public sealed class Meteor : AnomalyModProjectile
             });
         }
     }
+
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(Projectile.Center, 50f * Projectile.scale).Collides(targetHitbox);
 
     public override bool PreDraw(ref Color lightColor)
     {

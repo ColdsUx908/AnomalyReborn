@@ -1,3 +1,8 @@
+StarPowerSuppression: {
+	DisplayName: 星力压制
+	Description: 造成的伤害乘算降低50%
+}
+
 DimensionalRend: {
 	DisplayName: 维度撕裂
 	Description: 失去对真实的控制，是超越空间界限的代价

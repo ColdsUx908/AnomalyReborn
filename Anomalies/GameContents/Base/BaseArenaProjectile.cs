@@ -106,8 +106,18 @@ public abstract class BaseRingArenaProjectile : BaseArenaProjectile
     public virtual int DustType => -1;
 
     /// <summary>
-    /// 竞技场弹幕对玩家移动的限制逻辑。
-    /// 包含玩家越界检测、动态速度递增、位置修正、控制剥夺以及粒子生成。
+    /// 返回竞技场内部距离指定点最近的位置，内部的点保持不变。
+    /// 子类可重写此方法以使用不同形状的边界。
+    /// </summary>
+    protected virtual Vector2 ClosestPointInArena(Vector2 point)
+    {
+        Vector2 offset = point - Projectile.Center;
+        float distance = offset.Length();
+        return distance > Radius ? Projectile.Center + offset * (Radius / distance) : point;
+    }
+
+    /// <summary>
+    /// 根据实际边界执行越界检测、渐增拉回、控制剥夺及粒子生成。
     /// </summary>
     protected void MovementRestriction()
     {
@@ -116,15 +126,15 @@ public abstract class BaseRingArenaProjectile : BaseArenaProjectile
         {
             float distance = target.Distance(Projectile.Center);
 
-            if (distance > Radius && distance < DistanceThreshold2)
+            Vector2 movement = ClosestPointInArena(target.Center) - target.Center;
+            float difference = movement.Length();
+            if (difference > 0.001f && distance < DistanceThreshold2)
             {
                 OutofArenaTimer++;
                 int dustAmount = 10;
 
                 float pushSpeed = Math.Min(BasePushSpeed + OutofArenaTimer * 0.05f, 60f);
-                Vector2 movement = Projectile.Center - target.Center;
-                float difference = movement.Length() - Radius;
-                movement.Modulus = Math.Min(difference, pushSpeed);
+                movement *= Math.Min(difference, pushSpeed) / difference;
 
                 target.position += movement;
 

@@ -4,6 +4,7 @@ public sealed class AnomaliesMusicHandler : IContentLoader
 {
     public static int CurseoftheDungeon { get; private set; } = -1;
     public static int TornfromtheHeavens { get; private set; } = -1;
+    public static int PathwaytoReverie { get; private set; } = -1;
 
     void IContentLoader.PostSetupContent()
     {

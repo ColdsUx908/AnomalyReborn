@@ -1,9 +1,12 @@
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+﻿namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 
 // ai[0]：铜/银/金/铂；ai[1]：预警计时；ai[2]：所属骷髅王（1-based）。
 public sealed class CoinJudgment : AnomalyModProjectile
 {
     public const int WarningDuration = 180;
+    public const int DangerWarningDuration = 60;
+    private const int DangerWarningFadeInDuration = 6;
+    private const float DangerWarningMaxOpacity = 0.22f;
     public const int OverlayFadeInDuration = 8;
     public const int OverlayHoldDuration = 8;
     public const int OverlayFadeOutDuration = 24;
@@ -17,10 +20,23 @@ public sealed class CoinJudgment : AnomalyModProjectile
     public const float PlatinumSafeHalfWidth = 160f;
 
     public static readonly SoundStyle ExplosionSound = new(LegendaryNightHandler.LegendaryNightEntityPath + "CoinJudgmentExplosion") { Volume = 1.5f };
+    public static readonly SoundStyle WarningSound = SoundID.Item4 with { Volume = 0.65f, Pitch = -0.35f };
 
     private bool _Judged;
-
+    private bool _WarningSoundPlayed;
     public float OverlayOpacity => GetOverlayOpacity(Projectile.ai[1]);
+    public float WarningOverlayOpacity => GetWarningOverlayOpacity(Projectile.ai[1]);
+    public float BoundaryOpacity => Projectile.ai[1] < WarningDuration
+        ? MathHelper.Clamp(Projectile.ai[1] / RingFadeInDuration, 0f, 1f)
+        : OverlayOpacity / OverlayMaxOpacity;
+
+    public static float GetWarningOverlayOpacity(float timer)
+    {
+        float age = timer - (WarningDuration - DangerWarningDuration);
+        if (age < 0f || timer >= WarningDuration)
+            return 0f;
+        return DangerWarningMaxOpacity * MathHelper.Clamp(age / DangerWarningFadeInDuration, 0f, 1f);
+    }
 
     public static float GetOverlayOpacity(float timer)
     {
@@ -56,7 +72,7 @@ public sealed class CoinJudgment : AnomalyModProjectile
         float progress = MathHelper.Clamp(timer / ringDuration, 0f, 1f);
         if (timer < ringDuration)
         {
-            float radiusFactor = (int)Projectile.ai[0] is 1 or 3 ? progress : 1f - progress;
+            float radiusFactor = 1f - progress;
             float opacity = MathHelper.Clamp(timer / RingFadeInDuration, 0f, 1f);
             Texture2D ring = ParticleHandler.GetTexture<PulseRing>();
             Main.spriteBatch.DrawFromCenter(ring, Projectile.Center - Main.screenPosition, null,
@@ -94,13 +110,19 @@ public sealed class CoinJudgment : AnomalyModProjectile
             return;
         }
 
-        int timer = (int)++Projectile.ai[1];
-        if (timer < WarningDuration)
+        int timer = (int)Projectile.ai[1] + 1;
+        Projectile.ai[1] = timer;
+        if (!_WarningSoundPlayed && timer >= WarningDuration - DangerWarningDuration && timer < WarningDuration && !Main.dedServ)
         {
-            if (!Main.dedServ && timer % 3 == 0)
-                DrawBoundaryDust();
-            return;
+            _WarningSoundPlayed = true;
+            SoundEngine.PlaySound(WarningSound, Projectile.Center);
         }
+
+        if (timer == WarningDuration - 5)
+            SoundEngine.PlaySound(ExplosionSound);
+
+        if (timer < WarningDuration)
+            return;
 
         if (_Judged)
             return;
@@ -108,77 +130,10 @@ public sealed class CoinJudgment : AnomalyModProjectile
         if (Main.dedServ)
             return;
 
-        SoundEngine.PlaySound(ExplosionSound, Projectile.Center);
         Player player = Main.LocalPlayer;
         if (!player.active || player.dead || player.ghost || Colliding(Projectile.Hitbox, player.Hitbox) != true)
             return;
 
-        bool previousImmune = player.immune;
-        int previousImmuneTime = player.immuneTime;
-        try
-        {
-            player.immune = false;
-            player.Hurt(PlayerDeathReason.ByProjectile(Projectile.owner, Projectile.whoAmI), Projectile.damage, 0,
-                cooldownCounter: ImmunityCooldownID.General, dodgeable: false);
-        }
-        finally
-        {
-            player.immune |= previousImmune;
-            player.immuneTime = Math.Max(player.immuneTime, previousImmuneTime);
-        }
-    }
-
-    private void DrawBoundaryDust()
-    {
-        // 以实际可见的世界范围为基准，围绕屏幕中心将宽高分别扩大为 1.25 倍。
-        Vector2 size = Main.ScreenSize.ToVector2() / Main.GameViewMatrix.Zoom * 1.25f;
-        Vector2 screenCenter = Main.screenPosition + Main.ScreenSize.ToVector2() * 0.5f;
-        FloatRectangle screen = new(screenCenter - size * 0.5f, size);
-        Vector2 center = Projectile.Center;
-        switch ((int)Projectile.ai[0])
-        {
-            case 0:
-                CircleBoundary(CopperRadius);
-                break;
-            case 1:
-                for (int side = -1; side <= 1; side += 2)
-                {
-                    float x = center.X + side * SilverHalfWidth;
-                    float y = center.Y + side * SilverHalfWidth;
-                    for (float sampleY = screen.Top; sampleY <= screen.Bottom; sampleY += 12f)
-                        if (Math.Abs(sampleY - center.Y) >= SilverHalfWidth)
-                            Spawn(new Vector2(x, sampleY));
-                    for (float sampleX = screen.Left; sampleX <= screen.Right; sampleX += 12f)
-                        if (Math.Abs(sampleX - center.X) >= SilverHalfWidth)
-                            Spawn(new Vector2(sampleX, y));
-                }
-                break;
-            case 2:
-                CircleBoundary(GoldInnerRadius);
-                CircleBoundary(GoldOuterRadius);
-                break;
-            case 3:
-                for (float y = screen.Top; y <= screen.Bottom; y += 12f)
-                {
-                    Spawn(new Vector2(center.X - PlatinumSafeHalfWidth, y));
-                    Spawn(new Vector2(center.X + PlatinumSafeHalfWidth, y));
-                }
-                break;
-        }
-
-        void CircleBoundary(float radius)
-        {
-            int count = (int)MathF.Ceiling(MathHelper.TwoPi * radius / 12f);
-            for (int i = 0; i < count; i++)
-                Spawn(center + (MathHelper.TwoPi * i / count).ToRotationVector2() * radius);
-        }
-
-        void Spawn(Vector2 position)
-        {
-            if (!screen.Contains(position))
-                return;
-            Dust dust = Dust.NewDustPerfect(position, DustID.RainbowMk2, Vector2.Zero, 0, new Color(80, 160, 255), 1.1f);
-            dust.noGravity = true;
-        }
+        LegendaryNightDamage.HurtLocalPlayer(Projectile, Projectile.damage, false, knockback: 4.5f);
     }
 }

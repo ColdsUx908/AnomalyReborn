@@ -1,3 +1,4 @@
+using Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 using Anomalies.GameContents.Base;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight.Arena;
@@ -44,8 +45,16 @@ public sealed class LegendaryNightArena : BaseRingArenaProjectile
 
     public override string Texture => TOTextures.InvisibleTexturePath;
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
-    public override float Radius { get; set; } = 1200f;
+    public override float Radius { get; set; } = 1000f;
     public override float Thickness => 40f;
+    public Hexadecagon ArenaPolygon => new(Projectile.Center, Radius);
+
+    // 视觉快照在激活期间跟随弹幕，淡出期间保留最后一次激活的位置和大小。
+    private Hexadecagon _VisualPolygon;
+    private bool _VisualPolygonInitialized;
+    public Hexadecagon VisualPolygon => _VisualPolygonInitialized ? _VisualPolygon : ArenaPolygon;
+
+    protected override Vector2 ClosestPointInArena(Vector2 point) => ArenaPolygon.ClosestPoint(point);
     public override Player Target => MasterBehavior?.Target;
     public override int DustType => DustID.PlatinumCoin;
     public override bool EnableMovementRestriction => IsActivated && Intensity == 1f;
@@ -72,27 +81,37 @@ public sealed class LegendaryNightArena : BaseRingArenaProjectile
             return;
         }
 
+        if (MasterBehavior.Phase2ArenaRequested)
+        {
+            if (TOSharedData.NotClient)
+            {
+                bool created = false;
+                Projectile.NewProjectileAction<LegendaryNightPhase2Arena>(SourceAI, Target?.Center ?? Master.Center,
+                    Vector2.Zero, SkeletronLegendHead.ArenaDamage * 4, 0f, action: p =>
+                    {
+                        LegendaryNightPhase2Arena arena = p.GetModProjectile<LegendaryNightPhase2Arena>();
+                        arena.Master = Master;
+                        arena.AppearanceStartMusicTime = MasterBehavior.Phase2ArenaStartMusicTime;
+                        MasterBehavior.ArenaProjectile = p;
+                        created = true;
+                    });
+                if (created)
+                    Projectile.Kill();
+            }
+            return;
+        }
+
         Projectile.Center = Master.Center;
         Projectile.velocity = Vector2.Zero;
         Projectile.timeLeft = 100;
 
-        Intensity = MathHelper.Clamp(Intensity + (IsActivated ? 1f : -1f) / 60f, 0f, 1f);
-        Radius = 1000f;
-
-        if (!Main.dedServ && Intensity > 0f)
+        if (IsActivated || Intensity <= 0f || !_VisualPolygonInitialized)
         {
-            for (int i = 0; i < 12; i++)
-            {
-                Vector2 direction = Main.rand.NextPolarVector2(1f);
-                Dust.NewDustAction(Projectile.Center + direction * Radius, 0, 0, DustType, action: d =>
-                {
-                    d.noGravity = true;
-                    d.velocity = direction.RotatedBy(MathHelper.PiOver2) * 1.5f;
-                    d.alpha = (int)(255f * (1f - Intensity));
-                    d.scale = Main.rand.NextFloat(1f, 1.5f) * Intensity;
-                });
-            }
+            _VisualPolygon = ArenaPolygon;
+            _VisualPolygonInitialized = true;
         }
+
+        Intensity = MathHelper.Clamp(Intensity + (IsActivated ? 1f : -1f) / 60f, 0f, 1f);
 
         if (EnableMovementRestriction)
             MovementRestriction();
@@ -102,7 +121,8 @@ public sealed class LegendaryNightArena : BaseRingArenaProjectile
 
     public override bool CanHitPlayer(Player target) => EnableMovementRestriction && base.CanHitPlayer(target);
 
-    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => EnableMovementRestriction && base.Colliding(projHitbox, targetHitbox) == true;
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => EnableMovementRestriction
+        && ArenaPolygon.BoundaryCollides(targetHitbox, Thickness);
 
     public override bool PreDraw(ref Color lightColor) => false;
 }

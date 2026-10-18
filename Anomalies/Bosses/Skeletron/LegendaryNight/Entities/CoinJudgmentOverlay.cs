@@ -14,8 +14,17 @@ public sealed class CoinJudgmentOverlay : CustomOverlay
         // 每个判定单独合成，避免一种币的安全区擦掉另一种币的危险区域。
         foreach (Projectile projectile in Projectile.ActiveProjectiles)
         {
-            if (projectile.ModProjectile is not CoinJudgment judgment || judgment.OverlayOpacity <= 0f)
+            if (projectile.ModProjectile is not CoinJudgment judgment)
                 continue;
+            float boundaryOpacity = judgment.BoundaryOpacity;
+            float warningOpacity = judgment.WarningOverlayOpacity;
+            float impactOpacity = judgment.OverlayOpacity;
+            if (warningOpacity <= 0f && impactOpacity <= 0f)
+            {
+                if (boundaryOpacity > 0f)
+                    DrawBoundary(spriteBatch, projectile, boundaryOpacity);
+                continue;
+            }
 
             using RenderTargetLease lease = RenderTargetPool.Shared.Rent(Main.instance.GraphicsDevice,
                 Main.screenWidth, Main.screenHeight, RenderTargetDescriptor.Default);
@@ -24,9 +33,62 @@ public sealed class CoinJudgmentOverlay : CustomOverlay
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
                 DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
-            spriteBatch.Draw(lease.Target, Vector2.Zero, Color.White * judgment.OverlayOpacity);
+            // 两个阶段共用同一张形状遮罩，确保红色预警与白色命中范围完全重合。
+            if (warningOpacity > 0f)
+                spriteBatch.Draw(lease.Target, Vector2.Zero, new Color(255, 120, 120) * warningOpacity);
+            if (impactOpacity > 0f)
+                spriteBatch.Draw(lease.Target, Vector2.Zero, Color.White * impactOpacity);
             spriteBatch.End();
+            // 边界画在遮罩上方，保持币色，并与白色遮罩同步淡出。
+            if (boundaryOpacity > 0f)
+                DrawBoundary(spriteBatch, projectile, boundaryOpacity);
         }
+    }
+
+    private static void DrawBoundary(SpriteBatch spriteBatch, Projectile projectile, float opacity)
+    {
+        int coinType = (int)projectile.ai[0];
+        Vector2 center = projectile.Center;
+        Color color = CoinRoulette.GetCoinColor(coinType);
+        switch (coinType)
+        {
+            case 0:
+                AnomalyDrawUtils.DrawGlowingCircle(spriteBatch, center, CoinJudgment.CopperRadius, color, opacity);
+                return;
+            case 2:
+                AnomalyDrawUtils.DrawGlowingCircle(spriteBatch, center, CoinJudgment.GoldInnerRadius, color, opacity);
+                AnomalyDrawUtils.DrawGlowingCircle(spriteBatch, center, CoinJudgment.GoldOuterRadius, color, opacity);
+                return;
+        }
+
+        // 只在屏幕范围内截取无限边界，端点外扩以免光晕在视口边缘出现圆头。
+        FloatRectangle bounds = AnomalyDrawUtils.GetVisibleWorldBounds(84f);
+        Span<(Vector2 Start, Vector2 End)> lines = stackalloc (Vector2, Vector2)[8];
+        int count = 0;
+        for (int side = -1; side <= 1; side += 2)
+        {
+            if (coinType == 1)
+            {
+                float halfWidth = CoinJudgment.SilverHalfWidth;
+                float x = center.X + side * halfWidth;
+                float y = center.Y + side * halfWidth;
+                // 十字重叠区内部没有边界，分别绘制四条伸向视口外的臂。
+                lines[count++] = (new Vector2(x, bounds.Top),
+                    new Vector2(x, Math.Clamp(center.Y - halfWidth, bounds.Top, bounds.Bottom)));
+                lines[count++] = (new Vector2(x, Math.Clamp(center.Y + halfWidth, bounds.Top, bounds.Bottom)),
+                    new Vector2(x, bounds.Bottom));
+                lines[count++] = (new Vector2(bounds.Left, y),
+                    new Vector2(Math.Clamp(center.X - halfWidth, bounds.Left, bounds.Right), y));
+                lines[count++] = (new Vector2(Math.Clamp(center.X + halfWidth, bounds.Left, bounds.Right), y),
+                    new Vector2(bounds.Right, y));
+            }
+            else if (coinType == 3)
+            {
+                float x = center.X + side * CoinJudgment.PlatinumSafeHalfWidth;
+                lines[count++] = (new Vector2(x, bounds.Top), new Vector2(x, bounds.Bottom));
+            }
+        }
+        AnomalyDrawUtils.DrawGlowingLines(spriteBatch, lines[..count], color, opacity);
     }
 
     private static void DrawMask(SpriteBatch spriteBatch, Projectile projectile)
@@ -37,13 +99,9 @@ public sealed class CoinJudgmentOverlay : CustomOverlay
         Texture2D filler = TOTextures.FillerTexture;
 
         // 将屏幕四角逆变换，条带在缩放及相机变换后仍覆盖整个视口。
-        Matrix inverse = Matrix.Invert(Main.GameViewMatrix.TransformationMatrix);
-        Vector2 a = Vector2.Transform(Vector2.Zero, inverse);
-        Vector2 b = Vector2.Transform(new Vector2(Main.screenWidth, 0f), inverse);
-        Vector2 c = Vector2.Transform(new Vector2(0f, Main.screenHeight), inverse);
-        Vector2 d = Vector2.Transform(Main.ScreenSize.ToVector2(), inverse);
-        Vector2 min = Vector2.Min(Vector2.Min(a, b), Vector2.Min(c, d)) - Vector2.One;
-        Vector2 max = Vector2.Max(Vector2.Max(a, b), Vector2.Max(c, d)) + Vector2.One;
+        FloatRectangle bounds = AnomalyDrawUtils.GetVisibleWorldBounds(1f);
+        Vector2 min = bounds.TopLeft - Main.screenPosition;
+        Vector2 max = bounds.BottomRight - Main.screenPosition;
 
         if (coinType == 3)
         {

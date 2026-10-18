@@ -1,5 +1,6 @@
 ﻿using Anomalies.DataStructures;
 using Anomalies.GameContents;
+using Anomalies.Visuals;
 using Terraria.GameContent.Creative;
 
 namespace Anomalies.AnomalyMode;
@@ -57,15 +58,22 @@ public sealed class HeavenrendCrown : AnomalyModItem
 
 public sealed class HeavenrendCrownHoldout : AnomalyModProjectile
 {
+    private const int VisibleDuration = 58;
+    private const int HiddenDuration = 90;
+
+    // ai[0]：0 尚未确定操作，1 开启模式，-1 关闭模式；由服务端确定并同步。
+    public bool IsActivatingAnomaly => Projectile.ai[0] == 1f;
+
     public override LocalizedText DisplayName => ModContent.GetModItem<HeavenrendCrown>()?.DisplayName;
     public override string Texture => ModContent.GetModItem<HeavenrendCrown>()?.Texture;
 
     public override void AI()
     {
         Timer1++;
-        Lighting.AddLight(Projectile.Center, AnomalySharedData.AnomalyUltramundaneTitleColor.ToVector3());
+        if (Timer1 < VisibleDuration)
+            Lighting.AddLight(Projectile.Center, AnomalySharedData.AnomalyUltramundaneTitleColor.ToVector3());
 
-        if (Projectile.IsOnOwnerClient)
+        if (Projectile.IsOnOwnerClient && Timer1 < VisibleDuration)
         {
             if (Projectile.localAI[0] == 0f)
             {
@@ -87,7 +95,9 @@ public sealed class HeavenrendCrownHoldout : AnomalyModProjectile
                 SoundEngine.PlaySound(AnomalyHandler.ActivationSound);
                 if (!TOSharedData.NotClient)
                     break;
-                if (!AnomalySharedData.Anomaly)
+                Projectile.ai[0] = AnomalySharedData.Anomaly ? -1f : 1f;
+                Projectile.netUpdate = true;
+                if (IsActivatingAnomaly)
                 {
                     if (Main.GameMode != GameModeID.Creative)
                     {
@@ -102,14 +112,19 @@ public sealed class HeavenrendCrownHoldout : AnomalyModProjectile
                     AnomalySharedData.Anomaly = false;
                 }
                 break;
-            case 58:
+            case VisibleDuration + HiddenDuration:
                 Projectile.Kill();
                 break;
         }
+
+        if (!Main.dedServ && Projectile.active && IsActivatingAnomaly)
+            AnomalyStarVisual.Intensity += 1f / 30f;
     }
 
     public override bool PreDraw(ref Color lightColor)
     {
+        if (Timer1 >= VisibleDuration)
+            return false;
         Main.spriteBatch.DrawFromCenter(Projectile.Texture, Projectile.Center - Main.screenPosition, null, Color.White);
         return false;
     }

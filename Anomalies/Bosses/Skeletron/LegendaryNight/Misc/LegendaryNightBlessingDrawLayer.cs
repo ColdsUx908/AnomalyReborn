@@ -1,5 +1,3 @@
-using Terraria.DataStructures;
-
 namespace Anomalies.Bosses.Skeletron.LegendaryNight.Misc;
 
 public sealed class LegendaryNightBlessingDrawLayer : PlayerDrawLayer

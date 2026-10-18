@@ -7,6 +7,7 @@ public sealed class AnomalySynchronization : IAnomalyLoader
         public const byte SyncAnomalyMode = 0;
         public const byte SyncAnomalyModeFromServer = 1;
         public const byte SyncWorldState = 2;
+        public const byte BrainIllusionHit = 3;
     }
 
     internal static ModPacket GetCAPacket() => AnomalyMain.Instance.GetPacket();
@@ -51,6 +52,11 @@ public sealed class AnomalySynchronization : IAnomalyLoader
         byte id = reader.ReadByte();
         switch (id)
         {
+            case ID.BrainIllusionHit:
+                int illusionIndex = reader.ReadByte();
+                if (Main.netMode == NetmodeID.Server)
+                    Bosses.BrainofCthulhu.BrainIllusionHit.Apply(illusionIndex, whoAmI);
+                break;
             case ID.SyncAnomalyMode:
                 bool requested = reader.ReadBoolean();
                 if (Main.netMode == NetmodeID.Server && (uint)whoAmI < Main.maxPlayers && Main.player[whoAmI].active)

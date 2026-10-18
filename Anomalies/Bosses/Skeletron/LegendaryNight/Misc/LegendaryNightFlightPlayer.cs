@@ -28,12 +28,15 @@ public sealed class LegendaryNightFlightPlayer : AnomalyPlayerBehavior
         if (!AnomalyPlayer.StarGodBlessingActive)
             return;
 
-        AnomalyPlayer.LegendaryNightVirtualBoneWings ??= new Item(ItemID.BoneWings);
-        int visibleWings = Player.wings;
-        // 与额外饰品栏相同的原版入口，同时应用骨之翼属性与其他模组的饰品钩子。
-        Player.ApplyEquipFunctional(AnomalyPlayer.LegendaryNightVirtualBoneWings, hideVisual: true);
-        if (visibleWings > 0)
-            Player.wings = visibleWings;
+        // 功能翅膀优先：已有翅膀时只补充无限飞行，不覆盖其飞行参数。
+        if (Player.wingsLogic <= 0)
+        {
+            AnomalyPlayer.LegendaryNightVirtualBoneWings ??= new Item(ItemID.BoneWings);
+            int visibleWings = Player.wings;
+            Player.ApplyEquipFunctional(AnomalyPlayer.LegendaryNightVirtualBoneWings, hideVisual: true);
+            if (visibleWings > 0)
+                Player.wings = visibleWings;
+        }
         Player.noFallDmg = true;
     }
 

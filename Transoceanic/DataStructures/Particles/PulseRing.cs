@@ -25,6 +25,10 @@ public class PulseRing : Particle
     public Color BaseColor;
     public bool UseHDTexture;
 
+    public PulseRing(Vector2 center, Vector2 velocity, Color color, float originalScale, float finalScale, int lifeTime)
+        : this(center, velocity, color, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), originalScale, finalScale, lifeTime)
+    { }
+
     public PulseRing(Vector2 center, Vector2 velocity, Color color, Vector2 squish, float rotation, float originalScale, float finalScale, int lifeTime, bool useHDTexture = false)
     {
         Center = center;

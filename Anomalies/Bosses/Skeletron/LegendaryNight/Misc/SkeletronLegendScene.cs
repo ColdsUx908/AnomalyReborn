@@ -7,7 +7,7 @@ public sealed class SkeletronLegendScene : BaseMusicSceneEffect
     public override int MusicModMusic => AnomaliesMusicHandler.CurseoftheDungeon;
     public override int VanillaMusic => MusicID.Boss1;
 
-    public override bool CheckSingleNPC(NPC npc) => npc.type == NPCID.SkeletronHead && npc.Anomaly.CustomAIType == 1 && SkeletronLegendHead.GetInstance(npc).CurrentPhase < SkeletronLegendHead.Phase.PhaseChange_1To2;
+    public override bool CheckSingleNPC(NPC npc) => npc.type == NPCID.SkeletronHead && npc.Anomaly.CustomAIType == 1 && !SkeletronLegendHead.GetInstance(npc).Phase2MusicActive;
 }
 
 public sealed class SkeletronLegendScene2 : BaseMusicSceneEffect
@@ -26,5 +26,5 @@ public sealed class SkeletronLegendScene2 : BaseMusicSceneEffect
         return active;
     }
 
-    public override bool CheckSingleNPC(NPC npc) => npc.type == NPCID.SkeletronHead && npc.Anomaly.CustomAIType == 1 && SkeletronLegendHead.GetInstance(npc).CurrentPhase >= SkeletronLegendHead.Phase.PhaseChange_1To2;
+    public override bool CheckSingleNPC(NPC npc) => npc.type == NPCID.SkeletronHead && npc.Anomaly.CustomAIType == 1 && SkeletronLegendHead.GetInstance(npc).Phase2MusicActive;
 }

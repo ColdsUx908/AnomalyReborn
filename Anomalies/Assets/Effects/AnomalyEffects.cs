@@ -1,10 +1,17 @@
-﻿using Terraria.Graphics.Shaders;
+using Terraria.Graphics.Shaders;
+using Terraria.Graphics.Effects;
 
 namespace Anomalies.Assets.Effects;
 
 public sealed class AnomalyEffects : IContentLoader
 {
     public sealed record MiscShaderContainer(Asset<Effect> Asset, MiscShaderData Data);
+
+    [AttributeUsage(AttributeTargets.Field)]
+    private sealed class ShaderPassAttribute(string name) : Attribute
+    {
+        public string Name { get; } = name;
+    }
 
     public static class BossBars
     {
@@ -24,6 +31,14 @@ public sealed class AnomalyEffects : IContentLoader
         public static MiscShaderContainer SolidColorMask;
     }
 
+    public static class Primitives
+    {
+        [ShaderPass("Pass0")]
+        public static MiscShaderContainer CircularAoETelegraph;
+        public static MiscShaderContainer GlowCircle;
+        public static MiscShaderContainer GlowLine;
+    }
+
     public static class Texts
     {
         public static MiscShaderContainer AnomalyTitle;
@@ -32,29 +47,55 @@ public sealed class AnomalyEffects : IContentLoader
         public static MiscShaderContainer LegendaryNightGold;
     }
 
+    public static class ScreenFilters
+    {
+        public static Filter BrainOfCthulhuForcefield;
+        public static Filter RadialBlur;
+    }
+
     #region 处理逻辑
     void IContentLoader.PostSetupContent()
     {
-        if (!AnomalyClientConfig.Instance.EnableShaders) //配置选项关闭时着色器不会加载
+        if (Main.dedServ || !AnomalyClientConfig.Instance.EnableShaders) //配置选项关闭时着色器不会加载
             return;
 
         HandleType(typeof(AnomalyEffects), true);
         HandleType(typeof(BossBars));
         HandleType(typeof(Overlays));
+        HandleType(typeof(Primitives));
         HandleType(typeof(Texts));
+        ScreenFilters.BrainOfCthulhuForcefield = LoadAndRegisterScreenFilter("BrainOfCthulhuForcefield", "Pass0");
+        ScreenFilters.RadialBlur = LoadAndRegisterScreenFilter("RadialBlur", "Pass0");
 
         void HandleType(Type type, bool isRoot = false)
         {
             foreach (FieldInfo field in type.GetFields(TOReflectionUtils.StaticBindingFlags))
-                field.SetValue(null, LoadAndRegisterMiscShader(isRoot ? "" : type.Name, field.Name));
+                field.SetValue(null, LoadAndRegisterMiscShader(isRoot ? "" : type.Name, field.Name, field.GetCustomAttribute<ShaderPassAttribute>()?.Name ?? "Pass0"));
         }
     }
 
     void IContentLoader.OnModUnload()
     {
+        if (!Main.dedServ)
+        {
+            ScreenFilters.BrainOfCthulhuForcefield?.Deactivate();
+            ScreenFilters.RadialBlur?.Deactivate();
+        }
+        ClearType(typeof(ScreenFilters));
         ClearType(typeof(AnomalyEffects));
         ClearType(typeof(BossBars));
+        ClearType(typeof(Overlays));
+        ClearType(typeof(Primitives));
         ClearType(typeof(Texts));
+    }
+
+    private static Filter LoadAndRegisterScreenFilter(string name, string passName)
+    {
+        Asset<Effect> asset = AnomalyMain.Instance.Assets.Request<Effect>($"Assets/Effects/ScreenFilters/{name}");
+        Filter filter = new(new ScreenShaderData(asset, passName), EffectPriority.VeryHigh);
+        Filters.Scene[$"Anomalies:{name}"] = filter;
+        filter.Load();
+        return filter;
     }
 
     private static MiscShaderContainer LoadAndRegisterMiscShader(string subDirectory, string registrationName, string passName = "Pass0")

@@ -1,4 +1,4 @@
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+﻿namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 
 // ai[0]：目标玩家（1-based）；ai[1]：计时；ai[2]：铜/银/金/铂金币类型。
 public sealed class CoinRoulette : AnomalyModProjectile
@@ -16,7 +16,6 @@ public sealed class CoinRoulette : AnomalyModProjectile
     public const float HeightAbovePlayer = 64f;
     public int MasterIndex;
     public int LockTime = 120;
-
     public override string Texture => TOTextures.InvisibleTexturePath;
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
 
@@ -57,7 +56,8 @@ public sealed class CoinRoulette : AnomalyModProjectile
             return;
         }
 
-        int timer = (int)++Projectile.ai[1];
+        int timer = (int)Projectile.ai[1] + 1;
+        Projectile.ai[1] = timer;
         if (timer <= LockTime)
             Projectile.Center = target.Center - Vector2.UnitY * HeightAbovePlayer;
 
@@ -67,6 +67,7 @@ public sealed class CoinRoulette : AnomalyModProjectile
             Projectile.ai[2] = ((int)Projectile.ai[2] + Main.rand.Next(1, 4)) % 4;
             Projectile.netUpdate = true;
         }
+
         if (timer == LockTime)
         {
             Projectile.netUpdate = true;
@@ -109,15 +110,17 @@ public sealed class CoinRoulette : AnomalyModProjectile
         _LastVisualCoinType = coinType;
     }
 
+    public static Color GetCoinColor(int coinType) => coinType switch
+    {
+        0 => new Color(210, 120, 65),
+        1 => new Color(190, 205, 220),
+        2 => LegendaryNightHandler.StarColor,
+        _ => LegendaryNightHandler.PlatinumColor
+    };
+
     private void ReleaseCoinParticles(int coinType, int count, float maxSpeed)
     {
-        Color color = coinType switch
-        {
-            0 => new Color(210, 120, 65),
-            1 => new Color(190, 205, 220),
-            2 => LegendaryNightHandler.StarColor,
-            _ => LegendaryNightHandler.PlatinumColor
-        };
+        Color color = GetCoinColor(coinType);
         Vector2 center = Projectile.Center;
         for (int i = 0; i < count; i++)
         {

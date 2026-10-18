@@ -1,4 +1,4 @@
-﻿using CalamityMod.NPCs.AquaticScourge;
+using CalamityMod.NPCs.AquaticScourge;
 using CalamityMod.NPCs.AstrumDeus;
 using CalamityMod.NPCs.CalClone;
 using CalamityMod.NPCs.DesertScourge;
@@ -124,6 +124,8 @@ public class BossBarHandler : IContentLoader
         ExclusionList =
         [
             NPCID.None,
+            NPCType<Anomalies.Bosses.BrainofCthulhu.FalseBrain>(),
+            NPCType<Anomalies.Bosses.BrainofCthulhu.BrainIllusion>(),
             NPCID.EaterofWorldsBody,
             NPCID.EaterofWorldsTail,
             NPCID.MoonLordFreeEye,

@@ -5,6 +5,9 @@ public sealed class FallingStar : AnomalyModProjectile
     /// <summary>拖尾类型：0 无拖尾，1 蓝白光尾，2 金色轨迹拖尾。</summary>
     public int TrailType;
 
+    /// <summary>可选拖尾颜色覆盖；null 时保留对应拖尾的默认颜色。</summary>
+    public Color? TrailColorOverride;
+
     /// <summary>Timer1 超过此值后开始加速。</summary>
     public int AccelerationStartTime = 420;
 
@@ -63,7 +66,7 @@ public sealed class FallingStar : AnomalyModProjectile
 
     public override bool PreDraw(ref Color lightColor)
     {
-        DrawFallingStar(Projectile.Center, Projectile.rotation, Projectile.scale, Projectile.velocity, trailType: TrailType, useMediumTexture: true, oldPositions: Projectile.oldPos, trailOffset: Projectile.Size * 0.5f);
+        DrawFallingStar(Projectile.Center, Projectile.rotation, Projectile.scale, Projectile.velocity, trailType: TrailType, useMediumTexture: true, oldPositions: Projectile.oldPos, trailOffset: Projectile.Size * 0.5f, trailColorOverride: TrailColorOverride);
         return false;
     }
 
@@ -86,6 +89,9 @@ public sealed class FallingStar : AnomalyModProjectile
         base.SendAnomalyExtraAI(writer);
         writer.Write(TrailType);
         writer.Write(AccelerationStartTime);
+        writer.Write(TrailColorOverride.HasValue);
+        if (TrailColorOverride.HasValue)
+            writer.Write(TrailColorOverride.Value.PackedValue);
     }
 
     protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
@@ -93,9 +99,10 @@ public sealed class FallingStar : AnomalyModProjectile
         base.ReceiveAnomalyExtraAI(reader);
         TrailType = reader.ReadInt32();
         AccelerationStartTime = reader.ReadInt32();
+        TrailColorOverride = reader.ReadBoolean() ? new Color { PackedValue = reader.ReadUInt32() } : null;
     }
 
-    public static void DrawFallingStar(Vector2 position, float rotation, float scale, Vector2 velocity, int trailType = 0, bool useMediumTexture = false, Vector2[] oldPositions = null, Vector2 trailOffset = default)
+    public static void DrawFallingStar(Vector2 position, float rotation, float scale, Vector2 velocity, int trailType = 0, bool useMediumTexture = false, Vector2[] oldPositions = null, Vector2 trailOffset = default, Color? trailColorOverride = null)
     {
         const float MediumToLargeScaleFactor = 2.55f; // 大型落星与中型落星的缩放比例
 
@@ -108,7 +115,7 @@ public sealed class FallingStar : AnomalyModProjectile
             case 1:
                 Texture2D lightTexture = LightTexture;
                 Vector2 lightOrigin = new(lightTexture.Width / 2f, lightTexture.Height * 0.2f);
-                Color lightColor = (Color.Blue * 0.25f) with { A = 0 };
+                Color lightColor = ((trailColorOverride ?? Color.Blue) * 0.25f) with { A = 0 };
                 float trailRotation = velocity.ToRotation(MathHelper.PiOver2);
                 float lightScale = scale * 7.5f;
                 if (useMediumTexture)
@@ -127,43 +134,12 @@ public sealed class FallingStar : AnomalyModProjectile
                     if (pulseOpacity > 1f)
                         pulseOpacity = 2f - pulseOpacity;
 
-                    Main.spriteBatch.Draw(lightTexture, position - velocity * 0.7f, null, (Color.White * 0.2f) with { A = 0 } * pulseOpacity, trailRotation, lightOrigin, lightScale * (0.3f + pulsePhase * 0.5f), SpriteEffects.None, 0f);
+                    Color pulseColor = trailColorOverride.HasValue ? Color.Lerp(trailColorOverride.Value, Color.White, 0.35f) : Color.White;
+                    Main.spriteBatch.Draw(lightTexture, position - velocity * 0.7f, null, (pulseColor * 0.2f) with { A = 0 } * pulseOpacity, trailRotation, lightOrigin, lightScale * (0.3f + pulsePhase * 0.5f), SpriteEffects.None, 0f);
                 }
                 break;
             case 2:
-                Texture2D bloom = ParticleHandler.GetTexture<BloomParticle>();
-                float sizeFactor = 4f * (useMediumTexture ? scale / MediumToLargeScaleFactor : scale);
-                float speed = velocity.Length();
-                if (oldPositions is null)
-                    break;
-
-                int trailSamples = oldPositions.Length;
-
-                for (int i = trailSamples - 1; i >= 0; i--)
-                {
-                    if (oldPositions[i] == Vector2.Zero)
-                        continue;
-                    float progress = (float)i / trailSamples;
-                    float strength = 1f - progress;
-                    Vector2 trailPosition = oldPositions[i] + trailOffset - Main.screenPosition;
-                    Vector2 nextPosition = i == 0 ? position
-                        : oldPositions[i - 1] != Vector2.Zero ? oldPositions[i - 1] + trailOffset - Main.screenPosition : trailPosition;
-                    Vector2 segment = nextPosition - trailPosition;
-                    float segmentLength = segment.Length();
-                    float segmentRotation = segment.ToRotation();
-                    Vector2 segmentCenter = (trailPosition + nextPosition) * 0.5f;
-                    float diameter = MathHelper.Lerp(12f, 240f, strength) * sizeFactor;
-                    float intensity = strength * strength * MathHelper.Clamp(speed / 2f, 0f, 1f);
-                    Color outerColor = new Color(255, 90, 10, 0) * (intensity * 0.12f);
-                    Color innerColor = new Color(255, 225, 100, 0) * (intensity * 0.18f);
-                    // 将每个光斑置于相邻采样点中间，沿轨迹拉长；额外重叠抵消光斑边缘的淡出。
-                    // 内芯也独立补足线段长度，避免随外层一起缩小后再次出现断点。
-                    Vector2 outerScale = new((diameter + segmentLength * 2f) / bloom.Width, diameter / bloom.Height);
-                    float innerDiameter = diameter * 0.45f;
-                    Vector2 innerScale = new((innerDiameter + segmentLength * 2f) / bloom.Width, innerDiameter / bloom.Height);
-                    Main.spriteBatch.DrawFromCenter_VectorScale(bloom, segmentCenter, null, outerColor, segmentRotation, outerScale);
-                    Main.spriteBatch.DrawFromCenter_VectorScale(bloom, segmentCenter, null, innerColor, segmentRotation, innerScale);
-                }
+                DrawTrailType2(position + Main.screenPosition, scale, velocity, oldPositions, trailOffset, trailColorOverride, useMediumTexture);
                 break;
         }
 
@@ -185,6 +161,46 @@ public sealed class FallingStar : AnomalyModProjectile
         }
 
         Main.spriteBatch.Draw(starTexture, position, null, Color.White, rotation, starOrigin, scale, SpriteEffects.None, 0f);
+    }
+
+    /// <summary>绘制类型2的连续光斑拖尾；位置和历史采样均使用世界坐标。</summary>
+    public static void DrawTrailType2(Vector2 position, float scale, Vector2 velocity, Vector2[] oldPositions,
+        Vector2 trailOffset = default, Color? trailColorOverride = null, bool useMediumTexture = false)
+    {
+        position -= Main.screenPosition;
+        Texture2D bloom = ParticleHandler.GetTexture<BloomParticle>();
+        float sizeFactor = 4f * (useMediumTexture ? scale / 2.55f : scale);
+        float speed = velocity.Length();
+        if (oldPositions is null)
+            return;
+
+        int trailSamples = oldPositions.Length;
+
+        for (int i = trailSamples - 1; i >= 0; i--)
+        {
+            if (oldPositions[i] == Vector2.Zero)
+                continue;
+            float progress = (float)i / trailSamples;
+            float strength = 1f - progress;
+            Vector2 trailPosition = oldPositions[i] + trailOffset - Main.screenPosition;
+            Vector2 nextPosition = i == 0 ? position
+                : oldPositions[i - 1] != Vector2.Zero ? oldPositions[i - 1] + trailOffset - Main.screenPosition : trailPosition;
+            Vector2 segment = nextPosition - trailPosition;
+            float segmentLength = segment.Length();
+            float segmentRotation = segment.ToRotation();
+            Vector2 segmentCenter = (trailPosition + nextPosition) * 0.5f;
+            float diameter = MathHelper.Lerp(12f, 240f, strength) * sizeFactor;
+            float intensity = strength * strength * MathHelper.Clamp(speed / 2f, 0f, 1f);
+            Color outerColor = ((trailColorOverride ?? new Color(255, 90, 10)) with { A = 0 }) * (intensity * 0.12f);
+            Color innerColor = ((trailColorOverride.HasValue ? Color.Lerp(trailColorOverride.Value, Color.White, 0.35f) : new Color(255, 225, 100)) with { A = 0 }) * (intensity * 0.18f);
+            // 将每个光斑置于相邻采样点中间，沿轨迹拉长；额外重叠抵消光斑边缘的淡出。
+            // 内芯也独立补足线段长度，避免随外层一起缩小后再次出现断点。
+            Vector2 outerScale = new((diameter + segmentLength * 2f) / bloom.Width, diameter / bloom.Height);
+            float innerDiameter = diameter * 0.45f;
+            Vector2 innerScale = new((innerDiameter + segmentLength * 2f) / bloom.Width, innerDiameter / bloom.Height);
+            Main.spriteBatch.DrawFromCenter_VectorScale(bloom, segmentCenter, null, outerColor, segmentRotation, outerScale);
+            Main.spriteBatch.DrawFromCenter_VectorScale(bloom, segmentCenter, null, innerColor, segmentRotation, innerScale);
+        }
     }
 
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)

@@ -78,6 +78,8 @@ public sealed partial class SkeletronLegendHead
 
     public override void PostSetupContent()
     {
+        NPCID.Sets.MustAlwaysDraw[NPCID.SkeletronHead] = true;
+        NPCID.Sets.MustAlwaysDraw[NPCID.SkeletronHand] = true;
         NPCID.Sets.TrailCacheLength[NPCID.SkeletronHead] = StarAvatarTrailLength;
         // 模式 1 每帧记录位置，模式 0 每两帧记录，无法对应 50 帧的时间窗口。
         NPCID.Sets.TrailingMode[NPCID.SkeletronHead] = 1;

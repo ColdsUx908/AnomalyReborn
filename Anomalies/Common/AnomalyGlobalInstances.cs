@@ -1,4 +1,6 @@
-﻿using Anomalies.Bosses.EaterofWorlds;
+using Anomalies.Bosses.BrainofCthulhu;
+using Anomalies.Bosses.EaterofWorlds;
+using Anomalies.Bosses.Skeletron.LegendaryNight.Misc;
 using Anomalies.DataStructures;
 using Anomalies.Visuals.BossBar;
 using Transoceanic.Framework.Helpers.Utilities;
@@ -7,6 +9,9 @@ namespace Anomalies.Common;
 
 public sealed class AnomalyPlayer : ModPlayer
 {
+    // 同时覆盖荆棘、冲撞等经由 Player.ApplyDamageToNPC 结算的特殊攻击。
+    public override bool CanHitNPC(NPC target) => AnomalyDepthDrawSystem.IsVisible(target.Anomaly.Z);
+
     //数据变量按字母顺序排列
     public int Coldheart_Phase;
     public int Coldheart_SubPhase;
@@ -116,6 +121,16 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
     // The worm's segment graph is server-local entity state, not singleton Behavior state.
     internal List<EaterofWorldsSegmentContainer> EaterOfWorldsSegments { get; private set; } = [];
 
+    // 克脑的客户端绘制数据，不参与网络快照。
+    public List<BrainOfCthulhuAfterImage> BrainAfterImages = [];
+    public Rectangle BrainFrame = new(0, 0, 198, 180);
+
+    // 仅客户端绘制使用，不同步，也不在单例 Behavior 上保存实体状态。
+    internal SkeletronHandBloodDust HandBloodDust;
+
+    /// <summary>本帧的视觉锚点：实体局部位置、未投影的世界目标和混合权重。仅影响绘制。</summary>
+    internal (Vector2 LocalOffset, Vector2 Target, float Weight)? DepthDrawAnchor;
+
     private Union32[] InternalAnomalyAI32 { get; set; } = new Union32[AISlot3];
     private Union64[] InternalAnomalyAI64 { get; set; } = new Union64[AISlot4];
 
@@ -125,6 +140,7 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
     public override void ResetEffects(NPC npc)
     {
         SpecialFlags = default;
+        DepthDrawAnchor = null;
     }
 
     public override GlobalNPC Clone(NPC from, NPC to)
@@ -137,6 +153,10 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
         clone.InternalAnomalyAI64 = (Union64[])InternalAnomalyAI64.Clone();
         clone._ProjectileReferenceCache = (ProjectileNetReference[])_ProjectileReferenceCache.Clone();
         clone.EaterOfWorldsSegments = [with(EaterOfWorldsSegments)];
+        clone.BrainAfterImages = [];
+        clone.BrainFrame = BrainFrame;
+        clone.HandBloodDust = null;
+        clone.DepthDrawAnchor = null;
 
         return clone;
     }
@@ -158,6 +178,34 @@ public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
     }
 
     #region 额外数据
+    /// <summary>
+    /// 深度（世界像素）。0 为正常平面，正值向屏幕后方远离，负值向屏幕前方靠近。
+    /// <br/>不改变世界位置；玩家武器和弹幕使用投影碰撞箱，越过观察者平面后不可被击中。
+    /// <br/>NPC 之间的接触伤害仍要求 Z=0，避免使用某个客户端的镜头决定服务端碰撞。
+    /// <br/>持续保留，回到正常战斗平面时应设为 0。
+    /// <br/>随 NPC 额外 AI 同步；由服务端修改时按需设置 npc.netUpdate。
+    /// </summary>
+    public float Z
+    {
+        get => InternalAnomalyAI32[3].f;
+        set
+        {
+            if (!float.IsFinite(value))
+                throw new ArgumentOutOfRangeException(nameof(value));
+            if (InternalAnomalyAI32[3].f != value)
+            {
+                InternalAnomalyAI32[3].f = value;
+                InternalAIChanged32[3] = true;
+            }
+        }
+    }
+
+    public override bool? CanBeHitByItem(NPC npc, Player player, Item item) => AnomalyDepthDrawSystem.IsVisible(Z) ? null : false;
+
+    public override bool? CanBeHitByProjectile(NPC npc, Projectile projectile) => AnomalyDepthDrawSystem.IsVisible(Z) ? null : false;
+
+    public override bool CanBeHitByNPC(NPC npc, NPC attacker) => Z == 0f;
+
     public bool ShouldRunAnomalyAI
     {
         get => InternalAnomalyAI32[0].bits[0];
@@ -320,6 +368,10 @@ public sealed class AnomalyGlobalProjectile : GlobalProjectile
         TONetUtils.ReadAI64Snapshot(binaryReader, InternalAnomalyAI64, 1);
     }
 
+    // 弹幕在克脑幻象阶段开始前已存在时，不再触发真假脑命中判定。
+    // 本地实体标记，保留原有不参与额外 AI 快照的行为；克隆时按值复制。
+    public bool IgnoreBrainIllusions;
+
     #region 额外数据
     public bool ShouldRunAnomalyAI
     {
@@ -343,6 +395,26 @@ public sealed class AnomalyGlobalProjectile : GlobalProjectile
             {
                 InternalAnomalyAI32[1].i = value;
                 InternalAIChanged32[1] = true;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 视觉深度（世界像素）。0 为正常平面，正值向屏幕后方远离，负值向屏幕前方靠近。
+    /// <br/>仅影响绘制，不改变位置、碰撞或伤害；持续保留，回到正常平面时应设为 0。
+    /// <br/>随弹幕额外 AI 同步；由弹幕的网络控制端修改时按需设置 projectile.netUpdate。
+    /// </summary>
+    public float Z
+    {
+        get => InternalAnomalyAI32[2].f;
+        set
+        {
+            if (!float.IsFinite(value))
+                throw new ArgumentOutOfRangeException(nameof(value));
+            if (InternalAnomalyAI32[2].f != value)
+            {
+                InternalAnomalyAI32[2].f = value;
+                InternalAIChanged32[2] = true;
             }
         }
     }

@@ -81,33 +81,38 @@ public sealed class LegendaryNightRitual : AnomalyModProjectile
                 break;
             case 300: //召唤骷髅王和竞技场
                 IsSummoningSkeletron = true;
-
-                SoundEngine.PlaySound(SoundID.ForceRoar);
-
-                for (int i = 0; i < 100; i++)
-                    ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Main.rand.NextPolarVector2(15f, 40f), Main.rand.Next(40, 60), Main.rand.NextFloat(1f, 1.6f), Color.Lerp(LegendaryNightHandler.StarColor, Color.White, Main.rand.NextFloat(0.5f))));
-
-                if (TOSharedData.NotClient)
+                try
                 {
-                    TOLocalizationUtils.ChatLocalizedText(AnomalySharedData.ModLocalizationPrefix + LocalizationCategory + ".Summon", LegendaryNightHandler.StarColor);
+                    SoundEngine.PlaySound(SoundID.ForceRoar);
 
-                    NPC.NewNPCAction(new EntitySource_BossSpawn(Projectile.FindTargetWithinRange(2000f)), Projectile.Center, NPCID.SkeletronHead, action: n =>
+                    for (int i = 0; i < 100; i++)
+                        ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Main.rand.NextPolarVector2(15f, 40f), Main.rand.Next(40, 60), Main.rand.NextFloat(1f, 1.6f), Color.Lerp(LegendaryNightHandler.StarColor, Color.White, Main.rand.NextFloat(0.5f))));
+
+                    if (TOSharedData.NotClient)
                     {
-                        n.Center = Projectile.Center;
-                        n.netUpdate = true;
-                        SummonedSkeletronHeadIndex = n.whoAmI;
-                        n.Anomaly.CustomAIType = 1;
-                        Projectile.NewProjectileAction<LegendaryNightArena>(SourceAI, n.Center, Vector2.Zero, SkeletronLegendHead.ArenaDamage, 0f, action: p =>
+                        TOLocalizationUtils.ChatLocalizedText(AnomalySharedData.ModLocalizationPrefix + LocalizationCategory + ".Summon", LegendaryNightHandler.StarColor);
+
+                        NPC.NewNPCAction(new EntitySource_BossSpawn(Projectile.FindTargetWithinRange(2000f)), Projectile.Center, NPCID.SkeletronHead, action: n =>
                         {
-                            p.GetModProjectile<LegendaryNightArena>().Master = n;
-                            SkeletronLegendHead.GetInstance(n).ArenaProjectile = p;
+                            n.Center = Projectile.Center;
+                            n.netUpdate = true;
+                            SummonedSkeletronHeadIndex = n.whoAmI;
+                            n.Anomaly.CustomAIType = 1;
+                            Projectile.NewProjectileAction<LegendaryNightArena>(SourceAI, n.Center, Vector2.Zero, SkeletronLegendHead.ArenaDamage, 0f, action: p =>
+                            {
+                                p.GetModProjectile<LegendaryNightArena>().Master = n;
+                                SkeletronLegendHead.GetInstance(n).ArenaProjectile = p;
+                            });
                         });
-                    });
+                    }
+
+                    if (TOSharedData.NotClient)
+                        Projectile.netUpdate = true;
                 }
-                
-                if (TOSharedData.NotClient)
-                    Projectile.netUpdate = true;
-                IsSummoningSkeletron = false;
+                finally
+                {
+                    IsSummoningSkeletron = false;
+                }
                 break;
             case > 300 and <= 360: //向下移动
                 float interpolation2 = TOMathUtils.Interpolation.QuadraticEaseInOut((Timer1 - 300) / 60f);

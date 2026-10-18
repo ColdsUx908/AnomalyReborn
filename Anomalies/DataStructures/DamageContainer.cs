@@ -62,18 +62,13 @@ public readonly record struct ProjectileDamageContainer(
     /// <remarks>
     /// 属性的计算逻辑分为三步：
     /// <list type="number">
-    /// <item>
-    /// <description>
-    /// <b>确定伤害调整系数</b>：
+    /// <item><description><b>确定伤害调整系数</b>：
     /// 根据 <see cref="Main.masterMode"/> 和 <see cref="Main.expertMode"/> 选取对应的弹幕伤害乘数常量：
     /// 大师模式为 <see cref="MasterProjectileVanillaMultiplier"/>（6），
     /// 专家模式为 <see cref="ExpertProjectileVanillaMultiplier"/>（4），
     /// 普通模式为 <see cref="NormalProjectileVanillaMultiplier"/>（2）。
-    /// </description>
-    /// </item>
-    /// <item>
-    /// <description>
-    /// <b>根据激活模式选择预设伤害值</b>：
+    /// </description></item>
+    /// <item><description><b>根据激活模式选择预设伤害值</b>：
     /// 按照以下优先级依次判断当前激活的特殊模式：
     /// <list type="bullet">
     /// <item/><description/>异象超凡（<see cref=" AnomalySharedData.AnomalyUltramundane"/>）
@@ -84,15 +79,11 @@ public readonly record struct ProjectileDamageContainer(
     /// <item/><description/>普通模式（默认）
     /// </list>
     /// 较高优先级的模式激活时，将忽略较低优先级的模式，直接使用对应参数的伤害值。
-    /// </description>
-    /// </item>
-    /// <item>
-    /// <description>
-    /// <b>反算基础伤害</b>：
+    /// </description></item>
+    /// <item><description><b>反算基础伤害</b>：
     /// 用选定的预设伤害值除以第一步中获得的伤害调整系数，并通过 <see cref="MathF.Round(float)"/> 取整后返回。
     /// 由于各预设伤害值均被约束为对应乘数的整数倍，除法结果应为整数，舍入步骤用于消除浮点运算可能产生的微小误差。
-    /// </description>
-    /// </item>
+    /// </description></item>
     /// </list>
     /// </remarks>
     public int Value

@@ -40,7 +40,7 @@ public sealed class QueenSlimeMinionBlue : AnomalyNPCBehavior<QueenSlimeMinionBl
                 {
                     for (int k = 0; k < 3; k++)
                     {
-                        Vector2 vector6 = new Vector2(k - 1, -4f);
+                        Vector2 vector6 = new(k - 1, -4f);
                         vector6.X *= 1f + Main.rand.Next(-50, 51) * 0.005f;
                         vector6.Y *= 1f + Main.rand.Next(-50, 51) * 0.005f;
                         vector6.Normalize();
@@ -135,7 +135,7 @@ public sealed class QueenSlimeMinionBlue : AnomalyNPCBehavior<QueenSlimeMinionBl
 
             NPC.ai[3] = 0f;
             NPC.velocity.X *= 0.8f;
-            if (NPC.velocity.X > -0.1 && NPC.velocity.X < 0.1)
+            if (NPC.velocity.X is > (float)-0.1 and < (float)0.1)
                 NPC.velocity.X = 0f;
 
             NPC.ai[0] += death ? 16f : 10f;
@@ -304,7 +304,7 @@ public sealed class QueenSlimeMinionPink : AnomalyNPCBehavior<QueenSlimeMinionPi
 
             NPC.ai[3] = 0f;
             NPC.velocity.X *= 0.8f;
-            if (NPC.velocity.X > -0.1 && NPC.velocity.X < 0.1)
+            if (NPC.velocity.X is > (float)-0.1 and < (float)0.1)
                 NPC.velocity.X = 0f;
 
             NPC.ai[0] += death ? 11f : 7f;

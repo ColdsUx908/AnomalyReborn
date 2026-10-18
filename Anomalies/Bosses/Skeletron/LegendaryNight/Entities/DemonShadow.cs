@@ -1,11 +1,22 @@
+using Transoceanic.DataStructures.Rendering;
+
 namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 
 public sealed class DemonShadow : AnomalyModProjectile
 {
-    private const int ShotInterval = 12;
+    private int ShotInterval => HorizontalTracking ? SkeletronLegendHead.Mechanic1Data.AttackAnimationDuration : 12;
     private const float ShotSpeed = 14f;
+    private const float TrackingMaxSpeed = 24f;
+    private const float TrackingAcceleration = 0.6f;
+    private const float TrackingResponse = 0.08f;
 
     private Player _drawPlayer;
+
+    // 二阶段模式：始终尝试跟随在玩家右侧约500像素处，与玩家同高。
+    public bool HorizontalTracking;
+
+    protected override void SendAnomalyExtraAI(BinaryWriter writer) => writer.Write(HorizontalTracking);
+    protected override void ReceiveAnomalyExtraAI(BinaryReader reader) => HorizontalTracking = reader.ReadBoolean();
 
     // ai[0]：目标玩家索引（1-based，0 表示未指定目标）。ai[1]：射击计时器。
     // ai[2]：所属骷髅王索引（1-based，0 表示独立测试实例）。
@@ -34,11 +45,13 @@ public sealed class DemonShadow : AnomalyModProjectile
 
     public override void AI()
     {
+        SkeletronLegendHead head = null;
         if (Projectile.ai[2] > 0f)
         {
             NPC master = NPC.GetNPCFromIndex((int)Projectile.ai[2] - 1);
             if (!master.active || master.type != NPCID.SkeletronHead || master.Anomaly.CustomAIType != 1
-                || !SkeletronLegendHead.GetInstance(master).StarAvatarActive)
+                || !(HorizontalTracking ? SkeletronLegendHead.GetInstance(master).Phase2DemonShadowActive
+                    : SkeletronLegendHead.GetInstance(master).StarAvatarActive))
             {
                 // 由服务端确认所属符卡结束，避免生成包早于 NPC 状态包到达时客户端误删。
                 if (TOSharedData.NotClient)
@@ -46,6 +59,7 @@ public sealed class DemonShadow : AnomalyModProjectile
                 return;
             }
 
+            head = SkeletronLegendHead.GetInstance(master);
             int targetIndex = master.target + 1;
             if (TargetIndex != targetIndex)
             {
@@ -56,11 +70,29 @@ public sealed class DemonShadow : AnomalyModProjectile
             Vector2 awayFromTarget = master.GetVelocityTowards(Main.player[master.target], -180f);
             if (awayFromTarget == Vector2.Zero)
                 awayFromTarget = Vector2.UnitX * 180f;
-            Vector2 destination = master.Center + awayFromTarget - Vector2.UnitY * 160f;
-            Vector2 velocity = (destination - Projectile.Center) * 0.08f;
-            if (velocity.Length() > 24f)
-                velocity = Projectile.GetVelocityTowards(destination, 24f);
-            Projectile.velocity = velocity;
+            Player trackedPlayer = Main.player[master.target];
+            Vector2 destination = HorizontalTracking
+                ? trackedPlayer.Center + Vector2.UnitX * 500f
+                : master.Center + awayFromTarget - Vector2.UnitY * 160f;
+            if (HorizontalTracking)
+            {
+                Vector2 desiredVelocity = (destination - Projectile.Center) * 0.06f + trackedPlayer.velocity;
+                if (desiredVelocity.Length() > TrackingMaxSpeed)
+                    desiredVelocity = desiredVelocity.ToCustomLength(TrackingMaxSpeed);
+
+                // 保留当前动量，以有限加速度逐渐追上目标速度；玩家急停或转向时会有跟随延迟。
+                Vector2 acceleration = (desiredVelocity - Projectile.velocity) * TrackingResponse;
+                if (acceleration.Length() > TrackingAcceleration)
+                    acceleration = acceleration.ToCustomLength(TrackingAcceleration);
+                Projectile.velocity += acceleration;
+            }
+            else
+            {
+                Vector2 velocity = (destination - Projectile.Center) * 0.08f;
+                if (velocity.Length() > 24f)
+                    velocity = Projectile.GetVelocityTowards(destination, 24f);
+                Projectile.velocity = velocity;
+            }
         }
 
         bool hasTarget = Player.TryGetPlayerFromIndex(TargetIndex - 1, out Player target) && target.active && !target.dead;
@@ -76,7 +108,11 @@ public sealed class DemonShadow : AnomalyModProjectile
         if (hasTarget)
         {
             Projectile.ai[1]++;
-            if (Projectile.ai[1] >= ShotInterval)
+            bool shoot = HorizontalTracking && head is not null
+                ? SkeletronLegendHead.Mechanic1Data.IsAttackSpawnTime(head.Phase2MusicElapsedTime,
+                    SkeletronLegendHead.Mechanic1Data.StarShockwave, SkeletronLegendHead.Mechanic1Data.DemonShadowEnd)
+                : Projectile.ai[1] >= ShotInterval;
+            if (shoot)
             {
                 Projectile.ai[1] = 0f;
                 Vector2 muzzlePosition = Projectile.Center + aimDirection * (40f * Projectile.scale);
@@ -86,6 +122,7 @@ public sealed class DemonShadow : AnomalyModProjectile
                         aimDirection * ShotSpeed, SkeletronLegendHead.FallingStarDamage, Projectile.knockBack, Projectile.owner, action: p =>
                         {
                             p.scale = 0.2f;
+                            p.ai[2] = HorizontalTracking ? Projectile.ai[2] : 0f;
                             p.GetModProjectile<FallingStar>().TrailType = 1;
                             p.GetModProjectile<FallingStar>().AccelerationStartTime = 420;
                             p.netUpdate = true;
@@ -166,6 +203,10 @@ public sealed class DemonShadow : AnomalyModProjectile
         // DrawPlayer 接收世界坐标，内部会减去 Main.screenPosition。
         // 原版以脚底为缩放中心；补偿位置，使缩放后的人物中心仍与弹幕中心重合。
         Vector2 position = _drawPlayer.position + Vector2.UnitY * (_drawPlayer.height * (Projectile.scale - 1f) * 0.5f);
+        // 玩家渲染器直接提交图元；Immediate 确保先应用普通透明混合，避免继承冲击波的叠加状态。
+        using SpriteBatchScope drawScope = new(Main.spriteBatch, SpriteSortMode.Immediate, BlendState.AlphaBlend,
+            Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer,
+            transformMatrix: Main.GameViewMatrix.TransformationMatrix, effectIsNull: true);
         Main.PlayerRenderer.DrawPlayer(Main.Camera, _drawPlayer, position, Projectile.rotation,
             _drawPlayer.Size * 0.5f, scale: Projectile.scale);
         return false;

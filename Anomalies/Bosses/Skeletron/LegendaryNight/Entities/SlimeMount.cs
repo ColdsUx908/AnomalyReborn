@@ -13,7 +13,7 @@ public sealed class SlimeMount : AnomalyModProjectile
     private const float WarningMaxLength = 1600f;
     private const float WarningGrowthTime = 30f;
 
-    // 旋转符卡的待机坐骑使用的主人索引（1-based）；下落后不再依赖主人。
+    // 所属骷髅王索引（1-based），用于清场和准备状态有效性检查；下落后不再依赖主人。
     public int MasterIndex;
 
     protected override void SendAnomalyExtraAI(BinaryWriter writer) => writer.Write(MasterIndex);
@@ -48,7 +48,8 @@ public sealed class SlimeMount : AnomalyModProjectile
         {
             NPC master = NPC.GetNPCFromIndex(MasterIndex - 1);
             if (!master.active || master.type != NPCID.SkeletronHead || master.Anomaly.CustomAIType != 1
-                || SkeletronLegendHead.GetInstance(master).CurrentAvatar != SkeletronLegendHead.Avatar.FlyingSlime)
+                || !(SkeletronLegendHead.GetInstance(master).CurrentAvatar == SkeletronLegendHead.Avatar.FlyingSlime
+                    || SkeletronLegendHead.GetInstance(master).Phase2SlimeRainActive))
             {
                 Projectile.Kill();
                 return;

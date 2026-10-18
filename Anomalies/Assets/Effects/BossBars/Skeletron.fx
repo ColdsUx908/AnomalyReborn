@@ -3,6 +3,7 @@ sampler uImage1 : register(s1);
 float2 uScreenResolution;
 float2 uPosition;
 float uTime;
+float uPhase2Fade;
 
 float3 GetColor(float2 screenCoords)
 {
@@ -13,6 +14,9 @@ float3 GetColor(float2 screenCoords)
     float txt = tex2D(uImage1, screenCoords * float2(1.5, 3) + float2(uTime * -0.07, uTime * -0.12)).r;
     float txtVal = pow(max(txt, 0), 1.2);
     float3 gradientColor = lerp(colorBase, colorTop, coords) * min(1.4, 0.75 + txtVal * 0.7);
+    float stripeMask = coords * coords;
+    float3 goldColor = float3(1.0, 0.75, 0.16);
+    gradientColor = lerp(gradientColor, goldColor, stripeMask * uPhase2Fade * 0.9);
     return gradientColor;
 }
 

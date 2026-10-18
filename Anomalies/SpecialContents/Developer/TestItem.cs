@@ -1,5 +1,6 @@
-﻿#if DEBUG
 using Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+
+#if DEBUG
 using Anomalies.GameContents;
 
 namespace Anomalies.SpecialContents.Developer;

@@ -19,6 +19,26 @@ EyeofCthulhu: {
 	BloodOrbProjectile.DisplayName: Blood Orb
 }
 
+BrainofCthulhu: {
+	BrainBloodShot.DisplayName: Blood Shot
+	BrainIllusion.DisplayName: Brain Illusion
+	FalseBrain.DisplayName: False Brain
+	BloodBomb.DisplayName: Blood Bomb
+	BloodBombRTS.DisplayName: Blood Bomb
+	BloodScythe.DisplayName: Blood Scythe
+	CirclingBloodScythe.DisplayName: Circling Blood Scythe
+	CrimsonEye.DisplayName: Crimson Eye
+	IchorShower.DisplayName: Ichor Shower
+	TelekineticEnemyGrab.DisplayName: Telekinetic Enemy Grab
+	TelekineticBlast.DisplayName: Telekinetic Blast
+
+	Death: {
+		BrainIllusion1: "{0} couldn't see past the illusion."
+		BrainIllusion2: "{0} fell for the trick."
+		BrainIllusion3: "{0} needed to pay more attention."
+	}
+}
+
 QueenBee: {
 	BeeProjectile.DisplayName: Bee Projectile
 	CombCell.DisplayName: Comb Cell
@@ -45,6 +65,7 @@ Skeletron: {
 		PlatinumCoin.DisplayName: Platinum Coin
 		CoinRoulette.DisplayName: Coin Roulette
 		CoinJudgment.DisplayName: Coin Judgment
+		Mechanic2Star.DisplayName: Astral Star Rain
 
 		FallenStarEssence: {
 			DisplayName: Fallen Star Essence
@@ -64,6 +85,9 @@ Skeletron: {
 			DisplayName: Memory of Astraeus
 			Tooltip: Place it on the altar to recreate the legendary night
 		}
+
+		LegendaryNightPhase2Arena.DisplayName: Astral Magic Circle
+		Mechanic3Star.DisplayName: Mechanic3 Star
 	}
 }
 
