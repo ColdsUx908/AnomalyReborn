@@ -2,7 +2,7 @@
 
 public sealed class StoryModeCommand : ModCommand, ILocalizationPrefix
 {
-    public override string Command => "ca~storymode";
+    public override string Command => "ano~storymode";
     public override CommandType Type => CommandType.World;
     public string LocalizationPrefix => AnomalySharedData.ModLocalizationPrefix + "Commands.StoryMode";
 
@@ -24,7 +24,7 @@ public sealed class StoryModeCommand : ModCommand, ILocalizationPrefix
 
 public sealed class EXModeCommand : ModCommand, ILocalizationPrefix
 {
-    public override string Command => "ca~exmode";
+    public override string Command => "ano~exmode";
     public override CommandType Type => CommandType.World;
     public string LocalizationPrefix => AnomalySharedData.ModLocalizationPrefix + "Commands.EXMode";
 

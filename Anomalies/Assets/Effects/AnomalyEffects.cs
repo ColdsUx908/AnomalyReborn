@@ -1,10 +1,12 @@
-using Terraria.Graphics.Shaders;
 using Terraria.Graphics.Effects;
+using Terraria.Graphics.Shaders;
 
 namespace Anomalies.Assets.Effects;
 
 public sealed class AnomalyEffects : IContentLoader
 {
+    //所有嵌套类、字段按字母顺序排列
+
     public sealed record MiscShaderContainer(Asset<Effect> Asset, MiscShaderData Data);
 
     [AttributeUsage(AttributeTargets.Field)]
@@ -15,6 +17,7 @@ public sealed class AnomalyEffects : IContentLoader
 
     public static class BossBars
     {
+        public static MiscShaderContainer BrainofCthulhu;
         public static MiscShaderContainer EaterofWorlds;
         public static MiscShaderContainer EyeofCthulhu;
         public static MiscShaderContainer KingSlime;
@@ -33,7 +36,6 @@ public sealed class AnomalyEffects : IContentLoader
 
     public static class Primitives
     {
-        [ShaderPass("Pass0")]
         public static MiscShaderContainer CircularAoETelegraph;
         public static MiscShaderContainer GlowCircle;
         public static MiscShaderContainer GlowLine;

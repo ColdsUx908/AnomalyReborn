@@ -1,5 +1,4 @@
 ﻿using Anomalies.Assets.Effects;
-using Anomalies.DataStructures;
 using Anomalies.Visuals.BossBar;
 
 namespace Anomalies.Bosses.KingSlime;
@@ -447,11 +446,8 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
         BridgeUtils.ApplyCalamityHealthBoost(NPC);
     }
 
-    public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
-    {
-        const float VanillaExpertLifeMultiplier = 1.4f;
-        NPC.lifeMax = (int)MathF.Round(NPC.lifeMax / (VanillaExpertLifeMultiplier * 1.5f) / bossAdjustment / 10f) * 10;
-    }
+    public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) =>
+        TONPCUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
 
     public override bool CheckActive() => false;
 

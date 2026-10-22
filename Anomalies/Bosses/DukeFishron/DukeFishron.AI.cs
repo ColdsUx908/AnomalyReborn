@@ -1,6 +1,4 @@
-﻿using Anomalies.DataStructures;
-
-namespace Anomalies.Bosses.DukeFishron;
+﻿namespace Anomalies.Bosses.DukeFishron;
 
 public sealed partial class DukeFishron
 {

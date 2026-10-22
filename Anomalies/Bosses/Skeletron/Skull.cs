@@ -2,149 +2,148 @@
 
 public sealed class Skull : AnomalyProjectileBehavior<Skull>
 {
+    // ai[0]: 本项目的行为协议；0/1 保留传说之夜的追踪/直线模式。
+    public const int LegendaryHoming = 0;
+    public const int LegendaryStraight = 1;
+    public const int Homing = -1;
+    public const int AcceleratingCrossbone = -2;
+    public const int ExtendedHoming = -3;
+
     public override int ApplyingType => ProjectileID.Skull;
 
-    public override bool AllowCalamityLogic(CalamityLogicType_ProjectileBehavior type) => type switch
-    {
-        CalamityLogicType_ProjectileBehavior.PreAI => false,
-        _ => true
-    };
+    // AI、颜色和骨片绘制均由本 Behavior 实现，不运行灾厄的对应覆盖。
+    public override bool AllowCalamityLogic(CalamityLogicType_ProjectileBehavior type) => false;
+
+    private bool IsHoming => Projectile.ai[0] is Homing or ExtendedHoming;
+    private bool IsCrossbone => Projectile.ai[0] == AcceleratingCrossbone;
+    private float HomingEndTime => (Ultra ? 105f : 90f) + (Projectile.ai[0] == ExtendedHoming ? 60f : 0f);
 
     public override bool PreAI()
     {
-        // -------------------------------------------------------------------------
-        // 1. 初始化效果（仅执行一次）
-        // -------------------------------------------------------------------------
-        if (Projectile.localAI[0] == 0f)
+        bool regular = Projectile.ai[0] < 0f;
+        // 追踪头骨直接显现；骨片保留每帧 75 的淡入速度。
+        Projectile.alpha = regular && !IsHoming ? Math.Max(0, Projectile.alpha - 75) : 0;
+        Projectile.frame = (Projectile.frame + 1) % 3;
+
+        if (regular)
         {
-            Projectile.localAI[0] = 1f; // 标记已初始化
+            // 骨片先加速再生成尾迹；追踪头骨先生成尾迹再更新运动。
+            if (IsCrossbone)
+                Accelerate(Ultra ? 18f : 15f, 1.015f, true);
+            EmitTrail();
+            if (IsHoming)
+            {
+                HomingMovement();
+                SpawnEffects(Projectile.Center);
+            }
+        }
+        else
+        {
+            SpawnEffects(Projectile.position);
+            if (Projectile.ai[0] == LegendaryHoming)
+            {
+                Projectile.ai[1]++;
+                if (Projectile.ai[1] is > 30f and < 110f)
+                    TurnTowardsPlayer(25f);
+                Accelerate(18f, 1.02f, false);
+            }
+            EmitTrail();
+        }
 
-            // 播放音效
-            SoundEngine.PlaySound(SoundID.Item8, Projectile.position);
+        Projectile.spriteDirection = Projectile.direction;
+        if (IsCrossbone)
+            Projectile.rotation += MathHelper.Pi / 90f * Projectile.velocity.Length() * Projectile.direction;
+        else
+            Projectile.rotation = (Projectile.velocity * (Projectile.direction < 0 ? -1f : 1f)).ToRotation();
+        return false;
 
-            // 生成 10 个尘土粒子，呈向内收缩的效果
+        void HomingMovement()
+        {
+            bool extended = Projectile.ai[0] == ExtendedHoming;
+            int targetIndex = Player.FindClosest(Projectile.Center, 1, 1);
+            Player target = Main.player[targetIndex];
+            Projectile.ai[1]++;
+            float stopDistance = extended ? (Ultra ? 192f : 120f) : 96f;
+            if (Projectile.Distance(target.Center) < stopDistance && Projectile.ai[1] < HomingEndTime)
+                Projectile.ai[1] = HomingEndTime;
+            if (Projectile.ai[1] > (extended ? 10f : 30f) && Projectile.ai[1] < HomingEndTime)
+                TurnTowardsPlayer(Ultra ? (extended ? 20f : 25f) : (extended ? 25f : 30f));
+            Accelerate(Ultra ? 18f : 15f, Ultra ? 1.02f : 1.015f, false);
+        }
+
+        void TurnTowardsPlayer(float inertia)
+        {
+            Player target = Main.player[Player.FindClosest(Projectile.Center, 1, 1)];
+            float speed = Projectile.velocity.Length();
+            Vector2 direction = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
+            Vector2 velocity = (Projectile.velocity * (inertia - 1f) + direction * speed) / inertia;
+            Projectile.velocity = velocity.SafeNormalize(direction) * speed;
+        }
+
+        void Accelerate(float maxSpeed, float acceleration, bool clamp)
+        {
+            if (Projectile.velocity.Length() >= maxSpeed)
+                return;
+            Projectile.velocity *= acceleration;
+            if (clamp && Projectile.velocity.Length() > maxSpeed)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY) * maxSpeed;
+        }
+
+        void SpawnEffects(Vector2 soundPosition)
+        {
+            if (Projectile.localAI[0] != 0f)
+                return;
+            Projectile.localAI[0] = 1f;
+            SoundEngine.PlaySound(SoundID.Item8, soundPosition);
             for (int i = 0; i < 10; i++)
             {
-                int dustIndex = Dust.NewDust(
-                    new Vector2(Projectile.position.X, Projectile.position.Y),
-                    Projectile.width,
-                    Projectile.height,
-                    DustID.Blood, // 尘土类型
-                    Projectile.velocity.X,
-                    Projectile.velocity.Y,
-                    0,
-                    default,
-                    2f // 缩放
-                );
-
-                Dust dust = Main.dust[dustIndex];
-                dust.noGravity = true;
-
-                // 尘土速度指向弹幕中心，然后反向并加上弹幕速度的一半
-                dust.velocity = Projectile.Center - dust.position;
-                dust.velocity.Normalize();
-                dust.velocity *= -5f;
-                dust.velocity += Projectile.velocity / 2f;
+                Dust.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, DustID.Blood, Projectile.velocity, dust =>
+                {
+                    dust.scale *= 2f;
+                    dust.noGravity = true;
+                    dust.velocity = (Projectile.Center - dust.position).SafeNormalize(Vector2.UnitY) * -5f + Projectile.velocity / 2f;
+                });
             }
         }
 
-        // -------------------------------------------------------------------------
-        // 2. 特殊行为
-        // -------------------------------------------------------------------------
-        switch ((int)Projectile.ai[0])
+        void EmitTrail()
         {
-            case 0: //追踪玩家
-                // 查找距离弹幕中心最近的玩家索引
-                int closestPlayerIndex = Player.FindClosest(Projectile.Center, 1, 1);
-
-                // ai[1] 作为计时器，每帧递增
-                Projectile.ai[1] += 1f;
-
-                // 在计时器位于 (30, 110) 区间时，执行平滑追踪转向
-                if (Projectile.ai[1] is > 30f and < 110f)
+            int count = IsCrossbone ? 1 : 2;
+            int dustType = IsCrossbone ? 91 : regular && !IsHoming ? DustID.Torch : DustID.Blood;
+            float scale = IsCrossbone ? 1f : regular && !IsHoming ? 2f : 1.5f;
+            float offset = regular && !IsHoming && !IsCrossbone ? 2f : 1f;
+            for (int i = 0; i < count; i++)
+            {
+                Dust.NewDustAction(Projectile.Center, Projectile.width - 8, Projectile.height - 8, dustType, Projectile.velocity * 0.2f, dust =>
                 {
-                    // 当前速度大小
-                    float currentSpeed = Projectile.velocity.Length();
-
-                    // 计算指向玩家的方向向量，并缩放到当前速度大小
-                    Vector2 directionToPlayer = Main.player[closestPlayerIndex].Center - Projectile.Center;
-                    directionToPlayer.Normalize();
-                    directionToPlayer *= currentSpeed;
-
-                    // 平滑插值：新速度 = (旧速度 * 24 + 目标速度) / 25
-                    // 相当于向目标方向缓慢转向，同时保持速度大小不变
-                    Projectile.velocity = (Projectile.velocity * 24f + directionToPlayer) / 25f;
-
-                    // 归一化后再乘以原速度大小，确保速度大小不变
-                    Projectile.velocity.Normalize();
-                    Projectile.velocity *= currentSpeed;
-                }
-
-                float maxSpeed = 18f; // 最大速度
-
-                // 如果速度低于 18，则逐渐加速
-                if (Projectile.velocity.Length() < maxSpeed)
-                    Projectile.velocity *= 1.02f;
-                break;
+                    dust.alpha = 100;
+                    dust.scale *= scale;
+                    dust.position -= Projectile.velocity * offset;
+                    dust.noGravity = true;
+                    dust.velocity *= 0.3f;
+                });
+            }
         }
+    }
 
-        // -------------------------------------------------------------------------
-        // 3. 透明度处理
-        // -------------------------------------------------------------------------
-        // 对于 270，强制透明度为 0（完全可见）
-        Projectile.alpha = 0;
+    public override Color? GetAlpha(Color lightColor)
+    {
+        if (!IsHoming)
+            return null;
+        return Projectile.ai[1] >= HomingEndTime
+            ? new Color(184, 140, 255, Projectile.alpha)
+            : new Color(255, 255, 255, (int)Utils.WrappedLerp(0f, 255f, Projectile.timeLeft % 40 / 40f));
+    }
 
-        // 以下 alpha 调整在 alpha 已为 0 的情况下不会生效，
-        // 但保留以完全维持原逻辑（原代码中此段对 270 无实际影响）
-        if (Projectile.alpha > 0)
-            Projectile.alpha -= 50;
-        if (Projectile.alpha < 0)
-            Projectile.alpha = 0;
-
-        // -------------------------------------------------------------------------
-        // 4. 帧动画
-        // -------------------------------------------------------------------------
-        Projectile.frame++;
-        if (Projectile.frame > 2)
-            Projectile.frame = 0;
-
-        // -------------------------------------------------------------------------
-        // 5. 持续产生尘土粒子
-        // -------------------------------------------------------------------------
-        for (int i = 0; i < 2; i++)
-        {
-            int dustIndex = Dust.NewDust(
-                new Vector2(Projectile.position.X + 4f, Projectile.position.Y + 4f),
-                Projectile.width - 8,
-                Projectile.height - 8,
-                DustID.Blood, // 尘土类型
-                Projectile.velocity.X * 0.2f,
-                Projectile.velocity.Y * 0.2f,
-                100,
-                default,
-                1.5f // 缩放
-            );
-
-            Dust dust = Main.dust[dustIndex];
-            // 位置稍微向后偏移
-            dust.position -= Projectile.velocity;
-            dust.noGravity = true;
-            // 速度衰减
-            dust.velocity.X *= 0.3f;
-            dust.velocity.Y *= 0.3f;
-        }
-
-        // -------------------------------------------------------------------------
-        // 6. 旋转和朝向
-        // -------------------------------------------------------------------------
-        Projectile.spriteDirection = Projectile.direction;
-
-        // 根据方向设置旋转角度，使其面向速度方向
-        if (Projectile.direction < 0)
-            Projectile.rotation = (float)Math.Atan2(-Projectile.velocity.Y, -Projectile.velocity.X);
-        else
-            Projectile.rotation = (float)Math.Atan2(Projectile.velocity.Y, Projectile.velocity.X);
-
-        return false; // 禁止原始 AI 执行
+    public override bool PreDraw(ref Color lightColor)
+    {
+        if (!IsCrossbone)
+            return true;
+        Main.instance.LoadProjectile(ProjectileID.BoneGloveProj);
+        Texture2D texture = TextureAssets.Projectile[ProjectileID.BoneGloveProj].Value;
+        Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Projectile.GetAlpha(lightColor),
+            Projectile.rotation, texture.Size() / 2f, Projectile.scale,
+            Projectile.spriteDirection == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+        return false;
     }
 }

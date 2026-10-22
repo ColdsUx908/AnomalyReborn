@@ -1,6 +1,4 @@
-using Anomalies.Bosses.Skeletron.LegendaryNight.Arena;
-
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 /// <summary>跟随小法阵扩大五角星的落星；ai[0] 为线段采样序号，ai[1] 为小圈索引，ai[2] 为主体索引（1-based）。</summary>
 public sealed class Mechanic3Star : AnomalyModProjectile

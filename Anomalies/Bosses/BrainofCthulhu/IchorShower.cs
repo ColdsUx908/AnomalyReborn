@@ -13,7 +13,7 @@ public class IchorShower : AnomalyModProjectile
         Projectile.Opacity = 1f;
         Projectile.tileCollide = false;
         Projectile.timeLeft = 480;
-        Projectile.damage = 10;
+        Projectile.damage = BrainofCthulhu.IchorShotDamage;
         Projectile.scale = 1;
         Projectile.hostile = true;
         Projectile.extraUpdates = 1;

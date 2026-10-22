@@ -46,28 +46,30 @@ float4 Main(float2 coords : TEXCOORD0) : COLOR0
 {       
     float resolutionRatio = uScreenResolution.x / uScreenResolution.y;
 
-    float screenScale = 1080.0 / min(uScreenResolution.x, uScreenResolution.y);
+    // Height is the common spatial scale, including portrait viewports.
+    float screenScale = 1080.0 / uScreenResolution.y;
 
-    float pixelSize = 0.002 * uZoom;
+    float pixelSize = 0.002 * uZoom.x;
     float2 aspectCorrectedCoords = coords;
     aspectCorrectedCoords.x *= resolutionRatio;
     float2 pixelatedCoords = floor(aspectCorrectedCoords / pixelSize) * pixelSize + pixelSize * 0.5;
     pixelatedCoords.x /= resolutionRatio;
 
-    float radius = uProgress * screenScale * resolutionRatio;
+    // Preserve the 16:9 radius without letting viewport width change shield size.
+    float radius = uProgress * screenScale * (16.0 / 9.0);
 
-    float4 baseColor = (1, 1, 1, 1);
+    float4 baseColor = float4(1, 1, 1, 1);
     baseColor.rgb = uColor;
     
-    float4 edgeColor = (1, 1, 1, 1);
+    float4 edgeColor = float4(1, 1, 1, 1);
     edgeColor.rgb = uSecondaryColor;
     
-    float2 center = (uDirection - (0.5, 0.5)) * 2;
+    float2 center = (uDirection - float2(0.5, 0.5)) * 2;
     center.x *= resolutionRatio;
     
-    float2 correctedCoords = (pixelatedCoords - (0.5, 0.5)) * 2;
+    float2 correctedCoords = (pixelatedCoords - float2(0.5, 0.5)) * 2;
     correctedCoords.x *= resolutionRatio;
-    float2 correctedTrueCoords = (coords - (0.5, 0.5)) * 2;
+    float2 correctedTrueCoords = (coords - float2(0.5, 0.5)) * 2;
     correctedTrueCoords.x *= resolutionRatio;
     
     float2 centerOffset = center - correctedCoords;
@@ -95,6 +97,8 @@ float4 Main(float2 coords : TEXCOORD0) : COLOR0
         float distortionFalloff = pow(normalizedDist, 3);
         float sphericalOffset = (1.0 - normalizedDist) * distortionStrength * distortionFalloff;
         float2 distortionDirection = normalize(center - correctedCoords);
+        // Convert the physical direction back to UV space at the original 16:9 strength.
+        distortionDirection.x *= (16.0 / 9.0) / resolutionRatio;
         float2 distortedCoords = coords + (distortionDirection * sphericalOffset * normalizedDist);
     
         float distDiff = (radius - dist) / radius;
@@ -104,7 +108,7 @@ float4 Main(float2 coords : TEXCOORD0) : COLOR0
             distDiff *= 2;
         float l = lerp(0, pow(1 - distDiff, 5), uOpacity);
     
-        float baseWave = dist / uZoom * 50 - uTime * 7;
+        float baseWave = dist / uZoom.x * 50 - uTime * 7;
         float angleWave = sin(angle * 12 - uTime * 4) * 0.3;
         float wave = pow(max(0, sin(baseWave + angleWave)), 3) * 0.8;
         
@@ -124,7 +128,7 @@ float4 Main(float2 coords : TEXCOORD0) : COLOR0
         float4 baseTexture = tex2D(uImage0, distortedCoords);
         float4 shieldColor = lerp(baseTexture, edgeColor, l);
         float4 depthColor = float4(depthNoise, depthNoise, depthNoise, 0);
-        depthColor.rgb = lerp(edgeColor, (1, 1, 1, 1), 0.33);
+        depthColor.rgb = lerp(edgeColor.rgb, float3(1, 1, 1), 0.33);
         depthColor *= depthNoise;
 
         return shieldColor 
@@ -133,7 +137,7 @@ float4 Main(float2 coords : TEXCOORD0) : COLOR0
     }
     else if (dist < radius + 0.01)
     {
-        float4 brightEdgeColor = lerp(edgeColor, (1, 1, 1, 1), 0.4);
+        float4 brightEdgeColor = lerp(edgeColor, float4(1, 1, 1, 1), 0.4);
         return brightEdgeColor;
     }
     

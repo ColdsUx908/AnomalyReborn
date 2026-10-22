@@ -1,4 +1,4 @@
-﻿using Anomalies.Bosses.Skeletron.LegendaryNight.Summoning;
+using Anomalies.Bosses.Skeletron.LegendaryNight;
 using Terraria.GameContent.ItemDropRules;
 
 namespace Anomalies.GameContents.AnomalyItems;

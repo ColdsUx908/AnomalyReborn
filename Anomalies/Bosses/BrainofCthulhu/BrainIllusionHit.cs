@@ -1,4 +1,5 @@
 namespace Anomalies.Bosses.BrainofCthulhu;
+
 internal static class BrainIllusionHit
 {
     public static void Send(int illusionIndex, int playerIndex)
@@ -32,7 +33,7 @@ internal static class BrainIllusionHit
         brain.BeenHit = true;
         illusion.dontTakeDamage = true;
         illusion.netUpdate = true;
-        Projectile.NewProjectileAction(source: illusion.GetSource_FromAI(), position: illusion.Center, velocity: Vector2.Zero, type: ModContent.ProjectileType<TelekineticBlast>(), damage: 50, knockback: 0.5f, owner: Main.myPlayer, action: entity =>
+        Projectile.NewProjectileAction(source: illusion.GetSource_FromAI(), position: illusion.Center, velocity: Vector2.Zero, type: ModContent.ProjectileType<TelekineticBlast>(), damage: BrainofCthulhu.TelekineticBlastDamage, knockback: 0.5f, owner: Main.myPlayer, action: entity =>
         {
             entity.ai[0] = playerIndex;
             entity.ai[1] = 8;

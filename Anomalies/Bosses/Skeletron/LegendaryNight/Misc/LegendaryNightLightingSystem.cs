@@ -2,7 +2,7 @@ using Terraria.Graphics;
 using Terraria.Graphics.Light;
 using Terraria.Graphics.Renderers;
 
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Misc;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class LegendaryNightLightingSystem : ModSystem
 {

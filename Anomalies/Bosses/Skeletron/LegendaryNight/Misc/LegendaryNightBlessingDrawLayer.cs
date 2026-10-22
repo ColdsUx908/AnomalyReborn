@@ -1,4 +1,4 @@
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Misc;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class LegendaryNightBlessingDrawLayer : PlayerDrawLayer
 {

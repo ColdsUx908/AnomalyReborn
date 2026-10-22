@@ -1,7 +1,9 @@
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class FlyingSlime : AnomalyModNPC
 {
+    public override string Texture => LegendaryNightHandler.LegendaryNightPath + "Entities/FlyingSlime";
+
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
 
     public override void SetStaticDefaults() => Main.npcFrameCount[Type] = 5;

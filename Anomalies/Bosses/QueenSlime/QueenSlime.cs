@@ -1,6 +1,5 @@
 ﻿using Anomalies.Assets.Effects;
 using Anomalies.Bosses.KingSlime;
-using Anomalies.DataStructures;
 using Anomalies.Visuals.BossBar;
 using Terraria.Graphics.Shaders;
 

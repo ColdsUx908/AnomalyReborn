@@ -1,5 +1,4 @@
 ﻿using Anomalies.Assets.Effects;
-using Anomalies.DataStructures;
 using Anomalies.Visuals.BossBar;
 
 namespace Anomalies.Bosses.KingSlime;

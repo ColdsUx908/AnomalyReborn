@@ -1,6 +1,4 @@
-﻿using Anomalies.DataStructures;
-
-namespace Anomalies.Bosses.EmpressofLight;
+﻿namespace Anomalies.Bosses.EmpressofLight;
 
 #pragma warning disable IDE0078
 #pragma warning disable IDE0090

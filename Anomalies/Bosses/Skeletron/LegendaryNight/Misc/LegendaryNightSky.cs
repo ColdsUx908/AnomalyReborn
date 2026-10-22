@@ -1,8 +1,6 @@
-using Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 using Terraria.Graphics.Effects;
-using Anomalies.Visuals;
 
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Misc;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class LegendaryNightSky : CustomSky, IContentLoader
 {

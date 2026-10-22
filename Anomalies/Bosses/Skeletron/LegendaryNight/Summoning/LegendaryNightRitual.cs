@@ -1,9 +1,10 @@
-﻿namespace Anomalies.Bosses.Skeletron.LegendaryNight.Summoning;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
-using Anomalies.Bosses.Skeletron.LegendaryNight.Arena;
 
 public sealed class LegendaryNightRitual : AnomalyModProjectile
 {
+    public override string Texture => LegendaryNightHandler.LegendaryNightPath + "Summoning/LegendaryNightRitual";
+
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
 
     public const int RitualTime = 360;

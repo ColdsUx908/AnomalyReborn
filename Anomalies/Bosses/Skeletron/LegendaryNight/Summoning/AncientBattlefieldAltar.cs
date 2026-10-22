@@ -1,12 +1,14 @@
-﻿using Anomalies.Assets.Effects;
+using Anomalies.Assets.Effects;
 using Anomalies.GameContents;
 using Terraria.Enums;
 using Terraria.ObjectData;
 
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Summoning;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class AncientBattlefieldAltarItem : AnomalyModItem
 {
+    public override string Texture => LegendaryNightHandler.LegendaryNightPath + "Summoning/AncientBattlefieldAltarItem";
+
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
 
     public override void SetStaticDefaults()
@@ -51,6 +53,8 @@ public sealed class AncientBattlefieldAltarItem : AnomalyModItem
 
 public sealed class AncientBattlefieldAltar : ModTile
 {
+    public override string Texture => LegendaryNightHandler.LegendaryNightPath + "Summoning/AncientBattlefieldAltar";
+
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
 
     public const int Width = 5;
@@ -100,7 +104,7 @@ public sealed class AncientBattlefieldAltar : ModTile
         LegendaryNightRitual ritual = null;
         bool ritualExists = false;
 
-        foreach (Projectile p  in Projectile.ActiveProjectiles)
+        foreach (Projectile p in Projectile.ActiveProjectiles)
         {
             if (p.ModProjectile is LegendaryNightRitual modP)
             {

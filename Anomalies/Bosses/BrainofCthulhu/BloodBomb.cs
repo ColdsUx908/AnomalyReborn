@@ -155,7 +155,7 @@ public class BloodBomb : AnomalyModNPC
                 NPC.ai[1] = BrainBehaviorAccess.ActiveBrain ? Terraria.NPC.crimsonBoss : -1;
             if (Main.netMode == NetmodeID.MultiplayerClient || (uint)NPC.ai[1] >= Main.maxNPCs || !Main.npc[(int)NPC.ai[1]].active)
                 return;
-            Projectile.NewProjectileAction(source: NPC.GetSource_FromThis(), position: NPC.Center, velocity: NPC.DirectionTo(Main.npc[(int)NPC.ai[1]].Center) * 16f, type: ModContent.ProjectileType<BloodBombRTS>(), damage: 40, knockback: 1f, owner: -1, action: entity =>
+            Projectile.NewProjectileAction(source: NPC.GetSource_FromThis(), position: NPC.Center, velocity: NPC.DirectionTo(Main.npc[(int)NPC.ai[1]].Center) * 16f, type: ModContent.ProjectileType<BloodBombRTS>(), damage: BrainofCthulhu.BloodBombDamage, knockback: 1f, owner: -1, action: entity =>
             {
                 entity.ai[0] = NPC.ai[1];
             });
@@ -197,7 +197,7 @@ public class BloodBombRTS : AnomalyModProjectile
         Projectile.penetrate = 1;
         Projectile.ignoreWater = true;
         Projectile.tileCollide = false;
-        Projectile.damage = 10;
+        Projectile.damage = BrainofCthulhu.BloodBombDamage;
         Projectile.friendly = true;
         Projectile.hostile = false;
         Projectile.tileCollide = false;
@@ -219,9 +219,9 @@ public class BloodBombRTS : AnomalyModProjectile
     public override void OnKill(int timeLeft)
     {
         SoundEngine.PlaySound(SoundID.DD2_ExplosiveTrapExplode, Projectile.Center);
-        CustomPulse explosion1 = new(Projectile.Center, Vector2.Zero, Color.OrangeRed, "Anomalies/Bosses/BrainofCthulhu/Assets/Particles/FlameExplosion", Vector2.One, Main.rand.NextFloat(0f, MathHelper.Pi), 0f, 0.1f, 24);
+        CustomPulse explosion1 = new(Projectile.Center, Vector2.Zero, Color.OrangeRed, "Anomalies/Bosses/BrainofCthulhu/Assets/FlameExplosion", Vector2.One, Main.rand.NextFloat(0f, MathHelper.Pi), 0f, 0.1f, 24);
         ParticleHandler.SpawnParticle(explosion1);
-        CustomPulse explosion2 = new(Projectile.Center, Vector2.Zero, Color.Red, "Anomalies/Bosses/BrainofCthulhu/Assets/Particles/FlameExplosion", Vector2.One, Main.rand.NextFloat(0f, MathHelper.Pi), 0f, 0.075f, 24);
+        CustomPulse explosion2 = new(Projectile.Center, Vector2.Zero, Color.Red, "Anomalies/Bosses/BrainofCthulhu/Assets/FlameExplosion", Vector2.One, Main.rand.NextFloat(0f, MathHelper.Pi), 0f, 0.075f, 24);
         ParticleHandler.SpawnParticle(explosion2);
     }
 

@@ -34,7 +34,7 @@ public class FalseBrain : AnomalyModNPC
         NPC.ShowNameOnHover = false;
         Music = MusicID.Boss3;
         SceneEffectPriority = (SceneEffectPriority)(-1);
-        NPC.localAI[0] = Main.rand.Next(Main.getGoodWorld ? 7 : 6);
+        NPC.localAI[0] = Main.rand.Next(6);
         NPC.localAI[1] = 1 + Main.rand.NextFloat(-0.25f, 0.25f);
     }
 
@@ -152,23 +152,13 @@ public class FalseBrain : AnomalyModNPC
 
     internal void DrawSelf(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        Texture2D tex;
-        Rectangle frame;
+        // This sheet contains seven subtly different exposed-brain variants.
+        // Boss texture/config overrides must not replace them with closed-brain frames.
+        Texture2D tex = TextureAssets.Npc[Type].Value;
+        Rectangle frame = tex.Frame(7, 4, Variant, (int)NPC.frameCounter);
         Vector2 scaleDistort = new((float)Math.Cos(Main.GlobalTimeWrappedHourly * MathHelper.TwoPi * 2) / 2f, (float)Math.Sin(Main.GlobalTimeWrappedHourly * MathHelper.TwoPi * 2) / 2f);
-        Vector2 scaleAddition = Vector2.Zero;
-        float endLerp = AttackTime / 60f;
-        float startLerp = SpawnTime / 60f;
-        if (BrainOfCthulhuSystem.IsBrainOfCthulhuTextureVanilla && !BrainCalamityBridge.UseChangedBrainSprite)
-        {
-            tex = TextureAssets.Npc[Type].Value;
-            frame = tex.Frame(7, 4, Variant, (int)NPC.frameCounter);
-        }
-        else
-        {
-            tex = TextureAssets.Npc[NPCID.BrainofCthulhu].Value;
-            frame = tex.Frame(1, 8, 0, (int)NPC.frameCounter);
-        }
-
+        float endLerp = MathHelper.Clamp(AttackTime / 60f, 0f, 1f);
+        float startLerp = MathHelper.Clamp(SpawnTime / 60f, 0f, 1f);
         if (SpawnTime > 0)
         {
             drawColor *= 1 - startLerp;
@@ -181,7 +171,7 @@ public class FalseBrain : AnomalyModNPC
         }
         else
             scaleDistort = Vector2.Zero;
-        spriteBatch.Draw(tex, NPC.Center + (Vector2.UnitY * 16) - screenPos, frame, drawColor, NPC.rotation, frame.Size() * 0.5f, (Vector2.One + scaleAddition + scaleDistort) * NPC.scale, 0, 0);
+        spriteBatch.Draw(tex, NPC.Center + (Vector2.UnitY * 16) - screenPos, frame, drawColor, NPC.rotation, frame.Size() * 0.5f, (Vector2.One + scaleDistort) * NPC.scale, 0, 0);
     }
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) => false;

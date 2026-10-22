@@ -1,6 +1,4 @@
-﻿using Anomalies.DataStructures;
-
-namespace Anomalies.Bosses.EyeofCthulhu;
+﻿namespace Anomalies.Bosses.EyeofCthulhu;
 
 public sealed partial class EyeofCthulhu
 {

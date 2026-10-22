@@ -1,6 +1,4 @@
-﻿using Anomalies.DataStructures;
-
-namespace Anomalies.Bosses.KingSlime;
+﻿namespace Anomalies.Bosses.KingSlime;
 
 public sealed partial class KingSlime
 {

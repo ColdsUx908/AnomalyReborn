@@ -8,8 +8,8 @@ float3 HexCoordRatioAndID(float2 uv)
 {
     const float sqrt3 = 1.7320508;
     
-    // 定义 screenRatio = width / height，使用 uv.x *= screenRatio 可以拉伸 X 轴使其保持正六边形
-    float screenRatio = uScreenResolution.x / uScreenResolution.y;
+    // Main already corrects the aspect ratio; retain the original 16:9 hex scale.
+    const float screenRatio = 16.0 / 9.0;
     uv.x *= screenRatio;
     
     // 尖顶六边形（竖直边）的仿射变换
@@ -132,6 +132,8 @@ float3 GetColor(float2 screenCoords)
 float4 Main(float4 screenPos : VPOS, float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
 {
     float2 screenCoords = (screenPos.xy - uPosition) / uScreenResolution;
+    // Preserve the 16:9 pattern scale while removing viewport aspect distortion.
+    screenCoords.x *= (uScreenResolution.x / uScreenResolution.y) / (16.0 / 9.0);
     float alpha = tex2D(uImage0, coords).a;
     float3 gradientColor = GetColor(screenCoords);
     return float4(gradientColor, 1.0) * alpha * sampleColor;

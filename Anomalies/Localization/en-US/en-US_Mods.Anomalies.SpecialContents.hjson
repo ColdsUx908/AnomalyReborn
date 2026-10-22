@@ -19,13 +19,6 @@ Developer: {
 	ColdheartIcicleProj.DisplayName: Coldheart Icicle
 	ColdheartIcicleSnowflake.DisplayName: Coldheart Icicle Snowflake
 
-	Permafrost: {
-		Spawn: Permafrost has awoken!
-		Welcome1: ""
-		Welcome2: ""
-		Beginning: ""
-	}
-
 	TestItem: {
 		DisplayName: Test Item
 		Tooltip: Only for testing purposes
@@ -34,6 +27,15 @@ Developer: {
 	EventideReunion: {
 		DisplayName: Eventide Reunion
 		Tooltip: ""
+		EventideReunionSelection.DisplayName: Eventide Reunion Selection
+		EventideReunionSunExplosion.DisplayName: Coronal Flare
+		EventideReunionDeathWave.DisplayName: Extinction Scythe Wave
+		EventideReunionDeathSoul.DisplayName: Reaped Soul
+
+		EventideReunionDeathMark: {
+			DisplayName: Death Mark
+			Description: Damage taken is multiplied by 1.15; non-boss enemies below 25% life are executed
+		}
 	}
 }
 

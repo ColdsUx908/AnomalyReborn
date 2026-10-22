@@ -1,10 +1,5 @@
-using Anomalies.Bosses.Skeletron.LegendaryNight.Arena;
-using Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
-using Anomalies.Bosses.Skeletron.LegendaryNight.Summoning;
 using Anomalies.Assets.Effects;
-
 using Anomalies.Visuals.BossBar;
-using Anomalies.DataStructures;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
@@ -220,6 +215,8 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
 
     public override bool CanHitPlayer(Player target, ref int cooldownSlot) => CurrentPhase != Phase.PhaseChange_1To2 && !Mechanic2InBackground;
 
+    public override decimal Priority => 10m;
+
     public override bool ShouldProcess
     {
         get
@@ -249,6 +246,14 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
 
     public override void SetDefaults()
     {
+        ArenaProjectile = Projectile.DummyProjectile;
+        CurrentAvatar = Avatar.None;
+        AvatarTimer = 0;
+        AvatarRotation = 0f;
+        Phase2ElapsedTime = 0;
+        Timer5 = 0;
+        IsSummoningHands = false;
+
         NPC.AddAnomalyHPIndicator(Phase2LifeRatio, Phase2LifeRatio);
         AnomalyNPC.DynamicDRHandler = new TimedDDRHandler(
             new TimedDDRHandler.SingleDDRHandler(1f, 0f,
@@ -259,22 +264,12 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
 
     public override void SetDefaultsFinal()
     {
-        ArenaProjectile = Projectile.DummyProjectile;
-        NPC.lifeMax = 7500;
+        NPC.lifeMax = CalamityEnabled ? 9000 : 7500;
         BridgeUtils.ApplyCalamityHealthBoost(NPC);
-        CurrentAvatar = Avatar.None;
-        AvatarTimer = 0;
-        AvatarRotation = 0f;
-        Phase2ElapsedTime = 0;
-        Timer5 = 0;
-        IsSummoningHands = false;
     }
 
-    public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
-    {
-        const float VanillaExpertLifeMultiplier = 2f;
-        NPC.lifeMax = (int)MathF.Round(NPC.lifeMax / (VanillaExpertLifeMultiplier * 1.5f) / bossAdjustment / 10f) * 10;
-    }
+    public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) =>
+        TONPCUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
 
     public override bool PreAI()
     {

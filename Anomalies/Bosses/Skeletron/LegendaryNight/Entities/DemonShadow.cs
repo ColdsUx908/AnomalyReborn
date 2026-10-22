@@ -1,6 +1,6 @@
 using Transoceanic.DataStructures.Rendering;
 
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class DemonShadow : AnomalyModProjectile
 {

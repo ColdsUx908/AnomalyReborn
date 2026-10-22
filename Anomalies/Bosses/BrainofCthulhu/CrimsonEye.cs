@@ -1,5 +1,4 @@
 using Anomalies.Assets.Effects;
-using Terraria.Graphics.Shaders;
 
 namespace Anomalies.Bosses.BrainofCthulhu;
 

@@ -24,6 +24,8 @@ float3 GetColor(float2 screenCoords)
 float4 Main(float4 screenPos : VPOS, float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
 {
     float2 screenCoords = (screenPos.xy - uPosition) / uScreenResolution;
+    // Preserve the 16:9 pattern scale while removing viewport aspect distortion.
+    screenCoords.x *= (uScreenResolution.x / uScreenResolution.y) / (16.0 / 9.0);
     float alpha = tex2D(uImage0, coords).a;
     float3 gradientColor = GetColor(screenCoords);
     return float4(gradientColor, 1.0) * alpha * sampleColor;

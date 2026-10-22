@@ -1,6 +1,6 @@
 using Anomalies.GameContents.Buffs;
 
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public static class LegendaryNightDamage
 {

@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 // ai[0]：目标玩家（1-based）；ai[1]：计时；ai[2]：铜/银/金/铂金币类型。
 public sealed class CoinRoulette : AnomalyModProjectile

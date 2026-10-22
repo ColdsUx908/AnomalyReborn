@@ -1,7 +1,9 @@
-﻿namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class FallingStar : AnomalyModProjectile
 {
+    public override string Texture => LegendaryNightHandler.LegendaryNightPath + "Entities/FallingStar";
+
     /// <summary>拖尾类型：0 无拖尾，1 蓝白光尾，2 金色轨迹拖尾。</summary>
     public int TrailType;
 

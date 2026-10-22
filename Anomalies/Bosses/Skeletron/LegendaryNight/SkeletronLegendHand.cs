@@ -1,6 +1,4 @@
-﻿using Anomalies.DataStructures;
-
-namespace Anomalies.Bosses.Skeletron.LegendaryNight;
+﻿namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand>
 {
@@ -24,6 +22,8 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
     // 保留原版手的 ai 布局：ai[0] 左右侧，ai[1] 头部索引，ai[2] 动作，ai[3] 待机计时。
     public NPC Master => NPC.Master;
     public override int ApplyingType => NPCID.SkeletronHand;
+
+    public override decimal Priority => 10m;
     public override bool ShouldProcess
     {
         get
@@ -52,20 +52,23 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
 
     public override void SetDefaultsFinal()
     {
-        NPC.lifeMax = 3750;
+        NPC.lifeMax = 1500;
         NPC.defense = 9999;
-        NPC.chaseable = false;
     }
 
     public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
     {
         modifiers.SetMaxDamage(1);
-        modifiers.ModifyHitInfo += static (ref NPC.HitInfo hit) => hit.Damage = 1;
+        modifiers.ModifyHitInfo += static (ref hit) => hit.Damage = 1;
     }
 
     public override bool PreAI()
     {
         using BossNetUpdateScope netUpdate = new(NPC);
+
+        //手部无敌，且不可追踪
+        NPC.chaseable = false;
+        NPC.dontTakeDamage = true;
 
         if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master) || master.Anomaly.CustomAIType != 1)
         {
@@ -309,7 +312,7 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
             if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master))
                 return 0f;
             SkeletronLegendHead head = SkeletronLegendHead.GetInstance(master);
-        if (head.Mechanic2Active)
+            if (head.Mechanic2Active)
             {
                 int strike = SkeletronLegendHead.Mechanic2Data.GetStrikeIndex(head.Mechanic2Age);
                 int remaining = SkeletronLegendHead.Mechanic2Data.GetStrikeTime(strike) - head.Mechanic2Age;

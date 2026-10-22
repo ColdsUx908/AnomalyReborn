@@ -1,9 +1,11 @@
-﻿using Anomalies.GameContents;
+using Anomalies.GameContents;
 
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Summoning;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class FallenStarEssence : AnomalyModItem
 {
+    public override string Texture => LegendaryNightHandler.LegendaryNightPath + "Summoning/FallenStarEssence";
+
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
 
     public override void SetDefaults()

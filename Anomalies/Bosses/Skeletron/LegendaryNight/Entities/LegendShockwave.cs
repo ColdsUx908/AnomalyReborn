@@ -1,6 +1,6 @@
-﻿using Anomalies.GameContents.Base;
+using Anomalies.GameContents.Base;
 
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class LegendShockwave : BaseShockwaveProjectile, IContentLoader
 {

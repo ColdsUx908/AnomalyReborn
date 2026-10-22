@@ -505,24 +505,24 @@ public sealed partial class BrainofCthulhu
                 {
                     Vector2 spawnPos = Target.Center;
                     int i = 0;
-                    Outer:
-                        for (i = 0; i <= 32; i++)
+                Outer:
+                    for (i = 0; i <= 32; i++)
+                    {
+                        spawnPos = Target.Center + Main.rand.NextVector2Circular(256, 256);
+                        if (Collision.IsWorldPointSolid(spawnPos))
+                            continue;
+                        foreach (Projectile p in Projectile.ActiveProjectiles)
                         {
-                            spawnPos = Target.Center + Main.rand.NextVector2Circular(256, 256);
-                            if (Collision.IsWorldPointSolid(spawnPos))
+                            if (p.type != ModContent.ProjectileType<CrimsonEye>())
                                 continue;
-                            foreach (Projectile p in Main.ActiveProjectiles)
-                            {
-                                if (p.type != ModContent.ProjectileType<CrimsonEye>())
-                                    continue;
-                                Rectangle hitbox = new((int)spawnPos.X - 50, (int)spawnPos.Y - 18, 100, 36);
-                                if (p.Hitbox.Intersects(hitbox))
-                                    continue Outer;
-                            }
-
-                            if (Collision.CanHitLine(spawnPos, 1, 1, Target.position, Target.width, Target.height))
-                                break;
+                            Rectangle hitbox = new((int)spawnPos.X - 50, (int)spawnPos.Y - 18, 100, 36);
+                            if (p.Hitbox.Intersects(hitbox))
+                                continue Outer;
                         }
+
+                        if (Collision.CanHitLine(spawnPos, 1, 1, Target.position, Target.width, Target.height))
+                            break;
+                    }
 
                     if (i == 32)
                         spawnPos = Target.Center;
@@ -565,7 +565,7 @@ public sealed partial class BrainofCthulhu
                         NPC.velocity *= 0.9f;
                         if (Time == CrimsonEyeAttackDuration)
                         {
-                            foreach (Projectile p in Main.ActiveProjectiles)
+                            foreach (Projectile p in Projectile.ActiveProjectiles)
                             {
                                 if (p.type != ModContent.ProjectileType<CrimsonEye>())
                                     continue;
@@ -700,7 +700,7 @@ public sealed partial class BrainofCthulhu
                     GenericSparkle sparkle = new(NPC.Center + new Vector2(16, -8), Vector2.Zero, Color.Yellow, Color.Orange, 2f, 16, needed: true);
                     ParticleHandler.SpawnParticle(sparkle);
                     NPC.netUpdate = true;
-                    foreach (NPC n in Main.ActiveNPCs)
+                    foreach (NPC n in NPC.ActiveNPCs)
                         if (n.type == ModContent.NPCType<BrainIllusion>())
                             n.netUpdate = true;
                 }
@@ -812,7 +812,7 @@ public sealed partial class BrainofCthulhu
                 }
                 else if (startTime >= 180 + IllusionDashSpinDuration + 30 + IllusionDashFakeoutTeleportDuration + 30)
                 {
-                    foreach (NPC n in Main.ActiveNPCs)
+                    foreach (NPC n in NPC.ActiveNPCs)
                         if (n.type == ModContent.NPCType<BrainIllusion>())
                             n.active = false;
                     SetupForNextAttack();
@@ -826,7 +826,7 @@ public sealed partial class BrainofCthulhu
             {
                 if (Time == 90)
                 {
-                    foreach (Projectile p in Main.ActiveProjectiles)
+                    foreach (Projectile p in Projectile.ActiveProjectiles)
                     {
                         if (!p.friendly)
                             continue;
@@ -838,7 +838,9 @@ public sealed partial class BrainofCthulhu
                     int brainAngleSlot = Main.rand.Next(0, IllusionTrickAngleGroups);
                     int brainDistSlot = Main.rand.Next(0, IllusionTrickGroupSize);
                     if (Main.netMode != NetmodeID.MultiplayerClient)
+                    {
                         for (int a = 0; a < IllusionTrickAngleGroups; a++)
+                        {
                             for (int d = 0; d < IllusionTrickGroupSize; d++)
                             {
                                 if (a != brainAngleSlot || d != brainDistSlot)
@@ -848,6 +850,8 @@ public sealed partial class BrainofCthulhu
                                         entity.ai[1] = FalseBrain.TimeDivisor / IllusionTrickGroupSize * d;
                                     });
                             }
+                        }
+                    }
 
                     AttackTime = (int)(FalseBrain.TimeDivisor / IllusionTrickGroupSize * brainDistSlot);
                     AttackRotation = MathHelper.TwoPi / IllusionTrickAngleGroups * brainAngleSlot;
@@ -923,7 +927,7 @@ public sealed partial class BrainofCthulhu
                         AttackList.Clear();
                         foreach (int p in targets)
                             AttackList.Add((byte)p);
-                        foreach (NPC n in Main.ActiveNPCs)
+                        foreach (NPC n in NPC.ActiveNPCs)
                         {
                             if (n.type != ModContent.NPCType<FalseBrain>())
                                 continue;

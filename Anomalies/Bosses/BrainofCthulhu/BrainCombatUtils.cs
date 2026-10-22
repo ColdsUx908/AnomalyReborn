@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using Terraria.Enums;
 
 namespace Anomalies.Bosses.BrainofCthulhu;
 
@@ -70,7 +69,7 @@ public struct BrainTargetingParameters : IEquatable<BrainTargetingParameters>
     public static BrainTargetingParameters Defaults => new();
     public static BrainTargetingParameters BossDefaults => new(true);
 
-#region Equality Operators
+    #region Equality Operators
     public static bool operator ==(BrainTargetingParameters ctp1, BrainTargetingParameters ctp2)
     {
         bool targetingCentersEqual = (ctp1.targetingCenter is null && ctp2.targetingCenter is null) || ctp1.targetingCenter == ctp2.targetingCenter;
@@ -90,7 +89,7 @@ public struct BrainTargetingParameters : IEquatable<BrainTargetingParameters>
 
     // Visual Studio complains if this is not here. I do not know why.
     public override readonly int GetHashCode() => base.GetHashCode();
-#endregion
+    #endregion
 }
 
 internal static class BrainCombatUtils
@@ -316,7 +315,7 @@ internal static class BrainCombatUtils
     public static int CountProjectiles(int type)
     {
         int count = 0;
-        foreach (Projectile p in Main.ActiveProjectiles)
+        foreach (Projectile p in Projectile.ActiveProjectiles)
             if (p.type == type)
                 count++;
         return count;

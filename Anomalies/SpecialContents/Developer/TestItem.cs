@@ -1,4 +1,4 @@
-using Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+using Anomalies.Bosses.Skeletron.LegendaryNight;
 
 #if DEBUG
 using Anomalies.GameContents;

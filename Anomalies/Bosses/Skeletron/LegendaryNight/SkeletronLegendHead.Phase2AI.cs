@@ -1,6 +1,3 @@
-using Anomalies.Bosses.Skeletron.LegendaryNight.Arena;
-using Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
-
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed partial class SkeletronLegendHead

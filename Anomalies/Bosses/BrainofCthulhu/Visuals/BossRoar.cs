@@ -2,7 +2,7 @@ namespace Anomalies.Bosses.BrainofCthulhu;
 
 public class BossRoar : Particle
 {
-    public override string TexturePath => "Anomalies/Bosses/BrainofCthulhu/Assets/Particles/RoarPulse";
+    public override string TexturePath => "Anomalies/Bosses/BrainofCthulhu/Assets/RoarPulse";
 
     private float OriginalScale;
     private float FinalScale;

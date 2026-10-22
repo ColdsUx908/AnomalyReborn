@@ -1,5 +1,3 @@
-using Anomalies.DataStructures;
-
 namespace Anomalies.Bosses.BrainofCthulhu;
 
 public sealed partial class BrainofCthulhu
@@ -71,28 +69,24 @@ public sealed partial class BrainofCthulhu
                 return false;
         }
 
-        if (CurrentBehavior == Behavior.Stunned)
-            NPC.HitSound = StunHitSound;
-        else
-            NPC.HitSound = SoundID.NPCHit9;
-        if (!phase2 && CreeperHPRatio == 0f && CurrentBehavior != Behavior.Stunned && CurrentBehavior >= Behavior.Phase1Idle)
-        {
-            CurrentBehavior = Behavior.Stunned;
-            Time = 0;
-            ResetAttackValues();
-            foreach (Projectile p in Main.ActiveProjectiles)
-            {
-                if (p.type != ModContent.ProjectileType<TelekineticEnemyGrab>())
-                    continue;
-                p.ai[1] = 0;
-            }
-        }
-
-        if (CurrentBehavior == Behavior.Stunned && (NPC.life / (float)NPC.lifeMax) < Phase2HealthGate)
+        // Protect the creeper phase, phase transition, and death sequence.
+        NPC.dontTakeDamage = CurrentPhase is Phase.Phase1 or Phase.Transition or Phase.Death;
+        NPC.HitSound = SoundID.NPCHit9;
+        if (CurrentPhase == Phase.Phase1 && !Main.npc.Any(n => n.active && n.type == NPCID.Creeper && !n.GetCreeperBehavior().IsPhantom))
         {
             CurrentBehavior = Behavior.Phase2TransitionClosed;
             Time = 0;
             TeleportTime = 0;
+            ResetAttackValues();
+            NPC.dontTakeDamage = true;
+            ShieldOpacity = 0f;
+            foreach (NPC creeper in NPC.ActiveNPCs)
+            {
+                if (creeper.type != NPCID.Creeper) continue;
+                creeper.damage = 0;
+                creeper.velocity = Vector2.Zero;
+                creeper.netUpdate = true;
+            }
         }
 
         switch (CurrentPhase)
@@ -101,7 +95,6 @@ public sealed partial class BrainofCthulhu
                 SpawnAnimation();
                 break;
             case Phase.Phase1:
-            case Phase.Stunned:
                 Phase1AI();
                 break;
             case Phase.Transition:
@@ -131,11 +124,12 @@ public sealed partial class BrainofCthulhu
                 BrainCombatUtils.BrainTargeting(NPC, options);
             }
 
-            Player target = Main.player[NPC.target];
-            NPC.Center = target.Center + Vector2.UnitY * 900;
+            NPC.velocity = Vector2.Zero;
             NPC.netUpdate = true;
-            NPC.dontTakeDamage = true;
+            NPC.dontTakeDamage = false;
             CurrentBehavior = Behavior.SurfaceSpawnAnimation;
+            BoCAfterImages = [];
+            TeleportDuration = 60;
             PreviousAttack = Behavior.Phase1Idle;
             SpawnDelay = (SummonedViaItem || BrainCalamityBridge.BossRushActive) ? 2 : 60;
             if (SummonedViaItem || BrainCalamityBridge.BossRushActive)
@@ -157,144 +151,60 @@ public sealed partial class BrainofCthulhu
         void SpawnAnimation()
         {
             NPC.damage = 0;
+            NPC.dontTakeDamage = false;
+            NPC.velocity = Vector2.Zero;
             foreach (Player p in Main.ActivePlayers)
                 BrainCalamityBridge.ResetAdrenaline(p);
-            if (SpawnTime != 0) //BoC should begin appearing
+            if (Time < 60)
             {
-                float d = Main.LocalPlayer.DistanceSQ(NPC.Center);
-                float distanceScaleFactor = 1;
-                if (d > 592900) //770^2
-                    distanceScaleFactor = 1 / (1 + (((float)Math.Sqrt(d) - 770) / 32f));
-                // Time spent in the spawn animation is shortened when summoned via item
-                float spawnAnimTimeReduction = (SummonedViaItem || BrainCalamityBridge.BossRushActive) ? 120 : 0;
-                float spawnCounter = Time - Math.Abs(SpawnTime) + spawnAnimTimeReduction;
-                if (spawnCounter < 180)
+                // Fade out at the spawn point, relocate while invisible, then fade in.
+                TeleportDuration = 60;
+                TeleportTime = Time <= 30 ? Time : 60 - Time;
+                NPC.Opacity = 1f - TeleportTime / 30f;
+                NPC.dontTakeDamage = true;
+                if (Time == 30 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
-                    float shakeIntensity = BrainCombatUtils.CircOutEasing(spawnCounter / 180f, 1) * 3f * distanceScaleFactor;
-                    Main.LocalPlayer.SetScreenshake(shakeIntensity);
-                    for (int i = 0; i < shakeIntensity; i++)
-                    {
-                        Point start = Target.Center.ToTileCoordinates() + new Point(Main.rand.Next(-64, 65), 48);
-                        for (int j = 0; j < 96; j++)
-                        {
-                            Point current = start - new Point(0, j);
-                            if (!Framing.GetTileSafely(current).IsTileSolid() && Framing.GetTileSafely(current - new Point(0, 1)).TileType == TileID.Crimstone)
-                                Dust.NewDustAction(current.ToWorldCoordinates(8, -8), 16, 16, DustID.Crimstone, new Vector2(0, 3));
-                        }
-                    }
-                }
-
-                if (spawnCounter == 180)
-                    NPC.velocity = Vector2.UnitY * -50;
-                else if (spawnCounter > 180)
-                {
-                    NPC.velocity *= 0.955f;
-                    if (spawnCounter == 240)
-                    {
-                        SoundEngine.PlaySound(RoarSound, NPC.Center);
-                        if (Main.netMode != NetmodeID.MultiplayerClient)
-                            TOLocalizationUtils.ChatLocalizedTextFormat("Announcement.HasAwoken", new Color(175, 75, 255), NPC.TypeName);
-                    }
-
-                    if (spawnCounter is> 240 and < 390)
-                    {
-                        BrainOfCthulhuSystem.ScreenBlurStrength = 0.5f; // 0.5f;
-                        if (spawnCounter < 250)
-                            BrainOfCthulhuSystem.ScreenBlurStrength = MathHelper.Lerp(0, 0.5f, (spawnCounter - 240) / 10f);
-                        NPC.frameCounter += 1f;
-                        BoCDrawOffset = Main.rand.NextVector2Circular(4, 4);
-                        for (int i = 0; i < 3; i++)
-                        {
-                            Point start = Target.Center.ToTileCoordinates() + new Point(Main.rand.Next(-64, 65), 48);
-                            for (int j = 0; j < 96; j++)
-                            {
-                                Point current = start - new Point(0, j);
-                                if (!Framing.GetTileSafely(current).IsTileSolid() && Framing.GetTileSafely(current - new Point(0, 1)).TileType == TileID.Crimstone)
-                                    Dust.NewDustAction(current.ToWorldCoordinates(8, -8), 16, 16, DustID.Crimstone, new Vector2(0, 3));
-                            }
-                        }
-
-                        Main.LocalPlayer.SetScreenshake(6 * BrainOfCthulhuSystem.ScreenBlurStrength * distanceScaleFactor);
-                        if (spawnCounter % 15 == 0)
-                        {
-                            BossRoar pulse = new(NPC.Center, Color.Black, Main.rand.NextFloatDirection(), 0.1f, 3f, 30);
-                            ParticleHandler.SpawnParticle(pulse);
-                        }
-                    }
-                    else if (spawnCounter is >= 390 and <= 420)
-                    {
-                        BrainOfCthulhuSystem.ScreenBlurStrength = MathHelper.Lerp(0.5f, 0f, (spawnCounter - 390) / 30f);
-                        BoCDrawOffset *= 0.75f;
-                    }
-                    else if (spawnCounter > 420)
-                    {
-                        BrainOfCthulhuSystem.ScreenBlurStrength = 0f;
-                        BoCDrawOffset = Vector2.Zero;
-                        CurrentBehavior = Behavior.Phase1Idle;
-                        NPC.damage = NPC.defDamage;
-                        ResetAttackValues();
-                        Time = -1;
-                        SpawnTime = -1;
-                        Main.musicFade[Main.curMusic] = 1f;
-                        return;
-                    }
-                }
-            }
-
-            if (CurrentLocalPhase < CreeperCount)
-            {
-                if (SpawnTime == 0)
-                {
-                    NPC.Center = Target.Center + Vector2.UnitY * 900;
+                    NPC.Center = Target.Center - Vector2.UnitY * 300;
+                    NPC.netOffset = Vector2.Zero;
                     NPC.netUpdate = true;
-                }
-
-                if (SpawnDelay == 1 && Main.netMode != NetmodeID.MultiplayerClient)
-                {
-                    bool targetLeft = CurrentLocalPhase % 2 == 0;
-                    List<NPC> creepers = [..Main.npc.Where(n => n.active && n.type == NPCID.Creeper && n.GetCreeperBehavior().Time == -1 && n.GetCreeperBehavior().CreeperID % 2 == (targetLeft ? 0 : 1))];
-                    if (creepers.Count > 0)
+                    foreach (NPC creeper in NPC.ActiveNPCs)
                     {
-                        AttackTime = creepers[Main.rand.Next(creepers.Count)].whoAmI;
-                    }
-                    else
-                    {
-                        creepers = [..Main.npc.Where(n => n.active && n.type == NPCID.Creeper && n.GetCreeperBehavior().Time == -1)];
-                        AttackTime = creepers.Count == 0 ? -1 : creepers[Main.rand.Next(creepers.Count)].whoAmI;
-                    }
-
-                    NPC.netUpdate = true;
-                }
-
-                if (SpawnDelay <= 0)
-                {
-                    if (AttackTime != -1)
-                    {
-                        NPC creeper = Main.npc[(int)AttackTime];
-                        creeper.GetCreeperBehavior().Time = 1;
+                        if (creeper.type != NPCID.Creeper)
+                            continue;
+                        creeper.Center = NPC.Center;
+                        creeper.velocity = Vector2.Zero;
+                        creeper.netOffset = Vector2.Zero;
                         creeper.netUpdate = true;
-                        CurrentLocalPhase++;
-                        if (SummonedViaItem || BrainCalamityBridge.BossRushActive)
-                            SpawnDelay = 1;
-                        else
-                            SpawnDelay = CurrentLocalPhase switch
-                            {
-                                1 => 90,
-                                2 or 3 or 4 => 24,
-                                5 => 60,
-                                6 or 7 or 8 => 24,
-                                9 => 60,
-                                _ => 4,
-                            };
                     }
-                    else
-                        SpawnTime = Time;
                 }
-                else
-                    SpawnDelay--;
+                return;
             }
-            else if (SpawnTime == 0)
-                SpawnTime = Time;
+            TeleportTime = 0;
+            NPC.Opacity = 1f;
+            float roarTime = Time - 60;
+            if (roarTime == 0)
+            {
+                SoundEngine.PlaySound(RoarSound, NPC.Center);
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    TOLocalizationUtils.ChatLocalizedTextFormat("Announcement.HasAwoken", new Color(175, 75, 255), NPC.TypeName);
+            }
+            if (roarTime < 60)
+            {
+                NPC.frameCounter++;
+                BoCDrawOffset = Main.rand.NextVector2Circular(4, 4) * (1f - roarTime / 60f);
+                Main.LocalPlayer.SetScreenshake(3f * (1f - roarTime / 60f));
+                if (roarTime % 15 == 0)
+                    ParticleHandler.SpawnParticle(new BossRoar(NPC.Center, Color.Black, Main.rand.NextFloatDirection(), 0.1f, 3f, 30));
+                return;
+            }
+            BoCDrawOffset = Vector2.Zero;
+            CurrentBehavior = Behavior.Phase1Idle;
+            NPC.dontTakeDamage = true;
+            NPC.damage = NPC.defDamage;
+            ResetAttackValues();
+            Time = -1;
+            SpawnTime = -1;
+            Main.musicFade[Main.curMusic] = 1f;
         }
 
         void DeathAnimation()
@@ -396,7 +306,7 @@ public sealed partial class BrainofCthulhu
         options.targetType = BrainTargetType.ForceSwitch;
         List<int> available = GetAllValidTargets(NPC.Center);
         if (available.Any(p => !TargetsSet.Contains(p)))
-            options.excludedPlayers = [..TargetsSet];
+            options.excludedPlayers = [.. TargetsSet];
         else
         {
             TargetsSet.Clear();

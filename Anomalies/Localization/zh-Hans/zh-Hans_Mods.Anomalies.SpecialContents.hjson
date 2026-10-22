@@ -19,13 +19,6 @@ Developer: {
 	ColdheartIcicleProj.DisplayName: 寒心冰柱
 	ColdheartIcicleSnowflake.DisplayName: 寒心雪降
 
-	Permafrost: {
-		Spawn: 至尊大法师，永冻已苏醒！
-		Welcome1: 感谢游玩Calamity Anomalies！
-		Welcome2: 现在你要面对的是，真正的最终挑战。
-		Beginning: 将你的真正实力展示在我面前！
-	}
-
 	TestItem: {
 		DisplayName: 测试物品
 		Tooltip: 仅用于测试
@@ -38,6 +31,15 @@ Developer: {
 			太阳燃尽万物，轮回编织因果；生命绽放新芽，死亡收割终局；神圣裁决罪孽，恒星坍缩成核
 			六相轮转，终焉日升
 			'''
+		EventideReunionSelection.DisplayName: 落日遗逢选择
+		EventideReunionSunExplosion.DisplayName: 日冕耀斑
+		EventideReunionDeathWave.DisplayName: 寂灭镰波
+		EventideReunionDeathSoul.DisplayName: 收割之魂
+
+		EventideReunionDeathMark: {
+			DisplayName: 死亡印记
+			Description: 受到的伤害乘以1.15；生命低于25%的非Boss敌人将被斩杀
+		}
 	}
 }
 

@@ -29,10 +29,12 @@
 
     <ItemGroup>
       <Folder Include="GameContents\MusicBoxes\" />
+      <Folder Include="SpecialContents\Developer\EventideReunion\Runes\" />
     </ItemGroup>
 
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-      <Exec Command="call &quot;$(ProjectDir)PreBuild\EffectCompiler\EffectCompiler.exe&quot;" />
+	  <!--暂时禁用编译器的统一调用站点，需要修改着色器时自行调用编译器-->
+      <!--<Exec Command="call &quot;$(ProjectDir)PreBuild\EffectCompiler\EffectCompiler.exe&quot;" />-->
     </Target>
 
 </Project>

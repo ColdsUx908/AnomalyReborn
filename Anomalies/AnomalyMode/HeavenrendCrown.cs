@@ -1,6 +1,4 @@
-﻿using Anomalies.DataStructures;
-using Anomalies.GameContents;
-using Anomalies.Visuals;
+﻿using Anomalies.GameContents;
 using Terraria.GameContent.Creative;
 
 namespace Anomalies.AnomalyMode;

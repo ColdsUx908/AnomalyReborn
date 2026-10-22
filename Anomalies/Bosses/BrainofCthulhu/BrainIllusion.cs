@@ -87,7 +87,7 @@ public class BrainIllusion : AnomalyModNPC
 
         Player target = Main.player[NPC.target];
         NPC.GivenName = brain.GivenOrTypeName + $": {brain.life}/{brain.lifeMax}";
-#region Attack Start
+        #region Attack Start
         if (Time < 30)
         {
             TeleportDuration = 30;
@@ -102,7 +102,7 @@ public class BrainIllusion : AnomalyModNPC
 
             NPC.Opacity = 1 - (TeleportTime / (TeleportDuration / 2f));
         }
-#endregion
+        #endregion
         else
         {
             if (Time == 30)
@@ -199,7 +199,7 @@ public class BrainIllusion : AnomalyModNPC
             //Color glowColor = Color.White * (teleportCounter / 30f);
             scale = Vector2.Lerp(Vector2.One, new Vector2(0.5f + ((float)Math.Cos(Time / (TeleportDuration / 2f) * MathHelper.TwoPi) / 2f + 0.5f), 0.5f + ((float)Math.Sin(Time / (TeleportDuration / 2f) * MathHelper.TwoPi) / 2f + 0.5f)), BrainCombatUtils.SineInOutEasing(TeleportTime / (TeleportDuration / 2f), 1));
             spriteBatch.Draw(texture, drawPos, frame, Lighting.GetColor(NPC.Center.ToTileCoordinates()) * NPC.Opacity * opacityMult, NPC.rotation, frame.Size() * 0.5f, scale * NPC.scale, 0, 0);
-        //spriteBatch.Draw(GetBrainGlow(), drawPos, npc.frame, glowColor, npc.rotation, npc.frame.Size() * 0.5f, scale, 0, 0);
+            //spriteBatch.Draw(GetBrainGlow(), drawPos, npc.frame, glowColor, npc.rotation, npc.frame.Size() * 0.5f, scale, 0, 0);
         }
         else
             spriteBatch.Draw(texture, drawPos, frame, Lighting.GetColor(NPC.Center.ToTileCoordinates()) * NPC.Opacity * opacityMult, NPC.rotation, frame.Size() * 0.5f, scale * NPC.scale, 0, 0);

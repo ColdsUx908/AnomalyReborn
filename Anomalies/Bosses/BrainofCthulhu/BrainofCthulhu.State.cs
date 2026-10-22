@@ -110,6 +110,8 @@ public sealed partial class CreeperAI
         AnomalyNPC.AIChanged32[slot] = true;
     }
 
+    public bool IsPhantom { get => Read(6) != 0; set => Write(6, value ? 1 : 0); }
+
     public float FlowTime { get => (float)Read(0); set => Write(0, value); }
     public int Time { get => (int)Read(1); set => Write(1, value); }
     public int CachedValue2 { get => (int)Read(2); set => Write(2, value); }

@@ -3,7 +3,7 @@ namespace Anomalies.Bosses.BrainofCthulhu;
 public class TelekineticEnemyGrab : AnomalyModProjectile
 {
     public override string LocalizationCategory => "Bosses.BrainofCthulhu";
-    public override string Texture => "Anomalies/Bosses/BrainofCthulhu/Assets/Particles/BloomRing";
+    public override string Texture => "Anomalies/Bosses/BrainofCthulhu/Assets/BloomRing";
 
     private BezierCurve curve = null;
     public int throwSign
@@ -68,7 +68,7 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
         Projectile.Opacity = 1f;
         Projectile.tileCollide = false;
         Projectile.timeLeft = 1200;
-        Projectile.damage = 10;
+        Projectile.damage = BrainofCthulhu.TelekineticEnemyGrabDamage;
         Projectile.hostile = true;
         if (NPC.crimsonBoss != -1)
             MyTarget = Main.npc[NPC.crimsonBoss].target;

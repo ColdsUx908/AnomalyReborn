@@ -1,8 +1,7 @@
-using Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
 using Anomalies.GameContents.Base;
 using Anomalies.GameContents.Buffs;
 
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Arena;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class LegendaryNightPhase2Arena : BaseRingArenaProjectile
 {

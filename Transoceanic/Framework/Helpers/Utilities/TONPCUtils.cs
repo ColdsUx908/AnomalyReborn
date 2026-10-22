@@ -1,10 +1,55 @@
-﻿namespace Transoceanic.Framework.Helpers;
+﻿using Mono.Cecil.Cil;
+using MonoMod.Utils;
+
+namespace Transoceanic.Framework.Helpers;
 
 /// <summary>
 /// 提供与 NPC 相关的便捷工具方法。
 /// </summary>
 public static class TONPCUtils
 {
+    private static readonly Lazy<Action<NPC, int, float, float, float>> VanillaMultiplayerScaling = new(CreateVanillaMultiplayerScaling);
+
+    private static Action<NPC, int, float, float, float> CreateVanillaMultiplayerScaling()
+    {
+        // TODO: 升级 tModLoader 时复核 ScaleStats_ApplyMultiplayerStats 的名称、签名及 IL；当前按 NPCLoader 缩放钩子的四个参数移除调用。
+        using DynamicMethodDefinition method = new(PublicizerHandler.GetInstanceMethod(typeof(NPC), "ScaleStats_ApplyMultiplayerStats"));
+        // 仅运行程序集中的原版逻辑，避免探测倍率时递归调用模组缩放钩子。
+        Mono.Collections.Generic.Collection<Instruction> instructions = method.Definition.Body.Instructions;
+        Instruction hook = instructions.Single(i => i.OpCode == OpCodes.Call
+            && i.Operand is Mono.Cecil.MethodReference m && m.DeclaringType.FullName == typeof(NPCLoader).FullName
+            && m.Name == nameof(NPCLoader.ApplyDifficultyAndPlayerScaling));
+        int index = instructions.IndexOf(hook);
+        hook.OpCode = OpCodes.Pop;
+        hook.Operand = null;
+        for (int i = 0; i < 3; i++)
+            instructions.Insert(++index, Instruction.Create(OpCodes.Pop));
+        return method.Generate().CreateDelegate<Action<NPC, int, float, float, float>>();
+    }
+
+    /// <summary>
+    /// 从当前 tModLoader 程序集的原版逻辑获取单人专家血量倍率，不调用模组钩子。
+    /// </summary>
+    public static float GetVanillaExpertLifeMultiplier(int npcType)
+    {
+        // TODO: 升级 tModLoader 时复核专家血量缩放流程；当前倍率按 EnemyMaxLifeMultiplier 与单人原版多人缩放结果相乘计算。
+        const int ProbeLife = 1000000;
+        NPC probe = new() { type = npcType, lifeMax = ProbeLife };
+        VanillaMultiplayerScaling.Value(probe, 1, 1f, 1f, 1f);
+        return GameModeData.ExpertMode.EnemyMaxLifeMultiplier * probe.lifeMax / ProbeLife;
+    }
+
+    /// <summary>
+    /// 在异象 Boss 的 ApplyDifficultyAndPlayerScaling 中撤销单人专家倍率、大师的 1.5 倍血量
+    /// 和 bossAdjustment，保留多人 balance，并将血量四舍五入到十的倍数。
+    /// </summary>
+    public static void ApplyAnomalyBossDifficultyAndPlayerScaling(NPC npc, float bossAdjustment)
+    {
+        // TODO: 升级 tModLoader 时复核缩放钩子的执行时机、大师相对专家的 1.5 倍血量及 bossAdjustment 的应用方式，再调整抵消公式。
+        float vanillaExpertLifeMultiplier = GetVanillaExpertLifeMultiplier(npc.type);
+        npc.lifeMax = (int)MathF.Round(npc.lifeMax / (vanillaExpertLifeMultiplier * 1.5f) / bossAdjustment / 10f) * 10;
+    }
+
     /// <summary>
     /// 判断当前 NPC 是否处于单独击败机械双子魔眼（The Twins）中某一只的状态（即另一只已死亡）。
     /// </summary>

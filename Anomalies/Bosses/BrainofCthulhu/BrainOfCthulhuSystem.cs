@@ -1,6 +1,5 @@
 using Anomalies.Assets.Effects;
 using Terraria.Graphics.Effects;
-using Terraria.Graphics.Shaders;
 
 namespace Anomalies.Bosses.BrainofCthulhu;
 
@@ -13,6 +12,7 @@ public class BrainOfCthulhuSystem : ModSystem
     private static Texture2D tendrilGlow = null;
     private static Texture2D brainGlow = null;
     private static Texture2D creeperGlow = null;
+    private static Texture2D bloodScytheMask = null;
     internal static float ScreenBlurStrength = 0f;
     internal static (int creeper, List<VerletSimulatedSegment> tendril, int reelInTimer)[] VerletTendrils;
     private static int previousMusic = -1;
@@ -97,6 +97,27 @@ public class BrainOfCthulhuSystem : ModSystem
             brain.timeLeft *= 20;
             previousMusic = Main.curMusic;
         });
+    }
+
+    internal static Texture2D GetBloodScytheMask()
+    {
+        if (bloodScytheMask == null)
+        {
+            Texture2D source = ModContent.Request<Texture2D>("Anomalies/Bosses/BrainofCthulhu/Assets/VerticalSmearRagged").Value;
+            Color[] pixels = new Color[source.Width * source.Height];
+            source.GetData(pixels);
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                // This particle texture stores its silhouette in RGB on black.
+                // RGB is already premultiplied by source alpha: use brightness
+                // as coverage and emit a premultiplied white alpha mask.
+                byte coverage = Math.Max(pixels[i].R, Math.Max(pixels[i].G, pixels[i].B));
+                pixels[i] = new Color(coverage, coverage, coverage, coverage);
+            }
+            bloodScytheMask = new Texture2D(Main.graphics.GraphicsDevice, source.Width, source.Height);
+            bloodScytheMask.SetData(pixels);
+        }
+        return bloodScytheMask;
     }
 
     internal static Texture2D GetTendrilGlow()
@@ -195,85 +216,44 @@ public class BrainOfCthulhuSystem : ModSystem
         {
             if (NPC.crimsonBoss != -1 && AnomalySharedData.Anomaly && Main.npc[NPC.crimsonBoss].GetBrainBehavior().CurrentBehavior <= BrainofCthulhu.Behavior.Phase2TransitionOpen)
             {
-                bool shouldSpawnTendrilIfNeeded = Main.npc[NPC.crimsonBoss].GetBrainBehavior().CurrentBehavior == BrainofCthulhu.Behavior.Stunned;
-                //Handles sim for tendrils attached to creepers
-                int index = 0;
-                foreach ((int creeper, List<VerletSimulatedSegment> tendril, int reelInTimer) member in VerletTendrils)
+                NPC brain = Main.npc[NPC.crimsonBoss];
+                bool transitioning = brain.GetBrainBehavior().CurrentPhase == BrainofCthulhu.Phase.Transition;
+                for (int index = 0; index < VerletTendrils.Length; index++)
                 {
-                    NPC creeper = Main.npc[member.creeper];
-                    Vector2 startPoint = Main.npc[NPC.crimsonBoss].Center + Main.npc[NPC.crimsonBoss].netOffset + Vector2.UnitY * 32;
-                    float creeperRatio = index / (float)BrainofCthulhu.CreeperCount;
-                    if (index % 2 == 0)
-                        startPoint += new Vector2(MathHelper.Lerp(-24, 0, creeperRatio), 0);
-                    else
-                        startPoint += new Vector2(MathHelper.Lerp(24, 0, creeperRatio), 0);
-                    List<VerletSimulatedSegment> vTendril = VerletTendrils[index].tendril;
-                    //Tendril's creeper is dead, dangle and reel in.
+                    NPC creeper = Main.npc[VerletTendrils[index].creeper];
+                    List<VerletSimulatedSegment> segments = VerletTendrils[index].tendril;
+                    if (segments is null || segments.Count < 2)
+                        continue;
                     if (!creeper.active || creeper.type != NPCID.Creeper)
                     {
-                        float reelInTime = 180;
-                        VerletTendrils[index].reelInTimer++;
-                        float reelRatio = BrainCombatUtils.CircInEasing(VerletTendrils[index].reelInTimer / reelInTime, 1);
-                        float reelInSegementedRatio = reelRatio * 28;
-                        float segmentRatio = MathF.Truncate(reelInSegementedRatio);
-                        if (reelRatio >= 1 || VerletTendrils[index].tendril.Count <= 1)
-                        {
-                            VerletTendrils[index].tendril.Clear();
-                            index++;
-                            continue;
-                        }
-
-                        for (int i = 0; i < 28; i++)
-                        {
-                            VerletSimulatedSegment seg = vTendril[i];
-                            if (i <= reelInSegementedRatio)
-                            {
-                                seg.position = startPoint;
-                                seg.oldPosition = startPoint;
-                                seg.locked = true;
-                                continue;
-                            }
-
-                            seg.position += Main.npc[NPC.crimsonBoss].velocity;
-                            seg.oldPosition += Main.npc[NPC.crimsonBoss].velocity;
-                            if (i == MathF.Ceiling(reelRatio))
-                            {
-                                seg.position = startPoint - (Vector2.UnitY * MathHelper.Lerp(0, 16, segmentRatio));
-                            }
-
-                            seg.locked = false;
-                        }
-
-                        if (reelRatio < 0.75f && Main.rand.NextBool(3))
-                        {
-                            Vector2 dir = (vTendril[^1].position - vTendril[^2].position).SafeNormalize(Vector2.UnitY);
-                            BloodParticle p = new(vTendril[^2].position, dir.RotatedBy(Main.rand.NextFloat(-MathHelper.Pi / 10f, MathHelper.Pi / 10f)) * Main.rand.NextFloat(4f, 8f), 16, Main.rand.NextFloat(0.5f, 0.75f), Color.Red * 0.75f);
-                            ParticleHandler.SpawnParticle(p);
-                        }
-
-                        VerletSimulatedSegment.SimpleSimulation(vTendril, 16, 10, 1.5f);
-                        index++;
+                        segments.Clear();
                         continue;
                     }
-
-                    VerletTendrils[index].reelInTimer = -1;
-                    //Tendril is gone/getting reeled in, attach to newly spawned creeper.
-                    if (vTendril.Count < 28 && shouldSpawnTendrilIfNeeded)
-                    {
-                        BrainOfCthulhuSystem.VerletTendrils[index] = new(creeper.whoAmI, [], -1);
-                        for (int j = 0; j < 28; j++)
-                            BrainOfCthulhuSystem.VerletTendrils[index].tendril.Add(new(creeper.Center));
-                    }
-
+                    Vector2 startPoint = brain.Center + brain.netOffset + Vector2.UnitY * 32;
+                    float creeperRatio = index / (float)BrainofCthulhu.CreeperCount;
+                    startPoint.X += index % 2 == 0 ? MathHelper.Lerp(-24, 0, creeperRatio) : MathHelper.Lerp(24, 0, creeperRatio);
                     Vector2 endPoint = creeper.Center + creeper.netOffset;
-                    index++;
-                    if (vTendril is null || vTendril.Count == 0)
+                    if (transitioning)
+                    {
+                        // Preserve the existing curve and move its anchors without
+                        // releasing the end or injecting spring energy during the fade.
+                        Vector2 startDelta = startPoint - segments[0].position;
+                        Vector2 endDelta = endPoint - segments[^1].position;
+                        for (int i = 0; i < segments.Count; i++)
+                        {
+                            segments[i].position += Vector2.Lerp(startDelta, endDelta, i / (float)(segments.Count - 1));
+                            segments[i].oldPosition = segments[i].position;
+                        }
                         continue;
-                    vTendril[0].position = startPoint;
-                    vTendril[0].locked = true;
-                    vTendril[^1].position = endPoint;
-                    vTendril[^1].locked = true;
-                    VerletSimulatedSegment.SimpleSimulation(vTendril, 16, 10, 3);
+                    }
+                    segments[0].position = startPoint;
+                    segments[0].oldPosition = startPoint;
+                    segments[0].locked = true;
+                    segments[^1].position = endPoint;
+                    segments[^1].oldPosition = endPoint;
+                    segments[^1].locked = true;
+                    float segmentDistance = Math.Max(16f, Vector2.Distance(startPoint, endPoint) / (segments.Count - 1));
+                    VerletSimulatedSegment.SimpleSimulation(segments, segmentDistance, 10, 3, 0.85f);
                 }
             }
         }
@@ -375,6 +355,8 @@ public class BrainOfCthulhuSystem : ModSystem
         tendrilGlow?.Dispose();
         brainGlow?.Dispose();
         creeperGlow?.Dispose();
+        bloodScytheMask?.Dispose();
+        bloodScytheMask = null;
         tendrilGlow = brainGlow = creeperGlow = null;
         tendril = null;
         previousMusic = -1;

@@ -1,10 +1,12 @@
-﻿using Anomalies.Assets.Effects;
+using Anomalies.Assets.Effects;
 using Anomalies.GameContents;
 
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Summoning;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public class MemoryofAstraeus : AnomalyModItem
 {
+    public override string Texture => LegendaryNightHandler.LegendaryNightPath + "Summoning/MemoryofAstraeus";
+
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
 
     public override void SetStaticDefaults()

@@ -3,7 +3,7 @@ namespace Anomalies.Bosses.BrainofCthulhu;
 public class BloodScythe : AnomalyModProjectile
 {
     public override string LocalizationCategory => "Bosses.BrainofCthulhu";
-    public override string Texture => "Anomalies/Bosses/BrainofCthulhu/Assets/Particles/VerticalSmearRagged";
+    public override string Texture => "Anomalies/Bosses/BrainofCthulhu/Assets/VerticalSmearRagged";
 
     public Vector2 InitialVelocity
     {
@@ -43,7 +43,7 @@ public class BloodScythe : AnomalyModProjectile
         Projectile.Opacity = 1f;
         Projectile.tileCollide = false;
         Projectile.timeLeft = Lifetime;
-        Projectile.damage = 10;
+        Projectile.damage = BrainofCthulhu.BloodScytheDamage;
         Projectile.scale = 0.1f;
         Projectile.hostile = true;
         BrainCalamityBridge.EnableDefenseDamage(Projectile);
@@ -95,31 +95,56 @@ public class BloodScythe : AnomalyModProjectile
 
     public override bool PreDraw(ref Color lightColor)
     {
-        Texture2D tex = TextureAssets.Projectile[Type].Value;
-        Vector2 drawPos = Projectile.Center - Main.screenPosition;
-        Color drawColor = (ChildSafety.Disabled ? Color.Red : Main.DiscoColor)with
-        {
-            A = 0
-        };
-        for (int i = 0; i < (true ? Projectile.oldPos.Length : 1); ++i)
-        {
-            float afterimageRot = Projectile.oldRot[i];
-            drawPos = Projectile.oldPos[i] + (Projectile.Size / 2f) - Main.screenPosition + new Vector2(0f, Projectile.gfxOffY);
-            if (i != 0)
-                drawColor *= 0.9f;
-            // DO NOT REMOVE THESE "UNNECESSARY" FLOAT CASTS. THIS WILL BREAK THE AFTERIMAGES.
-            float interpolant = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
-            Main.EntitySpriteDraw(tex, drawPos, null, drawColor, afterimageRot, tex.Size() * 0.5f, Projectile.scale * interpolant, SpriteEffects.None);
-        }
-
+        DrawScythe(Projectile);
         return false;
     }
+
+    internal static void DrawScythe(Projectile projectile)
+    {
+        // Alpha blending preserves the red silhouette against bright backgrounds.
+        Transoceanic.DataStructures.Rendering.SpriteBatchSnapshot state = Main.spriteBatch.ChangeState(blendState: BlendState.AlphaBlend);
+        try
+        {
+            Texture2D texture = BrainOfCthulhuSystem.GetBloodScytheMask();
+            Vector2 origin = texture.Size() * 0.5f;
+            Color red = ChildSafety.Disabled ? new Color(255, 32, 32) : Main.DiscoColor;
+            Color outline = ChildSafety.Disabled ? new Color(110, 4, 4) : red * 0.35f;
+            Vector2 offset = projectile.Size * 0.5f - Main.screenPosition + new Vector2(0f, projectile.gfxOffY);
+            // Draw oldest first so the current blade stays crisp above its trail.
+            for (int i = projectile.oldPos.Length - 1; i >= 0; i--)
+            {
+                if (projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+                float completion = 1f - i / (float)projectile.oldPos.Length;
+                float opacity = completion * completion * 0.6f * projectile.Opacity;
+                Vector2 position = projectile.oldPos[i] + offset;
+                float scale = projectile.scale * completion;
+                Main.spriteBatch.Draw(texture, position, null, outline * opacity, projectile.oldRot[i], origin, scale * 1.08f, SpriteEffects.None, 0f);
+                Main.spriteBatch.Draw(texture, position, null, red * opacity, projectile.oldRot[i], origin, scale, SpriteEffects.None, 0f);
+            }
+
+            Vector2 center = projectile.Center - Main.screenPosition + new Vector2(0f, projectile.gfxOffY);
+            // A narrow dark rim supplies contrast without whitening the red blade.
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 rimOffset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 1f;
+                Main.spriteBatch.Draw(texture, center + rimOffset, null, outline * projectile.Opacity, projectile.rotation, origin, projectile.scale, SpriteEffects.None, 0f);
+            }
+            Main.spriteBatch.Draw(texture, center, null, red * projectile.Opacity, projectile.rotation, origin, projectile.scale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(texture, center, null, red * (0.75f * projectile.Opacity), projectile.rotation, origin, projectile.scale, SpriteEffects.None, 0f);
+        }
+        finally
+        {
+            Main.spriteBatch.ResetState(state);
+        }
+    }
+
 }
 
 public class CirclingBloodScythe : AnomalyModProjectile
 {
     public override string LocalizationCategory => "Bosses.BrainofCthulhu";
-    public override string Texture => "Anomalies/Bosses/BrainofCthulhu/Assets/Particles/VerticalSmearRagged";
+    public override string Texture => "Anomalies/Bosses/BrainofCthulhu/Assets/VerticalSmearRagged";
     public static float RotationSpeed => MathHelper.Pi / 8f;
     public static int Lifetime => BrainofCthulhu.CrimsonEyeAttackDuration;
     public static float MaxCircleSpeed => MathHelper.Pi / 30f; //1 rev per second
@@ -141,7 +166,7 @@ public class CirclingBloodScythe : AnomalyModProjectile
         Projectile.Opacity = 1f;
         Projectile.tileCollide = false;
         Projectile.timeLeft = Lifetime;
-        Projectile.damage = 10;
+        Projectile.damage = BrainofCthulhu.BloodScytheDamage;
         Projectile.scale = 0.1f;
         Projectile.hostile = true;
     }
@@ -204,24 +229,7 @@ public class CirclingBloodScythe : AnomalyModProjectile
 
     public override bool PreDraw(ref Color lightColor)
     {
-        Transoceanic.DataStructures.Rendering.SpriteBatchSnapshot state = Main.spriteBatch.ChangeState(blendState: BlendState.Additive);
-        Texture2D tex = TextureAssets.Projectile[Type].Value;
-        Vector2 drawPos = Projectile.Center - Main.screenPosition;
-        Color drawColor = Color.Red;
-        if (!ChildSafety.Disabled)
-            drawColor = Main.DiscoColor;
-        for (int i = 0; i < Projectile.oldPos.Length; ++i)
-        {
-            float afterimageRot = Projectile.oldRot[i];
-            drawPos = Projectile.oldPos[i] + (Projectile.Size / 2f) - Main.screenPosition + new Vector2(0f, Projectile.gfxOffY);
-            if (i != 0)
-                drawColor *= 0.9f;
-            // DO NOT REMOVE THESE "UNNECESSARY" FLOAT CASTS. THIS WILL BREAK THE AFTERIMAGES.
-            float interpolant = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
-            Main.spriteBatch.Draw(tex, drawPos, null, drawColor, afterimageRot, tex.Size() * 0.5f, Projectile.scale * interpolant, SpriteEffects.None, 0f);
-        }
-
-        Main.spriteBatch.ResetState(state);
+        BloodScythe.DrawScythe(Projectile);
         return false;
     }
 }

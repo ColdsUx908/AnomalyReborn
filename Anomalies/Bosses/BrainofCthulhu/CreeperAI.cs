@@ -9,9 +9,12 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
 
     public override void SetDefaultsFinal()
     {
-        if (!CalamityEnabled)
-            NPC.lifeMax = (int)Math.Round(NPC.lifeMax * 1.1f);
+        NPC.lifeMax = CalamityEnabled ? 300 : 225;
+        BridgeUtils.ApplyCalamityHealthBoost(NPC);
     }
+
+    public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) =>
+        TONPCUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
 
     public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => type != CalamityLogicType_NPCBehavior.VanillaOverrideAI;
     public float FlowAmount => MathHelper.Lerp(0.1f, 0.15f, NPC.localAI[3]);
@@ -55,7 +58,7 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
         }
     }
 
-    private static readonly BrainBehavior[] bossAIStatesToUse = [BrainBehavior.SurfaceSpawnAnimation, BrainBehavior.Stunned, BrainBehavior.CreeperSwipes, BrainBehavior.CreeperSwings, BrainBehavior.CreeperOrbit, BrainBehavior.CreeperSpiral, BrainBehavior.TelekineticOnslaught];
+    private static readonly BrainBehavior[] bossAIStatesToUse = [BrainBehavior.SurfaceSpawnAnimation, BrainBehavior.CreeperSwipes, BrainBehavior.CreeperSwings, BrainBehavior.CreeperOrbit, BrainBehavior.CreeperSpiral];
     public override void SetDefaults()
     {
         NPC.damage = NPC.defDamage = 36; // 64 (1.8x expert scaling)
@@ -69,6 +72,22 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
         NPC.netUpdate = true;
     }
 
+    /// <summary>幻影仅保留用于维持实体的生命值，不贡献混合血条的剩余生命值。</summary>
+    public int CombinedLifeContribution => IsPhantom ? 0 : Math.Max(0, NPC.life);
+
+    public const int PhantomFadeDuration = 45;
+    public const int PhantomAppearDuration = 20;
+    // Presentation only: start the fade-in when this client observes the phantom.
+    public float PhantomAppearance => IsPhantom
+        ? MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(NPC.localAI[1] / PhantomAppearDuration, 0f, 1f))
+        : 0f;
+    public float PhantomVisualOpacity => (IsPhantom
+        ? (0.4f + 0.1f * MathF.Sin(Main.GlobalTimeWrappedHourly * 6f + CreeperID)) * PhantomAppearance
+        : 1f) * PhantomFadeOpacity * NPC.Opacity;
+    public float PhantomFadeOpacity => CurrentPhase is Phase.Transition or Phase.Phase2
+        ? 1f - MathHelper.Clamp(BossCounter / PhantomFadeDuration, 0f, 1f)
+        : 1f;
+
     public override bool PreAI()
     {
         if (!BrainBehaviorAccess.ActiveBrain)
@@ -78,29 +97,41 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
             return false;
         }
 
+        if (IsPhantom)
+        {
+            EnsurePhantomDeathEffects();
+            NPC.localAI[1] = Math.Min(NPC.localAI[1] + 1f, PhantomAppearDuration);
+        }
+
         if (NPC.target < 0 || NPC.target == Main.maxPlayers || Main.player[NPC.target].dead || !Main.player[NPC.target].active)
             BrainCombatUtils.BrainTargeting(NPC, default);
         if (!Main.dedServ)
             BrainOfCthulhuSystem.VerletTendrils[CreeperID].creeper = NPC.whoAmI;
-        UseBossAIState = bossAIStatesToUse.Contains(BoCAI.CurrentBehavior) && BossCounter >= 0;
-        if (BoCAI.CurrentBehavior is BrainBehavior.SurfaceSpawnAnimation or BrainBehavior.Stunned)
+        if (CurrentPhase is Phase.Transition or Phase.Phase2)
+        {
+            NPC.damage = 0;
             NPC.dontTakeDamage = true;
-        else
-            NPC.dontTakeDamage = false;
+            NPC.chaseable = false;
+            // Keep the formation attached to the moving brain while it dissolves.
+            NPC.velocity = Brain.velocity;
+            if (BossCounter >= PhantomFadeDuration && Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                NPC.active = false;
+                NPC.netUpdate = true;
+                if (Main.netMode == NetmodeID.Server)
+                    NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, NPC.whoAmI);
+            }
+            return false;
+        }
+        UseBossAIState = bossAIStatesToUse.Contains(BoCAI.CurrentBehavior) && BossCounter >= 0;
+        NPC.dontTakeDamage = IsPhantom || CurrentPhase == Phase.Introduction;
+        NPC.chaseable = !IsPhantom;
         if (UseBossAIState)
             switch (BoCAI.CurrentBehavior)
             {
                 case BrainBehavior.SurfaceSpawnAnimation:
                     NPC.damage = 0;
                     SpawnAnimation();
-                    break;
-                case BrainBehavior.TelekineticOnslaught:
-                    TelekineticOnslaught();
-                    break;
-                case BrainBehavior.Stunned:
-                    //Only used for when the Creepers are spawned just as the stun is ending.
-                    NPC.velocity *= 0.9f;
-                    NPC.damage = 0;
                     break;
                 case BrainBehavior.CreeperSwipes:
                     CreeperSwipes();
@@ -130,91 +161,21 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
         return false;
         void SpawnAnimation()
         {
-            float baseRotation = MathHelper.TwoPi / (BrainofCthulhu.CreeperCount / 2f) * (CreeperID / 2f);
-            Vector2 goalLocation;
-            float speedCap = 8f;
-            float accel = 1f;
-            float acceptableDist = 9216;
-            Player player = Main.player[Brain.target];
-            if (BoCAI.SpawnTime != 0 && Time >= 0) //Brain has appeared
+            NPC.Opacity = Brain.Opacity;
+            float rotation = MathHelper.TwoPi / (BrainofCthulhu.CreeperCount / 2f) * (CreeperID / 2f);
+            Vector2 offset = new Vector2(EvenID ? -256 : 256, 0) + Vector2.UnitX.RotatedBy(rotation + BossCounter / 60f * (EvenID ? -1 : 1)) * 64;
+            NPC.Center = Brain.Center + offset;
+            NPC.velocity = Vector2.Zero;
+            if (!Main.dedServ && BrainOfCthulhuSystem.VerletTendrils is { } tendrils && (uint)CreeperID < tendrils.Length)
             {
-                float spawnAnimTimeReduction = (BoCAI.SummonedViaItem || BrainCalamityBridge.BossRushActive) ? 120 : 0;
-                float brainTime = BossCounter - Math.Abs(BoCAI.SpawnTime) + spawnAnimTimeReduction;
-                if (brainTime < 180)
+                List<VerletSimulatedSegment> segments = tendrils[CreeperID].tendril;
+                for (int i = 0; i < segments.Count; i++)
                 {
-                    Vector2 baseOffset = new(EvenID ? -360 : 360, 0);
-                    Vector2 rotationOffset = Vector2.UnitX.RotatedBy(baseRotation + (BossCounter / 120f * (EvenID ? -1 : 1))) * 128;
-                    goalLocation = player.Center + baseOffset + rotationOffset;
-                }
-                else if (brainTime < 240)
-                {
-                    Vector2 baseOffset = new(EvenID ? -200 : 200, 64);
-                    Vector2 rotationOffset = Vector2.UnitX.RotatedBy(baseRotation + (BossCounter / 60f * (EvenID ? -1 : 1))) * 32;
-                    goalLocation = Brain.Center + baseOffset + rotationOffset;
-                    speedCap = 12;
-                    accel = 2f;
-                    acceptableDist = 4096;
-                }
-                else
-                {
-                    Vector2 baseOffset = new(EvenID ? -360 : 360, -64);
-                    Vector2 rotationOffset = Vector2.UnitX.RotatedBy(baseRotation + (BossCounter / 60f * (EvenID ? -1 : 1))) * 128;
-                    goalLocation = Brain.Center + baseOffset + rotationOffset;
-                    speedCap = 12;
-                    accel = 2f;
-                    acceptableDist = 4096;
-                }
-
-                Time++;
-            }
-            else
-            {
-                if (Time >= 0) //Has been brought down
-                {
-                    Vector2 baseOffset = new(EvenID ? -360 : 360, 0);
-                    Vector2 rotationOffset = Vector2.UnitX.RotatedBy(baseRotation + (BossCounter / 120f * (EvenID ? -1 : 1))) * 128;
-                    goalLocation = player.Center + baseOffset + rotationOffset;
-                    Time++;
-                }
-                else //Hasnt been brought down
-                {
-                    Vector2 baseOffset = new(EvenID ? -256 : 256, 0);
-                    Vector2 rotationOffset = Vector2.UnitX.RotatedBy(baseRotation + (BossCounter / 120f * (EvenID ? -1 : 1))) * 64;
-                    goalLocation = Brain.Center + baseOffset + rotationOffset;
+                    Vector2 position = Vector2.Lerp(Brain.Center + Vector2.UnitY * 32, NPC.Center, i / (float)(segments.Count - 1));
+                    segments[i].position = position;
+                    segments[i].oldPosition = position;
                 }
             }
-
-            if (NPC.DistanceSQ(goalLocation) > acceptableDist)
-            {
-                NPC.velocity += NPC.DirectionTo(goalLocation) * accel;
-                NPC.velocity = NPC.velocity.ClampMagnitude(0f, speedCap);
-            }
-        }
-
-        void TelekineticOnslaught()
-        {
-            if (Time > 0)
-            {
-                Point tileCoords = AttackPosition.ToTileCoordinates();
-                if (WorldGen.SolidOrSlopedTile(tileCoords.X, tileCoords.Y))
-                {
-                    float rayDist = BrainCombatUtils.PreciseDistanceToTileCollisionHit(Brain.Center, AttackAngle, 800, 4);
-                    AttackPosition = Brain.Center + (AttackAngle.ToRotationVector2() * (rayDist - 64));
-                }
-
-                if (NPC.DistanceSQ(AttackPosition) > 4096)
-                {
-                    NPC.velocity += NPC.DirectionTo(AttackPosition);
-                    NPC.velocity = NPC.velocity.ClampMagnitude(0f, 10f);
-                }
-                else
-                    NPC.velocity *= 0.8f;
-                ConnectionOpacity = BringOpacityTo(ConnectionOpacity, 1f);
-                NPC.damage = 0;
-            }
-            else
-                UseBossAIState = false;
-            Time++;
         }
 
         void CreeperSwipes()
@@ -418,7 +379,7 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
                                     if (dashDir.X <= 0)
                                     {
                                         //WaterFoam (0.25 -> 1), SoftRoundExplosion (0.025 -> 0.1), SmokeExplosion(0.05 -> 0.15)
-                                        CustomPulse splatter = new(attackCenter, Vector2.Zero, Color.Red, "Anomalies/Bosses/BrainofCthulhu/Assets/Particles/SmokeExplosion", Vector2.One, Main.rand.NextFloatDirection(), 0.05f, 0.15f, 24);
+                                        CustomPulse splatter = new(attackCenter, Vector2.Zero, Color.Red, "Anomalies/Bosses/BrainofCthulhu/Assets/SmokeExplosion", Vector2.One, Main.rand.NextFloatDirection(), 0.05f, 0.15f, 24);
                                         ParticleHandler.SpawnParticle(splatter);
                                     }
 
@@ -475,7 +436,7 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
             {
                 if (BossCounter == 1)
                 {
-                    List<NPC> mainOrbitMembers = [..Main.npc.Where(n => n.active && n.type == NPCID.Creeper && n.TryGetCreeperBehavior(out CreeperAI ai) && ai.CachedValue2 == -1)];
+                    List<NPC> mainOrbitMembers = [.. Main.npc.Where(n => n.active && n.type == NPCID.Creeper && n.TryGetCreeperBehavior(out CreeperAI ai) && ai.CachedValue2 == -1)];
                     CachedValue1 = MathHelper.TwoPi / mainOrbitMembers.Count * mainOrbitMembers.IndexOf(NPC);
                 }
                 else if (BossCounter == 0 && Main.netMode != NetmodeID.MultiplayerClient)
@@ -551,7 +512,7 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
             if (BossCounter == 0 && Main.netMode != NetmodeID.MultiplayerClient)
             {
                 AttackPosition = NPC.Center;
-                List<NPC> myGroup = [..Main.npc.Where(n => n.active && n.type == NPCID.Creeper && (n.ai[0] % TendrilCount) + 1 == tendrilID)];
+                List<NPC> myGroup = [.. Main.npc.Where(n => n.active && n.type == NPCID.Creeper && (n.ai[0] % TendrilCount) + 1 == tendrilID)];
                 CachedValue1 = myGroup.IndexOf(NPC);
                 CachedValue2 = myGroup.Count;
                 AttackAngle = 0;
@@ -677,21 +638,60 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
         }
     }
 
+    // Local presentation state: each client plays the effect once, including when
+    // the synchronized phantom state arrives without the original lethal hit.
+    private bool PhantomDeathEffectsPlayed
+    {
+        get => NPC.localAI[2] != 0f;
+        set => NPC.localAI[2] = value ? 1f : 0f;
+    }
+
     public override void HitEffect(NPC.HitInfo hit)
     {
-        if (!Main.dedServ && NPC.life <= 0 && BrainOfCthulhuSystem.VerletTendrils is { } tendrils && (uint)CreeperID < tendrils.Length && tendrils[CreeperID].tendril is { Count: >= 2 })
+        if (Main.dedServ || NPC.life > 0 || PhantomDeathEffectsPlayed || !BrainBehaviorAccess.ActiveBrain || CurrentPhase is not (Phase.Introduction or Phase.Phase1))
+            return;
+
+        // VanillaHitEffect has already emitted the creeper's blood dust and gore.
+        PhantomDeathEffectsPlayed = true;
+        SoundEngine.PlaySound(NPC.DeathSound, NPC.Center);
+        if (BrainOfCthulhuSystem.VerletTendrils is { } tendrils && (uint)CreeperID < tendrils.Length && tendrils[CreeperID].tendril is { Count: >= 2 } segments)
         {
-            List<VerletSimulatedSegment> verletTendril = BrainOfCthulhuSystem.VerletTendrils[CreeperID].tendril;
-            verletTendril[^1].position = NPC.Center;
-            verletTendril[^1].oldPosition = NPC.Center;
-            verletTendril[^1].locked = false;
+            Vector2 direction = (NPC.Center - segments[^2].position).SafeNormalize(Vector2.UnitY);
             for (int i = 0; i < 5; i++)
-            {
-                Vector2 dir = (verletTendril[^1].position - verletTendril[^2].position).SafeNormalize(Vector2.UnitY);
-                BloodParticle p = new(verletTendril[^2].position, dir.RotatedBy(Main.rand.NextFloat(-MathHelper.Pi / 10f, MathHelper.Pi / 10f)) * Main.rand.NextFloat(6f, 10f), 24, Main.rand.NextFloat(0.5f, 1f), Color.Yellow * 0.75f);
-                ParticleHandler.SpawnParticle(p);
-            }
+                ParticleHandler.SpawnParticle(new BloodParticle(NPC.Center, direction.RotatedBy(Main.rand.NextFloat(-MathHelper.Pi / 10f, MathHelper.Pi / 10f)) * Main.rand.NextFloat(6f, 10f), 24, Main.rand.NextFloat(0.5f, 1f), Color.Yellow * 0.75f));
         }
+    }
+
+    private void EnsurePhantomDeathEffects()
+    {
+        if (Main.dedServ || PhantomDeathEffectsPlayed)
+            return;
+
+        int life = NPC.life;
+        try
+        {
+            // Reuse vanilla death dust/gore for deaths without a local hit effect.
+            NPC.life = 0;
+            NPC.HitEffect(new NPC.HitInfo { HitDirection = NPC.direction });
+        }
+        finally
+        {
+            NPC.life = life;
+        }
+    }
+
+    public override bool CheckDead()
+    {
+        if (!BrainBehaviorAccess.ActiveBrain || CurrentPhase is not (Phase.Introduction or Phase.Phase1))
+            return true;
+        EnsurePhantomDeathEffects();
+        IsPhantom = true;
+        NPC.life = NPC.lifeMax;
+        NPC.dontTakeDamage = true;
+        NPC.chaseable = false;
+        NPC.lifeRegen = 0;
+        NPC.netUpdate = true;
+        return false;
     }
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) => false;

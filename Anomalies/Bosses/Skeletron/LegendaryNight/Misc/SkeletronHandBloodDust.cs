@@ -1,7 +1,7 @@
-﻿using Mono.Cecil.Cil;
+using Mono.Cecil.Cil;
 using MonoMod.Cil;
 
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Misc;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 /// <summary>
 /// 每只手独立持有的血尘，不注册到 Main.dust，由手的 PreDraw 更新和绘制。

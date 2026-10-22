@@ -1,6 +1,4 @@
-﻿using Anomalies.DataStructures;
-
-namespace Anomalies.Visuals.BossBar;
+﻿namespace Anomalies.Visuals.BossBar;
 
 /// <summary>
 /// 血量阈值指示器，用于在异象模式下 Boss 血条上标记关键血量百分比。
@@ -56,6 +54,9 @@ public class HPThresholdIndicator
     /// <remarks>用法参见 <see cref="HPThresholdIndicatorValueFunction"/>。</remarks>
     public HPThresholdIndicatorValueFunction ValueFunction;
 
+    /// <summary>触发和接近效果的进度，与 ValueFunction 使用相同坐标；默认使用合并血量比例。</summary>
+    public HPThresholdIndicatorValueFunction ProgressFunction;
+
     /// <summary>
     /// 自定义更新函数。
     /// </summary>
@@ -95,11 +96,11 @@ public class HPThresholdIndicator
         if (value <= 0f)
             return;
 
+        float realLifeRatio = ProgressFunction?.Invoke(this, npc, bar) ?? bar.NPCLifeRatio;
         Timer++;
-        if (npc.LifeRatio <= value || EaseOutTimer > 0)
+        if (realLifeRatio <= value || EaseOutTimer > 0)
             EaseOutTimer++;
 
-        float realLifeRatio = npc.LifeRatio;
         float particleIntensity = Utils.Remap(realLifeRatio - value, IsSubPhaseIndicator ? 0.04f : 0.05f, 0f, 0f, 1f); //接近或超过阈值时粒子效果更明显
 
         if (particleIntensity > 0f)

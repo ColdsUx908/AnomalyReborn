@@ -35,6 +35,13 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>, ICollidableWithRe
     /// <param name="rotation">旋转角度（弧度）。</param>
     public RotatedRectangle(Vector2 center, float width, float height, float rotation) : this(FloatRectangle.FromCenter(center, width, height), rotation) { }
 
+    /// <summary>以线段为中轴、指定宽度构造旋转矩形，端点对应两条短边的中点。</summary>
+    /// <param name="start">中轴起点。</param>
+    /// <param name="end">中轴终点。</param>
+    /// <param name="width">垂直于中轴的完整宽度。</param>
+    public static RotatedRectangle FromLineSegment(Vector2 start, Vector2 end, float width)
+        => new((start + end) * 0.5f, Vector2.Distance(start, end), width, (end - start).ToRotation());
+
     public static RotatedRectangle FromInnerPoint(Vector2 point, float left, float right, float top, float bottom, float rotation)
     {
         Vector2 realCenter = point + new PolarVector2(rotation) * ((right - left) / 2f) + new PolarVector2(rotation + MathHelper.PiOver2) * ((top - bottom) / 2f);

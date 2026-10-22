@@ -1,6 +1,4 @@
-﻿using Anomalies.DataStructures;
-
-namespace Anomalies.Bosses.EaterofWorlds;
+﻿namespace Anomalies.Bosses.EaterofWorlds;
 
 public sealed partial class EaterofWorldsHead
 {

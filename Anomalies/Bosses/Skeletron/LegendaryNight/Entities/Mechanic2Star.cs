@@ -1,6 +1,4 @@
-using Anomalies.Bosses.Skeletron.LegendaryNight.Arena;
-
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 /// <summary>半场拍击生成的帧伤落星；ai[0] 拍击序号，ai[1] 左右侧，ai[2] 主体索引。</summary>
 public sealed class Mechanic2Star : AnomalyModProjectile

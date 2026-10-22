@@ -1,5 +1,3 @@
-using Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
-
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed partial class SkeletronLegendHead
@@ -34,7 +32,6 @@ public sealed partial class SkeletronLegendHead
             Union32 pool = AI_Union_2;
             CurrentSpell = (Spell)DrawSpell((byte)CurrentSpell, ref pool.byte0);
             AI_Union_2 = pool;
-            CurrentSpell = Spell.PlatinumCoin;
             NPC.netUpdate = true;
 
             static byte DrawSpell(byte previousSpell, ref byte remainingSpells)

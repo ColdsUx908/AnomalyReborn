@@ -1,6 +1,6 @@
-﻿using Anomalies.GameContents.Base;
+using Anomalies.GameContents.Base;
 
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Misc;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class SkeletronLegendScene : BaseMusicSceneEffect
 {

@@ -13,7 +13,7 @@ public sealed class CustomPulse : TexturePulseParticle
         Vector2 originalSquish = Squish;
         if (Main.zenithWorld && DateTime.Now.DayOfWeek == DayOfWeek.Tuesday)
         {
-            SpriteAsset = ModContent.Request<Texture2D>("Anomalies/Bosses/BrainofCthulhu/Assets/Particles/MammothParticle");
+            SpriteAsset = ModContent.Request<Texture2D>("Anomalies/Bosses/BrainofCthulhu/Assets/MammothParticle");
             Squish *= MathHelper.Lerp(originalAsset.Value.Width / (float)SpriteAsset.Value.Width, originalAsset.Value.Height / (float)SpriteAsset.Value.Height, 0.5f);
         }
 

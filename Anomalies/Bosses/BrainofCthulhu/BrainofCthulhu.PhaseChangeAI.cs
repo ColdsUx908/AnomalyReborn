@@ -8,7 +8,10 @@ public sealed partial class BrainofCthulhu
         NPC.rotation *= 0.9f;
         TeleportTime = 0;
         NPC.damage = 0;
-        float animCounter = Time - 60;
+        // 90 frames to settle, then 120 frames to open: 3.5 seconds total.
+        // The bar's 28-frame locking animation leaves about 3 seconds fully locked.
+        const int settleDuration = 90;
+        float animCounter = Time - settleDuration;
         if (animCounter >= 0)
         {
             if (animCounter == 0)

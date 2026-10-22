@@ -1,3 +1,6 @@
+using Anomalies.Assets.Effects;
+using Anomalies.Visuals.BossBar;
+
 namespace Anomalies.Bosses.BrainofCthulhu;
 
 public sealed partial class BrainofCthulhu : AnomalyNPCBehavior<BrainofCthulhu>
@@ -14,38 +17,41 @@ public sealed partial class BrainofCthulhu : AnomalyNPCBehavior<BrainofCthulhu>
 
     public override void SetDefaultsFinal()
     {
-        if (!CalamityEnabled)
-            NPC.lifeMax = (int)Math.Round(NPC.lifeMax * 1.95f);
+        NPC.lifeMax = CalamityEnabled ? 6000 : 4500;
+        BridgeUtils.ApplyCalamityHealthBoost(NPC);
     }
+
+    public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) =>
+        TONPCUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
 
     public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => type != CalamityLogicType_NPCBehavior.VanillaOverrideAI;
     private static SoundStyle StunHitSound = new("Anomalies/Bosses/BrainofCthulhu/Sounds/StunHit", 3);
-    private static SoundStyle ShieldDownSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/ShieldDown")with
+    private static SoundStyle ShieldDownSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/ShieldDown") with
     {
         PauseBehavior = PauseBehavior.PauseWithGame
     };
-    private static SoundStyle ShieldUpSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/ShieldUp")with
+    private static SoundStyle ShieldUpSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/ShieldUp") with
     {
         PauseBehavior = PauseBehavior.PauseWithGame
     };
-    private static SoundStyle RoarSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/Roar")with
+    private static SoundStyle RoarSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/Roar") with
     {
         PauseBehavior = PauseBehavior.PauseWithGame
     };
-    private static SoundStyle ShortRoarSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/ShortRoar")with
+    private static SoundStyle ShortRoarSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/ShortRoar") with
     {
         PauseBehavior = PauseBehavior.PauseWithGame
     };
-    public static SoundStyle LaughSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/Laugh")with
+    public static SoundStyle LaughSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/Laugh") with
     {
         PauseBehavior = PauseBehavior.PauseWithGame,
         MaxInstances = 5
     };
-    private static SoundStyle GrowlSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/Growl", 2)with
+    private static SoundStyle GrowlSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/Growl", 2) with
     {
         PauseBehavior = PauseBehavior.PauseWithGame
     };
-    private static SoundStyle DeathRoarSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/DeathRoar")with
+    private static SoundStyle DeathRoarSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/DeathRoar") with
     {
         PauseBehavior = PauseBehavior.PauseWithGame
     };
@@ -54,14 +60,32 @@ public sealed partial class BrainofCthulhu : AnomalyNPCBehavior<BrainofCthulhu>
     private static SoundStyle ExplosionSound = new("Anomalies/Bosses/BrainofCthulhu/Sounds/Explosion", 2);
     public bool SummonedViaItem { get => Read(15) != 0; set => Write(15, value ? 1 : 0); }
     public List<BrainOfCthulhuAfterImage> BoCAfterImages { get => AnomalyNPC.BrainAfterImages; set => AnomalyNPC.BrainAfterImages = value; }
-    public static int BrainIllusionDamage => 15;
-    public static int BloodShotDamage => 12; // 48
-    public static int BloodScytheDamage => 12; // 48
-    public static int IchorShotDamage => 12; // 48
-    public static int CrimsonEyeDamage => 12; // 48
+
+    private static readonly ProjectileDamageContainer _BrainIllusionDamage = new(30, 60, 90, 90, 90, 90);
+    public static int BrainIllusionDamage => _BrainIllusionDamage.Value;
+
+    private static readonly ProjectileDamageContainer _BloodShotDamage = new(24, 48, 72, 72, 72, 72);
+    public static int BloodShotDamage => _BloodShotDamage.Value;
+
+    private static readonly ProjectileDamageContainer _BloodScytheDamage = new(24, 48, 72, 72, 72, 72);
+    public static int BloodScytheDamage => _BloodScytheDamage.Value;
+
+    private static readonly ProjectileDamageContainer _IchorShotDamage = new(24, 48, 72, 72, 72, 72);
+    public static int IchorShotDamage => _IchorShotDamage.Value;
+
+    private static readonly ProjectileDamageContainer _CrimsonEyeDamage = new(24, 48, 72, 72, 72, 72);
+    public static int CrimsonEyeDamage => _CrimsonEyeDamage.Value;
+
+    private static readonly ProjectileDamageContainer _TelekineticBlastDamage = new(100, 200, 300, 300, 300, 300);
+    public static int TelekineticBlastDamage => _TelekineticBlastDamage.Value;
+
+    private static readonly ProjectileDamageContainer _TelekineticEnemyGrabDamage = new(20, 40, 60, 60, 60, 60);
+    public static int TelekineticEnemyGrabDamage => _TelekineticEnemyGrabDamage.Value;
+
+    private static readonly ProjectileDamageContainer _BloodBombDamage = new(80, 160, 240, 240, 240, 240);
+    public static int BloodBombDamage => _BloodBombDamage.Value;
+
     public static float Phase1DefenseMultiplier => 1.5f; //Multiplies BoC's default defense value by this amount when in Phase 1.
-    public static float DesperateOnslaughtCreeperHealthGate => 0.1f; //When the cumulative health % of all creepers falls below this value, BoC will begin its pre-stun attack upon entering its idle phase.
-    public static float Phase2HealthGate => 0.7f; //When BoC's health % falls below this value, it will begin entering Phase 2
     public static float ForcedIllusionHealthGate => 0.25f; //When BoC's health % falls below this value, the next attack is forced to be the Illusion Trick
     public static float DespawnRangeSQ => 36000000f;
     public static float DespawnRange => 6000f;
@@ -188,7 +212,8 @@ public sealed partial class BrainofCthulhu : AnomalyNPCBehavior<BrainofCthulhu>
         {
             float ratio = 0f;
             foreach (NPC creeper in Main.npc.Where(n => n.active && n.type == NPCID.Creeper))
-                ratio += creeper.life / (float)creeper.lifeMax;
+                if (!creeper.GetCreeperBehavior().IsPhantom)
+                    ratio += creeper.life / (float)creeper.lifeMax;
             if (ratio != 0f)
                 ratio /= CreeperCount;
             return ratio;
@@ -204,7 +229,7 @@ public sealed partial class BrainofCthulhu : AnomalyNPCBehavior<BrainofCthulhu>
         ShieldOpacity = 1f;
         ShieldScale = 1f;
         BrainOfCthulhuSystem.ScreenBlurStrength = 0f;
-        NPC.AddAnomalyHPIndicator(Phase2HealthGate, Phase2HealthGate);
+        NPC.AddAnomalyExtraHPIndicator(0f, 0f);
         NPC.AddAnomalyHPIndicator(ForcedIllusionHealthGate, ForcedIllusionHealthGate, true);
         if (!Main.dedServ)
         {
@@ -262,7 +287,7 @@ public sealed partial class BrainofCthulhu : AnomalyNPCBehavior<BrainofCthulhu>
         NPC.dontTakeDamage = true;
         if (CurrentBehavior is Behavior.Stunned or Behavior.IllusionTrick)
             TeleportTime = 0;
-        foreach (NPC n in Main.ActiveNPCs)
+        foreach (NPC n in NPC.ActiveNPCs)
         {
             if (n.type != ModContent.NPCType<FalseBrain>())
                 continue;
@@ -309,5 +334,15 @@ public sealed partial class BrainofCthulhu : AnomalyNPCBehavior<BrainofCthulhu>
             else
                 return currentOpacity;
         }
+    }
+
+    public override void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle)
+    {
+        AnomalyEffects.BossBars.BrainofCthulhu.Data
+            .UseImage1(AnomalyTextures.Noise._Smear)
+            .UseImage2(AnomalyTextures.Noise._Vein)
+            .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
+            .SetCustomParameter("uPosition", destinationRentangle.TopLeft())
+            .Apply();
     }
 }

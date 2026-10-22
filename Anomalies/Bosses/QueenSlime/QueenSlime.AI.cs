@@ -1,5 +1,4 @@
 ﻿using Anomalies.Bosses.KingSlime;
-using Anomalies.DataStructures;
 
 namespace Anomalies.Bosses.QueenSlime;
 
@@ -649,8 +648,8 @@ public sealed partial class QueenSlime
                 switch (CurrentLocalPhase)
                 {
                     case 0: //寻的
-                    if (!TOSharedData.NotClient)
-                        return;
+                        if (!TOSharedData.NotClient)
+                            return;
                         Vector2? destination = null;
 
                         if (!Phase1_2)

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
+using Anomalies.Bosses.BrainofCthulhu;
 using CalamityMod.NPCs.CeaselessVoid;
 using CalamityMod.NPCs.ExoMechs.Apollo;
 using CalamityMod.NPCs.Ravager;
@@ -229,6 +230,9 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
     /// </summary>
     public long CombinedNPCMaxLife;
 
+    /// <summary>合并血量中除本体以外的当前生命值。</summary>
+    public long ExtraNPCLife => Math.Max(0L, CombinedNPCLife - Math.Max(0, NPC.life));
+
     /// <summary>
     /// 当前生命值比例（0~1），基于 <see cref="InitialMaxLife"/> 计算。
     /// </summary>
@@ -259,13 +263,24 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
     public bool NPCIsIncreasingDefenseOrDR => Valid && NPC.active && (AnomalyNPC.CurrentlyIncreasingDefenseOrDR || (HasOneToMany && CustomOneToMany.Values.Any(n => n.Anomaly.CurrentlyIncreasingDefenseOrDR)));
 
     /// <summary>
-    /// 当前 Boss（或附属 NPC）是否处于无敌（或几乎无敌）状态。
+    /// 本体与全部有效附属 NPC 是否均处于无敌（或几乎无敌）状态。
     /// </summary>
     public bool NPCIsImmune
     {
         get
         {
-            return Valid && NPC.active && (CheckImmune(NPC) || (HasOneToMany && CustomOneToMany.Values.Any(CheckImmune)));
+            if (!Valid || !NPC.active || !CheckImmune(NPC))
+                return false;
+            if (HasOneToMany)
+            {
+                foreach ((long identifier, NPC child) in CustomOneToMany)
+                {
+                    if (child.Identifier == identifier && child.active && child.life > 0 && !CheckImmune(child))
+                        return false;
+                }
+            }
+            return true;
+
             static bool CheckImmune(NPC npc) => npc.Anomaly.CurrentlyImmune || npc.dontTakeDamage || npc.immortal;
         }
     }
@@ -360,6 +375,13 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
         PostUpdate();
     }
 
+    private static int GetLifeContribution(NPC npc)
+    {
+        if (npc.type == NPCID.Creeper && npc.TryGetCreeperBehavior(out CreeperAI ai))
+            return ai.CombinedLifeContribution;
+        return Math.Max(0, npc.life);
+    }
+
     /// <summary>
     /// 更新合并后的当前生命值。会依次尝试自定义血量函数、特殊需求函数，最后采用默认合并逻辑。
     /// </summary>
@@ -374,11 +396,11 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
                 return;
         }
 
-        long result = NPC.life;
+        long result = GetLifeContribution(NPC);
         foreach ((long identifier, NPC npc) in CustomOneToMany)
         {
             if (npc.Identifier == identifier && npc.active && npc.life > 0)
-                result += npc.life;
+                result += GetLifeContribution(npc);
         }
         CombinedNPCLife = result;
     }
@@ -856,7 +878,8 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
         if (EntityExtensionHandler.TryGetValue(NPCType, out BossEntityExtension extraEntityData))
         {
             string extensionName = extraEntityData.NameOfExtensions.ToString();
-            int extraEntities = NPC.ActiveNPCs.Count(n => extraEntityData.TypesToSearchFor.Contains(n.type));
+            int extraEntities = NPC.ActiveNPCs.Count(n => extraEntityData.TypesToSearchFor.Contains(n.type)
+                && (n.type != NPCID.Creeper || !n.TryGetCreeperBehavior(out CreeperAI ai) || !ai.IsPhantom));
             smallText = (useNewLine ? Environment.NewLine : "    ") + $"{extensionName}: {extraEntities}";
         }
 
@@ -934,11 +957,31 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
         });
 
         // 保留原始生命值文本，仅拦截传说之夜骷髅王的剩余手部数量。
-        SmallTextFunctions.Add((BossHealthBar b, out string text, out bool disableOrig) =>
+        SmallTextFunctions.Add((b, out text, out disableOrig) =>
         {
             text = "";
             disableOrig = false;
             return b.NPC.type == NPCID.SkeletronHead && b.NPC.Anomaly.CustomAIType == 1;
+        });
+
+        // 飞眼怪死亡仅扣除当前血量；最大总血量在幻影清除后仍保持战斗期间的峰值。
+        LifeFunctions.Add(b =>
+        {
+            if (b.NPC.type != NPCID.BrainofCthulhu || !b.NPC.TryGetBrainBehavior(out _))
+                return false;
+            long life = b.NPC.life;
+            long maxLife = b.NPC.lifeMax;
+            foreach ((long identifier, NPC creeper) in b.CustomOneToMany)
+            {
+                if (creeper.Identifier != identifier || !creeper.active || creeper.lifeMax <= 0)
+                    continue;
+                maxLife += creeper.lifeMax;
+                life += GetLifeContribution(creeper);
+            }
+            b.CombinedNPCLife = life;
+            b.InitialMaxLife = Math.Max(b.InitialMaxLife, maxLife);
+            b.CombinedNPCMaxLife = b.InitialMaxLife;
+            return true;
         });
 
         // 月球领主血量合并

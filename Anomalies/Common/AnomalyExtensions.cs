@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Anomalies.DataStructures;
 using Anomalies.Visuals.BossBar;
 using Terraria.Graphics.Shaders;
 
@@ -47,13 +46,17 @@ public static class AnomalyExtensions
             return false;
         }
 
-        public void AddAnomalyHPIndicator(float anomalyLifeRatio, float anomalyUltraLifeRatio, bool isSubPhaseIndicator = false, Func<NPC, bool> condition = null)
+        /// <summary>添加本体血量阈值，在额外血量清零后的本体区段标记对应百分比。</summary>
+        public void AddAnomalyHPIndicator(float anomalyLifeRatio, float anomalyUltraLifeRatio, bool isSubPhaseIndicator = false, Func<NPC, bool> condition = null, HPThresholdLifeSource lifeSource = HPThresholdLifeSource.NPC)
         {
             condition ??= _ => true;
 
             npc.Anomaly.HPThresholdIndicators.Add(new HPThresholdIndicator()
             {
-                ValueFunction = (indicator, npc, bar) => npc.Anomaly.IsRunningAnomalyAI && condition(npc) ? AnomalySharedData.AnomalyUltramundane ? anomalyUltraLifeRatio : anomalyLifeRatio : 0f,
+                ValueFunction = (indicator, npc, bar) => npc.Anomaly.IsRunningAnomalyAI && condition(npc)
+                    ? HPThresholdMath.GetPosition(lifeSource, AnomalySharedData.AnomalyUltramundane ? anomalyUltraLifeRatio : anomalyLifeRatio, npc.lifeMax, bar.InitialMaxLife)
+                    : 0f,
+                ProgressFunction = (indicator, npc, bar) => HPThresholdMath.GetProgress(lifeSource, npc.life, npc.lifeMax, bar.ExtraNPCLife, bar.InitialMaxLife),
                 CustomUpdateFunction = (indicator, npc, bar) =>
                 {
                     if (!npc.Anomaly.IsRunningAnomalyAI || !condition(npc))
@@ -71,6 +74,10 @@ public static class AnomalyExtensions
                     () => Color.White, 0.1f, 0f)
             });
         }
+
+        /// <summary>添加额外血量阈值；0% 标记额外血量全部清零、本体仍满血的位置。</summary>
+        public void AddAnomalyExtraHPIndicator(float anomalyLifeRatio, float anomalyUltraLifeRatio, bool isSubPhaseIndicator = false, Func<NPC, bool> condition = null)
+            => npc.AddAnomalyHPIndicator(anomalyLifeRatio, anomalyUltraLifeRatio, isSubPhaseIndicator, condition, HPThresholdLifeSource.Extra);
     }
 
     extension(Player player)

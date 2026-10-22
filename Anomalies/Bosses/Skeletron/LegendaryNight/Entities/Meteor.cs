@@ -1,7 +1,9 @@
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class Meteor : AnomalyModProjectile
 {
+    public override string Texture => LegendaryNightHandler.LegendaryNightPath + "Entities/Meteor";
+
     public const int TrailLength = 50;
 
     public static readonly SoundStyle SummonSound = new(LegendaryNightHandler.LegendaryNightEntityPath + "MeteorSummon") { MaxInstances = 0 };

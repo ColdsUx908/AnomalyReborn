@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.Skeletron.LegendaryNight.Entities;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 // ai[0]：铜/银/金/铂；ai[1]：预警计时；ai[2]：所属骷髅王（1-based）。
 public sealed class CoinJudgment : AnomalyModProjectile

@@ -1,7 +1,6 @@
 using Anomalies.Bosses.BrainofCthulhu;
 using Anomalies.Bosses.EaterofWorlds;
-using Anomalies.Bosses.Skeletron.LegendaryNight.Misc;
-using Anomalies.DataStructures;
+using Anomalies.Bosses.Skeletron.LegendaryNight;
 using Anomalies.Visuals.BossBar;
 using Transoceanic.Framework.Helpers.Utilities;
 
@@ -26,6 +25,34 @@ public sealed class AnomalyPlayer : ModPlayer
         set => field = MathHelper.Clamp(value, 0f, 1f);
     }
 
+    // 落日遗逢的本地输入与飘带视觉状态，不参与网络快照。
+    public bool EventideReunionRightWasDown;
+    public int EventideReunionSunCooldown;
+    public int EventideReunionDeathCooldown;
+    public int EventideReunionDeathProtection;
+    public int EventideReunionSunFallProtection;
+
+    internal Vector2[][] EventideReunionStreamerPositions
+    {
+        get => field ??= [new Vector2[33], new Vector2[33]];
+        private set;
+    }
+
+    internal Vector2[][] EventideReunionStreamerPrevious
+    {
+        get => field ??= [new Vector2[33], new Vector2[33]];
+        private set;
+    }
+
+    internal Vector2[] EventideReunionStreamerAnchors
+    {
+        get => field ??= new Vector2[2];
+        private set;
+    }
+
+    internal ulong EventideReunionStreamerLastUpdate;
+    internal bool EventideReunionStreamerInitialized;
+
     public Item LegendaryNightVirtualBoneWings;
 
     public bool Minion_VacuousBlack;
@@ -44,6 +71,16 @@ public sealed class AnomalyPlayer : ModPlayer
         clone.DownedBoss = DownedBoss;
 
         clone.DarknessIntensity = DarknessIntensity;
+        clone.EventideReunionRightWasDown = EventideReunionRightWasDown;
+        clone.EventideReunionSunCooldown = EventideReunionSunCooldown;
+        clone.EventideReunionDeathCooldown = EventideReunionDeathCooldown;
+        clone.EventideReunionDeathProtection = EventideReunionDeathProtection;
+        clone.EventideReunionSunFallProtection = EventideReunionSunFallProtection;
+        clone.EventideReunionStreamerPositions = null;
+        clone.EventideReunionStreamerPrevious = null;
+        clone.EventideReunionStreamerAnchors = null;
+        clone.EventideReunionStreamerLastUpdate = 0;
+        clone.EventideReunionStreamerInitialized = false;
         clone.LegendaryNightVirtualBoneWings = LegendaryNightVirtualBoneWings?.Clone();
         clone.StarGodBlessingActive = StarGodBlessingActive;
         clone.StarGodBlessingOpacity = StarGodBlessingOpacity;
@@ -63,6 +100,9 @@ public sealed class AnomalyPlayer : ModPlayer
 
 public sealed class AnomalyGlobalNPC : GlobalNPC, IContentLoader
 {
+    public int EventideReunionDeathOwner = -1;
+    // 仅在回斩/波的伤害结算期间有效，供致死回调使用，不参与网络快照。
+    public int EventideReunionDeathHitOwner = -1;
     public override bool InstancePerEntity => true;
 
 #if DEBUG

@@ -1,5 +1,4 @@
 ﻿using Anomalies.Bosses.KingSlime;
-using Anomalies.DataStructures;
 
 namespace Anomalies.Bosses.QueenSlime;
 

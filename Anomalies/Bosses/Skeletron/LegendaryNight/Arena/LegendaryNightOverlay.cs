@@ -3,7 +3,7 @@ using Anomalies.Visuals.Overlays;
 using Terraria.Graphics.Effects;
 using Transoceanic.DataStructures.Rendering;
 
-namespace Anomalies.Bosses.Skeletron.LegendaryNight.Arena;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class LegendaryNightOverlay : CustomOverlay
 {
