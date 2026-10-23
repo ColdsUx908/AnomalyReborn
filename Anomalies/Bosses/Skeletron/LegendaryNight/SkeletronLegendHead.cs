@@ -255,7 +255,7 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         IsSummoningHands = false;
 
         NPC.AddAnomalyHPIndicator(Phase2LifeRatio, Phase2LifeRatio);
-        AnomalyNPC.DynamicDRHandler = new TimedDDRHandler(
+        AnomalyNPC.DamageReduction_DynamicHandler = new TimedDDRHandler(
             new TimedDDRHandler.SingleDDRHandler(1f, 0f,
                 n => GetInstance(n).Phase2 && GetInstance(n).Phase2ElapsedTime > 0,
                 n => GetInstance(n).Phase2ElapsedTime >= Phase2MinimumDuration,
@@ -293,7 +293,7 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         if (Phase2MusicActive)
             Timer5++;
 
-        AnomalyNPC.CurrentlyImmune = CurrentPhase == Phase.PhaseChange_1To2;
+        AnomalyNPC.BossBar_Immune = CurrentPhase == Phase.PhaseChange_1To2;
 
         switch (CurrentPhase)
         {

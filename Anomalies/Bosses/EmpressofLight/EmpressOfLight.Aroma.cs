@@ -58,13 +58,13 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
         if (shouldBeInPhase2ButIsStillInPhase1)
             anomalyNPC.DR = 0.99f;
 
-        anomalyNPC.CurrentlyIncreasingDefenseOrDR = shouldBeInPhase2ButIsStillInPhase1 || npc.ai[0] == 6f;
+        anomalyNPC.BossBar_IncreasingDefenseOrDR = shouldBeInPhase2ButIsStillInPhase1 || npc.ai[0] == 6f;
 
         bool dayTimeEnrage = NPC.ShouldEmpressBeEnraged();
         if (npc.life == npc.lifeMax && dayTimeEnrage && !npc.AI_120_HallowBoss_IsGenuinelyEnraged())
             npc.ai[3] += 2f;
 
-        anomalyNPC.CurrentlyEnraged = !bossRush && dayTimeEnrage;
+        anomalyNPC.BossBar_Enraged = !bossRush && dayTimeEnrage;
 
         int projectileDamageMultiplier = dayTimeEnrage ? 2 : 1;
 

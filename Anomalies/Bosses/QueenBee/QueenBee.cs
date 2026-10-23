@@ -335,7 +335,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
             AttackRandomVariation_BeeSwarmPhase2 = Main.rand.NextBool();
         }
 
-        AnomalyNPC.DynamicDRHandler = new TimedDDRHandler(
+        AnomalyNPC.DamageReduction_DynamicHandler = new TimedDDRHandler(
             new TimedDDRHandler.SingleDDRHandler(1f, Phase2LifeRatio, null, n => GetInstance(n).CurrentPhase >= Phase.PhaseChange_1To2, 60),
             new TimedDDRHandler.SingleDDRHandler(0.5f, 0f, n => GetInstance(n).Phase2, null, 45)
         );

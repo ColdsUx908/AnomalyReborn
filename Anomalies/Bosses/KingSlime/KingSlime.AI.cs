@@ -23,11 +23,11 @@ public sealed partial class KingSlime
             SapphireBuffRatio += 0.02f;
         else
             SapphireBuffRatio -= 0.025f;
-        AnomalyNPC.CurrentlyIncreasingDefenseOrDR = hasSapphireBuff;
+        AnomalyNPC.BossBar_IncreasingDefenseOrDR = hasSapphireBuff;
         NPC.defense = JewelSapphireDead ? (int)(NPC.defDefense * 0.75f) : hasSapphireBuff ? (int)(NPC.defDefense * 1.25f) : NPC.defDefense;
         AnomalyNPC.DR = Ultra && hasSapphireBuff ? 0.2f : 0f;
 
-        AnomalyNPC.CurrentlyImmune = InvalidPhase1;
+        AnomalyNPC.BossBar_Immune = InvalidPhase1;
 
         switch (CurrentPhase)
         {

@@ -115,137 +115,55 @@ public static partial class TOExtensions
         /// <summary>
         /// 执行一个飞行宠物的 AI 行为，使弹幕跟随玩家移动。
         /// </summary>
-        /// <param name="reverseDitection">是否反转方向（速度向右时设置方向为 -1，而不是 1）。</param>
+        /// <param name="reverseDitection">是否反转朝向。</param>
         /// <param name="tiltFloat">倾斜浮动值。</param>
         /// <param name="lightPet">是否为光源宠物。</param>
         public void FloatingPetAI(bool reverseDitection, float tiltFloat, bool lightPet = false)
         {
             Player player = Main.player[projectile.owner];
 
-            //anti sticking movement as a failsafe
-            float SAImovement = 0.05f;
-            for (int k = 0; k < Main.maxProjectiles; k++)
-            {
-                Projectile otherProj = Main.projectile[k];
-                // Short circuits to make the loop as fast as possible
-                if (!otherProj.active || otherProj.owner != projectile.owner || !Main.projPet[otherProj.type] || k == projectile.whoAmI)
-                    continue;
-
-                // If the other projectile is indeed another pet owned by the same player and they're too close, nudge them away.
-                bool isPet = Main.projPet[otherProj.type];
-                float taxicabDist = Math.Abs(projectile.position.X - otherProj.position.X) + Math.Abs(projectile.position.Y - otherProj.position.Y);
-                if (isPet && taxicabDist < projectile.width)
-                {
-                    if (projectile.position.X < otherProj.position.X)
-                        projectile.velocity.X -= SAImovement;
-                    else
-                        projectile.velocity.X += SAImovement;
-
-                    if (projectile.position.Y < otherProj.position.Y)
-                        projectile.velocity.Y -= SAImovement;
-                    else
-                        projectile.velocity.Y += SAImovement;
-                }
-            }
-
-            float passiveMvtFloat = 0.5f;
             projectile.tileCollide = false;
-            float range = 100f;
-            Vector2 projPos = projectile.Center;
-            float xDist = player.Center.X - projPos.X;
-            float yDist = player.Center.Y - projPos.Y;
-            yDist += Main.rand.NextFloat(-10, 20);
-            xDist += Main.rand.NextFloat(-10, 20);
-            //Light pets lead the player, normal pets trail the player
-            xDist += 60f * (lightPet ? player.direction : -(float)player.direction);
-            yDist -= 60f;
-            Vector2 playerVector = new(xDist, yDist);
-            float playerDist = playerVector.Length();
-            float returnSpeed = 18f;
 
-            //If player is close enough, resume normal
-            if (playerDist < range && player.velocity.Y == 0f &&
-                projectile.Bottom.Y <= player.Bottom.Y &&
-                !Collision.SolidCollision(projectile.position, projectile.width, projectile.height))
+            // 保留原有停驻偏移，使用原版小光之女皇的跟随移动逻辑。
+            Vector2 idleOffset = new(60f * (lightPet ? player.direction : -player.direction), -60f);
+            Vector2 idlePosition = player.Center + idleOffset;
+            float distance = Vector2.Distance(projectile.Center, idlePosition);
+            if (distance > 1000f)
             {
-                if (projectile.velocity.Y < -6f)
-                {
-                    projectile.velocity.Y = -6f;
-                }
-            }
-
-            //Teleport to player if too far
-            if (playerDist > 2000f)
-            {
-                projectile.Center = player.Center;
+                projectile.Center = player.Center + idleOffset;
                 projectile.netUpdate = true;
             }
 
-            if (playerDist < 50f)
+            Vector2 displacement = idlePosition - projectile.Center;
+            if (distance < 4f)
+                projectile.velocity *= 0.25f;
+
+            if (displacement != Vector2.Zero)
+                projectile.velocity = displacement.Length() < 4f ? displacement : displacement * 0.1f;
+
+            projectile.direction = player.direction;
+            if (distance > 50f)
+                projectile.direction = projectile.velocity.X < 0f ? -1 : 1;
+            if (reverseDitection)
+                projectile.direction *= -1;
+            projectile.spriteDirection = projectile.direction;
+
+            if (projectile.velocity.Length() > 6f)
             {
-                if (Math.Abs(projectile.velocity.X) > 2f || Math.Abs(projectile.velocity.Y) > 2f)
-                {
-                    projectile.velocity *= 0.99f;
-                }
-                passiveMvtFloat = 0.01f;
+                float targetRotation = projectile.velocity.X * tiltFloat;
+                if (Math.Abs(projectile.rotation - targetRotation) >= MathHelper.Pi)
+                    projectile.rotation += targetRotation < projectile.rotation ? -MathHelper.TwoPi : MathHelper.TwoPi;
+                projectile.rotation = (projectile.rotation * 11f + targetRotation) / 12f;
             }
             else
             {
-                if (playerDist < 100f)
-                {
-                    passiveMvtFloat = 0.1f;
-                }
-                if (playerDist > 300f)
-                {
-                    passiveMvtFloat = 1f;
-                }
-                playerDist = returnSpeed / playerDist;
-                playerVector.X *= playerDist;
-                playerVector.Y *= playerDist;
+                if (projectile.rotation > MathHelper.Pi)
+                    projectile.rotation -= MathHelper.TwoPi;
+                if (projectile.rotation > -0.005f && projectile.rotation < 0.005f)
+                    projectile.rotation = 0f;
+                else
+                    projectile.rotation *= 0.96f;
             }
-            if (projectile.velocity.X < playerVector.X)
-            {
-                projectile.velocity.X += passiveMvtFloat;
-                if (passiveMvtFloat > 0.05f && projectile.velocity.X < 0f)
-                {
-                    projectile.velocity.X += passiveMvtFloat;
-                }
-            }
-            if (projectile.velocity.X > playerVector.X)
-            {
-                projectile.velocity.X -= passiveMvtFloat;
-                if (passiveMvtFloat > 0.05f && projectile.velocity.X > 0f)
-                {
-                    projectile.velocity.X -= passiveMvtFloat;
-                }
-            }
-            if (projectile.velocity.Y < playerVector.Y)
-            {
-                projectile.velocity.Y += passiveMvtFloat;
-                if (passiveMvtFloat > 0.05f && projectile.velocity.Y < 0f)
-                {
-                    projectile.velocity.Y += passiveMvtFloat * 2f;
-                }
-            }
-            if (projectile.velocity.Y > playerVector.Y)
-            {
-                projectile.velocity.Y -= passiveMvtFloat;
-                if (passiveMvtFloat > 0.05f && projectile.velocity.Y > 0f)
-                {
-                    projectile.velocity.Y -= passiveMvtFloat * 2f;
-                }
-            }
-            if (projectile.velocity.X >= 0.25f)
-            {
-                projectile.direction = reverseDitection ? 1 : -1;
-            }
-            else if (projectile.velocity.X < -0.25f)
-            {
-                projectile.direction = reverseDitection ? -1 : 1;
-            }
-            //Tilting and change directions
-            projectile.spriteDirection = projectile.direction;
-            projectile.rotation = projectile.velocity.X * tiltFloat;
         }
 
         #region GlobalProjectile

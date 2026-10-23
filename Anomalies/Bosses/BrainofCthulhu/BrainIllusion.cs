@@ -121,14 +121,14 @@ public class BrainIllusion : AnomalyModNPC
             if (Time < 60)
             {
                 float lerp = (Time - 30) / 30f;
-                float circleDist = MathHelper.Lerp(BrainofCthulhu.IllusionDashTeleportDistance, BrainofCthulhu.IllusionDashCloseInDistance, BrainCombatUtils.SineInOutEasing(lerp, 1));
+                float circleDist = MathHelper.Lerp(BrainofCthulhu.IllusionDashTeleportDistance, BrainofCthulhu.IllusionDashCloseInDistance, TOMathUtils.Interpolation.SineEaseInOut(lerp, clamped: false));
                 NPC.Center = Vector2.Lerp(OldPos, target.Center + (Angle.ToRotationVector2() * circleDist), lerp);
-                Angle += MathHelper.Lerp(0f, BrainofCthulhu.IllusionDashStartingSpinSpeed, BrainCombatUtils.SineInEasing(lerp, 1));
+                Angle += MathHelper.Lerp(0f, BrainofCthulhu.IllusionDashStartingSpinSpeed, TOMathUtils.Interpolation.SineEaseIn(lerp, clamped: false));
             }
             else if (Time <= 60f + BrainofCthulhu.IllusionDashSpinDuration)
             {
                 NPC.Center = target.Center + Angle.ToRotationVector2() * BrainofCthulhu.IllusionDashCloseInDistance;
-                Angle += MathHelper.Lerp(BrainofCthulhu.IllusionDashStartingSpinSpeed, 0f, BrainCombatUtils.SineOutEasing((Time - 60) / BrainofCthulhu.IllusionDashSpinDuration, 1));
+                Angle += MathHelper.Lerp(BrainofCthulhu.IllusionDashStartingSpinSpeed, 0f, TOMathUtils.Interpolation.SineEaseOut((Time - 60) / BrainofCthulhu.IllusionDashSpinDuration, clamped: false));
             }
             else if (Time <= 90 + BrainofCthulhu.IllusionDashSpinDuration)
             {
@@ -142,7 +142,7 @@ public class BrainIllusion : AnomalyModNPC
                 NPC.velocity = (Angle + MathHelper.Pi).ToRotationVector2() * BrainofCthulhu.IllusionDashVelocity;
             else if (Time <= 91 + BrainofCthulhu.IllusionDashSpinDuration + BrainofCthulhu.IllusionDashTeleportDuration)
             {
-                NPC.Opacity = MathHelper.Lerp(1f, 0.25f, BrainCombatUtils.SineInEasing((Time - (91 + BrainofCthulhu.IllusionDashSpinDuration)) / BrainofCthulhu.IllusionDashTeleportDuration, 1));
+                NPC.Opacity = MathHelper.Lerp(1f, 0.25f, TOMathUtils.Interpolation.SineEaseIn((Time - (91 + BrainofCthulhu.IllusionDashSpinDuration)) / BrainofCthulhu.IllusionDashTeleportDuration, clamped: false));
                 if (NPC.Opacity < 0.666f)
                     NPC.damage = 0;
             }
@@ -197,7 +197,7 @@ public class BrainIllusion : AnomalyModNPC
         if (TeleportTime != 0)
         {
             //Color glowColor = Color.White * (teleportCounter / 30f);
-            scale = Vector2.Lerp(Vector2.One, new Vector2(0.5f + ((float)Math.Cos(Time / (TeleportDuration / 2f) * MathHelper.TwoPi) / 2f + 0.5f), 0.5f + ((float)Math.Sin(Time / (TeleportDuration / 2f) * MathHelper.TwoPi) / 2f + 0.5f)), BrainCombatUtils.SineInOutEasing(TeleportTime / (TeleportDuration / 2f), 1));
+            scale = Vector2.Lerp(Vector2.One, new Vector2(0.5f + ((float)Math.Cos(Time / (TeleportDuration / 2f) * MathHelper.TwoPi) / 2f + 0.5f), 0.5f + ((float)Math.Sin(Time / (TeleportDuration / 2f) * MathHelper.TwoPi) / 2f + 0.5f)), TOMathUtils.Interpolation.SineEaseInOut(TeleportTime / (TeleportDuration / 2f), clamped: false));
             spriteBatch.Draw(texture, drawPos, frame, Lighting.GetColor(NPC.Center.ToTileCoordinates()) * NPC.Opacity * opacityMult, NPC.rotation, frame.Size() * 0.5f, scale * NPC.scale, 0, 0);
             //spriteBatch.Draw(GetBrainGlow(), drawPos, npc.frame, glowColor, npc.rotation, npc.frame.Size() * 0.5f, scale, 0, 0);
         }

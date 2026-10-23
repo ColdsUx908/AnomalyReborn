@@ -142,7 +142,7 @@ public sealed partial class SkeletronLegendHead
             ResetPhaseState();
             Phase2ElapsedTime = 0;
             CurrentPhase = Phase.Phase2_1;
-            AnomalyNPC.CurrentlyImmune = false;
+            AnomalyNPC.BossBar_Immune = false;
             NPC.dontTakeDamage = false;
             NPC.Opacity = 1f;
         }

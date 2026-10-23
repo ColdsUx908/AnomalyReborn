@@ -32,7 +32,7 @@ public sealed partial class EyeofCthulhu
         else if (Timer5 > 0)
             Timer5--;
 
-        AnomalyNPC.CurrentlyImmune = InvalidPhase2;
+        AnomalyNPC.BossBar_Immune = InvalidPhase2;
 
         if (Main.rand.NextBool(5))
         {

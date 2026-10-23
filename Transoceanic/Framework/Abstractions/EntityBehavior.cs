@@ -1,4 +1,4 @@
-﻿using Terraria.GameContent.Bestiary;
+using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
 
@@ -390,23 +390,11 @@ public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
     /// <inheritdoc cref="ModPlayer.OnHitAnything"/>
     public virtual void OnHitAnything(float x, float y, Entity victim) { }
 
-    /// <inheritdoc cref="ModPlayer.CanHitNPC"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool CanHitNPC(NPC target) => true;
-
-    /// <inheritdoc cref="ModPlayer.CanMeleeAttackCollideWithNPC"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, NPC target) => null;
-
     /// <inheritdoc cref="ModPlayer.ModifyHitNPC"/>
     public virtual void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) { }
 
     /// <inheritdoc cref="ModPlayer.OnHitNPC"/>
     public virtual void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) { }
-
-    /// <inheritdoc cref="ModPlayer.CanHitNPCWithItem"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool? CanHitNPCWithItem(Item item, NPC target) => null;
 
     /// <inheritdoc cref="ModPlayer.ModifyHitNPCWithItem"/>
     public virtual void ModifyHitNPCWithItem(Item item, NPC target, ref NPC.HitModifiers modifiers) { }
@@ -414,37 +402,17 @@ public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
     /// <inheritdoc cref="ModPlayer.OnHitNPCWithItem"/>
     public virtual void OnHitNPCWithItem(Item item, NPC target, NPC.HitInfo hit, int damageDone) { }
 
-    /// <inheritdoc cref="ModPlayer.CanHitNPCWithProj"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool? CanHitNPCWithProj(Projectile proj, NPC target) => null;
-
     /// <inheritdoc cref="ModPlayer.ModifyHitNPCWithProj"/>
     public virtual void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers) { }
 
     /// <inheritdoc cref="ModPlayer.OnHitNPCWithProj"/>
     public virtual void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone) { }
 
-    /// <inheritdoc cref="ModPlayer.CanHitPvp"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool CanHitPvp(Item item, Player target) => true;
-
-    /// <inheritdoc cref="ModPlayer.CanHitPvpWithProj"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool CanHitPvpWithProj(Projectile proj, Player target) => true;
-
-    /// <inheritdoc cref="ModPlayer.CanBeHitByNPC"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool CanBeHitByNPC(NPC npc, ref int cooldownSlot) => true;
-
     /// <inheritdoc cref="ModPlayer.ModifyHitByNPC"/>
     public virtual void ModifyHitByNPC(NPC npc, ref Player.HurtModifiers modifiers) { }
 
     /// <inheritdoc cref="ModPlayer.OnHitByNPC"/>
     public virtual void OnHitByNPC(NPC npc, Player.HurtInfo hurtInfo) { }
-
-    /// <inheritdoc cref="ModPlayer.CanBeHitByProjectile"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool CanBeHitByProjectile(Projectile proj) => true;
 
     /// <inheritdoc cref="ModPlayer.ModifyHitByProjectile"/>
     public virtual void ModifyHitByProjectile(Projectile proj, ref Player.HurtModifiers modifiers) { }
@@ -478,6 +446,9 @@ public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
 
     /// <inheritdoc cref="ModPlayer.ModifyDrawInfo"/>
     public virtual void ModifyDrawInfo(ref PlayerDrawSet drawInfo) { }
+
+    /// <inheritdoc cref="ModPlayer.TransformDrawData"/>
+    public virtual void TransformDrawData(ref PlayerDrawSet drawInfo) { }
 
     /// <inheritdoc cref="ModPlayer.ModifyDrawLayerOrdering"/>
     public virtual void ModifyDrawLayerOrdering(IDictionary<PlayerDrawLayer, PlayerDrawLayer.Position> positions) { }
@@ -646,23 +617,11 @@ public abstract class GlobalNPCBehavior : GlobalEntityBehavior<NPC>
     /// <inheritdoc cref="GlobalNPC.ModifyGlobalLoot"/>
     public virtual void ModifyGlobalLoot(GlobalLoot globalLoot) { }
 
-    /// <inheritdoc cref="GlobalNPC.CanHitPlayer"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot) => true;
-
     /// <inheritdoc cref="GlobalNPC.ModifyHitPlayer"/>
     public virtual void ModifyHitPlayer(NPC npc, Player target, ref Player.HurtModifiers modifiers) { }
 
     /// <inheritdoc cref="GlobalNPC.OnHitPlayer"/>
     public virtual void OnHitPlayer(NPC npc, Player target, Player.HurtInfo hurtInfo) { }
-
-    /// <inheritdoc cref="GlobalNPC.CanHitNPC"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool CanHitNPC(NPC npc, NPC target) => true;
-
-    /// <inheritdoc cref="GlobalNPC.CanBeHitByNPC"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool CanBeHitByNPC(NPC npc, NPC attacker) => true;
 
     /// <inheritdoc cref="GlobalNPC.ModifyHitNPC"/>
     public virtual void ModifyHitNPC(NPC npc, NPC target, ref NPC.HitModifiers modifiers) { }
@@ -670,23 +629,11 @@ public abstract class GlobalNPCBehavior : GlobalEntityBehavior<NPC>
     /// <inheritdoc cref="GlobalNPC.OnHitNPC"/>
     public virtual void OnHitNPC(NPC npc, NPC target, NPC.HitInfo hit) { }
 
-    /// <inheritdoc cref="GlobalNPC.CanBeHitByItem"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool? CanBeHitByItem(NPC npc, Player player, Item item) => null;
-
-    /// <inheritdoc cref="GlobalNPC.CanCollideWithPlayerMeleeAttack"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool? CanCollideWithPlayerMeleeAttack(NPC npc, Player player, Item item, Rectangle meleeAttackHitbox) => null;
-
     /// <inheritdoc cref="GlobalNPC.ModifyHitByItem"/>
     public virtual void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) { }
 
     /// <inheritdoc cref="GlobalNPC.OnHitByItem"/>
     public virtual void OnHitByItem(NPC npc, Player player, Item item, NPC.HitInfo hit, int damageDone) { }
-
-    /// <inheritdoc cref="GlobalNPC.CanBeHitByProjectile"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool? CanBeHitByProjectile(NPC npc, Projectile projectile) => null;
 
     /// <inheritdoc cref="GlobalNPC.ModifyHitByProjectile"/>
     public virtual void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) { }
@@ -871,33 +818,17 @@ public abstract class GlobalProjectileBehavior : GlobalEntityBehavior<Projectile
     /// <inheritdoc cref="GlobalProjectile.ModifyDamageHitbox"/>
     public virtual void ModifyDamageHitbox(Projectile projectile, ref Rectangle hitbox) { }
 
-    /// <inheritdoc cref="GlobalProjectile.CanHitNPC"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool? CanHitNPC(Projectile projectile, NPC target) => null;
-
     /// <inheritdoc cref="GlobalProjectile.ModifyHitNPC"/>
     public virtual void ModifyHitNPC(Projectile projectile, NPC target, ref NPC.HitModifiers modifiers) { }
 
     /// <inheritdoc cref="GlobalProjectile.OnHitNPC"/>
     public virtual void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone) { }
 
-    /// <inheritdoc cref="GlobalProjectile.CanHitPvp"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool CanHitPvp(Projectile projectile, Player target) => true;
-
-    /// <inheritdoc cref="GlobalProjectile.CanHitPlayer"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool CanHitPlayer(Projectile projectile, Player target) => true;
-
     /// <inheritdoc cref="GlobalProjectile.ModifyHitPlayer"/>
     public virtual void ModifyHitPlayer(Projectile projectile, Player target, ref Player.HurtModifiers modifiers) { }
 
     /// <inheritdoc cref="GlobalProjectile.OnHitPlayer"/>
     public virtual void OnHitPlayer(Projectile projectile, Player target, Player.HurtInfo info) { }
-
-    /// <inheritdoc cref="GlobalProjectile.Colliding"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool? Colliding(Projectile projectile, Rectangle projHitbox, Rectangle targetHitbox) => null;
 
     /// <inheritdoc cref="GlobalProjectile.GetAlpha"/>
     public virtual Color? GetAlpha(Projectile projectile, Color lightColor) => null;
@@ -1073,23 +1004,11 @@ public abstract class GlobalItemBehavior : GlobalEntityBehavior<Item>
     /// <inheritdoc cref="GlobalItem.ModifyItemScale"/>
     public virtual void ModifyItemScale(Item item, Player player, ref float scale) { }
 
-    /// <inheritdoc cref="GlobalItem.CanHitNPC"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool? CanHitNPC(Item item, Player player, NPC target) => null;
-
-    /// <inheritdoc cref="GlobalItem.CanMeleeAttackCollideWithNPC"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, Player player, NPC target) => null;
-
     /// <inheritdoc cref="GlobalItem.ModifyHitNPC"/>
     public virtual void ModifyHitNPC(Item item, Player player, NPC target, ref NPC.HitModifiers modifiers) { }
 
     /// <inheritdoc cref="GlobalItem.OnHitNPC"/>
     public virtual void OnHitNPC(Item item, Player player, NPC target, NPC.HitInfo hit, int damageDone) { }
-
-    /// <inheritdoc cref="GlobalItem.CanHitPvp"/>
-    [Obsolete("Poor performance.", true)]
-    public virtual bool CanHitPvp(Item item, Player player, Player target) => true;
 
     /// <inheritdoc cref="GlobalItem.ModifyHitPvp"/>
     public virtual void ModifyHitPvp(Item item, Player player, Player target, ref Player.HurtModifiers modifiers) { }
@@ -2395,30 +2314,6 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
             npcBehavior.HitEffect(hit);
     }
 
-    [Obsolete("Poor performance.", true)]
-    public override bool? CanBeHitByItem(NPC npc, Player player, Item item)
-    {
-        if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
-        {
-            bool? result = npcBehavior.CanBeHitByItem(player, item);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }
-
-    [Obsolete("Poor performance.", true)]
-    public override bool? CanCollideWithPlayerMeleeAttack(NPC npc, Player player, Item item, Rectangle meleeAttackHitbox)
-    {
-        if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
-        {
-            bool? result = npcBehavior.CanCollideWithPlayerMeleeAttack(player, item, meleeAttackHitbox);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }
-
     public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
     {
         if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
@@ -2429,18 +2324,6 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
     {
         if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
             npcBehavior.OnHitByItem(player, item, hit, damageDone);
-    }
-
-    [Obsolete("Poor performance.", true)]
-    public override bool? CanBeHitByProjectile(NPC npc, Projectile projectile)
-    {
-        if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
-        {
-            bool? result = npcBehavior.CanBeHitByProjectile(projectile);
-            if (result is not null)
-                return result;
-        }
-        return null;
     }
 
     public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
@@ -2455,32 +2338,10 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
             npcBehavior.OnHitByProjectile(projectile, hit, damageDone);
     }
 
-    [Obsolete("Poor performance.", true)]
-    public override bool CanBeHitByNPC(NPC npc, NPC attacker)
-    {
-        if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
-        {
-            if (!npcBehavior.CanBeHitByNPC(attacker))
-                return false;
-        }
-        return true;
-    }
-
     public override void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers)
     {
         if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
             npcBehavior.ModifyIncomingHit(ref modifiers);
-    }
-
-    [Obsolete("Poor performance.", true)]
-    public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
-    {
-        if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
-        {
-            if (!npcBehavior.CanHitPlayer(target, ref cooldownSlot))
-                return false;
-        }
-        return true;
     }
 
     public override void ModifyHitPlayer(NPC npc, Player target, ref Player.HurtModifiers modifiers)
@@ -2493,17 +2354,6 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
     {
         if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
             npcBehavior.OnHitPlayer(target, hurtInfo);
-    }
-
-    [Obsolete("Poor performance.", true)]
-    public override bool CanHitNPC(NPC npc, NPC target)
-    {
-        if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
-        {
-            if (!npcBehavior.CanHitNPC(target))
-                return false;
-        }
-        return true;
     }
 
     public override void ModifyHitNPC(NPC npc, NPC target, ref NPC.HitModifiers modifiers)
@@ -2922,18 +2772,6 @@ public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : Glo
             projectileBehavior.ModifyDamageHitbox(ref hitbox);
     }
 
-    [Obsolete("Poor performance.", true)]
-    public override bool? CanHitNPC(Projectile projectile, NPC target)
-    {
-        if (TryGetBehavior(projectile, out TProjectileBehavior projectileBehavior))
-        {
-            bool? result = projectileBehavior.CanHitNPC(target);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }
-
     public override void ModifyHitNPC(Projectile projectile, NPC target, ref NPC.HitModifiers modifiers)
     {
         if (TryGetBehavior(projectile, out TProjectileBehavior projectileBehavior))
@@ -2944,28 +2782,6 @@ public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : Glo
     {
         if (TryGetBehavior(projectile, out TProjectileBehavior projectileBehavior))
             projectileBehavior.OnHitNPC(target, hit, damageDone);
-    }
-
-    [Obsolete("Poor performance.", true)]
-    public override bool CanHitPvp(Projectile projectile, Player target)
-    {
-        if (TryGetBehavior(projectile, out TProjectileBehavior projectileBehavior))
-        {
-            if (!projectileBehavior.CanHitPvp(target))
-                return false;
-        }
-        return true;
-    }
-
-    [Obsolete("Poor performance.", true)]
-    public override bool CanHitPlayer(Projectile projectile, Player target)
-    {
-        if (TryGetBehavior(projectile, out TProjectileBehavior projectileBehavior))
-        {
-            if (!projectileBehavior.CanHitPlayer(target))
-                return false;
-        }
-        return true;
     }
 
     public override void ModifyHitPlayer(Projectile projectile, Player target, ref Player.HurtModifiers modifiers)
@@ -2980,17 +2796,6 @@ public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : Glo
             projectileBehavior.OnHitPlayer(target, info);
     }
 
-    [Obsolete("Poor performance.", true)]
-    public override bool? Colliding(Projectile projectile, Rectangle projHitbox, Rectangle targetHitbox)
-    {
-        if (TryGetBehavior(projectile, out TProjectileBehavior projectileBehavior))
-        {
-            bool? result = projectileBehavior.Colliding(projHitbox, targetHitbox);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }
     #endregion Hit
 
     #region SpecialEffects
@@ -3470,30 +3275,6 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
     #endregion ModifyStats
 
     #region Hit
-    [Obsolete("Poor performance.", true)]
-    public override bool? CanHitNPC(Item item, Player player, NPC target)
-    {
-        if (TryGetBehavior(item, out TItemBehavior itemBehavior))
-        {
-            bool? result = itemBehavior.CanHitNPC(player, target);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }
-
-    [Obsolete("Poor performance.", true)]
-    public override bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, Player player, NPC target)
-    {
-        if (TryGetBehavior(item, out TItemBehavior itemBehavior))
-        {
-            bool? result = itemBehavior.CanMeleeAttackCollideWithNPC(meleeAttackHitbox, player, target);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }
-
     public override void ModifyHitNPC(Item item, Player player, NPC target, ref NPC.HitModifiers modifiers)
     {
         if (TryGetBehavior(item, out TItemBehavior itemBehavior))
@@ -3504,18 +3285,6 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
     {
         if (TryGetBehavior(item, out TItemBehavior itemBehavior))
             itemBehavior.OnHitNPC(player, target, hit, damageDone);
-    }
-
-    [Obsolete("Poor performance.", true)]
-    public override bool CanHitPvp(Item item, Player player, Player target)
-    {
-        if (TryGetBehavior(item, out TItemBehavior itemBehavior))
-        {
-            bool result = itemBehavior.CanHitPvp(player, target);
-            if (!result)
-                return false;
-        }
-        return true;
     }
 
     public override void ModifyHitPvp(Item item, Player player, Player target, ref Player.HurtModifiers modifiers)

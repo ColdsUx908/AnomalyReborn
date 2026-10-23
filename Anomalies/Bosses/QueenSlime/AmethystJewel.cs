@@ -1,5 +1,3 @@
-﻿using Anomalies.Bosses.KingSlime;
-
 namespace Anomalies.Bosses.QueenSlime;
 
 public sealed class AmethystJewel : JewelNPC
@@ -92,6 +90,7 @@ public sealed class AmethystJewel : JewelNPC
 
         QueenSlime masterBehavior = QueenSlime.GetInstance(master);
 
+        /*
         if (CanAttack)
         {
             switch (CurrentBehavior)
@@ -126,6 +125,7 @@ public sealed class AmethystJewel : JewelNPC
             CurrentBehavior = Behavior.None;
             Timer1 = 0;
         }
+        */
     }
 
     public static bool CheckMasterJump(QueenSlime behavior) =>

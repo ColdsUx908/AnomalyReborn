@@ -58,7 +58,7 @@ public class EnhancedDarknessSystem : CustomOverlay, IContentLoader
             return;
 
         AnomalyPlayer anomalyPlayer = Main.LocalPlayer.Anomaly;
-        if (anomalyPlayer.DarknessIntensity <= 0)
+        if (anomalyPlayer.Visual_DarknessIntensity <= 0)
             return;
 
         _DefaultTexture ??= ParticleHandler.GetTexture<BloomParticle>();
@@ -82,7 +82,7 @@ public class EnhancedDarknessSystem : CustomOverlay, IContentLoader
         spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         AnomalyEffects.Overlays.SolidColorMask.Data
             .UseColor(Color.Black)
-            .UseOpacity(anomalyPlayer.DarknessIntensity)
+            .UseOpacity(anomalyPlayer.Visual_DarknessIntensity)
             .Apply();
         spriteBatch.Draw(lease.Target, Vector2.Zero, null, Color.White, 0, Vector2.Zero, 1, 0, 0);
         spriteBatch.End();
@@ -96,7 +96,7 @@ public class EnhancedDarknessSystem : CustomOverlay, IContentLoader
         if (intensityModifier is null)
             return;
         AnomalyPlayer anomalyPlayer = player.Anomaly;
-        anomalyPlayer.DarknessIntensity = intensityModifier(anomalyPlayer.DarknessIntensity);
+        anomalyPlayer.Visual_DarknessIntensity = intensityModifier(anomalyPlayer.Visual_DarknessIntensity);
     }
 
     void IContentLoader.PostSetupContent()

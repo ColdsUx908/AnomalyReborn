@@ -8,7 +8,14 @@ public class BrainOfCthulhuSystem : ModSystem
     public static bool IsBrainOfCthulhuTextureVanilla => _vanillaBoCTexture;
 
     private static bool _vanillaBoCTexture = true;
-    internal static Asset<Texture2D> tendril;
+    [LoadTexture("Terraria/Images/Chain12")]
+    internal static Asset<Texture2D> Tendril;
+
+    [LoadTexture("Anomalies/Bosses/BrainofCthulhu/Assets/VerticalSmearRagged")]
+    private static Asset<Texture2D> _BloodScytheSource;
+
+    [LoadTexture("Anomalies/Bosses/BrainofCthulhu/ReferenceBrainOfCthulhu")]
+    private static Asset<Texture2D> _ReferenceBrain;
     private static Texture2D tendrilGlow = null;
     private static Texture2D brainGlow = null;
     private static Texture2D creeperGlow = null;
@@ -20,8 +27,6 @@ public class BrainOfCthulhuSystem : ModSystem
 
     public override void OnModLoad()
     {
-        if (!Main.dedServ)
-            tendril = ModContent.Request<Texture2D>("Terraria/Images/Chain12");
         On_NPC.SpawnBoss += SpawnBrainNoMessage;
         On_Player.ItemCheck_UseBossSpawners += BlockRoar;
         On_Main.UpdateAudio_DecideOnNewMusic += StopBoss3FromStarting;
@@ -77,7 +82,7 @@ public class BrainOfCthulhuSystem : ModSystem
 
         SoundEngine.PlaySound(SoundID.NPCDeath1, Main.LocalPlayer.Center);
         self.ApplyItemTime(sItem);
-        BrainCombatUtils.SpawnBossUsingItem(self, NPCID.BrainofCthulhu);
+        TOCombatUtils.SpawnBossUsingItem(self, NPCID.BrainofCthulhu);
     }
 
     private void SpawnBrainNoMessage(On_NPC.orig_SpawnBoss orig, int spawnPositionX, int spawnPositionY, int Type, int targetPlayerIndex)
@@ -103,7 +108,7 @@ public class BrainOfCthulhuSystem : ModSystem
     {
         if (bloodScytheMask == null)
         {
-            Texture2D source = ModContent.Request<Texture2D>("Anomalies/Bosses/BrainofCthulhu/Assets/VerticalSmearRagged").Value;
+            Texture2D source = _BloodScytheSource.Value;
             Color[] pixels = new Color[source.Width * source.Height];
             source.GetData(pixels);
             for (int i = 0; i < pixels.Length; i++)
@@ -124,10 +129,10 @@ public class BrainOfCthulhuSystem : ModSystem
     {
         if (tendrilGlow == null)
         {
-            Texture2D tex = new(Main.graphics.GraphicsDevice, tendril.Value.Width, tendril.Value.Height);
+            Texture2D tex = new(Main.graphics.GraphicsDevice, Tendril.Value.Width, Tendril.Value.Height);
             Color[] BaseArray = new Color[tex.Width * tex.Height];
             Color[] ColorArray = new Color[tex.Width * tex.Height];
-            tendril.Value.GetData(BaseArray);
+            Tendril.Value.GetData(BaseArray);
             for (int i = 0; i < BaseArray.Length; i++)
             {
                 ColorArray[i] = new Color(255, 255, 255) * (BaseArray[i].A / 255f);
@@ -186,7 +191,7 @@ public class BrainOfCthulhuSystem : ModSystem
         {
             Main.QueueMainThreadAction(() =>
             {
-                Texture2D reference = ModContent.Request<Texture2D>("Anomalies/Bosses/BrainofCthulhu/ReferenceBrainOfCthulhu", AssetRequestMode.ImmediateLoad).Value;
+                Texture2D reference = _ReferenceBrain.Value;
                 Main.instance.LoadNPC(NPCID.BrainofCthulhu);
                 Texture2D usedTexture = TextureAssets.Npc[NPCID.BrainofCthulhu].Value;
                 int refSize = reference.Width * reference.Height;
@@ -358,7 +363,6 @@ public class BrainOfCthulhuSystem : ModSystem
         bloodScytheMask?.Dispose();
         bloodScytheMask = null;
         tendrilGlow = brainGlow = creeperGlow = null;
-        tendril = null;
         previousMusic = -1;
     }
 }

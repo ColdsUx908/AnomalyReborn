@@ -1,11 +1,8 @@
-﻿using Anomalies.Bosses.QueenSlime;
-
 namespace Anomalies.Bosses.KingSlime;
 
 public static class JewelHandler
 {
     public const string AnomalyKingSlimePath = AnomalySharedData.ModPath + "Bosses/KingSlime/";
-    public const string AnomalyQueenSlimePath = AnomalySharedData.ModPath + "Bosses/QueenSlime/";
 
     [LoadTexture(AnomalyKingSlimePath + "RubyJewelShards")]
     private static Asset<Texture2D> _RubyShardTexture;
@@ -23,10 +20,6 @@ public static class JewelHandler
     private static Asset<Texture2D> _RainbowShardTexture;
     public static Texture2D RainbowShardTexture => _RainbowShardTexture.Value;
 
-    [LoadTexture(AnomalyQueenSlimePath + "AmethystJewelShards")]
-    private static Asset<Texture2D> _AmethystShardTexture;
-    public static Texture2D AmethystShardTexture => _AmethystShardTexture.Value;
-
     public static readonly SoundStyle SpawnSound = new(AnomalyKingSlimePath + "JewelSpawn");
     public static readonly SoundStyle ShatterSound = new(AnomalyKingSlimePath + "JewelShatter");
     public static readonly SoundStyle ShootSound = new(AnomalyKingSlimePath + "JewelShoot");
@@ -38,12 +31,9 @@ public static class JewelHandler
     public static Color EmeraldColor => Aroma ? Color.Purple : Color.Lime with { B = 40 };
     public static Color SapphireColor => Aroma ? Color.Yellow : Color.Blue;
     public static Color RainbowColor => Main.DiscoColor;
-    public static Color AmethystColor => Aroma ? Color.Lime with { B = 40 } : Color.Purple;
-
-    //TODO：针对史莱姆皇后宝石的逻辑
 
     /// <summary>
-    /// 获取宝石对应的 <see cref="IKingSlimeJewel"/> 实例。
+    /// 获取宝石对应的 <see cref="JewelNPC"/> 实例。
     /// </summary>
     public static JewelNPC GetKingSlimeJewel(NPC jewel) => jewel.ModNPC switch
     {
@@ -51,8 +41,6 @@ public static class JewelHandler
         EmeraldJewel emerald => emerald,
         SapphireJewel sapphire => sapphire,
         RainbowJewel rainbow => rainbow,
-
-        AmethystJewel amethyst => amethyst,
 
         _ => null
     };
@@ -64,8 +52,6 @@ public static class JewelHandler
         SapphireJewel => SapphireColor,
         RainbowJewel => RainbowColor,
 
-        AmethystJewel => AmethystColor,
-
         _ => Color.White
     };
 
@@ -75,8 +61,6 @@ public static class JewelHandler
         EmeraldJewel => Color.LimeGreen,
         SapphireJewel => Color.CornflowerBlue,
         RainbowJewel => Color.White,
-
-        AmethystJewel => Color.MediumPurple,
 
         _ => Color.White
     };
@@ -272,8 +256,6 @@ public static class JewelHandler
             EmeraldJewel => EmeraldShardTexture,
             SapphireJewel => SapphireShardTexture,
             RainbowJewel => RainbowShardTexture,
-
-            AmethystJewel => AmethystShardTexture,
 
             _ => null
         };

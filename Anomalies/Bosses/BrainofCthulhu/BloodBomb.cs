@@ -4,13 +4,12 @@ public class BloodBomb : AnomalyModNPC
 {
     public override string LocalizationCategory => "Bosses.BrainofCthulhu";
 
+    [LoadTexture("Anomalies/Bosses/BrainofCthulhu/BloodBomb2")]
     internal static Asset<Texture2D> BloodBombYellow;
     internal static Texture2D BloodBombGlow;
     public override void SetStaticDefaults()
     {
         NPCID.Sets.ProjectileNPC[Type] = true;
-        if (!Main.dedServ)
-            BloodBombYellow = ModContent.Request<Texture2D>("Anomalies/Bosses/BrainofCthulhu/BloodBomb2");
         this.HideFromBestiary();
     }
 
@@ -18,7 +17,6 @@ public class BloodBomb : AnomalyModNPC
     {
         BloodBombGlow?.Dispose();
         BloodBombGlow = null;
-        BloodBombYellow = null;
     }
 
     internal static Texture2D GetBombGlow()
@@ -49,7 +47,7 @@ public class BloodBomb : AnomalyModNPC
         NPC.damage = 10;
         NPC.defense = 5;
         NPC.lifeMax = 60;
-        BrainCalamityBridge.EnableDefenseDamage(NPC);
+        BridgeUtils.EnableCalamityDefenseDamage(NPC);
         NPC.lavaImmune = true;
         NPC.aiStyle = -1;
         AIType = -1;
@@ -111,7 +109,7 @@ public class BloodBomb : AnomalyModNPC
 
     public override void ModifyHitByItem(Player player, Item item, ref NPC.HitModifiers modifiers)
     {
-        if (BrainCalamityBridge.IsTrueMelee(modifiers.DamageType))
+        if (BridgeUtils.IsCalamityTrueMelee(modifiers.DamageType))
         {
             modifiers.FinalDamage *= 1.5f;
             return;
@@ -127,7 +125,7 @@ public class BloodBomb : AnomalyModNPC
 
     public override void ModifyHitByProjectile(Projectile projectile, ref NPC.HitModifiers modifiers)
     {
-        if (BrainCalamityBridge.IsTrueMelee(modifiers.DamageType))
+        if (BridgeUtils.IsCalamityTrueMelee(modifiers.DamageType))
         {
             modifiers.FinalDamage *= 1.5f;
             return;

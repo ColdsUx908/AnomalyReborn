@@ -366,6 +366,7 @@ FodyWeavers.xsd
 /CelessTest/*
 /Design/*
 /Tests/*
+!/Tests/BossIsolation/
 /AnomalyReborn.slnx
 /tModLoader.targets
 /docs/*

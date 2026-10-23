@@ -230,12 +230,12 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
         NPC.velocity = Vector2.Zero;
         NPC.Center = destination;
         AnomalyNPC.Z = z;
-        if (!selected && head.AnomalyNPC.DepthDrawAnchor is { } anchor)
+        if (!selected && head.AnomalyNPC.Depth_DrawAnchor is { } anchor)
         {
             // 仅复制 Z 会漏掉头部为贴近玩家头顶而产生的屏幕平移。
             // 以同一世界锚点投影，使闲置手和头部获得完全相同的视觉平移。
             Vector2 localOffset = Master.Center + Master.netOffset + anchor.LocalOffset - NPC.Center - NPC.netOffset;
-            AnomalyNPC.DepthDrawAnchor = (localOffset, anchor.Target, anchor.Weight);
+            AnomalyNPC.Depth_DrawAnchor = (localOffset, anchor.Target, anchor.Weight);
         }
         // 原版从手掌连接点朝 (±200,130) 绘制第一段骨节；手掌朝向沿同一条轴自然下垂。
         // 始终以闲置位置计算基准，避免抬手时基准朝向随攻击位置变化。
@@ -248,7 +248,7 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         // 原版骨节与血尘生成先执行；血尘由独立列表在本体的 Z 投影作用域内绘制。
-        AnomalyNPC.HandBloodDust?.UpdateAndDraw(spriteBatch, NPC.netOffset - screenPos, NPC.Opacity);
+        AnomalyNPC.Skeletron_HandBloodDust?.UpdateAndDraw(spriteBatch, NPC.netOffset - screenPos, NPC.Opacity);
         if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master))
             return true;
         SkeletronLegendHead head = SkeletronLegendHead.GetInstance(master);

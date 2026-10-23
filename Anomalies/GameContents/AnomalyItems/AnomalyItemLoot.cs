@@ -1,4 +1,3 @@
-using Anomalies.Bosses.Skeletron.LegendaryNight;
 using Terraria.GameContent.ItemDropRules;
 
 namespace Anomalies.GameContents.AnomalyItems;
@@ -32,9 +31,6 @@ public sealed class AnomalyItemLoot : AnomalyGlobalNPCBehavior
         {
             case NPCID.QueenBee:
                 npcLoot.Add(ItemDropRule.ByCondition(AnomalyItemLootRule.Instance, ModContent.ItemType<HoneyedWildbloom.HoneyedWildbloom>()));
-                break;
-            case NPCID.SkeletronHead:
-                npcLoot.Add(ItemDropRule.ByCondition(AnomalyUltramundaneItemLootRule.Instance, ModContent.ItemType<FallenStarEssence>()));
                 break;
         }
     }

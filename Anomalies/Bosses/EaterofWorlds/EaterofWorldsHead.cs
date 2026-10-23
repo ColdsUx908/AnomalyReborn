@@ -48,7 +48,7 @@ public sealed partial class EaterofWorldsHead : EaterofWorldsSegment<EaterofWorl
     private static readonly ProjectileDamageContainer _CursedFireBallDamage = new(50, 80, 120, 150, 144, 180);
     public static int CursedFireballDamage => _CursedFireBallDamage.Value;
 
-    public List<EaterofWorldsSegmentContainer> AllSegments => AnomalyNPC.EaterOfWorldsSegments;
+    public List<EaterofWorldsSegmentContainer> AllSegments => AnomalyNPC.EaterOfWorlds_Segments;
 
     public Phase CurrentPhase
     {

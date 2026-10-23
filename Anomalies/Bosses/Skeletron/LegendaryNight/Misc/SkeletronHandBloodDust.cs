@@ -153,7 +153,7 @@ public sealed class SkeletronHandBloodDustSystem : ModSystem
         if (npc.type != NPCID.SkeletronHand || npc.Anomaly.CustomAIType != 1 || type != DustID.Blood)
             return Dust.NewDust(position, width, height, type, speedX, speedY, alpha, color, scale);
 
-        SkeletronHandBloodDust blood = npc.Anomaly.HandBloodDust ??= new();
+        SkeletronHandBloodDust blood = npc.Anomaly.Skeletron_HandBloodDust ??= new();
         blood.Spawn(position, width, height, speedX, speedY, alpha, color, scale);
         // 原版紧接着会访问返回槽位的 noGravity。使用 NewDust 自带的失败哨兵，绝不占用全局粒子槽。
         return Main.maxDust;

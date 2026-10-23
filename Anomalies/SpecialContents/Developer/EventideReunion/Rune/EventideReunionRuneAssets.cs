@@ -1,8 +1,8 @@
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
-internal static class EventideReunionRunes
+internal static class EventideReunionRuneAssets
 {
-    public const string AssetPath = EventideReunionHoldout.AssetPath + "Runes/";
+    public const string AssetPath = EventideReunionAssets.AssetPath + "Rune/";
     public const string SunPath = AssetPath + "Sun";
 
     [LoadTexture(SunPath)]

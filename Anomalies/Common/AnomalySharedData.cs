@@ -200,6 +200,3 @@ public sealed partial class AnomalySharedData : ModSystem
 
     #endregion World
 }
-
-
-

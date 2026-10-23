@@ -46,7 +46,7 @@ public sealed partial class EventideReunionSunSkill
         AnomalyDrawUtils.DrawGlowingLines(batch, rays, Color.Gold, 0.7f, 2f, 7f);
         batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
             DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-        Texture2D weapon = ModContent.Request<Texture2D>(Texture).Value;
+        Texture2D weapon = EventideReunionAssets.Weapon;
         if (Phase is SunPhase.Spin or SunPhase.Slash)
         {
             for (int i = 3; i > 0; i--)
@@ -82,7 +82,7 @@ internal static class EventideReunionSunDrawing
     {
         if (progress <= 0f || opacity <= 0f)
             return;
-        DrawBlade(grip, progress, Math.Max(0f, progress - 0.7f), opacity, time,
+        EventideReunionBladeTrail.DrawArc(grip, progress, Math.Max(0f, progress - 0.7f), opacity, time,
             sample => EventideReunionSunGeometry.SweepVector(sample, facing, gravity) * EventideReunionSunGeometry.SweepOuterRadius);
     }
 
@@ -90,24 +90,10 @@ internal static class EventideReunionSunDrawing
     {
         if (progress <= 0f || opacity <= 0f)
             return;
-        DrawBlade(grip, progress, Math.Max(0f, progress - 0.65f), opacity, time,
+        EventideReunionBladeTrail.DrawArc(grip, progress, Math.Max(0f, progress - 0.65f), opacity, time,
             sample => EventideReunionSunGeometry.SlashVector(sample, aim, facing, gravity)
                 * (220f + EventideReunionSunGeometry.SlashArmOffset(sample)));
     }
 
-    private static void DrawBlade(Vector2 grip, float head, float tail, float opacity, float time, Func<float, Vector2> sampleVector)
-    {
-        const int Samples = 96;
-        VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[Samples * 2];
-        for (int i = 0; i < Samples; i++)
-        {
-            float factor = i / (Samples - 1f);
-            Vector2 vector = sampleVector(MathHelper.Lerp(tail, head, factor));
-            Color tint = new(1f, 1f, 1f, MathF.Sin(factor * MathHelper.PiOver2) * opacity);
-            vertices[i * 2] = new(new Vector3(grip + vector * 0.23f, 0f), tint, new Vector2(factor, 1f));
-            vertices[i * 2 + 1] = new(new Vector3(grip + vector, 0f), tint, new Vector2(factor, 0f));
-        }
-        EventideReunionBladeTrail.Draw(vertices, time);
-    }
 
 }

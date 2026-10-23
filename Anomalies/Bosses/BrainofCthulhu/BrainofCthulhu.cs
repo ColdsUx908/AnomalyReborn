@@ -59,7 +59,7 @@ public sealed partial class BrainofCthulhu : AnomalyNPCBehavior<BrainofCthulhu>
     private static SoundStyle BloodBombSound = new("Anomalies/Bosses/BrainofCthulhu/Sounds/BloodBomb");
     private static SoundStyle ExplosionSound = new("Anomalies/Bosses/BrainofCthulhu/Sounds/Explosion", 2);
     public bool SummonedViaItem { get => Read(15) != 0; set => Write(15, value ? 1 : 0); }
-    public List<BrainOfCthulhuAfterImage> BoCAfterImages { get => AnomalyNPC.BrainAfterImages; set => AnomalyNPC.BrainAfterImages = value; }
+    public List<BrainOfCthulhuAfterImage> BoCAfterImages { get => AnomalyNPC.BrainOfCthulhu_AfterImages; set => AnomalyNPC.BrainOfCthulhu_AfterImages = value; }
 
     private static readonly ProjectileDamageContainer _BrainIllusionDamage = new(30, 60, 90, 90, 90, 90);
     public static int BrainIllusionDamage => _BrainIllusionDamage.Value;
@@ -247,7 +247,7 @@ public sealed partial class BrainofCthulhu : AnomalyNPCBehavior<BrainofCthulhu>
 
     public override bool? CanBeHitByProjectile(Projectile projectile)
     {
-        if (CurrentBehavior == Behavior.IllusionTrick && !AttackFlag && projectile.Anomaly.IgnoreBrainIllusions)
+        if (CurrentBehavior == Behavior.IllusionTrick && !AttackFlag && projectile.Anomaly.BrainOfCthulhu_IgnoreIllusions)
             return false;
         return base.CanBeHitByProjectile(projectile);
     }

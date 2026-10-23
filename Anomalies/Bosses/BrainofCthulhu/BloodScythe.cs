@@ -46,7 +46,7 @@ public class BloodScythe : AnomalyModProjectile
         Projectile.damage = BrainofCthulhu.BloodScytheDamage;
         Projectile.scale = 0.1f;
         Projectile.hostile = true;
-        BrainCalamityBridge.EnableDefenseDamage(Projectile);
+        BridgeUtils.EnableCalamityDefenseDamage(Projectile);
     }
 
     public override void OnSpawn(IEntitySource source)
@@ -194,7 +194,7 @@ public class CirclingBloodScythe : AnomalyModProjectile
 
         int UpTime = Lifetime - Projectile.timeLeft;
         if (UpTime < 30f)
-            CircleRadius = MathHelper.Lerp(0f, 128f, BrainCombatUtils.CircOutEasing(UpTime / 30f, 1));
+            CircleRadius = MathHelper.Lerp(0f, 128f, TOMathUtils.Interpolation.CircularEaseOut(UpTime / 30f, clamped: false));
         else if (UpTime < Lifetime - 180)
             CircleRadius = 128f;
         else
@@ -208,11 +208,11 @@ public class CirclingBloodScythe : AnomalyModProjectile
         if (UpTime >= 15f)
         {
             if (UpTime < 30f)
-                CircleAngle += MathHelper.Lerp(0f, MaxCircleSpeed, BrainCombatUtils.SineInEasing((UpTime - 15) / 15f, 1));
+                CircleAngle += MathHelper.Lerp(0f, MaxCircleSpeed, TOMathUtils.Interpolation.SineEaseIn((UpTime - 15) / 15f, clamped: false));
             else if (UpTime < 870)
                 CircleAngle += MaxCircleSpeed;
             else if (UpTime < 900)
-                CircleAngle += MathHelper.Lerp(MaxCircleSpeed, MaxCircleSpeed / 3f, BrainCombatUtils.SineOutEasing((UpTime - 870) / 30f, 1));
+                CircleAngle += MathHelper.Lerp(MaxCircleSpeed, MaxCircleSpeed / 3f, TOMathUtils.Interpolation.SineEaseOut((UpTime - 870) / 30f, clamped: false));
             else
                 CircleAngle += MaxCircleSpeed / 3f;
             if (Main.rand.NextBool(6))

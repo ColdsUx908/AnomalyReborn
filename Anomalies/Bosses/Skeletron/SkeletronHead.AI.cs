@@ -162,7 +162,7 @@ public sealed partial class SkeletronHead
         AnomalyNPC.DR = !handsDead ? (float)Math.Sqrt(MathHelper.Lerp(minDR, maxDR, RespawnHands ? (RespawnHandsLifeRatio - lifeRatio) / RespawnHandsLifeRatio : 2f - lifeRatio / RespawnHandsLifeRatio)) : minDR;
         AnomalyNPC.ExtraDR = AnomalyNPC.DR;
         AnomalyNPC.DR = 0f;
-        AnomalyNPC.CurrentlyIncreasingDefenseOrDR = !handsDead;
+        AnomalyNPC.BossBar_IncreasingDefenseOrDR = !handsDead;
 
         // Value to start teleport dust
         int teleportGateValue = Phase5 ? 180 : 300;
@@ -676,8 +676,8 @@ public sealed partial class SkeletronHead
             AnomalyNPC.ExtraDR = 0.9999f;
             AnomalyNPC.DR = 0f;
 
-            AnomalyNPC.CurrentlyEnraged = true;
-            AnomalyNPC.CurrentlyIncreasingDefenseOrDR = true;
+            AnomalyNPC.BossBar_Enraged = true;
+            AnomalyNPC.BossBar_IncreasingDefenseOrDR = true;
 
             RotatingMovement(NPC, Main.player[NPC.target], 0.3f, 8f);
                 }

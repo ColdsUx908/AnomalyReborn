@@ -57,8 +57,8 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
         NPC.DeathSound = JewelHandler.ShatterSound;
 
         NPC.IsImportantBossMinion = true;
-        AnomalyNPC.CanHaveBossHealthBar = true;
-        AnomalyNPC.BossHealthBarIsSmall = true;
+        AnomalyNPC.BossBar_Enabled = true;
+        AnomalyNPC.BossBar_IsSmall = true;
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) => NPC.lifeMax = (int)(NPC.lifeMax * balance);

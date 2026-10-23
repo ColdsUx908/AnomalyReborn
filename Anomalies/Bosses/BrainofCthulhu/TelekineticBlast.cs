@@ -67,7 +67,7 @@ public class TelekineticBlast : AnomalyModProjectile
         target.AddBuff(BuffID.Bleeding, (int)Math.Round(900 * debuffMultiplier));
         target.AddBuff(BuffID.Confused, (int)Math.Round(60 * debuffMultiplier));
         target.Hurt(PlayerDeathReason.ByCustomReason(Language.GetText("Mods.Anomalies.Bosses.BrainofCthulhu.Death.BrainIllusion" + Main.rand.Next(1, 3 + 1)).ToNetworkText(target.name)), 100, Main.npc[NPC.crimsonBoss].Center.X > target.Center.X ? -1 : 1, cooldownCounter: 0, dodgeable: false, scalingArmorPenetration: 1f);
-        BrainCalamityBridge.ResetAdrenaline(target);
+        BridgeUtils.ResetCalamityAdrenaline(target);
         Projectile.active = false;
     }
 }

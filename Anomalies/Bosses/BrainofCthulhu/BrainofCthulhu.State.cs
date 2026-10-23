@@ -91,7 +91,7 @@ public sealed partial class BrainofCthulhu
 
     public Vector2 AttackPosition { get => ReadVector(0); set => WriteVector(0, value); }
     public Vector2 BoCDrawOffset { get => ReadVector(16); set => WriteVector(16, value); }
-    public ref Rectangle BoCFrame => ref AnomalyNPC.BrainFrame;
+    public ref Rectangle BoCFrame => ref AnomalyNPC.BrainOfCthulhu_Frame;
     public BrainByteList<Behavior> AvailableAttacks => new(NPC, 0, 8, 18);
     public BrainByteList<byte> AttackList => new(NPC, 8, 256, 19);
     public BrainTargetSet TargetsSet => new(NPC);

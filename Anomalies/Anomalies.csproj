@@ -29,7 +29,6 @@
 
     <ItemGroup>
       <Folder Include="GameContents\MusicBoxes\" />
-      <Folder Include="SpecialContents\Developer\EventideReunion\Runes\" />
     </ItemGroup>
 
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

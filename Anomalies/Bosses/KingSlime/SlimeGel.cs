@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.KingSlime;
+namespace Anomalies.Bosses.KingSlime;
 
 public sealed class SlimeGel : AnomalyModProjectile
 {
@@ -31,59 +31,13 @@ public sealed class SlimeGel : AnomalyModProjectile
         Projectile.scale = 0.5f;
     }
 
-    public override bool OnTileCollide(Vector2 oldVelocity) => Gel_OnTileCollide(Projectile, oldVelocity, DustID.Skyware, d =>
+    public override bool OnTileCollide(Vector2 oldVelocity) => SlimeGelMotion.Gel_OnTileCollide(Projectile, oldVelocity, DustID.Skyware, d =>
     {
         d.velocity = Main.rand.NextPolarVector2(1f, 5f);
         d.noGravity = true;
     });
 
-    public override void AI() => Gel_AI(Projectile);
-
-    public static bool Gel_OnTileCollide(Projectile Projectile, Vector2 oldVelocity, int dustID, Action<Dust> dustAction)
-    {
-        for (int i = 0; i < 10; i++)
-            Dust.NewDustPerfectAction(Projectile.Center, dustID, dustAction);
-
-        ref float bounceCount = ref Projectile.ai[0]; // 当前已碰撞次数
-        bounceCount++;
-
-        if (bounceCount < 2f)
-        {
-            if (Projectile.velocity.X != oldVelocity.X)
-                Projectile.velocity.X = -oldVelocity.X * 0.4f; // 反向并衰减至 40%
-
-            if (Projectile.velocity.Y != oldVelocity.Y)
-            {
-                Projectile.velocity.Y = -oldVelocity.Y * 0.8f; // 反向并衰减至 80%
-                Projectile.velocity.X = oldVelocity.X * 0.8f;
-            }
-
-            return false; // 弹射物不销毁，继续存在
-        }
-        else
-        {
-            for (int j = 0; j < 15; j++)
-            {
-                Dust.NewDustPerfectAction(Projectile.Center, dustID, d =>
-                {
-                    d.velocity = Main.rand.NextPolarVector2(1f, 15f); //速度范围更大
-                    d.noGravity = true;
-                });
-            }
-
-            return true; // 销毁弹射物
-        }
-    }
-
-    public static void Gel_AI(Projectile Projectile)
-    {
-        Projectile.velocity.X *= 0.996f;
-        Projectile.velocity.Y += 0.15f;
-        if (Projectile.velocity.Y > 15f)
-            Projectile.velocity.Y = 15f;
-
-        Projectile.rotation += 0.05f;
-    }
+    public override void AI() => SlimeGelMotion.Gel_AI(Projectile);
 
     public override Color? GetAlpha(Color lightColor)
     {

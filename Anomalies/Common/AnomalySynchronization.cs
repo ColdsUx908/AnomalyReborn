@@ -1,6 +1,6 @@
-﻿namespace Anomalies.Common;
+namespace Anomalies.Common;
 
-public sealed class AnomalySynchronization : IAnomalyLoader
+public sealed partial class AnomalySynchronization : IAnomalyLoader
 {
     public static class ID
     {
@@ -8,6 +8,8 @@ public sealed class AnomalySynchronization : IAnomalyLoader
         public const byte SyncAnomalyModeFromServer = 1;
         public const byte SyncWorldState = 2;
         public const byte BrainIllusionHit = 3;
+        public const byte EventideResonance = 4;
+        public const byte PlayerDownedBossKill = 5;
     }
 
     internal static ModPacket GetCAPacket() => AnomalyMain.Instance.GetPacket();
@@ -47,15 +49,25 @@ public sealed class AnomalySynchronization : IAnomalyLoader
         packet.Send(toClient);
     }
 
+    static partial void ApplyBrainIllusionHit(int illusionIndex, int playerIndex);
+
     public static void HandlePacket(AnomalyMain mod, BinaryReader reader, int whoAmI)
     {
         byte id = reader.ReadByte();
         switch (id)
         {
+            case ID.PlayerDownedBossKill:
+                int npcType = reader.ReadInt32();
+                if (Main.netMode == NetmodeID.MultiplayerClient)
+                    SingleBehaviors.AnomalyPlayerDownedBossUpdate_System.RecordKill(npcType);
+                break;
+            case ID.EventideResonance:
+                SpecialContents.Developer.EventideReunion.EventideReunionResonancePlayer.Receive(reader, whoAmI);
+                break;
             case ID.BrainIllusionHit:
                 int illusionIndex = reader.ReadByte();
                 if (Main.netMode == NetmodeID.Server)
-                    Bosses.BrainofCthulhu.BrainIllusionHit.Apply(illusionIndex, whoAmI);
+                    ApplyBrainIllusionHit(illusionIndex, whoAmI);
                 break;
             case ID.SyncAnomalyMode:
                 bool requested = reader.ReadBoolean();
@@ -115,4 +127,3 @@ public sealed class AnomalySynchronization : IAnomalyLoader
         TOSharedData.SyncEnabled = true;
     }
 }
-

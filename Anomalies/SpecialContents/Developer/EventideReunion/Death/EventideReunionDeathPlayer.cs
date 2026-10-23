@@ -3,7 +3,7 @@ namespace Anomalies.SpecialContents.Developer.EventideReunion;
 public sealed class EventideReunionDeathPlayer : AnomalyPlayerBehavior
 {
     public override bool ImmuneTo(PlayerDeathReason damageSource, int cooldownCounter, bool dodgeable) =>
-        AnomalyPlayer.EventideReunionDeathProtection > 0 || IsDashing();
+        AnomalyPlayer.EventideReunion_DeathProtection > 0 || IsDashing();
 
     private bool IsDashing()
     {
@@ -15,14 +15,14 @@ public sealed class EventideReunionDeathPlayer : AnomalyPlayerBehavior
 
     public override void PostUpdate()
     {
-        if (AnomalyPlayer.EventideReunionDeathCooldown > 0)
-            AnomalyPlayer.EventideReunionDeathCooldown--;
-        if (AnomalyPlayer.EventideReunionDeathProtection > 0)
-            AnomalyPlayer.EventideReunionDeathProtection--;
+        if (AnomalyPlayer.EventideReunion_DeathCooldown > 0)
+            AnomalyPlayer.EventideReunion_DeathCooldown--;
+        if (AnomalyPlayer.EventideReunion_DeathProtection > 0)
+            AnomalyPlayer.EventideReunion_DeathProtection--;
     }
     public override void SetControls()
     {
-        if (Player.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionDeathSkill>()] == 0)
+        if (!EventideReunionDeathSkill.IsBlockingActions(Player))
             return;
         Player.controlUseItem = Player.controlUseTile = false;
         foreach (Projectile projectile in Main.ActiveProjectiles)

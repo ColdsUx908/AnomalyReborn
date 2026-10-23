@@ -72,7 +72,7 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
         Projectile.hostile = true;
         if (NPC.crimsonBoss != -1)
             MyTarget = Main.npc[NPC.crimsonBoss].target;
-        BrainCalamityBridge.EnableDefenseDamage(Projectile);
+        BridgeUtils.EnableCalamityDefenseDamage(Projectile);
     }
 
     public override void OnSpawn(IEntitySource source)
@@ -149,7 +149,7 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
                     {
                         if (throwTime <= 60f)
                         {
-                            Projectile.Center = Vector2.Lerp(throwPos, throwPos - throwDir * 56f, BrainCombatUtils.SineInOutEasing((throwTime - 30) / 30f, 1)) + (Main.npc[NPC.crimsonBoss].Center + Main.npc[NPC.crimsonBoss].velocity);
+                            Projectile.Center = Vector2.Lerp(throwPos, throwPos - throwDir * 56f, TOMathUtils.Interpolation.SineEaseInOut((throwTime - 30) / 30f, clamped: false)) + (Main.npc[NPC.crimsonBoss].Center + Main.npc[NPC.crimsonBoss].velocity);
                             Projectile.velocity = Vector2.Zero;
                         }
                         else
@@ -169,7 +169,7 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
 
             Vector2 direction = endPoint - startPoint;
             float distance = Vector2.Distance(startPoint, endPoint);
-            float lerp = BrainCombatUtils.SineInOutEasing(MathHelper.Clamp(throwTime / 60f, 0f, 1f), 1);
+            float lerp = TOMathUtils.Interpolation.SineEaseInOut(MathHelper.Clamp(throwTime / 60f, 0f, 1f), clamped: false);
             float xMult = MathHelper.Lerp(-Math.Clamp(direction.X / 256f, -1, 1), throwSign, lerp);
             float yMult = Math.Clamp(direction.Y / 256f, -1, 1);
             float curveIntensity = Math.Clamp(distance / 420f, 0f, 0.66f) * xMult * yMult;

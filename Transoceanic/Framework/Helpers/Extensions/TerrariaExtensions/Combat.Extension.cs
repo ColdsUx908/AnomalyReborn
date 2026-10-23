@@ -1,6 +1,6 @@
-namespace Anomalies.Bosses.BrainofCthulhu;
+namespace Transoceanic.Framework.Helpers;
 
-internal static class BrainCombatExtensions
+public static class TOCombatExtensions
 {
     public static void HideFromBestiary(this ModNPC npc) => NPCID.Sets.NPCBestiaryDrawOffset.Add(npc.Type, new NPCID.Sets.NPCBestiaryDrawModifiers { Hide = true });
     public static Vector2 ClampMagnitude(this Vector2 vector, float min, float max) => vector.SafeNormalize(Vector2.UnitY) * Math.Clamp(vector.Length(), min, max);

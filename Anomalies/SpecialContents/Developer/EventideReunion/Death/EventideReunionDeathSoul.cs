@@ -37,10 +37,9 @@ public sealed class EventideReunionDeathSoul : AnomalyModProjectile
                 });
         }
         // 只有灵魂所属客户端修改生命；使用原版幽魂治疗包同步，避免重复治疗。
-        float collisionPoint = 0f;
         bool reached = target.Hitbox.Intersects(Projectile.Hitbox)
-            || Collision.CheckAABBvLineCollision(target.position, target.Size, Projectile.Center,
-                Projectile.Center + Projectile.velocity, 12f, ref collisionPoint);
+            || RotatedRectangle.FromLineSegment(Projectile.Center,
+                Projectile.Center + Projectile.velocity, 12f).Collides(target.Hitbox);
         if (!Projectile.IsOnOwnerClient || !reached)
             return;
         int healing = EventideReunionDeathSoulMotion.Healing(target.statLife, target.statLifeMax2, target.moonLeech);

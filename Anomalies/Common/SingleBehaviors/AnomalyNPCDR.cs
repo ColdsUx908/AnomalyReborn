@@ -4,7 +4,7 @@ public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior, IContentLoader
 {
     public override decimal Priority => 100m;
 
-    public override void PostAI(NPC npc) => npc.Anomaly.DynamicDRHandler?.Update(npc);
+    public override void PostAI(NPC npc) => npc.Anomaly.DamageReduction_DynamicHandler?.Update(npc);
 
     public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
     {
@@ -23,7 +23,7 @@ public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior, IContentLoader
 
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);
-        float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR) + (npc.Anomaly.DynamicDRHandler?.GetCurrentDDR(npc) ?? 0f));
+        float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR) + (npc.Anomaly.DamageReduction_DynamicHandler?.GetCurrentDDR(npc) ?? 0f));
 
         modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR - npc.Anomaly.ExtraDR, 0f, 1f);
     }
@@ -45,7 +45,7 @@ public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior, IContentLoader
 
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);
-        float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR) + (npc.Anomaly.DynamicDRHandler?.GetCurrentDDR(npc) ?? 0f));
+        float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR) + (npc.Anomaly.DamageReduction_DynamicHandler?.GetCurrentDDR(npc) ?? 0f));
 
         modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR - npc.Anomaly.ExtraDR, 0f, 1f);
     }

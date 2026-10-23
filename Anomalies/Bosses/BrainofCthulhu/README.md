@@ -25,6 +25,10 @@
 
 Behavior 不保存实体实例字段。主脑的普通状态使用 NPC.ai 与 AnomalyAI32/64；攻击队列和玩家目标历史通过 BrainByteList/BrainTargetSet 打包到同一套快照。触须、动画帧和残影是客户端视觉数据。具体数组布局写在 State 文件中。
 
+通用寻敌参数 `NPCTargetingParameters`、目标偏好 `NPCTargetPreference` 和 `TOCombatUtils.TargetWithOptions` 位于 Transoceanic；通用地形射线、弹幕计数和 Boss 召唤工具也由该层提供。向量与图鉴扩展位于 `TOCombatExtensions`，缓动统一使用 `TOMathUtils.Interpolation`。带距离衰减的变种震屏策略位于 `AnomalyCombatUtils`；灾厄 Boss Rush、肾上腺素、破防与真近战接口位于公共 `BridgeUtils`。攻击队列的槽位布局、脑的灾厄换皮与 AI 覆盖、幻象命中和血条规则仍归本 Boss 模块所有。
+
+依赖 Boss 类型的 GlobalNPC 字段与克隆、血条扩展和网络处理使用本目录下的部分类实现；公共入口仅保留可选的 partial 方法。模块移除检查见 `Tests/BossIsolation`。
+
 本目录声明的属性与索引器统一为 public。主脑的 AI 行为函数收在对应阶段入口内，飞眼怪的 8 个 AI 专用函数收在 `PreAI` 内；同时服务于 AI、命中和死亡回调的状态重置、死亡触发等方法保留为类成员，绘制与同步回调保留框架要求的入口。
 
 ## 验证与游戏内复核

@@ -382,7 +382,7 @@ public sealed partial class SkeletronLegendHead
                 float bottomExtent = Math.Abs(MathF.Sin(drawRotation)) * halfWidth
                     + Math.Abs(MathF.Cos(drawRotation)) * halfHeight;
                 float drawCenterOffset = NPC.height * 0.5f - halfHeight + 4f + NPC.gfxOffY;
-                AnomalyNPC.DepthDrawAnchor = (new Vector2(0f, drawCenterOffset + bottomExtent),
+                AnomalyNPC.Depth_DrawAnchor = (new Vector2(0f, drawCenterOffset + bottomExtent),
                     Target.Top - Vector2.UnitY * Mechanic2Data.BodyHeadClearance, anchorWeight);
                 return;
             }

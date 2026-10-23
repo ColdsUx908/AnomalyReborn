@@ -4,8 +4,8 @@ public sealed class LegendaryNightFlightPlayer : AnomalyPlayerBehavior
 {
     public override void UpdateDead()
     {
-        AnomalyPlayer.StarGodBlessingActive = false;
-        AnomalyPlayer.StarGodBlessingOpacity = 0f;
+        AnomalyPlayer.LegendaryNight_StarGodBlessingActive = false;
+        AnomalyPlayer.LegendaryNight_StarGodBlessingOpacity = 0f;
     }
 
     public override void PostUpdateEquips()
@@ -20,20 +20,20 @@ public sealed class LegendaryNightFlightPlayer : AnomalyPlayerBehavior
                 || !SkeletronLegendHead.GetInstance(npc).StarGodBlessingActive)
                 continue;
 
-            AnomalyPlayer.StarGodBlessingActive = true;
-            AnomalyPlayer.StarGodBlessingOpacity = Math.Max(AnomalyPlayer.StarGodBlessingOpacity,
+            AnomalyPlayer.LegendaryNight_StarGodBlessingActive = true;
+            AnomalyPlayer.LegendaryNight_StarGodBlessingOpacity = Math.Max(AnomalyPlayer.LegendaryNight_StarGodBlessingOpacity,
                 SkeletronLegendHead.GetInstance(npc).StarGodBlessingOpacity);
         }
 
-        if (!AnomalyPlayer.StarGodBlessingActive)
+        if (!AnomalyPlayer.LegendaryNight_StarGodBlessingActive)
             return;
 
         // 功能翅膀优先：已有翅膀时只补充无限飞行，不覆盖其飞行参数。
         if (Player.wingsLogic <= 0)
         {
-            AnomalyPlayer.LegendaryNightVirtualBoneWings ??= new Item(ItemID.BoneWings);
+            AnomalyPlayer.LegendaryNight_VirtualBoneWings ??= new Item(ItemID.BoneWings);
             int visibleWings = Player.wings;
-            Player.ApplyEquipFunctional(AnomalyPlayer.LegendaryNightVirtualBoneWings, hideVisual: true);
+            Player.ApplyEquipFunctional(AnomalyPlayer.LegendaryNight_VirtualBoneWings, hideVisual: true);
             if (visibleWings > 0)
                 Player.wings = visibleWings;
         }
@@ -43,7 +43,7 @@ public sealed class LegendaryNightFlightPlayer : AnomalyPlayerBehavior
     public override void PostUpdateMiscEffects()
     {
         // 在装备及飞行时间加成计算后补满，不修改玩家的实际装备或持久数据。
-        if (!AnomalyPlayer.StarGodBlessingActive)
+        if (!AnomalyPlayer.LegendaryNight_StarGodBlessingActive)
             return;
 
         Player.wingTime = Player.wingTimeMax;
@@ -52,7 +52,7 @@ public sealed class LegendaryNightFlightPlayer : AnomalyPlayerBehavior
 
         // 淡金色呼吸光与上浮星尘持续提示祝福，避免遮挡玩家和战斗弹幕。
         float glow = TOMathUtils.TimeWrappingFunction.GetTimeSin(0.3f, 3f) + 0.7f;
-        Lighting.AddLight(Player.Center, LegendaryNightHandler.StarColor.ToVector3() * (glow * AnomalyPlayer.StarGodBlessingOpacity));
+        Lighting.AddLight(Player.Center, LegendaryNightHandler.StarColor.ToVector3() * (glow * AnomalyPlayer.LegendaryNight_StarGodBlessingOpacity));
         if (Main.rand.NextBool(3))
         {
             Vector2 position = Player.Center + new Vector2(Main.rand.NextFloat(-16f, 16f), Main.rand.NextFloat(-8f, 20f));

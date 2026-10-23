@@ -4,11 +4,7 @@ public sealed partial class EventideReunionHoldout : AnomalyModProjectile
 {
     public override string LocalizationCategory => EventideReunion.LocalizationCategoryForEventideReunion;
     public override LocalizedText DisplayName => ModContent.GetModItem<EventideReunion>()?.DisplayName;
-    public override string Texture => AssetPath + "EventideReunion_NoStreamer";
-    public const string AssetPath = "Anomalies/SpecialContents/Developer/EventideReunion/";
-
-    [LoadTexture(AssetPath + "EventideReunion_NoStreamer")]
-    private static Asset<Texture2D> _WeaponTexture;
+    public override string Texture => EventideReunionAssets.WeaponPath;
 
     public static Color GetRandomColor() => Color.Lerp(Color.Red, Color.Orange, Main.rand.NextFloat());
     public Vector2 OrbCenter => Projectile.Center + new PolarVector2(60.81f * DrawScale, Projectile.rotation);
@@ -87,7 +83,7 @@ public sealed partial class EventideReunionHoldout : AnomalyModProjectile
         if (ownerPlayer.CanNotUseHoldOut(needsToHold: false) || ownerPlayer.HeldItem.type != ModContent.ItemType<EventideReunion>()
             || ownerPlayer.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionSelection>()] > 0
             || ownerPlayer.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionSunSkill>()] > 0
-            || ownerPlayer.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionDeathSkill>()] > 0)
+            || EventideReunionDeathSkill.IsBlockingActions(ownerPlayer))
         {
             Projectile.Kill();
             return;
@@ -112,7 +108,7 @@ public sealed partial class EventideReunionHoldout : AnomalyModProjectile
         {
             Array.Clear(Projectile.localNPCImmunity);
             if (Phase is 1 or 2)
-                SoundEngine.PlaySound(EventideReunionSounds.Thrust, _Grip);
+                SoundEngine.PlaySound(EventideReunionNormalAttackAssets.Thrust, _Grip);
         }
         float previousTime = Projectile.ai[0];
         _PreviousProgress = Progress;
@@ -128,7 +124,7 @@ public sealed partial class EventideReunionHoldout : AnomalyModProjectile
         else if (Phase == 3)
         {
             if (previousTime < SweepStart * SweepDuration && Projectile.ai[0] >= SweepStart * SweepDuration)
-                SoundEngine.PlaySound(EventideReunionSounds.SweepUpward, _Grip);
+                SoundEngine.PlaySound(EventideReunionNormalAttackAssets.SweepUpward, _Grip);
             _BladeVector = GetSweepVector(currentProgress);
             Projectile.rotation = _BladeVector.ToRotation();
             Projectile.Center = _Grip + _BladeVector * 60f * Projectile.scale;
@@ -137,7 +133,7 @@ public sealed partial class EventideReunionHoldout : AnomalyModProjectile
         else if (Phase == 4)
         {
             if (previousTime < DownwardStart * DownwardDuration && Projectile.ai[0] >= DownwardStart * DownwardDuration)
-                SoundEngine.PlaySound(EventideReunionSounds.DownwardSlash, _Grip);
+                SoundEngine.PlaySound(EventideReunionNormalAttackAssets.DownwardSlash, _Grip);
             _BladeVector = GetDownwardVector(currentProgress);
             Projectile.rotation = _BladeVector.ToRotation();
             Projectile.Center = GetDownwardCenter(currentProgress);
@@ -287,7 +283,7 @@ public sealed partial class EventideReunionHoldout : AnomalyModProjectile
 
     private void DrawWeapon(Vector2 center, Vector2 vector, Color drawTint)
     {
-        Main.spriteBatch.Draw(_WeaponTexture.Value, center - Main.screenPosition, null, drawTint,
+        Main.spriteBatch.Draw(EventideReunionAssets.Weapon, center - Main.screenPosition, null, drawTint,
             vector.ToRotation() + MathHelper.PiOver4, _WeaponOrigin, Projectile.scale * vector.Length(), SpriteEffects.None, 0f);
     }
 

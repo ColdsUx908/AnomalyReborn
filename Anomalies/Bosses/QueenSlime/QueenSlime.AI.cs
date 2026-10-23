@@ -1,4 +1,3 @@
-﻿using Anomalies.Bosses.KingSlime;
 
 namespace Anomalies.Bosses.QueenSlime;
 
@@ -108,13 +107,14 @@ public sealed partial class QueenSlime
             }
         }
 
+        void ChangeScale() => NPC.ChangeScaleFixBottom(114, 100, TeleportScaleMultiplier * DespawnScaleMultiplier);
+
+        /*
         void SpawnJewelParticle(NPC jewel, int amount)
         {
             for (int i = 0; i < amount; i++)
                 JewelHandler.SpawnOrbParticle(jewel, Main.rand.NextFloat(5f, 10f), Main.rand.Next(40, 60), Main.rand.NextFloat(0.4f, 0.7f));
         }
-
-        void ChangeScale() => NPC.ChangeScaleFixBottom(114, 100, TeleportScaleMultiplier * DespawnScaleMultiplier);
 
         Vector2 GetJewelSpawnPosition() => NPC.Top + new Vector2(0, -NPC.height);
 
@@ -125,6 +125,7 @@ public sealed partial class QueenSlime
             SoundEngine.PlaySound(JewelHandler.SpawnSound, GetJewelSpawnPosition());
             SpawnJewelParticle(n, 50);
         }
+        */
 
         void SpawnSpikeAction_NoGravity(Projectile p)
         {

@@ -29,6 +29,7 @@ public sealed class AnomalyEffects : IContentLoader
 
     public static class Overlays
     {
+        public static MiscShaderContainer EventideDeathVignette;
         public static MiscShaderContainer LegendaryNightOverlay;
         public static MiscShaderContainer SolidColor;
         public static MiscShaderContainer SolidColorMask;
@@ -37,6 +38,11 @@ public sealed class AnomalyEffects : IContentLoader
     public static class Primitives
     {
         public static MiscShaderContainer CircularAoETelegraph;
+        public static MiscShaderContainer EventideDeathMark;
+        public static MiscShaderContainer EventideDeathSweep;
+        public static MiscShaderContainer EventideSamsaraMark;
+        public static MiscShaderContainer EventideSamsaraThread;
+        public static MiscShaderContainer EventideSweep;
         public static MiscShaderContainer GlowCircle;
         public static MiscShaderContainer GlowLine;
     }

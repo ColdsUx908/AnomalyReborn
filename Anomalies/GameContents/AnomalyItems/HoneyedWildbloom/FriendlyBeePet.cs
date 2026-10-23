@@ -1,11 +1,10 @@
-﻿using Anomalies.Bosses.QueenBee;
 
 namespace Anomalies.GameContents.AnomalyItems.HoneyedWildbloom;
 
 public sealed class FriendlyBeePet : AnomalyModProjectile
 {
-    public override LocalizedText DisplayName => ModContent.GetModProjectile<FriendlyBee>()?.DisplayName;
-    public override string Texture => ModContent.GetModProjectile<FriendlyBee>()?.Texture;
+    public override LocalizedText DisplayName => Language.GetText("Mods.Anomalies.Bosses.QueenBee.FriendlyBee.DisplayName");
+    public override string Texture => AnomalySharedData.ModPath + "GameContents/AnomalyItems/HoneyedWildbloom/FriendlyBeePet";
 
     public override void SetStaticDefaults()
     {

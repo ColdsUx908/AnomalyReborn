@@ -17,23 +17,23 @@ public sealed class AnomalyNPCMisc : AnomalyGlobalNPCBehavior
 
         if (AnomalySharedData.Anomaly)
         {
-            anomalyNPC.AnomalyAITimer++;
+            anomalyNPC.AnomalyAI_Timer++;
             if (AnomalySharedData.AnomalyUltramundane)
             {
-                anomalyNPC.AnomalyUltraAITimer++;
-                anomalyNPC.AnomalyUltraBarTimer = Math.Clamp(anomalyNPC.AnomalyUltraBarTimer + 1, 0, 120);
+                anomalyNPC.AnomalyAI_UltraTimer++;
+                anomalyNPC.BossBar_UltraTimer = Math.Clamp(anomalyNPC.BossBar_UltraTimer + 1, 0, 120);
             }
             else
             {
-                anomalyNPC.AnomalyUltraAITimer = 0;
-                anomalyNPC.AnomalyUltraBarTimer = Math.Clamp(anomalyNPC.AnomalyUltraBarTimer - 4, 0, 120);
+                anomalyNPC.AnomalyAI_UltraTimer = 0;
+                anomalyNPC.BossBar_UltraTimer = Math.Clamp(anomalyNPC.BossBar_UltraTimer - 4, 0, 120);
             }
         }
         else
         {
-            anomalyNPC.AnomalyAITimer = 0;
-            anomalyNPC.AnomalyUltraAITimer = 0;
-            anomalyNPC.AnomalyUltraBarTimer = 0;
+            anomalyNPC.AnomalyAI_Timer = 0;
+            anomalyNPC.AnomalyAI_UltraTimer = 0;
+            anomalyNPC.BossBar_UltraTimer = 0;
         }
 
         return true;

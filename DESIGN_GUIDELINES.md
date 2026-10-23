@@ -33,10 +33,41 @@
 - 上述规则适用于 GlobalType 数据容器；`ModNPC`、`ModProjectile`、`ModItem` 等实体自身类型可以持有各自的数据。
 - 玩家实例数据统一归入 `AnomalyGlobalInstances` 中的 `AnomalyPlayer`，不得另建 `ModPlayer` 存储数据。
 
+#### 2.1.1 GlobalInstances 数据组织
+
+- `AnomalyGlobalInstances.cs` 仅保留稳定的通用代码：实体实例配置、调试数据、AI 数组与变化标记、框架回调入口、AI 数组克隆和通用网络读写。
+- 独立于 AI 数组声明的实例字段、自动属性及相关派生属性，按实体类型放入 `Common/GlobalInstances/<类名>/<类名>.ExtraData.cs`，作为对应数据容器的部分类。AI 数组槽位映射属性放入同目录的 `<类名>.AIData.cs`，不混入独立实例数据文件。没有相应数据或逻辑时不创建空文件。
+- 独立实例数据按机制或用途采用 `分类_名称` 命名，两部分均使用 `PascalCase`，例如 `BrainOfCthulhu_AfterImages`、`BossBar_IsSmall`、`EventideReunion_DeathCooldown`；不期望外部直接访问的字段保留前导下划线，例如 `_Network_ProjectileReferenceCache`。这是对通用命名规则的专门约定。
+- 同一机制使用统一分类前缀；通用数据按实际用途分类，例如 `AnomalyAI`、`BossBar`、`DamageReduction`、`Depth`、`Network`、`Progression`、`Visual`。避免将已有明确归属的数据放入笼统的通用分类。
+- 独立实例数据使用外层 `#region 独立实例数据`，内部按机制或用途适量分组；分类按英文前缀的字母顺序排列，组内按成员名称的字母顺序排列，排序忽略私有字段的前导下划线。注释随对应成员移动，保留客户端专用、临时状态及同步边界等说明。
+- AI 数组映射属性放入 `#region AI 数组映射数据`，内部按变种 AI 控制、减益、深度、伤害减免等用途分组。整理声明顺序不得改变槽位索引、变化标记或网络读写顺序。
+- 重命名时同步更新全部引用，包括克隆、重置、同步和绘制代码；保持初始化值、克隆策略、重置时机及网络协议不变。
+- `Clone`、`ResetEffects` 和网络同步的框架入口保留在主文件，通用逻辑仍在入口中执行；仅将额外数据的处理提取为 `CloneExtraData`、`ResetExtraData`、`SyncExtraData` 等独立方法，分别放入对应实体目录的 `<类名>.Clone.cs`、`<类名>.ResetEffects.cs`、`<类名>.NetSync.cs`。通过部分类方法连接入口与实现，不将 AI 数组克隆、通用快照读写等基础逻辑一并搬出。其他行为按 2.2 节组织。
+
 ### 2.2 行为与数据分离
 
-- 仅提供行为、不存储数据的 GlobalType，若存在对应的 Behavior 基类，应重构为对应的 Behavior；不存在对应基类时，可保留 GlobalType。
-- 玩家行为统一使用 `AnomalyPlayerBehavior`。
+- 仅提供行为、不存储数据的 GlobalType，若存在对应的 Behavior 基类且所用回调会被 Behavior 统一接口调用，应重构为对应的 Behavior；不存在对应基类或回调不参与统一调用时，可保留 GlobalType，但以下高频 `Can...` 回调必须遵循集中实现规则。
+- 玩家行为统一使用 `AnomalyPlayerBehavior`；不参与 Behavior 统一调用的回调由 `ModPlayer` 实现，且玩家实例数据仍统一保存在 `AnomalyPlayer`。
+- 迁移前必须确认回调具有有效的 Behavior 调度路径，不能仅因基类声明了同名虚方法就迁移。
+
+#### 2.2.1 高频 Can 回调集中实现
+
+- 全局 Behavior 抽象类不提供下表中的 `Can...` 接口；这些判定直接由对应的 GlobalType 或 `ModPlayer` 集中实现。
+- 命中及碰撞检查本质上需要遍历两类实体的候选配对，即两个实体集合的笛卡尔积。若两类实体的数量分别为 n 和 m，配对检查的复杂度为 O(nm)。
+- 每次配对检查都可能调用相应的全局判定钩子；若有 k 个 GlobalType 或 `ModPlayer` 分别声明同一回调，钩子遍历与调用开销会叠加到这些配对上，最坏可达 O(knm)。因此，重复声明会显著放大高密度实体场景的性能开销；每种实体的同名回调应只在一个全局类型中实现，集中合并各机制的判定条件。
+- 本项目的相关实现统一放在 `Anomalies/Common/AnomalyGlobalInstances.CanHit.cs`，玩家使用 `AnomalyPlayer`，NPC 使用 `AnomalyGlobalNPC`，弹幕使用 `AnomalyGlobalProjectile`，物品使用 `AnomalyGlobalItem`。新增实现时只应在这些类中添加代码，不得将逻辑散放在其他位置。
+- 全局 Behavior 不提供的 `Can...` 接口如下；新增同类限制时同步维护此表。
+
+| 对应全局类型 | 集中实现的 Can 回调 |
+| --- | --- |
+| `ModPlayer` | `CanHitNPC`、`CanMeleeAttackCollideWithNPC`、`CanHitNPCWithItem`、`CanHitNPCWithProj`、`CanHitPvp`、`CanHitPvpWithProj`、`CanBeHitByNPC`、`CanBeHitByProjectile` |
+| `GlobalNPC` | `CanHitPlayer`、`CanHitNPC`、`CanBeHitByNPC`、`CanBeHitByItem`、`CanCollideWithPlayerMeleeAttack`、`CanBeHitByProjectile` |
+| `GlobalProjectile` | `CanHitNPC`、`CanHitPvp`、`CanHitPlayer` |
+| `GlobalItem` | `CanHitNPC`、`CanMeleeAttackCollideWithNPC`、`CanHitPvp` |
+
+- `GlobalProjectileBehavior` 同样不提供 `Colliding` 接口；全局碰撞判定也应在对应数据容器的同一专用部分类文件中集中实现。单实体 Behavior 可提供实体专属的判定接口。
+- 只声明有实际判定逻辑的回调，不为覆盖列表而添加返回默认值的空重写。合并逻辑时保留各条件的生效范围、短路行为和可空布尔返回语义，尤其不能将表示“不作决定”的 `null` 改为强制允许的 `true`。
+- 此集中规则针对全局回调；`ModNPC`、`ModProjectile`、`ModItem` 自身的实体专属回调继续由实体类型实现，不因同名而迁入全局入口。
 
 ### 2.3 克隆与同步
 
@@ -77,11 +108,29 @@
 - 切换行为时明确设置新行为所需的 LocalPhase、Timer 及临时状态；不能默认所有计时器都应清零，独立的传送、预警和生命周期计时按各自语义保留。保持每帧执行一个行为分支，除非原设计明确要求当帧继续执行下一步。
 - 服务器负责随机决策、实体生成和权威状态切换，客户端按同步状态预测表现。结构重构必须检查部件联动、退场、狂暴、首次初始化及中途加入同步，并保持原有攻击时序、伤害和生成坐标语义。
 
+#### 2.6.1 Boss 模块解耦
+
+- `Anomalies/Bosses/<BossName>/` 是独立模块。删除任意一个直属 Boss 子文件夹后，项目必须仍能编译、加载，其他 Boss 的 AI、伤害、同步、绘制和资源加载行为保持不变；不得要求同时修改其他文件。
+- Boss 模块不得引用其他 Boss 模块的类型、静态成员或资源路径。通过原版 NPC/弹幕 ID 交互时，不得依赖另一模块的自定义实现必然存在。宝石等相似机制按所属 Boss 拆分专属 Handler、状态与资源；独立使用的音效或贴图应放入公共资源目录或各自拥有完整副本。
+- 可复用且不依赖 Anomalies 的寻敌、运动、几何、插值及实体工具放入 Transoceanic 对应 API；依赖变种模式、Anomaly 数据或视觉系统的通用逻辑放入 Anomalies 对应公共层。Boss 的攻击参数、AI 槽位布局和专属兼容逻辑保留在本模块，不能仅重命名后整体移入公共层。
+- 公共层和其他内容不得直接引用 Boss 类型。Boss 专属的掉落、血条扩展、网络处理、测试物品等集成实现放入所属 Boss 文件夹，通过可选部分类方法或明确的注册接口接入公共入口；缺失模块时入口自然不执行，不得用反射按名称查找类型掩盖硬依赖。
+- Boss 专属 GlobalType 数据仍由统一数据容器持有。作为 2.1.1 文件位置规则的特例，涉及 Boss 类型的字段及其克隆等处理放入 Boss 文件夹中的容器部分类文件，公共容器只声明可选连接方法。删除模块后不得遗留公共字段对 Boss 类型的引用。此例外不允许另建存储数据的 GlobalType，也不改变同步槽位或网络协议。
+- 模块移除后，公共网络入口仍应消费已定义消息的固定载荷，保持消息 ID 与读取顺序不变；Boss 专属处理通过可选入口接入。注册逻辑保持原调用时机，避免内容加载先后顺序改变其他 Boss 的行为。
+- 调整目录和资源归属时遵循 1.3，逐一核对默认 Texture 路径、特效、粒子、音效和本地化。修改后运行完整构建，并用 `Tests/BossIsolation/Verify.ps1` 逐模块排除源码进行编译验证；同时检查跨模块资源引用。编译检查不能代替游戏内战斗、联机与资源加载验证。
+
+### 2.7 碰撞检测
+
+- 永远不要使用 `Collision` 类的带宽度线段碰撞检测（`Collision.CheckAABBvLineCollision` 的带宽度重载），也不得通过包装方法间接调用；该检测存在严重漏检问题。
+- 矛身、刀刃、射线及位移扫掠等带宽度区域统一使用 Transoceanic 的 `RotatedRectangle.FromLineSegment(start, end, width).Collides(targetHitbox)`。`width` 为完整宽度，端点对应矩形两条短边的中点；保持原有端点、宽度、缩放和扫掠采样，检查零位移、包围和斜向接触。
+- 需要首次接触距离或目标排序时，基于旋转矩形另行求解，不得依赖上述线段检测接口。圆形、实体 AABB 和地形碰撞继续使用适用的几何或地形接口。
+
 ## 3. 着色器规范
 
 ### 3.1 入口与编译配置
 
-`Anomalies` 项目中的着色器统一遵循以下规则：
+`Anomalies` 项目中的着色器统一使用 Shader Model 3.0（`ps_3_0`），`technique` 名称统一为 `Technique1`。根据是否包含多个 Pass，分别遵循以下入口与命名规则。
+
+**没有多 Pass 的着色器（仅有一个 Pass）必须严格遵循以下命名要求，不得因多 Pass 特例而放宽：**
 
 | 配置项 | 统一值 |
 | --- | --- |
@@ -91,8 +140,16 @@
 | `pass` 名称 | `Pass0` |
 
 - 以上名称的大小写必须保持一致；辅助函数可按用途命名。
-- 所有像素着色器的编译入口必须写为 `PixelShader = compile ps_3_0 Main();`，不得使用 `ps_2_0`、`ps_4_0` 或其他模型版本。
-- C# 中注册、加载或应用着色器时，相关名称引用必须与着色器文件一致，pass 名称使用 `Pass0`。
+- 单 Pass 着色器的编译入口必须写为 `PixelShader = compile ps_3_0 Main();`，C# 中注册、加载或应用时必须使用 `Pass0`。
+
+**多 Pass 着色器：**
+
+- 保留默认效果的 `Pass0`，其他 Pass 使用体现用途或主题的 PascalCase 名称，名称在同一 `Technique1` 中不得重复。
+- 允许多个 Pass 共用 `Main`，通过编译期 `uniform` 参数选择效果；编译入口可以写为 `PixelShader = compile ps_3_0 Main(常量参数);`。例如 `EventideReunion.fx` 的默认名称效果使用 `Pass0` / `Main(0.0)`，六相效果使用 `Sun`、`Samsara`、`Life`、`Death`、`Sacredness`、`Star`，第二行渐变使用 `FinalSun`，开发者名字的混沌效果使用 `Chaos`。
+- C# 中注册、加载或应用时，必须引用实际需要的 Pass 名称，并与文件中的拼写和大小写完全一致；默认效果仍使用 `Pass0`。通过 `Effect.CurrentTechnique.Passes[passName].Apply()` 选择效果时，应先设置该 Pass 所需的参数。
+- 这些 Pass 可作为独立效果按需选择，不要求依次叠加执行；不得仅为规避单 Pass 命名要求而添加无用途的 Pass。
+
+无论单 Pass 还是多 Pass，像素着色器入口名称均保持为 `Main`，不得使用 `ps_2_0`、`ps_4_0` 或其他模型版本。
 
 ### 3.2 长宽比适配
 
@@ -102,6 +159,13 @@
 - 已使用世界坐标、局部像素坐标或已有长宽比修正的效果，不得重复修正。
 - 计算距离、半径、方向与折射偏移时，必须区分修正后的空间坐标和纹理采样 UV，确保二者转换正确。
 - 修改后，检查 16:9 下的视觉兼容性，并验证 4:3、16:10、超宽屏和竖屏下均无比例拉伸。
+
+### 3.3 着色器引用与生命周期
+
+- 一般着色器引用统一存储在 `AnomalyEffects` 及其嵌套类中，按资源目录归入 `Primitives`、`Overlays`、`Texts`、`BossBars` 或 `ScreenFilters`；嵌套类内字段按字母顺序排列，名称与资源文件名保持一致。
+- 可沿用现有加载方式的着色器，复用 `AnomalyEffects` 的统一加载、注册和卸载流程；绘制类从对应容器的 `Asset.Value` 获取 `Effect`，不得另行保存静态 `Asset<Effect>` 或在绘制时重复请求同一资源。确需特殊加载方式时，应说明原因及生命周期管理方式。
+- 调用方必须兼容专用服务器、关闭着色器配置或资源尚未加载时容器为空的情况；无可用着色器时跳过对应效果，或沿用已有的不依赖着色器的绘制路径。
+- 同一着色器在不同效果间复用时，每次绘制显式设置所需参数和 Pass，避免共享状态影响后续绘制。
 
 ## 4. 测试文件组织
 

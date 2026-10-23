@@ -68,7 +68,7 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
 
     private static Vector2 GetNPCAnchorTranslation(NPC npc, Vector2 vanishingPoint, bool includeNetOffset = true)
     {
-        if (npc.Anomaly.DepthDrawAnchor is not { } anchor)
+        if (npc.Anomaly.Depth_DrawAnchor is not { } anchor)
             return Vector2.Zero;
         return GetAnchorTranslation(npc.Center + (includeNetOffset ? npc.netOffset : Vector2.Zero) + anchor.LocalOffset, anchor.Target,
             npc.Anomaly.Z, vanishingPoint, anchor.Weight);
@@ -97,7 +97,7 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
         float z = Main.npc[index].GetGlobalNPC<AnomalyGlobalNPC>().Z;
         if (!IsVisible(z))
             return;
-        if (GetPerspectiveScale(z) == 1f && Main.npc[index].Anomaly.DepthDrawAnchor is null)
+        if (GetPerspectiveScale(z) == 1f && Main.npc[index].Anomaly.Depth_DrawAnchor is null)
         {
             orig(self, index, behindTiles);
             return;
@@ -156,7 +156,7 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
     private static bool CheckNPCHover(ref Rectangle mouse, Rectangle bounds, NPC npc)
     {
         float z = npc.Anomaly.Z;
-        if (z == 0f && npc.Anomaly.DepthDrawAnchor is null)
+        if (z == 0f && npc.Anomaly.Depth_DrawAnchor is null)
             return mouse.Intersects(bounds);
         Vector2 vanishingPoint = GetVanishingPoint(Main.GameViewMatrix.TransformationMatrix, ViewportSize) + Main.screenPosition;
         // HoverOverNPCs 已临时将 netOffset 加入 NPC.position。
@@ -207,7 +207,7 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
     {
         EndNPCInterface();
         if (npc.active && npc.type > NPCID.None && npc.shimmerTransparency == 0f
-            && (npc.Anomaly.Z != 0f || npc.Anomaly.DepthDrawAnchor is not null) && IsVisible(npc.Anomaly.Z))
+            && (npc.Anomaly.Z != 0f || npc.Anomaly.Depth_DrawAnchor is not null) && IsVisible(npc.Anomaly.Z))
             _NPCInterfaceScope = BeginPerspective(npc.Anomaly.Z, npc);
     }
 
@@ -280,7 +280,7 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
         float z = npc.Anomaly.Z;
         if (!IsVisible(z))
             return Rectangle.Empty;
-        if (z == 0f && npc.Anomaly.DepthDrawAnchor is null)
+        if (z == 0f && npc.Anomaly.Depth_DrawAnchor is null)
             return bounds;
         // 原版近战/弹幕在命中者客户端检查碰撞，再同步伤害；专服没有观察者镜头。
         if (Main.dedServ)

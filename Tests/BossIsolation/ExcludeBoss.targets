@@ -1,0 +1,11 @@
+<Project>
+  <!-- Simulate deleting a module without moving or deleting the working tree. -->
+  <Target Name="ExcludeBossModule" BeforeTargets="AssignTargetPaths;_GenerateCompileDependencyCache;CoreCompile"
+          Condition="'$(MSBuildProjectName)' == 'Anomalies' and '$(ExcludedBoss)' != ''">
+    <ItemGroup>
+      <Compile Remove="Bosses/$(ExcludedBoss)/**/*.cs" />
+      <AdditionalFiles Remove="Bosses/$(ExcludedBoss)/**/*" />
+    </ItemGroup>
+    <Message Importance="high" Text="Boss isolation: excluded $(ExcludedBoss)" />
+  </Target>
+</Project>

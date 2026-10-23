@@ -7,9 +7,13 @@ public static class AnomalyUtils
     public static void ILFailure(string name, string reason, [DoesNotReturnIf(true)] bool exception = false)
     {
         string message = $"""[CA IL Editing] IL edit "{name}" failed! {reason}""";
-        AnomalyMain.Instance.Logger.Warn(message);
         if (exception)
+        {
+            AnomalyMain.Instance.Logger.Error(message);
             throw new InvalidOperationException(message);
+        }
+        else
+            AnomalyMain.Instance.Logger.Warn(message);
     }
 
     public static TooltipLine CreateNewTooltipLine(int num, string text) => new(AnomalyMain.Instance, $"Tooltip{num}", text);
@@ -23,4 +27,3 @@ public static class AnomalyUtils
         return newLine;
     }
 }
-

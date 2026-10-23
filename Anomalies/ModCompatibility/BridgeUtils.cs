@@ -3,7 +3,7 @@ using CalamityMod;
 
 namespace Anomalies.ModCompatibility;
 
-public static class BridgeUtils
+public static partial class BridgeUtils
 {
     public static event Action<NPC> OnApplyCalamityHealthBoost;
 

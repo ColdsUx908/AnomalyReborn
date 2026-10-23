@@ -23,15 +23,15 @@ public sealed partial class BrainofCthulhu
         if (NPC.target < 0 || NPC.target >= Main.maxPlayers || Main.player[NPC.target].dead || !Main.player[NPC.target].active)
         {
             // Ignore tank players, target low HP players, Brain is smart
-            BrainTargetingParameters options = BrainTargetingParameters.BossDefaults;
-            options.aggroRatio = -1f;
-            options.finishThemOff = true;
-            options.maxSearchRange = DespawnRange;
-            BrainCombatUtils.BrainTargeting(NPC, options);
+            NPCTargetingParameters options = NPCTargetingParameters.BossDefaults;
+            options.AggroRatio = -1f;
+            options.FinishThemOff = true;
+            options.MaxSearchRange = DespawnRange;
+            TOCombatUtils.TargetWithOptions(NPC, options);
         }
 
         // Despawn check
-        if (!BrainCalamityBridge.BossRushActive && CurrentBehavior != Behavior.DeathAnimation)
+        if (!BridgeUtils.CalamityBossRushActive && CurrentBehavior != Behavior.DeathAnimation)
         {
             bool despawn = Target.dead || !Target.active;
             if (despawn)
@@ -118,10 +118,10 @@ public sealed partial class BrainofCthulhu
             if (NPC.target < 0 || NPC.target >= Main.maxPlayers || Main.player[NPC.target].dead || !Main.player[NPC.target].active)
             {
                 // Ignore tank players, target low HP players, Brain is smart
-                BrainTargetingParameters options = BrainTargetingParameters.BossDefaults;
-                options.aggroRatio = -1f;
-                options.finishThemOff = true;
-                BrainCombatUtils.BrainTargeting(NPC, options);
+                NPCTargetingParameters options = NPCTargetingParameters.BossDefaults;
+                options.AggroRatio = -1f;
+                options.FinishThemOff = true;
+                TOCombatUtils.TargetWithOptions(NPC, options);
             }
 
             NPC.velocity = Vector2.Zero;
@@ -131,8 +131,8 @@ public sealed partial class BrainofCthulhu
             BoCAfterImages = [];
             TeleportDuration = 60;
             PreviousAttack = Behavior.Phase1Idle;
-            SpawnDelay = (SummonedViaItem || BrainCalamityBridge.BossRushActive) ? 2 : 60;
-            if (SummonedViaItem || BrainCalamityBridge.BossRushActive)
+            SpawnDelay = (SummonedViaItem || BridgeUtils.CalamityBossRushActive) ? 2 : 60;
+            if (SummonedViaItem || BridgeUtils.CalamityBossRushActive)
                 SpawnTime = -1;
             if (Main.netMode != NetmodeID.MultiplayerClient)
             {
@@ -154,7 +154,7 @@ public sealed partial class BrainofCthulhu
             NPC.dontTakeDamage = false;
             NPC.velocity = Vector2.Zero;
             foreach (Player p in Main.ActivePlayers)
-                BrainCalamityBridge.ResetAdrenaline(p);
+                BridgeUtils.ResetCalamityAdrenaline(p);
             if (Time < 60)
             {
                 // Fade out at the spawn point, relocate while invisible, then fade in.
@@ -299,21 +299,21 @@ public sealed partial class BrainofCthulhu
 
     private void SelectNewTarget()
     {
-        BrainTargetingParameters options = BrainTargetingParameters.BossDefaults;
-        options.aggroRatio = -1f;
-        options.finishThemOff = true;
-        options.maxSearchRange = DespawnRange;
-        options.targetType = BrainTargetType.ForceSwitch;
+        NPCTargetingParameters options = NPCTargetingParameters.BossDefaults;
+        options.AggroRatio = -1f;
+        options.FinishThemOff = true;
+        options.MaxSearchRange = DespawnRange;
+        options.TargetType = NPCTargetPreference.ForceSwitch;
         List<int> available = GetAllValidTargets(NPC.Center);
         if (available.Any(p => !TargetsSet.Contains(p)))
-            options.excludedPlayers = [.. TargetsSet];
+            options.ExcludedPlayers = [.. TargetsSet];
         else
         {
             TargetsSet.Clear();
-            options.excludedPlayers = [NPC.target];
+            options.ExcludedPlayers = [NPC.target];
         }
 
-        NPC.BrainTargeting(options);
+        NPC.TargetWithOptions(options);
         TargetsSet.Add(NPC.target);
     }
 }

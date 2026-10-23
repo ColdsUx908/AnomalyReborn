@@ -5,11 +5,6 @@ public sealed partial class EventideReunionSunSkill : AnomalyModProjectile
     public override string LocalizationCategory => EventideReunion.LocalizationCategoryForEventideReunion;
     public const int Cooldown = 10 * 60;
     public const float BlastRadius = 8f * 16f;
-    // 文档伤害未定：以武器伤害为基准，集中保留调整入口。
-    public const float SlamDamageMultiplier = 6f;
-    public const float ExplosionDamageMultiplier = 4f;
-    public const float SlashDamageMultiplier = 5f;
-    public const float SpinDamageMultiplier = 3f;
     private const int PlantDuration = 18;
     private const int SpinDuration = 36;
     private const int ChargeDuration = 30;
@@ -47,7 +42,7 @@ public sealed partial class EventideReunionSunSkill : AnomalyModProjectile
     private Vector2 WeaponTip => _WeaponCenter + (new Vector2(299f, 0f) - new Vector2(144f, 156f))
         .RotatedBy(_WeaponDirection.ToRotation() + MathHelper.PiOver4) * _WeaponScale;
 
-    public override string Texture => EventideReunionHoldout.AssetPath + "EventideReunion_NoStreamer";
+    public override string Texture => EventideReunionAssets.WeaponPath;
     public override LocalizedText DisplayName => ModContent.GetModItem<EventideReunion>().DisplayName;
     public override void SetDefaults()
     {
@@ -106,7 +101,7 @@ public sealed partial class EventideReunionSunSkill : AnomalyModProjectile
         ownerPlayer.fullRotation = 0f;
         ownerPlayer.noFallDmg = true;
         ownerPlayer.fallStart = (int)(ownerPlayer.position.Y / 16f);
-        ownerPlayer.Anomaly.EventideReunionSunFallProtection = 30;
+        ownerPlayer.Anomaly.EventideReunion_SunFallProtection = 30;
         Vector2 down = Vector2.UnitY * ownerPlayer.gravDir;
 
         if (_PreviousPhase != Phase)
@@ -118,18 +113,18 @@ public sealed partial class EventideReunionSunSkill : AnomalyModProjectile
 
             }
             else if (Phase == SunPhase.Spin)
-                SoundEngine.PlaySound(EventideReunionSunSounds.SunSweep, ownerPlayer.Center);
+                SoundEngine.PlaySound(EventideReunionSunAssets.SunSweep, ownerPlayer.Center);
             else if (Phase == SunPhase.Dive)
             {
                 // 横扫每个目标只命中一次；冲刺使用独立的一次命中机会。
                 Array.Clear(Projectile.localNPCImmunity);
-                SoundEngine.PlaySound(EventideReunionSounds.Thrust, ownerPlayer.Center);
+                SoundEngine.PlaySound(EventideReunionNormalAttackAssets.Thrust, ownerPlayer.Center);
             }
             else if (Phase == SunPhase.Slash)
             {
                 Array.Clear(Projectile.localNPCImmunity);
                 _PreviousSlashProgress = 0f;
-                SoundEngine.PlaySound(EventideReunionSunSounds.SunFollowUpSlash, ownerPlayer.Center);
+                SoundEngine.PlaySound(EventideReunionSunAssets.SunFollowUpSlash, ownerPlayer.Center);
             }
         }
 
@@ -360,10 +355,10 @@ public sealed partial class EventideReunionSunSkill : AnomalyModProjectile
     public override void ModifyHitNPC(NPC targetNPC, ref NPC.HitModifiers modifiers)
         => modifiers.SourceDamage *= (Phase switch
         {
-            SunPhase.Spin => SpinDamageMultiplier,
-            SunPhase.Slash => SlashDamageMultiplier,
-            _ => SlamDamageMultiplier
-        }) * (Main.dayTime ? 1.2f : 0.9f);
+            SunPhase.Spin => EventideReunionDamageConstants.SunSpinDamageMultiplier,
+            SunPhase.Slash => EventideReunionDamageConstants.SunSlashDamageMultiplier,
+            _ => EventideReunionDamageConstants.SunChargeDamageMultiplier
+        }) * (Main.dayTime ? EventideReunionDamageConstants.SunDayDamageMultiplier : EventideReunionDamageConstants.SunNightDamageMultiplier);
     public override void OnHitNPC(NPC targetNPC, NPC.HitInfo hit, int damageDone)
     {
         targetNPC.AddBuff(BuffID.OnFire, 180);
@@ -399,7 +394,7 @@ public sealed partial class EventideReunionSunSkill : AnomalyModProjectile
             Timer = 0;
         // 在收矛前固定爆心，各客户端通过独立弹幕播放一次爆炸。
         Projectile.NewProjectileAction<EventideReunionSunExplosion>(Projectile.GetSource_FromAI(), explosionCenter, Vector2.Zero,
-            Math.Max(1, (int)(Projectile.damage * ExplosionDamageMultiplier)), Projectile.knockBack, Projectile.owner);
+            Math.Max(1, (int)(Projectile.damage * EventideReunionDamageConstants.SunExplosionDamageMultiplier)), Projectile.knockBack, Projectile.owner);
     }
     public override void OnKill(int timeLeft)
     {
@@ -407,6 +402,6 @@ public sealed partial class EventideReunionSunSkill : AnomalyModProjectile
         ownerPlayer.fullRotation = 0f;
         ownerPlayer.fullRotationOrigin = Vector2.Zero;
         ownerPlayer.fallStart = (int)(ownerPlayer.position.Y / 16f);
-        ownerPlayer.Anomaly.EventideReunionSunFallProtection = 30;
+        ownerPlayer.Anomaly.EventideReunion_SunFallProtection = 30;
     }
 }

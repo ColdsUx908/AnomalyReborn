@@ -4,6 +4,9 @@ namespace Anomalies.Bosses.BrainofCthulhu;
 
 public class CrimsonEye : AnomalyModProjectile
 {
+    [LoadTexture("Anomalies/Bosses/BrainofCthulhu/CrimsonEyePupil")]
+    private static Asset<Texture2D> _Pupil;
+
     public override string LocalizationCategory => "Bosses.BrainofCthulhu";
     public ref float Time => ref Projectile.ai[0];
     public ref float DistanceRatio => ref Projectile.ai[1];
@@ -103,10 +106,10 @@ public class CrimsonEye : AnomalyModProjectile
     {
         if (ExplosionTime >= TimeToExplode)
             return;
-        float ratio = BrainCombatUtils.SineOutEasing(ExplosionTime / TimeToExplode, 1);
+        float ratio = TOMathUtils.Interpolation.SineEaseOut(ExplosionTime / TimeToExplode, clamped: false);
         if (Projectile.frame == 4)
         {
-            Texture2D tex = ModContent.Request<Texture2D>(Texture + "Pupil").Value;
+            Texture2D tex = _Pupil.Value;
             Vector2 rangeScale = new(2.25f, 0.75f);
             Vector2 dir = Projectile.DirectionTo(Main.LocalPlayer.Center);
             if (ExplosionTime > 0)
@@ -126,7 +129,7 @@ public class CrimsonEye : AnomalyModProjectile
             }
             else if (Time < 85)
             {
-                float lerp = BrainCombatUtils.SineOutEasing((Time - 65) / 20f, 1);
+                float lerp = TOMathUtils.Interpolation.SineEaseOut((Time - 65) / 20f, clamped: false);
                 range = MathHelper.Lerp(0f, range, lerp);
             }
 
@@ -141,7 +144,7 @@ public class CrimsonEye : AnomalyModProjectile
             if (Projectile.timeLeft <= 20)
                 opacity *= Projectile.timeLeft / 20f;
             Transoceanic.DataStructures.Rendering.SpriteBatchSnapshot state = Main.spriteBatch.ChangeState(sortMode: SpriteSortMode.Immediate);
-            Texture2D telegraphBase = ModContent.Request<Texture2D>(TOTextures.InvisibleTexturePath).Value;
+            Texture2D telegraphBase = TOTextures.InvisibleTexture;
             telegraph.Data.UseOpacity(opacity);
             telegraph.Data.UseColor(Color.Lerp(Color.Red, Color.OrangeRed, 0.7f * (float)Math.Pow(0.5 + 0.5 * Math.Sin(Main.GlobalTimeWrappedHourly), 3)));
             telegraph.Data.UseSecondaryColor(Color.Lerp(Color.Yellow, Color.White, 0.5f));

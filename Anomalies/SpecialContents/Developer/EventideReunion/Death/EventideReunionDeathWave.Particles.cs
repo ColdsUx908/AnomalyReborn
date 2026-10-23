@@ -25,7 +25,7 @@ public sealed partial class EventideReunionDeathWave
                 if (Main.rand.NextFloat() > fade)
                     continue;
                 float arc = Progress * Main.rand.NextFloat(0.08f, 0.92f);
-                Vector2 blade = EventideReunionDeathGeometry.SlashVector(arc, Aim, SwingSign);
+                Vector2 blade = EventideReunionDeathGeometry.SlashVector(arc, Aim, SwingSign) * WaveScale;
                 Vector2 position = center + blade * Main.rand.NextFloat(0.55f, 0.96f)
                     - Aim * Main.rand.NextFloat(8f, 24f);
                 Vector2 velocity = -Aim * Main.rand.NextFloat(1.2f, 3.5f) + normal * Main.rand.NextFloat(-0.35f, 0.35f);

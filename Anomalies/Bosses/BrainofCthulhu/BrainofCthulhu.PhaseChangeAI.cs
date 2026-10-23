@@ -60,9 +60,9 @@ public sealed partial class BrainofCthulhu
             else
                 NPC.velocity *= 0.9f;
             if (animCounter < 60f)
-                BoCDrawOffset = Main.rand.NextVector2CircularEdge(1, 1) * MathHelper.Lerp(0f, 16f, BrainCombatUtils.CircInEasing(animCounter / 60f, 1));
+                BoCDrawOffset = Main.rand.NextVector2CircularEdge(1, 1) * MathHelper.Lerp(0f, 16f, TOMathUtils.Interpolation.CircularEaseIn(animCounter / 60f, clamped: false));
             else if (animCounter < 70f)
-                BoCDrawOffset = Main.rand.NextVector2CircularEdge(1, 1) * MathHelper.Lerp(16f, 0f, BrainCombatUtils.CircOutEasing((animCounter - 60) / 10f, 1));
+                BoCDrawOffset = Main.rand.NextVector2CircularEdge(1, 1) * MathHelper.Lerp(16f, 0f, TOMathUtils.Interpolation.CircularEaseOut((animCounter - 60) / 10f, clamped: false));
             if (animCounter >= 120f)
             {
                 Time = 0;

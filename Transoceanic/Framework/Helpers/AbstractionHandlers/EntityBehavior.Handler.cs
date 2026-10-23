@@ -1,4 +1,4 @@
-﻿using MonoMod.Utils;
+using MonoMod.Utils;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
@@ -1026,26 +1026,6 @@ public sealed class PlayerBehaviorHandler : ModPlayer
             behavior.OnHitAnything(x, y, victim);
     }
 
-    /*
-    public override bool CanHitNPC(NPC target)
-    {
-        bool result = true;
-        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
-            result &= behavior.CanHitNPC(target);
-        return result;
-    }
-
-    public override bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, NPC target)
-    {
-        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
-        {
-            bool? result = behavior.CanMeleeAttackCollideWithNPC(item, meleeAttackHitbox, target);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }*/
-
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
     {
         foreach (PlayerBehavior behavior in BehaviorSet.Enumerate(Player))
@@ -1057,18 +1037,6 @@ public sealed class PlayerBehaviorHandler : ModPlayer
         foreach (PlayerBehavior behavior in BehaviorSet.Enumerate(Player))
             behavior.OnHitNPC(target, hit, damageDone);
     }
-
-    /*
-    public override bool? CanHitNPCWithItem(Item item, NPC target)
-    {
-        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
-        {
-            bool? result = behavior.CanHitNPCWithItem(item, target);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }*/
 
     public override void ModifyHitNPCWithItem(Item item, NPC target, ref NPC.HitModifiers modifiers)
     {
@@ -1082,18 +1050,6 @@ public sealed class PlayerBehaviorHandler : ModPlayer
             behavior.OnHitNPCWithItem(item, target, hit, damageDone);
     }
 
-    /*
-    public override bool? CanHitNPCWithProj(Projectile proj, NPC target)
-    {
-        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
-        {
-            bool? result = behavior.CanHitNPCWithProj(proj, target);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }*/
-
     public override void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers)
     {
         foreach (PlayerBehavior behavior in BehaviorSet.Enumerate(Player))
@@ -1106,31 +1062,6 @@ public sealed class PlayerBehaviorHandler : ModPlayer
             behavior.OnHitNPCWithProj(proj, target, hit, damageDone);
     }
 
-    /*
-    public override bool CanHitPvp(Item item, Player target)
-    {
-        bool result = true;
-        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
-            result &= behavior.CanHitPvp(item, target);
-        return result;
-    }
-
-    public override bool CanHitPvpWithProj(Projectile proj, Player target)
-    {
-        bool result = true;
-        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
-            result &= behavior.CanHitPvpWithProj(proj, target);
-        return result;
-    }
-
-    public override bool CanBeHitByNPC(NPC npc, ref int cooldownSlot)
-    {
-        bool result = true;
-        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
-            result &= behavior.CanBeHitByNPC(npc, ref cooldownSlot);
-        return result;
-    }*/
-
     public override void ModifyHitByNPC(NPC npc, ref Player.HurtModifiers modifiers)
     {
         foreach (PlayerBehavior behavior in BehaviorSet.Enumerate(Player))
@@ -1142,15 +1073,6 @@ public sealed class PlayerBehaviorHandler : ModPlayer
         foreach (PlayerBehavior behavior in BehaviorSet.Enumerate(Player))
             behavior.OnHitByNPC(npc, hurtInfo);
     }
-
-    /*
-    public override bool CanBeHitByProjectile(Projectile proj)
-    {
-        bool result = true;
-        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
-            result &= behavior.CanBeHitByProjectile(proj);
-        return result;
-    }*/
 
     public override void ModifyHitByProjectile(Projectile proj, ref Player.HurtModifiers modifiers)
     {
@@ -1221,6 +1143,12 @@ public sealed class PlayerBehaviorHandler : ModPlayer
     {
         foreach (PlayerBehavior behavior in BehaviorSet.Enumerate(Player))
             behavior.ModifyDrawInfo(ref drawInfo);
+    }
+
+    public override void TransformDrawData(ref PlayerDrawSet drawInfo)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.Enumerate(Player))
+            behavior.TransformDrawData(ref drawInfo);
     }
 
     public override void ModifyDrawLayerOrdering(IDictionary<PlayerDrawLayer, PlayerDrawLayer.Position> positions)
@@ -1624,15 +1552,6 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC
             behavior.ModifyGlobalLoot(globalLoot);
     }
 
-    /*
-    public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
-    {
-        bool result = true;
-        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
-            result &= behavior.CanHitPlayer(npc, target, ref cooldownSlot);
-        return result;
-    }*/
-
     public override void ModifyHitPlayer(NPC npc, Player target, ref Player.HurtModifiers modifiers)
     {
         foreach (GlobalNPCBehavior behavior in BehaviorSet.Enumerate())
@@ -1644,23 +1563,6 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC
         foreach (GlobalNPCBehavior behavior in BehaviorSet.Enumerate())
             behavior.OnHitPlayer(npc, target, hurtInfo);
     }
-
-    /*
-    public override bool CanHitNPC(NPC npc, NPC target)
-    {
-        bool result = true;
-        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
-            result &= behavior.CanHitNPC(npc, target);
-        return result;
-    }
-
-    public override bool CanBeHitByNPC(NPC npc, NPC attacker)
-    {
-        bool result = true;
-        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
-            result &= behavior.CanBeHitByNPC(npc, attacker);
-        return result;
-    }*/
 
     public override void ModifyHitNPC(NPC npc, NPC target, ref NPC.HitModifiers modifiers)
     {
@@ -1674,29 +1576,6 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC
             behavior.OnHitNPC(npc, target, hit);
     }
 
-    /*
-    public override bool? CanBeHitByItem(NPC npc, Player player, Item item)
-    {
-        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
-        {
-            bool? result = behavior.CanBeHitByItem(npc, player, item);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }
-
-    public override bool? CanCollideWithPlayerMeleeAttack(NPC npc, Player player, Item item, Rectangle meleeAttackHitbox)
-    {
-        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
-        {
-            bool? result = behavior.CanCollideWithPlayerMeleeAttack(npc, player, item, meleeAttackHitbox);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }*/
-
     public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
     {
         foreach (GlobalNPCBehavior behavior in BehaviorSet.Enumerate())
@@ -1708,18 +1587,6 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC
         foreach (GlobalNPCBehavior behavior in BehaviorSet.Enumerate())
             behavior.OnHitByItem(npc, player, item, hit, damageDone);
     }
-
-    /*
-    public override bool? CanBeHitByProjectile(NPC npc, Projectile projectile)
-    {
-        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
-        {
-            bool? result = behavior.CanBeHitByProjectile(npc, projectile);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }*/
 
     public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
     {
@@ -2159,18 +2026,6 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile
             behavior.ModifyDamageHitbox(projectile, ref hitbox);
     }
 
-    /*
-    public override bool? CanHitNPC(Projectile projectile, NPC target)
-    {
-        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
-        {
-            bool? result = behavior.CanHitNPC(projectile, target);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }*/
-
     public override void ModifyHitNPC(Projectile projectile, NPC target, ref NPC.HitModifiers modifiers)
     {
         foreach (GlobalProjectileBehavior behavior in BehaviorSet.Enumerate())
@@ -2183,23 +2038,6 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile
             behavior.OnHitNPC(projectile, target, hit, damageDone);
     }
 
-    /*
-    public override bool CanHitPvp(Projectile projectile, Player target)
-    {
-        bool result = true;
-        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
-            result &= behavior.CanHitPvp(projectile, target);
-        return result;
-    }
-
-    public override bool CanHitPlayer(Projectile projectile, Player target)
-    {
-        bool result = true;
-        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
-            result &= behavior.CanHitPlayer(projectile, target);
-        return result;
-    }*/
-
     public override void ModifyHitPlayer(Projectile projectile, Player target, ref Player.HurtModifiers modifiers)
     {
         foreach (GlobalProjectileBehavior behavior in BehaviorSet.Enumerate())
@@ -2211,18 +2049,6 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile
         foreach (GlobalProjectileBehavior behavior in BehaviorSet.Enumerate())
             behavior.OnHitPlayer(projectile, target, info);
     }
-
-    /*
-    public override bool? Colliding(Projectile projectile, Rectangle projHitbox, Rectangle targetHitbox)
-    {
-        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
-        {
-            bool? result = behavior.Colliding(projectile, projHitbox, targetHitbox);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }*/
 
     public override Color? GetAlpha(Projectile projectile, Color lightColor)
     {
@@ -2643,29 +2469,6 @@ public sealed class GlobalItemBehaviorHandler : GlobalItem
             behavior.ModifyItemScale(item, player, ref scale);
     }
 
-    /*
-    public override bool? CanHitNPC(Item item, Player player, NPC target)
-    {
-        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
-        {
-            bool? result = behavior.CanHitNPC(item, player, target);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }
-
-    public override bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, Player player, NPC target)
-    {
-        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
-        {
-            bool? result = behavior.CanMeleeAttackCollideWithNPC(item, meleeAttackHitbox, player, target);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }*/
-
     public override void ModifyHitNPC(Item item, Player player, NPC target, ref NPC.HitModifiers modifiers)
     {
         foreach (GlobalItemBehavior behavior in BehaviorSet.Enumerate())
@@ -2677,15 +2480,6 @@ public sealed class GlobalItemBehaviorHandler : GlobalItem
         foreach (GlobalItemBehavior behavior in BehaviorSet.Enumerate())
             behavior.OnHitNPC(item, player, target, hit, damageDone);
     }
-
-    /*
-    public override bool CanHitPvp(Item item, Player player, Player target)
-    {
-        bool result = true;
-        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
-            result &= behavior.CanHitPvp(item, player, target);
-        return result;
-    }*/
 
     public override void ModifyHitPvp(Item item, Player player, Player target, ref Player.HurtModifiers modifiers)
     {

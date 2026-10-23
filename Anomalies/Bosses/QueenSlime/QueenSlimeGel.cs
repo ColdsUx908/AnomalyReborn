@@ -1,4 +1,3 @@
-﻿using Anomalies.Bosses.KingSlime;
 
 namespace Anomalies.Bosses.QueenSlime;
 
@@ -44,7 +43,7 @@ public sealed class QueenSlimeGel : AnomalyProjectileBehavior<QueenSlimeGel>
         switch (BehaviorType)
         {
             case 0:
-                SlimeGel.Gel_AI(Projectile);
+                SlimeGelMotion.Gel_AI(Projectile);
                 break;
             case 1:
                 Projectile.tileCollide = false;
@@ -58,7 +57,7 @@ public sealed class QueenSlimeGel : AnomalyProjectileBehavior<QueenSlimeGel>
     {
         if (BehaviorType == 0)
         {
-            return SlimeGel.Gel_OnTileCollide(Projectile, oldVelocity, DustID.TintableDust, d =>
+            return SlimeGelMotion.Gel_OnTileCollide(Projectile, oldVelocity, DustID.TintableDust, d =>
             {
                 d.velocity = Main.rand.NextPolarVector2(1f, 5f);
                 d.noGravity = true;

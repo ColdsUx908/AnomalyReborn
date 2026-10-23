@@ -12,5 +12,3 @@ internal interface IAnomalyLoader
     /// </summary>
     internal virtual void Unload() { }
 }
-
-

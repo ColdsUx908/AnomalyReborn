@@ -3,7 +3,7 @@ using Terraria.Graphics.Effects;
 
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
-// 独立屏幕边缘遮罩，不写入通用的全屏 DarknessIntensity。
+// 独立屏幕边缘遮罩，不写入通用的全屏 Visual_DarknessIntensity。
 public sealed class EventideReunionDeathVignette : CustomOverlay
 {
     public override void Draw(SpriteBatch spriteBatch, RenderLayers layer, bool beginSpriteBatch)

@@ -30,8 +30,8 @@ public sealed partial class QueenBee
             Timer5--;
 
         NPC.defense = NPC.defDefense;
-        AnomalyNPC.CurrentlyEnraged = false;
-        AnomalyNPC.CurrentlyImmune = InvalidPhase1;
+        AnomalyNPC.BossBar_Enraged = false;
+        AnomalyNPC.BossBar_Immune = InvalidPhase1;
         AnomalyNPC.DR = Ultra
             && CurrentBehavior is Behavior.Phase1_BeeSwarm or Behavior.Phase1_BeeSwarm2 or Behavior.Phase2_BeeSwarm3 or Behavior.Phase2_BeeSwarm4
             && CurrentLocalPhase >= 1
@@ -142,7 +142,7 @@ public sealed partial class QueenBee
         {
             if (NPC.Distance(Target.Center) > EnrageDistance)
             {
-                AnomalyNPC.CurrentlyEnraged = true;
+                AnomalyNPC.BossBar_Enraged = true;
                 if (!HasBeenEnraged)
                 {
                     HasBeenEnraged = true;

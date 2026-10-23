@@ -26,7 +26,7 @@ namespace Anomalies.Visuals.BossBar;
 /// Anomaly Boss 血条系统的主管理类，负责血条资源加载、数据绑定、更新与绘制调度。
 /// 继承自 <see cref="ModBossBarStyle"/> 并实现 <see cref="IContentLoader"/>。
 /// </summary>
-public class BossBarHandler : IContentLoader
+public partial class BossBarHandler : IContentLoader
 {
     /// <summary>
     /// 最大可同时存在的血条记录数量。
@@ -69,7 +69,8 @@ public class BossBarHandler : IContentLoader
             long npcIdentifier = npc.Identifier;
             if (CurrentBars.ContainsKey(npcIdentifier))
                 CurrentValidIdentifiers.Add(npcIdentifier);
-            else if (CurrentBars.Count < MaxBars && npc.realLife < 0 && ((npc.IsBossEnemy && !ExclusionList.Contains(npc.type)) || Minibosses.Contains(npc.type) || npc.Anomaly.CanHaveBossHealthBar))
+            // 毁灭者等蠕虫的头部也可能将 realLife 指向自身，仅过滤指向其他 NPC 的体节。
+            else if (CurrentBars.Count < MaxBars && (npc.realLife < 0 || npc.realLife == npc.whoAmI) && ((npc.IsBossEnemy && !ExclusionList.Contains(npc.type)) || Minibosses.Contains(npc.type) || npc.Anomaly.BossBar_Enabled))
             {
                 CurrentBars.Add(npcIdentifier, new BossHealthBar(npc));
                 CurrentValidIdentifiers.Add(npcIdentifier);
@@ -119,13 +120,13 @@ public class BossBarHandler : IContentLoader
     /// <summary>
     /// 模组加载时完成资源请求和数据初始化，确保血条系统在游戏中可用。
     /// </summary>
+    static partial void RegisterBrainExclusions();
+
     void IContentLoader.PostSetupContent()
     {
         ExclusionList =
         [
             NPCID.None,
-            NPCType<Anomalies.Bosses.BrainofCthulhu.FalseBrain>(),
-            NPCType<Anomalies.Bosses.BrainofCthulhu.BrainIllusion>(),
             NPCID.EaterofWorldsBody,
             NPCID.EaterofWorldsTail,
             NPCID.MoonLordFreeEye,
@@ -137,6 +138,8 @@ public class BossBarHandler : IContentLoader
             NPCID.WyvernBody3,
             NPCID.WyvernTail,
         ];
+
+        RegisterBrainExclusions();
 
         Minibosses =
         [

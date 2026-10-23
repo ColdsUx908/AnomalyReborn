@@ -35,11 +35,13 @@ Developer: {
 		EventideReunionSunExplosion.DisplayName: 日冕耀斑
 		EventideReunionDeathWave.DisplayName: 寂灭镰波
 		EventideReunionDeathSoul.DisplayName: 收割之魂
+		EventideReunionSamsaraEcho.DisplayName: 业轮回响
 
-		EventideReunionDeathMark: {
-			DisplayName: 死亡印记
-			Description: 受到的伤害乘以1.15；生命低于25%的非Boss敌人将被斩杀
+		EventideReunionResonance: {
+			DisplayName: 轮回共鸣
+			Description: 每层近战伤害乘以1.08，技能冷却缩减5%；不同相位刷新30秒持续时间，重复相位移除自身和随机一个已有印记，该次冷却增加20%
 		}
+
 	}
 }
 

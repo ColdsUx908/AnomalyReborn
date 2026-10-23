@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using Anomalies.Bosses.BrainofCthulhu;
 using CalamityMod.NPCs.CeaselessVoid;
 using CalamityMod.NPCs.ExoMechs.Apollo;
 using CalamityMod.NPCs.Ravager;
@@ -11,7 +10,7 @@ namespace Anomalies.Visuals.BossBar;
 /// <summary>
 /// Boss血条类。
 /// </summary>
-public class BossHealthBar : IContentLoader, ILocalizationPrefix
+public partial class BossHealthBar : IContentLoader, ILocalizationPrefix
 {
     /// <summary>
     /// 用于描述 Boss 附属实体扩展信息的结构。
@@ -211,9 +210,9 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
     public int NPCType => NPC.type;
 
     /// <summary>
-    /// 指示此血条是否使用小尺寸布局（封装 AnomalyNPC.BossHealthBarIsSmall）。
+    /// 指示此血条是否使用小尺寸布局（封装 AnomalyNPC.BossBar_IsSmall）。
     /// </summary>
-    public bool IsSmall => AnomalyNPC.BossHealthBarIsSmall;
+    public bool IsSmall => AnomalyNPC.BossBar_IsSmall;
 
     /// <summary>
     /// 记录的初始最大生命值，用于计算生命比例，避免因最大生命值动态变化导致血条比例跳动。
@@ -255,12 +254,12 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
     /// <summary>
     /// 当前 Boss（或附属 NPC）是否处于激怒状态。
     /// </summary>
-    public bool NPCIsEnraged => Valid && NPC.active && (AnomalyNPC.CurrentlyEnraged || (HasOneToMany && CustomOneToMany.Values.Any(n => n.Anomaly.CurrentlyEnraged)));
+    public bool NPCIsEnraged => Valid && NPC.active && (AnomalyNPC.BossBar_Enraged || (HasOneToMany && CustomOneToMany.Values.Any(n => n.Anomaly.BossBar_Enraged)));
 
     /// <summary>
     /// 当前 Boss（或附属 NPC）是否正在提升防御/伤害减免。
     /// </summary>
-    public bool NPCIsIncreasingDefenseOrDR => Valid && NPC.active && (AnomalyNPC.CurrentlyIncreasingDefenseOrDR || (HasOneToMany && CustomOneToMany.Values.Any(n => n.Anomaly.CurrentlyIncreasingDefenseOrDR)));
+    public bool NPCIsIncreasingDefenseOrDR => Valid && NPC.active && (AnomalyNPC.BossBar_IncreasingDefenseOrDR || (HasOneToMany && CustomOneToMany.Values.Any(n => n.Anomaly.BossBar_IncreasingDefenseOrDR)));
 
     /// <summary>
     /// 本体与全部有效附属 NPC 是否均处于无敌（或几乎无敌）状态。
@@ -281,7 +280,7 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
             }
             return true;
 
-            static bool CheckImmune(NPC npc) => npc.Anomaly.CurrentlyImmune || npc.dontTakeDamage || npc.immortal;
+            static bool CheckImmune(NPC npc) => npc.Anomaly.BossBar_Immune || npc.dontTakeDamage || npc.immortal;
         }
     }
 
@@ -375,11 +374,22 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
         PostUpdate();
     }
 
+    static partial void RegisterBrainLifeFunctions();
+    static partial void AdjustBrainLifeContribution(NPC npc, ref int life);
+    static partial void FilterBrainExtension(NPC npc, ref bool include);
+
+    private static bool IncludeExtension(NPC npc)
+    {
+        bool include = true;
+        FilterBrainExtension(npc, ref include);
+        return include;
+    }
+
     private static int GetLifeContribution(NPC npc)
     {
-        if (npc.type == NPCID.Creeper && npc.TryGetCreeperBehavior(out CreeperAI ai))
-            return ai.CombinedLifeContribution;
-        return Math.Max(0, npc.life);
+        int life = Math.Max(0, npc.life);
+        AdjustBrainLifeContribution(npc, ref life);
+        return life;
     }
 
     /// <summary>
@@ -399,7 +409,7 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
         long result = GetLifeContribution(NPC);
         foreach ((long identifier, NPC npc) in CustomOneToMany)
         {
-            if (npc.Identifier == identifier && npc.active && npc.life > 0)
+            if (identifier != Identifier && npc.Identifier == identifier && npc.active && npc.life > 0)
                 result += GetLifeContribution(npc);
         }
         CombinedNPCLife = result;
@@ -422,7 +432,7 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
         long result = NPC.lifeMax;
         foreach ((long identifier, NPC npc) in CustomOneToMany)
         {
-            if (npc.Identifier == identifier && npc.active && npc.life > 0)
+            if (identifier != Identifier && npc.Identifier == identifier && npc.active && npc.life > 0)
                 result += npc.lifeMax;
         }
         CombinedNPCMaxLife = result;
@@ -436,10 +446,10 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
     /// </summary>
     protected void UpdateIndicators()
     {
-        foreach (HPThresholdIndicator indicator in AnomalyNPC.HPThresholdIndicators)
+        foreach (HPThresholdIndicator indicator in AnomalyNPC.BossBar_HPThresholdIndicators)
             indicator?.Update(NPC, this);
 
-        AnomalyNPC.HPThresholdIndicators.RemoveAll(i => i is null || i.EaseOutTimer >= 60);
+        AnomalyNPC.BossBar_HPThresholdIndicators.RemoveAll(i => i is null || i.EaseOutTimer >= 60);
     }
 
     /// <summary>
@@ -506,9 +516,9 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
             (float sin, float cos) = TOMathUtils.TimeWrappingFunction.GetTimeSinCos(0.5f, 1f, 0f, true);
 
             Color? mainColor;
-            if (AnomalyNPC.IsRunningAnomalyAI)
+            if (AnomalyNPC.AnomalyAI_IsRunning)
             {
-                mainColor = Color.Lerp(AnomalySharedData.GetGradientColor(0.1f), AnomalySharedData.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * cos * 0.8f);
+                mainColor = Color.Lerp(AnomalySharedData.GetGradientColor(0.1f), AnomalySharedData.AnomalyUltramundaneColor, AnomalyNPC.BossBar_UltraTimer / 120f * cos * 0.8f);
                 if (Aroma)
                     mainColor = Color.Lerp(mainColor.Value, AnomalySharedData.AromalyColor, sin);
                 if (IncreasingDefenseOrDRTimer > 0)
@@ -525,9 +535,9 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
             mainColor *= AnimationCompletionRatio2;
 
             Color? borderColor;
-            if (AnomalyNPC.IsRunningAnomalyAI)
+            if (AnomalyNPC.AnomalyAI_IsRunning)
             {
-                borderColor = Color.Lerp(AnomalySharedData.GetGradientColor(0.1f), AnomalySharedData.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin * 0.8f);
+                borderColor = Color.Lerp(AnomalySharedData.GetGradientColor(0.1f), AnomalySharedData.AnomalyUltramundaneColor, AnomalyNPC.BossBar_UltraTimer / 120f * sin * 0.8f);
                 if (Aroma)
                     borderColor = Color.Lerp(borderColor.Value, AnomalySharedData.AromalyColor, sin);
                 if (IncreasingDefenseOrDRTimer > 0)
@@ -542,8 +552,8 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
             borderColor *= AnimationCompletionRatio2;
 
             float borderWidth;
-            if (AnomalyNPC.IsRunningAnomalyAI)
-                borderWidth = (1f + TOMathUtils.TimeWrappingFunction.GetTimeSin(1f, 1f, 0f, true)) * Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f);
+            if (AnomalyNPC.AnomalyAI_IsRunning)
+                borderWidth = (1f + TOMathUtils.TimeWrappingFunction.GetTimeSin(1f, 1f, 0f, true)) * Math.Clamp(AnomalyNPC.AnomalyAI_Timer / 120f, 0f, 1f);
             else if (EnrageTimer > 0)
                 borderWidth = (1f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(EnrageTimer / 80f, 0f, 1f);
             else if (IncreasingDefenseOrDRTimer > 0)
@@ -699,12 +709,12 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
 
         //阈值指示器
 
-        if (AnomalyNPC.IsRunningAnomalyAI)
+        if (AnomalyNPC.AnomalyAI_IsRunning)
         {
             Vector2 indicatorBasePosition = barBasePosition + new Vector2(2f, 5f);
             float TotalWidth2 = small ? 300f : 400f;
 
-            foreach (HPThresholdIndicator indicator in AnomalyNPC.HPThresholdIndicators)
+            foreach (HPThresholdIndicator indicator in AnomalyNPC.BossBar_HPThresholdIndicators)
             {
                 if (indicator is null)
                     continue;
@@ -730,9 +740,9 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
         (float sin, float cos) = TOMathUtils.TimeWrappingFunction.GetTimeSinCos(0.5f, 1f, 0f, true);
 
         Color seperatorColor;
-        if (AnomalyNPC.IsRunningAnomalyAI)
+        if (AnomalyNPC.AnomalyAI_IsRunning)
         {
-            seperatorColor = Color.Lerp(BaseColor, Color.Lerp(AnomalySharedData.GetGradientColor(0.25f), AnomalySharedData.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin), Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f));
+            seperatorColor = Color.Lerp(BaseColor, Color.Lerp(AnomalySharedData.GetGradientColor(0.25f), AnomalySharedData.AnomalyUltramundaneColor, AnomalyNPC.BossBar_UltraTimer / 120f * sin), Math.Clamp(AnomalyNPC.AnomalyAI_Timer / 120f, 0f, 1f));
             if (Aroma)
                 seperatorColor = Color.Lerp(seperatorColor, AnomalySharedData.AromalyColor, sin);
             if (IncreasingDefenseOrDRTimer > 0)
@@ -879,7 +889,7 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
         {
             string extensionName = extraEntityData.NameOfExtensions.ToString();
             int extraEntities = NPC.ActiveNPCs.Count(n => extraEntityData.TypesToSearchFor.Contains(n.type)
-                && (n.type != NPCID.Creeper || !n.TryGetCreeperBehavior(out CreeperAI ai) || !ai.IsPhantom));
+                && IncludeExtension(n));
             smallText = (useNewLine ? Environment.NewLine : "    ") + $"{extensionName}: {extraEntities}";
         }
 
@@ -964,25 +974,7 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
             return b.NPC.type == NPCID.SkeletronHead && b.NPC.Anomaly.CustomAIType == 1;
         });
 
-        // 飞眼怪死亡仅扣除当前血量；最大总血量在幻影清除后仍保持战斗期间的峰值。
-        LifeFunctions.Add(b =>
-        {
-            if (b.NPC.type != NPCID.BrainofCthulhu || !b.NPC.TryGetBrainBehavior(out _))
-                return false;
-            long life = b.NPC.life;
-            long maxLife = b.NPC.lifeMax;
-            foreach ((long identifier, NPC creeper) in b.CustomOneToMany)
-            {
-                if (creeper.Identifier != identifier || !creeper.active || creeper.lifeMax <= 0)
-                    continue;
-                maxLife += creeper.lifeMax;
-                life += GetLifeContribution(creeper);
-            }
-            b.CombinedNPCLife = life;
-            b.InitialMaxLife = Math.Max(b.InitialMaxLife, maxLife);
-            b.CombinedNPCMaxLife = b.InitialMaxLife;
-            return true;
-        });
+        RegisterBrainLifeFunctions();
 
         // 月球领主血量合并
         LifeFunctions.Add(b =>
@@ -1048,7 +1040,7 @@ public class BossHealthBar : IContentLoader, ILocalizationPrefix
         LifeFunctions.Add(b =>
         {
             NPC npc = b.NPC;
-            if (npc.type == NPCID.EaterofWorldsHead)
+            if (npc.type == NPCID.EaterofWorldsHead && AnomalySharedData.Anomaly && npc.Anomaly.ShouldRunAnomalyAI)
             {
                 b.CombinedNPCMaxLife = b.InitialMaxLife = npc.lifeMax;
                 b.CombinedNPCLife = npc.life;

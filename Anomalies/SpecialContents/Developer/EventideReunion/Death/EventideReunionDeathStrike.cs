@@ -9,7 +9,7 @@ public sealed class EventideReunionDeathStrike : AnomalyModProjectile
     private bool _Initialized;
     private bool Slash => Projectile.ai[0] == 1f;
     private EventideReunionDeathSkill Skill => Source.Resolve().ModProjectile as EventideReunionDeathSkill;
-    public override string Texture => EventideReunionHoldout.AssetPath + "SpearTrail";
+    public override string Texture => EventideReunionAssets.SpearTrailPath;
     public override LocalizedText DisplayName => ModContent.GetModItem<EventideReunion>().DisplayName;
     public override void SetDefaults()
     {
@@ -51,9 +51,8 @@ public sealed class EventideReunionDeathStrike : AnomalyModProjectile
         if (Slash)
             return skill.SlashCollision(targetHitbox);
         Vector2 tip = skill.DashDirection * 219.91f;
-        float distance = 0f;
-        return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), _PreviousGrip,
-            Projectile.Center + tip, 28f, ref distance);
+        return RotatedRectangle.FromLineSegment(_PreviousGrip,
+            Projectile.Center + tip, 28f).Collides(targetHitbox);
     }
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
     {

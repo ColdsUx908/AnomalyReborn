@@ -9,7 +9,7 @@ public sealed class EventideReunionSunExplosion : AnomalyModProjectile
     private const int Duration = 32;
     public float FlashOpacity => Math.Max(0f, 1f - Age / 10f) * 0.2f;
     private int Age => Duration - Projectile.timeLeft;
-    public override string Texture => EventideReunionRunes.SunPath;
+    public override string Texture => EventideReunionRuneAssets.SunPath;
     public override void SetStaticDefaults() => ProjectileID.Sets.DrawScreenCheckFluff[Type] = 512;
     public override void SetDefaults()
     {
@@ -30,7 +30,7 @@ public sealed class EventideReunionSunExplosion : AnomalyModProjectile
         Lighting.AddLight(Projectile.Center, 1.5f, 0.8f, 0.15f);
         if (Age != 0 || Main.dedServ)
             return;
-        SoundEngine.PlaySound(EventideReunionSunSounds.SunDashHit, Projectile.Center);
+        SoundEngine.PlaySound(EventideReunionSunAssets.SunDashHit, Projectile.Center);
         float proximity = MathHelper.Clamp(1f - Main.LocalPlayer.Distance(Projectile.Center) / 1200f, 0f, 1f);
         if (proximity > 0f)
             Main.LocalPlayer.SetScreenshake(10f * proximity);
@@ -67,7 +67,7 @@ public sealed class EventideReunionSunExplosion : AnomalyModProjectile
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         => new Circle(Projectile.Center, EventideReunionSunSkill.BlastRadius).Collides(targetHitbox);
     public override void ModifyHitNPC(NPC targetNPC, ref NPC.HitModifiers modifiers)
-        => modifiers.SourceDamage *= Main.dayTime ? 1.2f : 0.9f;
+        => modifiers.SourceDamage *= Main.dayTime ? EventideReunionDamageConstants.SunDayDamageMultiplier : EventideReunionDamageConstants.SunNightDamageMultiplier;
     public override void OnHitNPC(NPC targetNPC, NPC.HitInfo hit, int damageDone) => targetNPC.AddBuff(BuffID.OnFire, 180);
     public override bool PreDraw(ref Color lightColor)
     {

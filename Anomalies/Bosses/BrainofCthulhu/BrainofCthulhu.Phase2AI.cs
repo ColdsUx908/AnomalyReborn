@@ -208,7 +208,7 @@ public sealed partial class BrainofCthulhu
                 NPC.velocity = Vector2.Zero;
                 NPC.netUpdate = true;
                 if (Time < 30f)
-                    NPC.Center = Vector2.Lerp(AttackPosition, goalPos, BrainCombatUtils.SineOutEasing(Time / 30f, 1));
+                    NPC.Center = Vector2.Lerp(AttackPosition, goalPos, TOMathUtils.Interpolation.SineEaseOut(Time / 30f, clamped: false));
                 else
                     NPC.Center = goalPos;
             }
@@ -484,7 +484,7 @@ public sealed partial class BrainofCthulhu
                             ParticleHandler.SpawnParticle(ring);
                         }
 
-                        BrainCombatUtils.AddScreenshakeAt(NPC.Center, 10f);
+                        AnomalyCombatUtils.AddScreenshakeAt(NPC.Center, 10f);
                     }
 
                     for (int i = 0; i < 12; i++)
@@ -501,7 +501,7 @@ public sealed partial class BrainofCthulhu
             }
             else
             {
-                if (Time < CrimsonEyeAttackDuration && BrainCombatUtils.CountProjectiles(ModContent.ProjectileType<CrimsonEye>()) < CrimsonEyeCap && Time % CrimsonEyeRate == 0)
+                if (Time < CrimsonEyeAttackDuration && TOCombatUtils.CountProjectiles(ModContent.ProjectileType<CrimsonEye>()) < CrimsonEyeCap && Time % CrimsonEyeRate == 0)
                 {
                     Vector2 spawnPos = Target.Center;
                     int i = 0;
@@ -553,7 +553,7 @@ public sealed partial class BrainofCthulhu
                         float speed = 10f;
                         if (Time < CrimsonEyeAttackIdleDuration + CrimsonEyeAttackSetUpDuration + CrimsonEyeAttackBuildUpDuration)
                         {
-                            float lerp = BrainCombatUtils.SineInEasing((Time - (CrimsonEyeAttackIdleDuration + CrimsonEyeAttackSetUpDuration)) / CrimsonEyeAttackBuildUpDuration, 1);
+                            float lerp = TOMathUtils.Interpolation.SineEaseIn((Time - (CrimsonEyeAttackIdleDuration + CrimsonEyeAttackSetUpDuration)) / CrimsonEyeAttackBuildUpDuration, clamped: false);
                             speed = MathHelper.Lerp(0f, speed, lerp);
                         }
 
@@ -708,16 +708,16 @@ public sealed partial class BrainofCthulhu
                 if (startTime < 30)
                 {
                     float lerp = startTime / 30f;
-                    float circleDist = MathHelper.Lerp(IllusionDashTeleportDistance, IllusionDashCloseInDistance, BrainCombatUtils.SineOutEasing(lerp, 1));
+                    float circleDist = MathHelper.Lerp(IllusionDashTeleportDistance, IllusionDashCloseInDistance, TOMathUtils.Interpolation.SineEaseOut(lerp, clamped: false));
                     NPC.Center = Vector2.Lerp(AttackPosition, Target.Center + (AttackRotation.ToRotationVector2() * circleDist), lerp);
-                    AttackRotation += MathHelper.Lerp(0f, IllusionDashStartingSpinSpeed, BrainCombatUtils.SineInEasing(lerp, 1));
+                    AttackRotation += MathHelper.Lerp(0f, IllusionDashStartingSpinSpeed, TOMathUtils.Interpolation.SineEaseIn(lerp, clamped: false));
                     NPC.netUpdate = true;
                 }
                 else if (startTime <= 30 + IllusionDashSpinDuration)
                 {
                     NPC.Center = Target.Center + AttackRotation.ToRotationVector2() * IllusionDashCloseInDistance;
                     NPC.netUpdate = true;
-                    AttackRotation += MathHelper.Lerp(IllusionDashStartingSpinSpeed, 0f, BrainCombatUtils.SineOutEasing((startTime - 30) / IllusionDashSpinDuration, 1));
+                    AttackRotation += MathHelper.Lerp(IllusionDashStartingSpinSpeed, 0f, TOMathUtils.Interpolation.SineEaseOut((startTime - 30) / IllusionDashSpinDuration, clamped: false));
                 }
                 else if (startTime < 30 + IllusionDashSpinDuration + 30)
                 {
@@ -830,7 +830,7 @@ public sealed partial class BrainofCthulhu
                     {
                         if (!p.friendly)
                             continue;
-                        p.Anomaly.IgnoreBrainIllusions = true;
+                        p.Anomaly.BrainOfCthulhu_IgnoreIllusions = true;
                     }
 
                     if (Main.netMode == NetmodeID.MultiplayerClient)
@@ -981,7 +981,7 @@ public sealed partial class BrainofCthulhu
                 else
                 {
                     CachedRatio = (float)Math.Cos(AttackTime * MathHelper.TwoPi / FalseBrain.TimeDivisor);
-                    float lerp = BrainCombatUtils.SineInOutEasing(MathHelper.Clamp((Time - 150) / 30f, 0f, 1f), 1);
+                    float lerp = TOMathUtils.Interpolation.SineEaseInOut(MathHelper.Clamp((Time - 150) / 30f, 0f, 1f), clamped: false);
                     float baseDist = 240;
                     float circleDist = 480;
                     if (Time - 150 < 30f)

@@ -6,6 +6,11 @@ internal static class EventideReunionDeathGeometry
     public const float DashSpeed = 48f;
     public const float ExitClearance = 96f;
     public const int HitDashDuration = 240;
+    public const int WaveLifetime = 72;
+    public const float WaveVelocityRetention = 0.99f;
+    public const float WaveMaxScale = 1.6f;
+
+    public static float WaveScale(int age) => MathHelper.SmoothStep(1f, WaveMaxScale, MathHelper.Clamp(age / 54f, 0f, 1f));
     public const float InnerRatio = 0.48f;
 
     // 椭圆挥动平面加透视缩放；武器、刀光和碰撞共用同一投影。

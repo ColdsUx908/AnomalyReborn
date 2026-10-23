@@ -26,16 +26,22 @@ Developer: {
 
 	EventideReunion: {
 		DisplayName: Eventide Reunion
-		Tooltip: ""
+		Tooltip:
+			'''
+			The sun burns all to ash, samsara weaves cause and effect; life blossoms anew, death reaps the end; sacred light judges sin, stars collapse into cores
+			Six aspects turn, the final sun rises
+			'''
 		EventideReunionSelection.DisplayName: Eventide Reunion Selection
 		EventideReunionSunExplosion.DisplayName: Coronal Flare
 		EventideReunionDeathWave.DisplayName: Extinction Scythe Wave
 		EventideReunionDeathSoul.DisplayName: Reaped Soul
+		EventideReunionSamsaraEcho.DisplayName: Karmic Echo
 
-		EventideReunionDeathMark: {
-			DisplayName: Death Mark
-			Description: Damage taken is multiplied by 1.15; non-boss enemies below 25% life are executed
+		EventideReunionResonance: {
+			DisplayName: Samsara Resonance
+			Description: Each stack multiplies melee damage by 1.08 and reduces skill cooldowns by 5%; a new aspect refreshes the 30-second duration, while a repeated aspect removes itself and one random remaining mark and increases that cast's cooldown by 20%
 		}
+
 	}
 }
 

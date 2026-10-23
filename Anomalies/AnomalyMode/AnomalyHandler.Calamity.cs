@@ -72,6 +72,9 @@ public sealed class AnomalyDifficulty : DifficultyMode, ILocalizationPrefix
 [ExtendsFromMod(CalamityModName)]
 public sealed class AnomalyHandler_Calamity : IContentLoader
 {
+    [LoadTexture("CalamityMod/UI/ModeIndicator/BloomFlare")]
+    private static Asset<Texture2D> _BloomFlare;
+
     #region Detour
     public delegate void Orig_CalculateDifficultyData();
     [DetourMethodTo(typeof(DifficultyModeSystem))]
@@ -240,7 +243,7 @@ public sealed class AnomalyHandler_Calamity : IContentLoader
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, null, null, null, null, Main.UIScaleMatrix);
 
-            Texture2D bloomTex = ModContent.Request<Texture2D>("CalamityMod/UI/ModeIndicator/BloomFlare").Value;
+            Texture2D bloomTex = _BloomFlare.Value;
             float opacity = !_hasCheckedItOutYet ? 1f : 1f * GlowFadeTime / GlowFadeAnimLength;
             float scale = 0.4f + (float)Math.Sin(Main.GlobalTimeWrappedHourly) * 0.05f;
             float rot = Main.GlobalTimeWrappedHourly * 0.5f;
@@ -250,7 +253,6 @@ public sealed class AnomalyHandler_Calamity : IContentLoader
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, Main.UIScaleMatrix);
 
-            //Texture2D outlineTexture = ModContent.Request<Texture2D>("CalamityMod/UI/ModeIndicator/ModeIndicatorOutline").Value;
             //spriteBatch.Draw(outlineTexture, DrawCenter, null, Color.White * opacity, 0f, outlineTexture.Size() * 0.5f, MainIconScale, SpriteEffects.None, 0f);
 
         }

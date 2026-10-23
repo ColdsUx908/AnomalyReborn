@@ -4,14 +4,11 @@ public sealed partial class EventideReunionDeathSkill : AnomalyModProjectile
 {
     public override string LocalizationCategory => EventideReunion.LocalizationCategoryForEventideReunion;
     public const int Cooldown = 600;
-    // 设计文档伤害待定，以武器伤害为基准。
-    public const float WaveDamageMultiplier = 5f;
-    public const float DashDamageMultiplier = 3f;
-    public const float SlashDamageMultiplier = 5f;
     private const int ChargeDuration = 30;
     private const int DashDuration = 12;
     internal const int SlashDuration = 14;
-    private const int RecoveryDuration = 42;
+    private const int RecoveryDuration = EventideReunionDeathRecall.CompletionAge - SlashDuration + 8;
+    private const int ActionRecoveryDuration = 4;
     private const float DashSpeed = EventideReunionDeathGeometry.DashSpeed;
     private const float WeaponTipDistance = 219.91f;
     private bool _WaveReleased;
@@ -31,6 +28,17 @@ public sealed partial class EventideReunionDeathSkill : AnomalyModProjectile
     private int TargetIndex { get => (int)Projectile.ai[2] - 1; set => Projectile.ai[2] = value + 1; }
     public bool IsDashing => Phase == DeathPhase.Dash;
     internal bool IsSlashing => Phase == DeathPhase.Slash;
+    internal bool BlocksActions => Phase != DeathPhase.Recovery || Timer < ActionRecoveryDuration;
+
+    internal static bool IsBlockingActions(Player player)
+    {
+        if (player.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionDeathSkill>()] == 0)
+            return false;
+        foreach (Projectile active in Main.ActiveProjectiles)
+            if (active.owner == player.whoAmI && active.ModProjectile is EventideReunionDeathSkill { BlocksActions: true })
+                return true;
+        return false;
+    }
     internal float EdgeDarknessOpacity => IsDashing
         ? 0.55f * MathHelper.SmoothStep(0f, 1f, Math.Min(1f, Timer / 6f))
         : IsSlashing ? 0.55f * MathHelper.SmoothStep(1f, 0f, Math.Min(1f, Timer / (float)SlashDuration)) : 0f;
@@ -42,7 +50,7 @@ public sealed partial class EventideReunionDeathSkill : AnomalyModProjectile
         : (Phase == DeathPhase.Charge ? Aim.ToRotation() + MathHelper.Pi * 0.85f
             : Phase == DeathPhase.Recovery ? SlashAim.ToRotation() + 1.85f * _SwingSign : Aim.ToRotation()).ToRotationVector2();
     private float WeaponAngle => WeaponVector.ToRotation();
-    public override string Texture => EventideReunionHoldout.AssetPath + "EventideReunion_NoStreamer";
+    public override string Texture => EventideReunionAssets.WeaponPath;
     public override LocalizedText DisplayName => ModContent.GetModItem<EventideReunion>().DisplayName;
     public override void SetDefaults()
     {
@@ -71,7 +79,8 @@ public sealed partial class EventideReunionDeathSkill : AnomalyModProjectile
     public override void AI()
     {
         Player player = Projectile.Owner;
-        if (!player.active || player.dead || player.noItems || player.CCed || player.HeldItem.type != ModContent.ItemType<EventideReunion>())
+        if (!player.active || player.dead || BlocksActions
+            && (player.noItems || player.CCed || player.HeldItem.type != ModContent.ItemType<EventideReunion>()))
         {
             Projectile.Kill();
             return;
@@ -84,11 +93,16 @@ public sealed partial class EventideReunionDeathSkill : AnomalyModProjectile
             if (Timer % 6 == 0)
                 Projectile.netUpdate = true;
         }
-        player.heldProj = Projectile.whoAmI;
-        player.itemTime = player.itemAnimation = 2;
-        Vector2 facing = Phase >= DeathPhase.Slash ? SlashAim : Aim;
-        player.ChangeDir(facing.X >= 0f ? 1 : -1);
-        player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, WeaponAngle - MathHelper.PiOver2);
+        if (BlocksActions)
+        {
+            player.heldProj = Projectile.whoAmI;
+            player.itemTime = player.itemAnimation = 2;
+            Vector2 facing = Phase >= DeathPhase.Slash ? SlashAim : Aim;
+            player.ChangeDir(facing.X >= 0f ? 1 : -1);
+            player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, WeaponAngle - MathHelper.PiOver2);
+        }
+        else if (player.heldProj == Projectile.whoAmI)
+            player.heldProj = -1;
         switch (Phase)
         {
             case DeathPhase.Charge:
@@ -119,7 +133,7 @@ public sealed partial class EventideReunionDeathSkill : AnomalyModProjectile
                     {
                         SpawnStrike(true);
                         Projectile.NewProjectileAction<EventideReunionDeathWave>(Projectile.GetSource_FromThis(),
-                            player.Center, SlashAim * 18f, (int)(Projectile.damage * WaveDamageMultiplier), Projectile.knockBack,
+                            player.Center, SlashAim * 18f, (int)(Projectile.damage * EventideReunionDamageConstants.DeathWaveDamageMultiplier), Projectile.knockBack,
                             Main.myPlayer, p => { p.ai[0] = player.whoAmI; p.ai[1] = _SwingSign; });
                     }
                 }
@@ -147,13 +161,13 @@ public sealed partial class EventideReunionDeathSkill : AnomalyModProjectile
             player.immuneTime = Math.Max(player.immuneTime, 10);
             for (int i = 0; i < player.hurtCooldowns.Length; i++)
                 player.hurtCooldowns[i] = Math.Max(player.hurtCooldowns[i], 10);
-            player.Anomaly.EventideReunionDeathProtection = 10;
+            player.Anomaly.EventideReunion_DeathProtection = 10;
         }
 
         void SpawnStrike(bool slash)
         {
             Projectile.NewProjectileAction<EventideReunionDeathStrike>(Projectile.GetSource_FromThis(), player.Center,
-                Vector2.Zero, (int)(Projectile.damage * (slash ? SlashDamageMultiplier : DashDamageMultiplier)),
+                Vector2.Zero, (int)(Projectile.damage * (slash ? EventideReunionDamageConstants.DeathSlashDamageMultiplier : EventideReunionDamageConstants.DeathDashDamageMultiplier)),
                 Projectile.knockBack, Main.myPlayer, p =>
                 {
                     p.ai[0] = slash ? 1f : 0f;
@@ -172,8 +186,14 @@ public sealed partial class EventideReunionDeathSkill : AnomalyModProjectile
             }
             Vector2 start = player.position;
             Vector2 motion = Aim * DashSpeed;
+            bool hitTerrain = false;
             player.position = EventideReunionDeathGeometry.SweepDash(start, motion,
-                (position, step) => Collision.TileCollision(position, step, player.width, player.height, false, false, (int)player.gravDir),
+                (position, step) =>
+                {
+                    Vector2 actual = Collision.TileCollision(position, step, player.width, player.height, false, false, (int)player.gravDir);
+                    hitTerrain |= Vector2.DistanceSquared(actual, step) > 0.001f;
+                    return actual;
+                },
                 InspectPosition);
             player.velocity = Vector2.Zero;
             player.fallStart = (int)(player.position.Y / 16f);
@@ -187,16 +207,15 @@ public sealed partial class EventideReunionDeathSkill : AnomalyModProjectile
                 }
             }
             bool overlapping = OverlapsEnemy(player.Hitbox);
-            bool blocked = Vector2.DistanceSquared(player.position - start, motion) > 0.01f;
             bool needsClearance = TargetIndex >= 0 && !EventideReunionDeathGeometry.HasPassedTarget(player.Hitbox, _TargetBounds, Aim);
             bool finish = EventideReunionDeathGeometry.ShouldFinishDash(Timer + 1, _HitTimer, overlapping || needsClearance, DashDuration);
             bool hitTimeout = _HitTimer >= 0 && Timer - _HitTimer >= EventideReunionDeathGeometry.HitDashDuration;
-            if (blocked || hitTimeout)
+            if (hitTerrain || hitTimeout)
             {
                 // 目标与地形夹住玩家时退回最后安全位置，不在敌人体内结束。
                 if (overlapping && _HasSafePosition)
                     player.position = _SafePosition;
-                finish = !OverlapsEnemy(player.Hitbox);
+                finish = hitTerrain || !OverlapsEnemy(player.Hitbox);
             }
             if (finish)
             {
@@ -230,12 +249,11 @@ public sealed partial class EventideReunionDeathSkill : AnomalyModProjectile
                 bool bodyContact = box.Intersects(target.Hitbox);
                 overlapping |= bodyContact;
                 Vector2 grip = position + player.Size * 0.5f;
-                float collisionPoint = 0f;
-                bool spearContact = TargetIndex < 0 && Collision.CheckAABBvLineCollision(target.position, target.Size,
-                    grip, grip + Aim * WeaponTipDistance, 28f, ref collisionPoint);
+                bool spearContact = TargetIndex < 0 && RotatedRectangle.FromLineSegment(
+                    grip, grip + Aim * WeaponTipDistance, 28f).Collides(target.Hitbox);
                 if (TargetIndex < 0 && (bodyContact || spearContact))
                 {
-                    float contactDistance = bodyContact ? 0f : collisionPoint;
+                    float contactDistance = bodyContact ? 0f : SpearContactDistance(grip, target.Hitbox);
                     if (contactDistance < nearestContact)
                     {
                         firstTarget = target;
@@ -260,6 +278,21 @@ public sealed partial class EventideReunionDeathSkill : AnomalyModProjectile
         }
     }
 
+    // 对已确认命中的目标二分最短相交矛身，保留按首次接触距离选敌的顺序。
+    private float SpearContactDistance(Vector2 grip, Rectangle target)
+    {
+        float start = 0f;
+        float end = WeaponTipDistance;
+        while (end - start > 0.01f)
+        {
+            float middle = (start + end) * 0.5f;
+            if (RotatedRectangle.FromLineSegment(grip, grip + Aim * middle, 28f).Collides(target))
+                end = middle;
+            else
+                start = middle;
+        }
+        return end;
+    }
     private static bool IsTarget(NPC npc) => npc.active && !npc.friendly && !npc.dontTakeDamage && npc.life > 0 && npc.lifeMax > 5;
     internal bool SlashCollision(Rectangle target)
     {
@@ -268,9 +301,8 @@ public sealed partial class EventideReunionDeathSkill : AnomalyModProjectile
         for (int i = 0; i <= 16; i++)
         {
             Vector2 vector = EventideReunionDeathGeometry.SlashVector(MathHelper.Lerp(tail, head, i / 16f), SlashAim, _SwingSign);
-            float distance = 0f;
-            if (Collision.CheckAABBvLineCollision(target.TopLeft(), target.Size(), Projectile.Owner.MountedCenter,
-                Projectile.Owner.MountedCenter + vector, 24f, ref distance))
+            if (RotatedRectangle.FromLineSegment(Projectile.Owner.MountedCenter,
+                Projectile.Owner.MountedCenter + vector, 24f).Collides(target))
                 return true;
         }
         return false;

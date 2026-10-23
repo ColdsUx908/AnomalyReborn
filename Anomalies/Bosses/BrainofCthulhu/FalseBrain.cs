@@ -88,7 +88,7 @@ public class FalseBrain : AnomalyModNPC
         }
         else
         {
-            float lerp = BrainCombatUtils.SineInOutEasing(MathHelper.Clamp(SpawnTime / -30f, 0f, 1f), 1);
+            float lerp = TOMathUtils.Interpolation.SineEaseInOut(MathHelper.Clamp(SpawnTime / -30f, 0f, 1f), clamped: false);
             float baseDist = 240;
             float circleDist = 480;
             if (SpawnTime != -30)
@@ -135,7 +135,7 @@ public class FalseBrain : AnomalyModNPC
 
     public override void OnHitByProjectile(Projectile projectile, NPC.HitInfo hit, int damageDone)
     {
-        if (BeenHit || projectile.Anomaly.IgnoreBrainIllusions || (uint)projectile.owner >= Main.maxPlayers)
+        if (BeenHit || projectile.Anomaly.BrainOfCthulhu_IgnoreIllusions || (uint)projectile.owner >= Main.maxPlayers)
             return;
         if (Main.netMode == NetmodeID.MultiplayerClient)
             BrainIllusionHit.Send(NPC.whoAmI, projectile.owner);

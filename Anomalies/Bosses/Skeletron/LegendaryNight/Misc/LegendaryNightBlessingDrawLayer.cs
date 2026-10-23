@@ -6,7 +6,7 @@ public sealed class LegendaryNightBlessingDrawLayer : PlayerDrawLayer
 
     public override bool GetDefaultVisibility(PlayerDrawSet drawInfo) =>
         drawInfo.drawPlayer.active && !drawInfo.drawPlayer.dead && !drawInfo.drawPlayer.invis
-        && drawInfo.shadow == 0f && drawInfo.drawPlayer.Anomaly.StarGodBlessingActive;
+        && drawInfo.shadow == 0f && drawInfo.drawPlayer.Anomaly.LegendaryNight_StarGodBlessingActive;
 
     protected override void Draw(ref PlayerDrawSet drawInfo)
     {
@@ -14,7 +14,7 @@ public sealed class LegendaryNightBlessingDrawLayer : PlayerDrawLayer
         Vector2 position = drawInfo.Center - Main.screenPosition;
         float pulse = 1f + 0.08f * MathF.Sin(Main.GlobalTimeWrappedHourly * 3f);
         // Alpha 为零的颜色在原版预乘混合中产生叠加光，不切换玩家绘制的 SpriteBatch。
-        float opacity = drawInfo.drawPlayer.Anomaly.StarGodBlessingOpacity;
+        float opacity = drawInfo.drawPlayer.Anomaly.LegendaryNight_StarGodBlessingOpacity;
         Color outer = (LegendaryNightHandler.StarColor with { A = 0 }) * (0.5f * opacity);
         Color inner = (Color.White with { A = 0 }) * (0.5f * opacity);
         drawInfo.DrawDataCache.Add(new DrawData(bloom, position, null, outer, 0f,

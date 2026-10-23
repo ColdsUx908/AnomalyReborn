@@ -468,7 +468,7 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
         ServantRight = NPC.DummyNPC;
         ArenaProjectile = Projectile.DummyProjectile;
 
-        AnomalyNPC.DynamicDRHandler = new TimedDDRHandler(
+        AnomalyNPC.DamageReduction_DynamicHandler = new TimedDDRHandler(
             new TimedDDRHandler.SingleDDRHandler(1f, Phase2LifeRatio, null, n => GetInstance(n).CurrentPhase >= Phase.PhaseChange_1To2, 15),
             new TimedDDRHandler.SingleDDRHandler(Phase2LifeRatio, Phase3LifeRatio, null, n => GetInstance(n).CurrentPhase >= Phase.PhaseChange_2To3, 55),
             new TimedDDRHandler.SingleDDRHandler(0.5f, 0f, n => GetInstance(n).Phase3, null, 30)

@@ -7,12 +7,13 @@ public sealed class EventideReunionSelectionPlayer : AnomalyPlayerBehavior
     {
         if (Player.whoAmI != Main.myPlayer || Main.dedServ)
             return;
-        bool pressed = Main.mouseRight && !AnomalyPlayer.EventideReunionRightWasDown;
-        AnomalyPlayer.EventideReunionRightWasDown = Main.mouseRight;
+        bool pressed = Main.mouseRight && !AnomalyPlayer.EventideReunion_RightWasDown;
+        AnomalyPlayer.EventideReunion_RightWasDown = Main.mouseRight;
         if (!pressed || Main.gameMenu || Main.playerInventory || Main.blockMouse || Player.mouseInterface
             || Player.dead || Player.noItems || Player.CCed
             || Player.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionSunSkill>()] > 0
-            || Player.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionDeathSkill>()] > 0
+            || EventideReunionDeathSkill.IsBlockingActions(Player)
+            || Player.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionSamsaraSkill>()] > 0
             || Player.HeldItem.type != ModContent.ItemType<EventideReunion>())
             return;
 
@@ -33,7 +34,7 @@ public sealed class EventideReunionSelectionPlayer : AnomalyPlayerBehavior
 public sealed class EventideReunionSelection : AnomalyModProjectile
 {
     public override string LocalizationCategory => EventideReunion.LocalizationCategoryForEventideReunion;
-    public override string Texture => EventideReunionRunes.SunPath;
+    public override string Texture => EventideReunionRuneAssets.SunPath;
     private const float OuterRadius = 432f;
     private const float InnerRadius = 288f;
     private const float RuneRadius = (OuterRadius - InnerRadius) * 0.5f;
@@ -143,7 +144,8 @@ public sealed class EventideReunionSelection : AnomalyModProjectile
         }
         Projectile.timeLeft = 2;
         if (canHold && ownerPlayer.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionSunSkill>()] == 0
-            && ownerPlayer.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionDeathSkill>()] == 0)
+            && !EventideReunionDeathSkill.IsBlockingActions(ownerPlayer)
+            && ownerPlayer.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionSamsaraSkill>()] == 0)
         {
             ownerPlayer.heldProj = Projectile.whoAmI;
             ownerPlayer.itemTime = ownerPlayer.itemAnimation = 2;
@@ -164,6 +166,11 @@ public sealed class EventideReunionSelection : AnomalyModProjectile
         for (int i = 0; i < _RuneHover.Length; i++)
             _RuneHover[i] = MathHelper.Clamp(_RuneHover[i] + (!Closing && SelectedRune == i ? 1f / 6f : -1f / 10f), 0f, 1f);
 
+        if (!Main.dedServ && Progress > 0f)
+            for (int i = 0; i < 6; i++)
+                if (EventideReunionResonanceRules.Contains(ownerPlayer.Anomaly.EventideReunion_ResonanceMask, (EventideReunionAspect)i))
+                    EventideReunionResonanceDrawing.EmitSparkles(GetRuneCenter(i), RuneRadius * CircleScale, CircleScale);
+
         void UpdateSelection()
         {
             int hovered = -1;
@@ -171,7 +178,7 @@ public sealed class EventideReunionSelection : AnomalyModProjectile
             {
                 for (int i = 0; i < _RuneHover.Length; i++)
                 {
-                    Texture2D rune = EventideReunionRunes.GetTexture((EventideReunionAspect)i);
+                    Texture2D rune = EventideReunionRuneAssets.GetTexture((EventideReunionAspect)i);
                     float scale = GetRuneScale(rune, i);
                     Vector2 halfSize = rune.Size() * scale * 0.5f;
                     Vector2 offset = Main.MouseWorld - GetRuneCenter(i);
@@ -242,11 +249,14 @@ public sealed class EventideReunionSelection : AnomalyModProjectile
             DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         for (int i = 0; i < 6; i++)
         {
-            Texture2D rune = EventideReunionRunes.GetTexture((EventideReunionAspect)i);
+            Texture2D rune = EventideReunionRuneAssets.GetTexture((EventideReunionAspect)i);
             Vector2 position = GetRuneCenter(i);
             float runeScale = GetRuneScale(rune, i);
-            int cooldown = i == 0 ? Projectile.Owner.Anomaly.EventideReunionSunCooldown
-                : i == 3 ? Projectile.Owner.Anomaly.EventideReunionDeathCooldown : 0;
+            if (EventideReunionResonanceRules.Contains(Projectile.Owner.Anomaly.EventideReunion_ResonanceMask, (EventideReunionAspect)i))
+                EventideReunionResonanceDrawing.DrawGlow(batch, rune, position, runeScale, currentProgress, (EventideReunionAspect)i);
+            int cooldown = i == 0 ? Projectile.Owner.Anomaly.EventideReunion_SunCooldown
+                : i == 1 ? Projectile.Owner.Anomaly.EventideReunion_SamsaraCooldown
+                : i == 3 ? Projectile.Owner.Anomaly.EventideReunion_DeathCooldown : 0;
             Color tint = cooldown > 0 ? new Color(140, 110, 85) : Color.White;
             batch.Draw(rune, position - Main.screenPosition, null, tint * currentProgress,
                 0f, rune.Size() * 0.5f, runeScale, SpriteEffects.None, 0f);
@@ -258,9 +268,10 @@ public sealed class EventideReunionSelection : AnomalyModProjectile
         Player ownerPlayer = Projectile.Owner;
         if (ownerPlayer.active && !ownerPlayer.dead && ownerPlayer.HeldItem.type == ModContent.ItemType<EventideReunion>()
             && ownerPlayer.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionSunSkill>()] == 0
-            && ownerPlayer.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionDeathSkill>()] == 0)
+            && !EventideReunionDeathSkill.IsBlockingActions(ownerPlayer)
+            && ownerPlayer.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionSamsaraSkill>()] == 0)
         {
-            Texture2D weapon = ModContent.Request<Texture2D>(EventideReunionHoldout.AssetPath + "EventideReunion_NoStreamer").Value;
+            Texture2D weapon = EventideReunionAssets.Weapon;
             batch.Draw(weapon, WeaponCenter - Main.screenPosition, null, Color.White,
                 AimDirection.ToRotation() + MathHelper.PiOver4, new Vector2(144f, 156f), 1f, SpriteEffects.None, 0f);
         }

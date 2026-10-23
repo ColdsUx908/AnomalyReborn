@@ -1,0 +1,235 @@
+namespace Anomalies.Bosses.QueenSlime;
+
+public static class JewelHandler
+{
+    public const string AnomalyQueenSlimePath = AnomalySharedData.ModPath + "Bosses/QueenSlime/";
+
+    [LoadTexture(AnomalyQueenSlimePath + "AmethystJewelShards")]
+    private static Asset<Texture2D> _AmethystShardTexture;
+    public static Texture2D AmethystShardTexture => _AmethystShardTexture.Value;
+
+    public static readonly SoundStyle SpawnSound = new(AnomalyQueenSlimePath + "JewelSpawn");
+    public static readonly SoundStyle ShatterSound = new(AnomalyQueenSlimePath + "JewelShatter");
+    public static readonly SoundStyle ShootSound = new(AnomalyQueenSlimePath + "JewelShoot");
+    public static readonly SoundStyle DashSoundNormal = new(AnomalyQueenSlimePath + "JewelDashNormal");
+    public static readonly SoundStyle DashSoundBuff = new(AnomalyQueenSlimePath + "JewelDashBuff");
+    public static readonly SoundStyle HitSound = new(AnomalyQueenSlimePath + "JewelHit", 3) { Volume = 0.6f };
+
+    public static Color AmethystColor => Aroma ? Color.Lime with { B = 40 } : Color.Purple;
+
+    /// <summary>
+    /// 获取宝石对应的 <see cref="JewelNPC"/> 实例。
+    /// </summary>
+    public static JewelNPC GetQueenSlimeJewel(NPC jewel) => jewel.ModNPC switch
+    {
+        AmethystJewel amethyst => amethyst,
+
+        _ => null
+    };
+
+    public static Color GetColor(NPC jewel) => jewel.ModNPC switch
+    {
+        AmethystJewel => AmethystColor,
+
+        _ => Color.White
+    };
+
+    public static Color GetFlashColor(NPC jewel) => jewel.ModNPC switch
+    {
+        AmethystJewel => Color.MediumPurple,
+
+        _ => Color.White
+    };
+
+    /// <summary>
+    /// 宝石脱战通用逻辑。
+    /// </summary>
+    /// <param name="jewel">宝石。</param>
+    public static void Despawn(NPC jewel)
+    {
+        if (!TOSharedData.NotClient)
+            return;
+        jewel.life = 0;
+        jewel.HitEffect();
+        jewel.active = false;
+        jewel.netUpdate = true;
+    }
+
+    public static void Kill(NPC jewel)
+    {
+        jewel.life = 0;
+        jewel.HitEffect();
+        jewel.ModNPC?.OnKill();
+        jewel.active = false;
+        jewel.netUpdate = true;
+    }
+
+    /// <summary>
+    /// 宝石跟随目标通用逻辑。
+    /// </summary>
+    /// <param name="jewel">宝石。</param>
+    /// <param name="destination">目标点。</param>
+    /// <param name="maxVelocityX">水平速度最大值。</param>
+    /// <param name="maxVelocityY">竖直速度最大值。</param>
+    /// <param name="accelerationX">水平加速度。</param>
+    /// <param name="accelerationY">竖直加速度。</param>
+    /// <param name="safeDistanceXMax">水平安全距离（宝石中心X坐标减目标中心X坐标）最大值。当水平距离大于此值时触发反向移动。</param>
+    /// <param name="safeDistanceXMin">水平安全距离（宝石中心X坐标减目标中心X坐标）最小值。当水平距离小于此值时触发反向移动。</param>
+    /// <param name="safeDistanceYMax">竖直安全距离（宝石中心Y坐标减目标中心Y坐标）最大值。当竖直距离大于此值时触发反向移动。</param>
+    /// <param name="safeDistanceYMin">竖直安全距离（宝石中心Y坐标减目标中心Y坐标）最小值。当竖直距离小于此值时触发反向移动。</param>
+    public static void Move(NPC jewel, Vector2 destination, float maxVelocityX, float maxVelocityY, float accelerationX, float accelerationY, float safeDistanceXMax, float safeDistanceXMin, float safeDistanceYMax, float safeDistanceYMin)
+    {
+        jewel.damage = 0;
+        jewel.knockBackResist = 0.4f;
+        jewel.rotation = jewel.velocity.X / 15f;
+        Vector2 distance = jewel.Center - destination;
+        float adjustedX = distance.X - (safeDistanceXMax + safeDistanceXMin) / 2f;
+        float safeX = (safeDistanceXMax - safeDistanceXMin) / 2f;
+        float adjustedY = distance.Y - (safeDistanceYMax + safeDistanceYMin) / 2f;
+        float safeY = (safeDistanceYMax - safeDistanceYMin) / 2f;
+        maxVelocityX = Utils.Remap(Math.Abs(adjustedX), safeX, safeX * 7f, maxVelocityX * 0.65f, maxVelocityX);
+        maxVelocityY = Utils.Remap(Math.Abs(adjustedY), safeY, safeY * 7f, maxVelocityY * 0.65f, maxVelocityY, true);
+        if (adjustedX > safeX)
+        {
+            if (jewel.velocity.X > 0f)
+                jewel.velocity.X *= 0.98f;
+            jewel.velocity.X = Math.Clamp(jewel.velocity.X - accelerationX, -maxVelocityX, maxVelocityX);
+        }
+        else if (adjustedX < -safeX)
+        {
+            if (jewel.velocity.X < 0f)
+                jewel.velocity.X *= 0.98f;
+            jewel.velocity.X = Math.Clamp(jewel.velocity.X + accelerationX, -maxVelocityX, maxVelocityX);
+        }
+        if (adjustedY > safeY)
+        {
+            if (jewel.velocity.Y > 0f)
+                jewel.velocity.Y *= 0.98f;
+            jewel.velocity.Y = Math.Clamp(jewel.velocity.Y - accelerationY, -maxVelocityY, maxVelocityY);
+        }
+        else if (adjustedY < -safeY)
+        {
+            if (jewel.velocity.Y < 0f)
+                jewel.velocity.Y *= 0.98f;
+            jewel.velocity.Y = Math.Clamp(jewel.velocity.Y + accelerationY, -maxVelocityY, maxVelocityY);
+        }
+    }
+
+    /// <summary>
+    /// 宝石绘制通用逻辑。
+    /// </summary>
+    /// <param name="spriteBatch"><c>PreDraw</c> 方法中的 <c>spriteBatch</c> 参数。</param>
+    /// <param name="screenPos"><c>PreDraw</c> 方法中的 <c>screenPos</c> 参数。</param>
+    /// <param name="jewel">宝石。</param>
+    public static void DrawJewel(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel)
+    {
+        spriteBatch.DrawFromCenter(jewel.Texture, jewel.Center - screenPos, null, Color.White with { A = jewel.GraphicAlpha }, jewel.rotation, jewel.scale);
+    }
+
+    /// <summary>
+    /// 宝石粒子生成通用逻辑。
+    /// </summary>
+    /// <param name="jewel">宝石。</param>
+    /// <param name="speed">粒子速度大小。</param>
+    /// <param name="lifetime">粒子存在时长。</param>
+    /// <param name="scale">粒子大小。</param>
+    public static void SpawnOrbParticle(NPC jewel, float speed, int lifetime, float scale)
+    {
+        Color color = GetColor(jewel);
+        ParticleHandler.SpawnParticle(new OrbParticle(jewel.Center, Main.rand.NextPolarVector2(speed), lifetime, scale, color, lifeEndRatio: 0.925f));
+    }
+
+    public static void SpawnPointingParticle(NPC jewel, int amount, bool extraParticle)
+    {
+        Color color = GetColor(jewel);
+        Color flashColor = GetFlashColor(jewel);
+
+        for (int i = 0; i < amount; i++)
+        {
+            ParticleHandler.SpawnParticle(new PointingParticle(jewel.Center, Main.rand.NextPolarVector2(0f, 20f), false, 10, Main.rand.NextFloat(0.8f, 1.5f), color));
+            if (extraParticle)
+                ParticleHandler.SpawnParticle(new PointingParticle(jewel.Center, Main.rand.NextPolarVector2(0f, 10f), false, 10, Main.rand.NextFloat(0.8f, 1.5f), flashColor));
+        }
+    }
+
+    public static void CreateDustFromJewelTo(NPC jewel, Vector2 destination, int type, bool rainbow = false)
+    {
+        int maxDustIterations = (int)Vector2.Distance(jewel.Center, destination); //distance
+        int maxDust = 100;
+        int dustDivisor = Math.Max(maxDustIterations / maxDust, 2);
+
+        Vector2 start = jewel.Center;
+        Vector2 spinningpoint = Vector2.UnitX.RotatedByRandom();
+        for (int i = 0; i < maxDustIterations; i++)
+        {
+            if (i % dustDivisor == 0)
+            {
+                Vector2 position = Vector2.Lerp(start, destination, i / (float)maxDustIterations);
+                Dust.NewDustAction(position, 0, 0, rainbow ? GetRandomDustID() : type, Vector2.Zero, d =>
+                {
+                    d.position = position;
+                    d.velocity = spinningpoint.RotatedBy(MathHelper.TwoPi * i / maxDustIterations) * (0.9f + Main.rand.NextFloat() * 0.2f);
+                    d.noGravity = true;
+                    if (Main.rand.NextBool())
+                    {
+                        d.scale = 0.5f;
+                        d.fadeIn = Main.rand.NextFloat(1f, 2f);
+                    }
+                    Dust d2 = Dust.CloneDust(d);
+                    d2.scale *= 0.5f;
+                    d2.fadeIn *= 0.5f;
+                });
+            }
+        }
+    }
+
+    public static bool CheckIfPhase2(NPC jewel) => GetQueenSlimeJewel(jewel).HasEnteredPhase2;
+
+    public static void EnterPhase2(NPC jewel)
+    {
+        for (int i = 0; i < 20; i++)
+            SpawnOrbParticle(jewel, Main.rand.NextFloat(2f, 2.5f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.4f, 0.7f));
+        SoundEngine.PlaySound(jewel.DeathSound, jewel.Center);
+        GetQueenSlimeJewel(jewel)?.HasEnteredPhase2 = true;
+        jewel.dontTakeDamage = true;
+        jewel.netUpdate = true;
+    }
+
+    public static void DisableAttack(NPC jewel) => GetQueenSlimeJewel(jewel)?.CanAttack = false;
+
+    public static int GetRandomDustID() => Main.rand.Next(7) switch
+    {
+        0 => DustID.GemAmethyst,
+        1 => DustID.GemTopaz,
+        2 => DustID.GemSapphire,
+        3 => DustID.GemEmerald,
+        4 => DustID.GemRuby,
+        5 => DustID.GemDiamond,
+        6 => DustID.GemAmber,
+        _ => DustID.TintableDust
+    };
+
+    public static void HitEffect(NPC jewel) => SpawnPointingParticle(jewel, 6, false);
+
+    public static void OnKill(NPC jewel)
+    {
+        SpawnPointingParticle(jewel, 6, true);
+
+        Texture2D shardTexture = jewel.ModNPC switch
+        {
+            AmethystJewel => AmethystShardTexture,
+
+            _ => null
+        };
+
+        float start = Main.rand.NextFloat(MathHelper.TwoPi);
+        for (int i = 0; i < 3; i++)
+        {
+            int iClone = i;
+            CustomSpriteParticle particle = new(shardTexture, jewel.Center, new Vector2(0, -2).RotatedByRandom(start + MathHelper.ToRadians(20f)).RotatedBy(MathHelper.ToRadians(i * 125)), 120, 0f, 1f, new Color(255, 255, 255), Main.rand.NextFloat(0.2f, 0.6f), BlendState.Additive, customGetFrameAction: p => p.Texture.Frame(1, 3, 0, iClone));
+            ParticleHandler.SpawnParticle(particle);
+        }
+
+        SoundEngine.PlaySound(ShatterSound, jewel.Center);
+    }
+}

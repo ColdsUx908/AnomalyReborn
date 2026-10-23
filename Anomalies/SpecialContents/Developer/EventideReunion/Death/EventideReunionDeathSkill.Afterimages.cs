@@ -27,8 +27,12 @@ public sealed partial class EventideReunionDeathSkill
         }
     }
 
-    private void DrawAfterimages(Texture2D weapon, Vector2 origin)
+    internal void DrawAfterimages()
     {
+        if (_AfterimageCount == 0)
+            return;
+        Texture2D weapon = EventideReunionAssets.Weapon;
+        Vector2 origin = new(144f, 156f);
         Player player = Projectile.Owner;
         for (int i = 0; i < _AfterimageCount; i++)
         {
@@ -61,8 +65,7 @@ public sealed partial class EventideReunionDeathSkill
                 player.legFrame = image.LegFrame;
                 // 原版从脚底缩放，补偿脚底到中心的距离，保证最终缩回玩家中心。
                 Vector2 drawPosition = center - new Vector2(player.width * 0.5f, player.height * (1f - scale * 0.5f));
-                Main.PlayerRenderer.DrawPlayer(Main.Camera, player, drawPosition,
-                    0f, player.fullRotationOrigin, 1f - opacity, scale);
+                EventideReunionDeathAfterimageDrawing.DrawPlayer(player, drawPosition, opacity, scale);
             }
             finally
             {
@@ -73,6 +76,11 @@ public sealed partial class EventideReunionDeathSkill
                 player.bodyFrame = body;
                 player.legFrame = leg;
             }
+            for (int ray = 0; ray < 8; ray++)
+                Main.EntitySpriteDraw(weapon, center - Main.screenPosition
+                    + (MathHelper.TwoPi * ray / 8f).ToRotationVector2() * (2.5f * scale), null,
+                    new Color(155, 50, 255, 0) * (opacity * 0.18f), angle + MathHelper.PiOver4, origin,
+                    image.WeaponScale * scale, SpriteEffects.None);
             Main.EntitySpriteDraw(weapon, center - Main.screenPosition, null,
                 new Color(105, 60, 150) * opacity, angle + MathHelper.PiOver4, origin,
                 image.WeaponScale * scale, SpriteEffects.None);

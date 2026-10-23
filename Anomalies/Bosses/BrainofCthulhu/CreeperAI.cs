@@ -104,7 +104,7 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
         }
 
         if (NPC.target < 0 || NPC.target == Main.maxPlayers || Main.player[NPC.target].dead || !Main.player[NPC.target].active)
-            BrainCombatUtils.BrainTargeting(NPC, default);
+            TOCombatUtils.TargetWithOptions(NPC, default);
         if (!Main.dedServ)
             BrainOfCthulhuSystem.VerletTendrils[CreeperID].creeper = NPC.whoAmI;
         if (CurrentPhase is Phase.Transition or Phase.Phase2)
@@ -240,11 +240,11 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
                         goalLocation = Brain.Center + (Vector2.UnitY * -96f) + (Vector2.UnitX * (EvenID ? -256 : 256)) + (Vector2.UnitX.RotatedBy(baseRotation + (BossCounter / 30f * (EvenID ? -1 : 1))) * new Vector2(32, 96));
                     else
                         goalLocation = Brain.Center + (Vector2.UnitY * -96f) + (Vector2.UnitX * 256 * handSide) + (Vector2.UnitX.RotatedBy(baseRotation + (BossCounter / 30f * handSide)) * new Vector2(32, 96));
-                    goalLocation.Y += MathHelper.Lerp(0, 420, BrainCombatUtils.SineInOutEasing(MathHelper.Clamp((Time - Brain.GetBrainBehavior().SwipeDelay) / 20f, 0f, 1f), 1));
+                    goalLocation.Y += MathHelper.Lerp(0, 420, TOMathUtils.Interpolation.SineEaseInOut(MathHelper.Clamp((Time - Brain.GetBrainBehavior().SwipeDelay) / 20f, 0f, 1f), clamped: false));
                     if (!singleHand)
-                        goalLocation.X += MathHelper.Lerp(0f, 900f, BrainCombatUtils.SineInOutEasing(MathHelper.Clamp((Time - (Brain.GetBrainBehavior().SwipeDelay + 5)) / 55f, 0f, 1f), 1)) * (EvenID ? 1 : -1);
+                        goalLocation.X += MathHelper.Lerp(0f, 900f, TOMathUtils.Interpolation.SineEaseInOut(MathHelper.Clamp((Time - (Brain.GetBrainBehavior().SwipeDelay + 5)) / 55f, 0f, 1f), clamped: false)) * (EvenID ? 1 : -1);
                     else
-                        goalLocation.X += MathHelper.Lerp(0f, 900f, BrainCombatUtils.SineInOutEasing(MathHelper.Clamp((Time - (Brain.GetBrainBehavior().SwipeDelay + 5)) / 55f, 0f, 1f), 1)) * (handSide == -1 ? 1 : -1);
+                        goalLocation.X += MathHelper.Lerp(0f, 900f, TOMathUtils.Interpolation.SineEaseInOut(MathHelper.Clamp((Time - (Brain.GetBrainBehavior().SwipeDelay + 5)) / 55f, 0f, 1f), clamped: false)) * (handSide == -1 ? 1 : -1);
                     NPC.Center = Vector2.Lerp(NPC.Center, goalLocation, MathHelper.Clamp((Time - Brain.GetBrainBehavior().SwipeDelay) / 10f, 0f, 1f));
                     NPC.netUpdate = true;
                 }
@@ -295,7 +295,7 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
                     {
                         Vector2 goalPosition = sharedTarget.Center - dashDir * 128;
                         goalPosition += dashDir.RotatedBy(MathHelper.PiOver2) * 16;
-                        NPC.Center = Vector2.Lerp(AttackPosition, goalPosition, BrainCombatUtils.SineOutEasing(MathHelper.Clamp(Time / (float)LightSwipeTravelTime, 0f, 1f), 1));
+                        NPC.Center = Vector2.Lerp(AttackPosition, goalPosition, TOMathUtils.Interpolation.SineEaseOut(MathHelper.Clamp(Time / (float)LightSwipeTravelTime, 0f, 1f), clamped: false));
                         NPC.velocity = Vector2.Zero;
                         NPC.netUpdate = true;
                     }
@@ -340,7 +340,7 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
                         if (AttackPosition == Vector2.Zero)
                             AttackPosition = NPC.Center;
                         Vector2 goalPosition = sharedTarget.Center - dashDir * 128;
-                        NPC.Center = Vector2.Lerp(AttackPosition, goalPosition, BrainCombatUtils.SineOutEasing(MathHelper.Clamp(Time / (float)StrongSwipeTravelTime, 0f, 1f), 1));
+                        NPC.Center = Vector2.Lerp(AttackPosition, goalPosition, TOMathUtils.Interpolation.SineEaseOut(MathHelper.Clamp(Time / (float)StrongSwipeTravelTime, 0f, 1f), clamped: false));
                         NPC.velocity = Vector2.Zero;
                         NPC.netUpdate = true;
                     }
@@ -471,12 +471,12 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
                 float telegraphPeriod = OrbitAttackInterval * 0.25f;
                 float shiftPeriod = (OrbitAttackInterval - telegraphPeriod) / 2f;
                 if (Time < telegraphPeriod)
-                    dist = MathHelper.Lerp(dist, OrbitTelegraphRadius, BrainCombatUtils.SineOutEasing(Time / telegraphPeriod, 1));
+                    dist = MathHelper.Lerp(dist, OrbitTelegraphRadius, TOMathUtils.Interpolation.SineEaseOut(Time / telegraphPeriod, clamped: false));
                 else if (Time < shiftPeriod + telegraphPeriod)
-                    dist = MathHelper.Lerp(OrbitTelegraphRadius, 16, BrainCombatUtils.SineInOutEasing((Time - telegraphPeriod) / shiftPeriod, 1));
+                    dist = MathHelper.Lerp(OrbitTelegraphRadius, 16, TOMathUtils.Interpolation.SineEaseInOut((Time - telegraphPeriod) / shiftPeriod, clamped: false));
                 else
                 {
-                    dist = MathHelper.Lerp(16, dist, BrainCombatUtils.SineInOutEasing((Time - telegraphPeriod - shiftPeriod) / shiftPeriod, 1));
+                    dist = MathHelper.Lerp(16, dist, TOMathUtils.Interpolation.SineEaseInOut((Time - telegraphPeriod - shiftPeriod) / shiftPeriod, clamped: false));
                     if (Time > OrbitAttackInterval)
                     {
                         Time = -2;
@@ -495,7 +495,7 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
             if (BossCounter < OrbitSetupDuration)
             {
                 NPC.damage = 0;
-                NPC.Center = Vector2.Lerp(AttackPosition, BoCAI.AttackPosition + rotation, BrainCombatUtils.SineOutEasing(BossCounter / OrbitSetupDuration, 1));
+                NPC.Center = Vector2.Lerp(AttackPosition, BoCAI.AttackPosition + rotation, TOMathUtils.Interpolation.SineEaseOut(BossCounter / OrbitSetupDuration, clamped: false));
             }
             else
             {
@@ -545,7 +545,7 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
             {
                 NPC.velocity = Vector2.Zero;
                 float lerp = (BossCounter - (SpiralSetupTime / 10f)) / (float)(SpiralSetupTime * 0.9f);
-                NPC.Center = Vector2.Lerp(AttackPosition, position, BrainCombatUtils.SineInOutEasing(MathHelper.Clamp(lerp, 0f, 1f), 1));
+                NPC.Center = Vector2.Lerp(AttackPosition, position, TOMathUtils.Interpolation.SineEaseInOut(MathHelper.Clamp(lerp, 0f, 1f), clamped: false));
                 NPC.netUpdate = true;
             }
 

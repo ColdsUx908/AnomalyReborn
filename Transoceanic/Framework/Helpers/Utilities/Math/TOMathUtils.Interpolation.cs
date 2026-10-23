@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.Framework.Helpers;
+namespace Transoceanic.Framework.Helpers;
 
 public static partial class TOMathUtils
 {
@@ -11,6 +11,30 @@ public static partial class TOMathUtils
     /// </remarks>
     public static class Interpolation
     {
+        /// <summary>以 2 为底、曲线跨度为 10 的指数缓入；零点保持精确为零。</summary>
+        public static float BinaryExponentialEaseIn(float ratio, bool clamped = true)
+        {
+            if (clamped)
+                ratio = Math.Clamp(ratio, 0f, 1f);
+            return ratio == 0f ? 0f : (float)Math.Pow(2, 10f * ratio - 10f);
+        }
+
+        /// <summary>圆形曲线缓入。</summary>
+        public static float CircularEaseIn(float ratio, bool clamped = true)
+        {
+            if (clamped)
+                ratio = Math.Clamp(ratio, 0f, 1f);
+            return 1f - (float)Math.Sqrt(1 - Math.Pow(ratio, 2f));
+        }
+
+        /// <summary>圆形曲线缓出。</summary>
+        public static float CircularEaseOut(float ratio, bool clamped = true)
+        {
+            if (clamped)
+                ratio = Math.Clamp(ratio, 0f, 1f);
+            return (float)Math.Sqrt(1 - Math.Pow(ratio - 1f, 2f));
+        }
+
         /// <summary>
         /// 二次方缓入（Quadratic Ease In）。
         /// </summary>

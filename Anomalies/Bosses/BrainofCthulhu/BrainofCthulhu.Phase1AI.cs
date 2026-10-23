@@ -91,7 +91,7 @@ public sealed partial class BrainofCthulhu
             float rotateDir = AttackSign;
             Vector2 fromTarget = NPC.DirectionFrom(Target.Center);
             Vector2 dir = fromTarget.RotatedBy(Math.Sin(Time / 60f) * rotateDir) * new Vector2(2, 1);
-            float rayDist = BrainCombatUtils.PreciseDistanceToTileCollisionHit(Target.Center, dir.ToRotation(), 360, 1);
+            float rayDist = TOCombatUtils.PreciseDistanceToTileCollisionHit(Target.Center, dir.ToRotation(), 360, 1);
             Vector2 offset = dir * (rayDist - NPC.width);
             Vector2 goalPos = Target.Center + offset;
             float distSQ = NPC.DistanceSQ(goalPos);
@@ -194,7 +194,7 @@ public sealed partial class BrainofCthulhu
 
                 if (wrappedCount < 60f) // Vibrates during telegraph
                 {
-                    Vector2 vibrationVector = Main.rand.NextVector2CircularEdge(1, 1) * MathHelper.Lerp(0f, 12f, BrainCombatUtils.CircInEasing(wrappedCount / 80f, 1));
+                    Vector2 vibrationVector = Main.rand.NextVector2CircularEdge(1, 1) * MathHelper.Lerp(0f, 12f, TOMathUtils.Interpolation.CircularEaseIn(wrappedCount / 80f, clamped: false));
                     BoCDrawOffset = vibrationVector;
                 }
                 else if (wrappedCount is > 60f and < 80f) // Droops down when starting to fire ichor shots
@@ -453,9 +453,9 @@ public sealed partial class BrainofCthulhu
             float spinSpeedCompletion = MathHelper.Clamp((Time - SpeedUpDelayTime) / (SpiralDuration - SpeedUpDelayTime - SpeedUpExtensionTime), 0f, 1f);
             float timePerRev = MathHelper.Lerp(startTimePerRev, endTimePerRev, spinSpeedCompletion);
             if (Time > SpiralDuration - 30)
-                timePerRev *= MathHelper.Lerp(1f, 10f, BrainCombatUtils.CircOutEasing(MathHelper.Clamp((Time - (SpiralDuration - 30)) / 30f, 0f, 1f), 1));
+                timePerRev *= MathHelper.Lerp(1f, 10f, TOMathUtils.Interpolation.CircularEaseOut(MathHelper.Clamp((Time - (SpiralDuration - 30)) / 30f, 0f, 1f), clamped: false));
             else if (Time < SpiralSetupTime)
-                timePerRev *= MathHelper.Lerp(1f, 10f, BrainCombatUtils.CircInEasing(MathHelper.Clamp(Time / SpiralSetupTime, 0f, 1f), 1));
+                timePerRev *= MathHelper.Lerp(1f, 10f, TOMathUtils.Interpolation.CircularEaseIn(MathHelper.Clamp(Time / SpiralSetupTime, 0f, 1f), clamped: false));
             float rotToAdd = MathHelper.TwoPi / timePerRev * AttackSign;
             if (OnSecondCreeperPhase)
             {

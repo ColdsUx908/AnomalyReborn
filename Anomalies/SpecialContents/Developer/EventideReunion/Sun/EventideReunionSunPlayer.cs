@@ -4,7 +4,7 @@ public sealed class EventideReunionSunPlayer : AnomalyPlayerBehavior
 {
     public override void ResetEffects()
     {
-        if (AnomalyPlayer.EventideReunionSunFallProtection > 0
+        if (AnomalyPlayer.EventideReunion_SunFallProtection > 0
             || Player.ownedProjectileCounts[ModContent.ProjectileType<EventideReunionSunSkill>()] > 0)
             Player.noFallDmg = true;
     }
@@ -46,11 +46,11 @@ public sealed class EventideReunionSunPlayer : AnomalyPlayerBehavior
 
     public override void PostUpdate()
     {
-        if (AnomalyPlayer.EventideReunionSunCooldown > 0)
-            AnomalyPlayer.EventideReunionSunCooldown--;
-        if (AnomalyPlayer.EventideReunionSunFallProtection > 0)
+        if (AnomalyPlayer.EventideReunion_SunCooldown > 0)
+            AnomalyPlayer.EventideReunion_SunCooldown--;
+        if (AnomalyPlayer.EventideReunion_SunFallProtection > 0)
         {
-            AnomalyPlayer.EventideReunionSunFallProtection--;
+            AnomalyPlayer.EventideReunion_SunFallProtection--;
             Player.noFallDmg = true;
         }
     }

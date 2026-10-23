@@ -1,5 +1,4 @@
-﻿using Anomalies.Assets.Effects;
-using Anomalies.Bosses.KingSlime;
+using Anomalies.Assets.Effects;
 using Anomalies.Visuals.BossBar;
 using Terraria.Graphics.Shaders;
 
@@ -185,37 +184,6 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
     public bool JewelAmethystAlive => JewelAmethyst.active && JewelAmethyst.ModNPC is AmethystJewel && JewelAmethyst.Master == NPC;
     public bool JewelAmethystDead => JewelAmethystSpawned && !JewelAmethystAlive;
 
-    public bool JewelRainbowSpawned
-    {
-        get => AnomalyNPC.AnomalyAI32[0].bits[1];
-        set
-        {
-            if (AnomalyNPC.AnomalyAI32[0].bits[1] != value)
-            {
-                AnomalyNPC.AnomalyAI32[0].bits[1] = value;
-                AnomalyNPC.AIChanged32[0] = true;
-            }
-        }
-    }
-    /// <summary>
-    /// 王冠彩虹宝石实例。
-    /// <br/>在 <see cref="SetDefaults"/> 中初始化为 <c>DummyNPC</c>。
-    /// </summary>
-    public NPC JewelRainbow
-    {
-        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte1);
-        set
-        {
-            byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
-            if (AnomalyNPC.AnomalyAI32[1].byte1 != temp)
-            {
-                AnomalyNPC.AnomalyAI32[1].byte1 = temp;
-                AnomalyNPC.AIChanged32[1] = true;
-            }
-        }
-    }
-    public bool JewelRainbowAlive => JewelRainbow.active && JewelRainbow.ModNPC is RainbowJewel && JewelRainbow.Master == NPC;
-    public bool JewelRainbowDead => JewelRainbowSpawned && !JewelRainbowAlive;
     #endregion 宝石
 
     public float TeleportTimer

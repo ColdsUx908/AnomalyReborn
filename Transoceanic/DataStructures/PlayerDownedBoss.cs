@@ -43,6 +43,16 @@ public class PlayerDownedBoss
     public bool NebulaTower { get; set; }
     public bool StardustTower { get; set; }
 
+    public virtual PlayerDownedBoss Clone() => (PlayerDownedBoss)MemberwiseClone();
+
+    public void UpdateDerivedProgression()
+    {
+        EvilBoss |= EaterOfWorld || BrainOfCthulhu;
+        MechBossAny |= Destroyer || Twins || SkeletronPrime;
+        MechBossAnyTwo = TOMathUtils.AtLeastXTrue(2, Destroyer, Twins, SkeletronPrime);
+        MechBossAll = Destroyer && Twins && SkeletronPrime;
+    }
+
     public virtual void WorldPolluted()
     {
         if (NPC.downedSlimeKing)
@@ -71,8 +81,6 @@ public class PlayerDownedBoss
             SkeletronPrime = true;
         if (NPC.downedMechBossAny)
             MechBossAny = true;
-        MechBossAnyTwo = TOMathUtils.AtLeastXTrue(2, Destroyer, Twins, SkeletronPrime); //完全依靠游戏内更新
-        MechBossAll = Destroyer && Twins && SkeletronPrime; //完全依靠游戏内更新
         if (NPC.downedPlantBoss)
             Plantera = true;
         if (NPC.downedEmpressOfLight)
@@ -104,6 +112,9 @@ public class PlayerDownedBoss
         if (NPC.downedChristmasIceQueen)
             IceQueen = true;
 
+        if (Terraria.GameContent.Events.DD2Event.DownedInvasionT3)
+            Betsy = true;
+
         if (NPC.downedTowerSolar)
             SolarTower = true;
         if (NPC.downedTowerVortex)
@@ -112,6 +123,8 @@ public class PlayerDownedBoss
             NebulaTower = true;
         if (NPC.downedTowerStardust)
             StardustTower = true;
+
+        UpdateDerivedProgression();
     }
 
     public virtual void SaveData(TagCompound tag, string key)
@@ -201,75 +214,42 @@ public class PlayerDownedBoss
 
     public virtual void LoadDataFromIList(IList<string> downedLoaded)
     {
-        if (downedLoaded.Contains("KingSlime"))
-            KingSlime = true;
-        if (downedLoaded.Contains("EyeOfCthulhu"))
-            EyeOfCthulhu = true;
-        if (downedLoaded.Contains("EvilBoss"))
-            EvilBoss = true;
-        if (downedLoaded.Contains("EaterOfWorld"))
-            EaterOfWorld = true;
-        if (downedLoaded.Contains("BrainOfCthulhu"))
-            BrainOfCthulhu = true;
-        if (downedLoaded.Contains("QueenBee"))
-            QueenBee = true;
-        if (downedLoaded.Contains("Skeletron"))
-            Skeletron = true;
-        if (downedLoaded.Contains("Deerclops"))
-            Deerclops = true;
-        if (downedLoaded.Contains("WallOfFlesh"))
-            WallOfFlesh = true;
-        if (downedLoaded.Contains("DukeFishron"))
-            DukeFishron = true;
-        if (downedLoaded.Contains("QueenSlime"))
-            QueenSlime = true;
-        if (downedLoaded.Contains("Destroyer"))
-            Destroyer = true;
-        if (downedLoaded.Contains("Twins"))
-            Twins = true;
-        if (downedLoaded.Contains("SkeletronPrime"))
-            SkeletronPrime = true;
-        if (downedLoaded.Contains("MechBossAny"))
-            MechBossAny = true;
-        if (downedLoaded.Contains("Plantera"))
-            Plantera = true;
-        if (downedLoaded.Contains("EmpressOfLight"))
-            EmpressOfLight = true;
-        if (downedLoaded.Contains("Golem"))
-            Golem = true;
-        if (downedLoaded.Contains("LunaticCultist"))
-            LunaticCultist = true;
-        if (downedLoaded.Contains("MoonLord"))
-            MoonLord = true;
-        if (downedLoaded.Contains("Goblins"))
-            Goblins = true;
-        if (downedLoaded.Contains("Frost"))
-            Frost = true;
-        if (downedLoaded.Contains("Pirates"))
-            Pirates = true;
-        if (downedLoaded.Contains("Martians"))
-            Martians = true;
-        if (downedLoaded.Contains("MourningWood"))
-            MourningWood = true;
-        if (downedLoaded.Contains("Pumpking"))
-            Pumpking = true;
-        if (downedLoaded.Contains("Everscream"))
-            Everscream = true;
-        if (downedLoaded.Contains("SantaNK1"))
-            SantaNK1 = true;
-        if (downedLoaded.Contains("IceQueen"))
-            IceQueen = true;
-        if (downedLoaded.Contains("Betsy"))
-            Betsy = true;
-        if (downedLoaded.Contains("Dreadnautilus"))
-            Dreadnautilus = true;
-        if (downedLoaded.Contains("SolarTower"))
-            SolarTower = true;
-        if (downedLoaded.Contains("VortexTower"))
-            VortexTower = true;
-        if (downedLoaded.Contains("NebulaTower"))
-            NebulaTower = true;
-        if (downedLoaded.Contains("StardustTower"))
-            StardustTower = true;
+        KingSlime = downedLoaded.Contains("KingSlime");
+        EyeOfCthulhu = downedLoaded.Contains("EyeOfCthulhu");
+        EvilBoss = downedLoaded.Contains("EvilBoss");
+        EaterOfWorld = downedLoaded.Contains("EaterOfWorld");
+        BrainOfCthulhu = downedLoaded.Contains("BrainOfCthulhu");
+        QueenBee = downedLoaded.Contains("QueenBee");
+        Skeletron = downedLoaded.Contains("Skeletron");
+        Deerclops = downedLoaded.Contains("Deerclops");
+        WallOfFlesh = downedLoaded.Contains("WallOfFlesh");
+        DukeFishron = downedLoaded.Contains("DukeFishron");
+        QueenSlime = downedLoaded.Contains("QueenSlime");
+        Destroyer = downedLoaded.Contains("Destroyer");
+        Twins = downedLoaded.Contains("Twins");
+        SkeletronPrime = downedLoaded.Contains("SkeletronPrime");
+        MechBossAny = downedLoaded.Contains("MechBossAny");
+        Plantera = downedLoaded.Contains("Plantera");
+        EmpressOfLight = downedLoaded.Contains("EmpressOfLight");
+        Golem = downedLoaded.Contains("Golem");
+        LunaticCultist = downedLoaded.Contains("LunaticCultist");
+        MoonLord = downedLoaded.Contains("MoonLord");
+        Goblins = downedLoaded.Contains("Goblins");
+        Frost = downedLoaded.Contains("Frost");
+        Pirates = downedLoaded.Contains("Pirates");
+        Martians = downedLoaded.Contains("Martians");
+        MourningWood = downedLoaded.Contains("MourningWood");
+        Pumpking = downedLoaded.Contains("Pumpking");
+        Everscream = downedLoaded.Contains("Everscream");
+        SantaNK1 = downedLoaded.Contains("SantaNK1");
+        IceQueen = downedLoaded.Contains("IceQueen");
+        Betsy = downedLoaded.Contains("Betsy");
+        Dreadnautilus = downedLoaded.Contains("Dreadnautilus");
+        SolarTower = downedLoaded.Contains("SolarTower");
+        VortexTower = downedLoaded.Contains("VortexTower");
+        NebulaTower = downedLoaded.Contains("NebulaTower");
+        StardustTower = downedLoaded.Contains("StardustTower");
+
+        UpdateDerivedProgression();
     }
 }

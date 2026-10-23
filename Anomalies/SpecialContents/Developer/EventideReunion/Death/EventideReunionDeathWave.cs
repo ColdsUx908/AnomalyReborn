@@ -3,8 +3,10 @@ namespace Anomalies.SpecialContents.Developer.EventideReunion;
 public sealed partial class EventideReunionDeathWave : AnomalyModProjectile
 {
     public override string LocalizationCategory => EventideReunion.LocalizationCategoryForEventideReunion;
-    public override string Texture => EventideReunionHoldout.AssetPath + "SpearTrail";
-    private const int Lifetime = 45;
+    public override string Texture => EventideReunionAssets.SpearTrailPath;
+    private const int Lifetime = EventideReunionDeathGeometry.WaveLifetime;
+    private int Age => Math.Max(0, Lifetime - Projectile.timeLeft);
+    private float WaveScale => EventideReunionDeathGeometry.WaveScale(Age);
     private float Progress => MathHelper.Clamp((Lifetime - Projectile.timeLeft + 1f) / EventideReunionDeathSkill.SlashDuration, 0f, 1f);
     private Vector2 Aim => Projectile.velocity.SafeNormalize(Vector2.UnitX);
     private float SwingSign => Projectile.ai[1] < 0f ? -1f : 1f;
@@ -15,6 +17,7 @@ public sealed partial class EventideReunionDeathWave : AnomalyModProjectile
         Projectile.DamageType = DamageClass.Melee;
         Projectile.penetrate = -1;
         Projectile.tileCollide = false;
+        Projectile.ownerHitCheck = false;
         Projectile.ignoreWater = true;
         Projectile.timeLeft = Lifetime;
         Projectile.usesLocalNPCImmunity = true;
@@ -23,23 +26,27 @@ public sealed partial class EventideReunionDeathWave : AnomalyModProjectile
     public override void AI()
     {
         Projectile.rotation = Projectile.velocity.ToRotation();
-        Projectile.velocity *= 0.97f;
+        Projectile.velocity *= EventideReunionDeathGeometry.WaveVelocityRetention;
+        Projectile.scale = WaveScale;
         EmitFlightTrail();
     }
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
     {
         // 与绘制使用同一个投影弧面，避免只在弹幕中心的方框内造成伤害。
-        for (int i = 0; i <= 48; i++)
+        const int Samples = 96;
+        float previousScale = EventideReunionDeathGeometry.WaveScale(Math.Max(0, Age - 1));
+        for (int i = 0; i <= Samples; i++)
         {
-            Vector2 vector = EventideReunionDeathGeometry.SlashVector(Progress * i / 48f, Aim, SwingSign);
+            Vector2 baseVector = EventideReunionDeathGeometry.SlashVector(Progress * i / Samples, Aim, SwingSign);
+            Vector2 vector = baseVector * WaveScale;
             Vector2 outer = Projectile.Center + vector;
             Vector2 inner = Projectile.Center + vector * EventideReunionDeathGeometry.InnerRatio;
-            float distance = 0f;
-            if (Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), inner, outer, 16f, ref distance))
+            if (RotatedRectangle.FromLineSegment(inner, outer, 16f * WaveScale).Collides(targetHitbox))
                 return true;
             // 包含本帧运动扫过的刃口，快速飞行时不漏掉薄目标。
-            if (Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), outer - Projectile.velocity,
-                outer, 16f, ref distance))
+            Vector2 previousOuter = Projectile.Center - Projectile.velocity + baseVector * previousScale;
+            if (RotatedRectangle.FromLineSegment(previousOuter,
+                outer, 16f * WaveScale).Collides(targetHitbox))
                 return true;
         }
         return false;
@@ -55,7 +62,7 @@ public sealed partial class EventideReunionDeathWave : AnomalyModProjectile
     {
         float fade = MathHelper.SmoothStep(0f, 1f, Math.Min(1f, Projectile.timeLeft / 12f));
         Main.spriteBatch.End();
-        EventideReunionDeathDrawing.DrawCrescent(Projectile.Center, Aim, SwingSign, Progress, fade);
+        EventideReunionDeathDrawing.DrawCrescent(Projectile.Center, Aim, SwingSign, Progress, fade, WaveScale);
         Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
             DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         return false;

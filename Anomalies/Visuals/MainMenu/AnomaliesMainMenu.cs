@@ -4,10 +4,16 @@ public sealed class AnomaliesMainMenu : ModMenu
 {
     private const string AssetPath = "Anomalies/Visuals/MainMenu/";
 
-    public override string DisplayName => "Anomalies";
+    [LoadTexture(AssetPath + "MenuBackground")]
+    private static Asset<Texture2D> _Background;
+
+    [LoadTexture(TOTextures.InvisibleTexturePath)]
+    private static Asset<Texture2D> _InvisibleTexture;
+
+    public override string DisplayName => "Anomalous Permafrost"; //异常冻土
     public override int Music => AnomaliesMusicHandler.PathwaytoReverie > 0 ? AnomaliesMusicHandler.PathwaytoReverie : MusicID.OtherworldlySnow;
     public override Asset<Texture2D> Logo => TextureAssets.Logo;
-    public override Asset<Texture2D> SunTexture => ModContent.Request<Texture2D>(TOTextures.InvisibleTexturePath);
+    public override Asset<Texture2D> SunTexture => _InvisibleTexture;
     public override Asset<Texture2D> MoonTexture => SunTexture;
     public override ModSurfaceBackgroundStyle MenuBackgroundStyle => ModContent.GetInstance<AnomaliesMenuBackground>();
 
@@ -22,13 +28,12 @@ public sealed class AnomaliesMainMenu : ModMenu
 
         // The painted night sky is independent of vanilla's menu lighting.
         // Keep menu text bright instead of allowing the day/night cycle to tint it.
-        Main.dayTime = true;
-        Main.time = 27000;
+        new TerrariaTime(12, 0).Apply();
     }
 
     public override bool PreDrawLogo(SpriteBatch spriteBatch, ref Vector2 logoDrawCenter, ref float logoRotation, ref float logoScale, ref Color drawColor)
     {
-        Texture2D background = ModContent.Request<Texture2D>(AssetPath + "MenuBackground").Value;
+        Texture2D background = _Background.Value;
         float scale = Math.Max((float)Main.screenWidth / background.Width, (float)Main.screenHeight / background.Height);
         Vector2 offset = (new Vector2(Main.screenWidth, Main.screenHeight) - background.Size() * scale) * 0.5f;
 

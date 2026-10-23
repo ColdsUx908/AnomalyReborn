@@ -2,6 +2,8 @@
 // Coordinates are local to the world-space spear arc; no screen-aspect correction is needed.
 float4x4 TransformMatrix;
 float Time;
+float DeathPalette;
+float SamsaraPalette;
 texture Shape;
 sampler _ShapeSampler = sampler_state
 {
@@ -46,9 +48,15 @@ float4 Main(PixelInput input) : COLOR0
     float filaments = pow(saturate(sin(flow) * 0.5 + 0.5), 12.0)
         * radial * (0.3 + shapeValue * 0.7);
     float leading = exp(-(1.0 - uv.x) * 24.0) * exp(-uv.y * 12.0);
-    float3 orange = float3(1.0, 0.18, 0.012);
-    float3 gold = float3(1.0, 0.62, 0.045);
-    float3 white = float3(1.0, 0.94, 0.76);
+    float3 orange = lerp(float3(1.0, 0.18, 0.012), float3(0.38, 0.035, 0.85), DeathPalette);
+    float3 gold = lerp(float3(1.0, 0.62, 0.045), float3(0.75, 0.25, 1.0), DeathPalette);
+    float3 white = lerp(float3(1.0, 0.94, 0.76), float3(0.96, 0.88, 1.0), DeathPalette);
+    // 轮回仅替换配色，沿相同 UV 从青色过渡至淡紫色；弧面遮罩、流纹和刃口不变。
+    float3 cyan = float3(0.025, 0.72, 0.86);
+    float3 lavender = float3(0.72, 0.52, 1.0);
+    orange = lerp(orange, lerp(cyan, lavender, uv.x * 0.65), SamsaraPalette);
+    gold = lerp(gold, lerp(float3(0.22, 0.95, 1.0), float3(0.84, 0.72, 1.0), uv.x), SamsaraPalette);
+    white = lerp(white, float3(0.88, 0.97, 1.0), SamsaraPalette);
     // 金刃、橙色刀身和沿挥动方向流动的金色纹理；白热只集中在刃口与前锋。
     float goldBand = exp(-pow((uv.y - 0.22) / 0.16, 2.0));
     float3 colorValue = lerp(orange, gold, saturate(radial * radial * 0.65 + goldBand * 0.45));

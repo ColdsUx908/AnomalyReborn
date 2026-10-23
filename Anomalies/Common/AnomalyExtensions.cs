@@ -51,15 +51,15 @@ public static class AnomalyExtensions
         {
             condition ??= _ => true;
 
-            npc.Anomaly.HPThresholdIndicators.Add(new HPThresholdIndicator()
+            npc.Anomaly.BossBar_HPThresholdIndicators.Add(new HPThresholdIndicator()
             {
-                ValueFunction = (indicator, npc, bar) => npc.Anomaly.IsRunningAnomalyAI && condition(npc)
+                ValueFunction = (indicator, npc, bar) => npc.Anomaly.AnomalyAI_IsRunning && condition(npc)
                     ? HPThresholdMath.GetPosition(lifeSource, AnomalySharedData.AnomalyUltramundane ? anomalyUltraLifeRatio : anomalyLifeRatio, npc.lifeMax, bar.InitialMaxLife)
                     : 0f,
                 ProgressFunction = (indicator, npc, bar) => HPThresholdMath.GetProgress(lifeSource, npc.life, npc.lifeMax, bar.ExtraNPCLife, bar.InitialMaxLife),
                 CustomUpdateFunction = (indicator, npc, bar) =>
                 {
-                    if (!npc.Anomaly.IsRunningAnomalyAI || !condition(npc))
+                    if (!npc.Anomaly.AnomalyAI_IsRunning || !condition(npc))
                         return false;
 
                     if (indicator.GetValue(npc, bar) == 0f)
