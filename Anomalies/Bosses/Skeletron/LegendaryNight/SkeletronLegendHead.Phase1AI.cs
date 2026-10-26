@@ -26,11 +26,11 @@ public sealed partial class SkeletronLegendHead
                 return;
             }
 
-            if (!TOSharedData.NotClient)
+            if (!TONetworkEnvironment.NotClient)
                 return;
 
             Union32 pool = AI_Union_2;
-            CurrentSpell = (Spell)DrawSpell((byte)CurrentSpell, ref pool.byte0);
+            CurrentSpell = (Spell)DrawSpell((byte)CurrentSpell, ref pool.Byte0);
             AI_Union_2 = pool;
             NPC.netUpdate = true;
 
@@ -146,7 +146,7 @@ public sealed partial class SkeletronLegendHead
                         d.velocity *= Main.rand.NextFloat(10f, 20f);
                     });
 
-                    if (TOSharedData.NotClient)
+                    if (TONetworkEnvironment.NotClient)
                     {
                         int delay = 30;
                         float distance = 300f - num * 35f;
@@ -207,7 +207,7 @@ public sealed partial class SkeletronLegendHead
                 StopMovement();
                 NPC.rotation *= 0.9f;
 
-                if (TOSharedData.NotClient)
+                if (TONetworkEnvironment.NotClient)
                 {
                     if (ArenaProjectileAlive && adjustedTimer >= RainStart && adjustedTimer <= RainEnd && adjustedTimer % RainInterval == 0)
                     {
@@ -267,7 +267,7 @@ public sealed partial class SkeletronLegendHead
                     ReleaseSpellShockwave();
                     NPC.Face(Target);
                     Timer1 = 0;
-                    if (CurrentSpell == Spell.Star && TOSharedData.NotClient)
+                    if (CurrentSpell == Spell.Star && TONetworkEnvironment.NotClient)
                     {
                         Projectile.NewProjectileAction<DemonShadow>(SourceAI, NPC.Center + new Vector2(180f * NPC.direction, -160f),
                             Vector2.Zero, 0, 0f, action: p =>
@@ -329,7 +329,7 @@ public sealed partial class SkeletronLegendHead
             {
                 ApplyAvatarOpacity(0.5f);
 
-                if (TOSharedData.NotClient)
+                if (TONetworkEnvironment.NotClient)
                 {
                     // 每轮生成一个立即下落的坐骑，并同步绘制延伸预警。
                     if (Timer1 >= 30 && Timer1 <= 450 && (Timer1 - 30) % 20 == 0)
@@ -388,7 +388,7 @@ public sealed partial class SkeletronLegendHead
                 if (Timer1 < 500 && Timer1 % AttackInterval == 0)
                 {
                     SoundEngine.PlaySound(SoundID.Item9, NPC.Center);
-                    if (TOSharedData.NotClient)
+                    if (TONetworkEnvironment.NotClient)
                     {
                         // 与陨石爆炸相同：隔点连接五个顶点，在五角星的五条边上插值速度。
                         Vector2 velocityTowardsTarget = NPC.GetVelocityTowards(Target, 15f);
@@ -431,7 +431,7 @@ public sealed partial class SkeletronLegendHead
                 if (Timer1 <= 420 && Timer1 % 6 == 0 && !Main.dedServ)
                     SoundEngine.PlaySound(PlatinumCoin.UnlimitedTossSound, NPC.Center);
 
-                if (TOSharedData.NotClient)
+                if (TONetworkEnvironment.NotClient)
                 {
                     if (Timer1 <= 420 && Timer1 % 6 == 0)
                     {
@@ -477,7 +477,7 @@ public sealed partial class SkeletronLegendHead
 
     private void ReleaseSpellShockwave(Spell? spell = null)
     {
-        if (!TOSharedData.NotClient)
+        if (!TONetworkEnvironment.NotClient)
             return;
 
         Projectile.NewProjectileAction<LegendShockwave>(SourceAI, NPC.Center, Vector2.Zero, 0, 0f, action: p =>
@@ -507,7 +507,7 @@ public sealed partial class SkeletronLegendHead
 
         if (timer >= AttackInterval && timer <= AttackInterval * MeteorCount && timer % AttackInterval == 0)
         {
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
             {
                 Vector2 spawnPosition = Target.Center + new Vector2(Main.rand.NextFloat(-500f, 500f), -1000f);
                 Vector2 velocity = Target.GetVelocityTowards(spawnPosition, -MeteorSpeed);
@@ -524,7 +524,7 @@ public sealed partial class SkeletronLegendHead
 
     private void SummonRotatingSkullWarnings(int timer)
     {
-        if (TOSharedData.NotClient && timer % 75 == 0 && timer <= 300)
+        if (TONetworkEnvironment.NotClient && timer % 75 == 0 && timer <= 300)
         {
             const int SkullCount = 4;
             float offset = Main.rand.NextFloat(MathHelper.TwoPi);

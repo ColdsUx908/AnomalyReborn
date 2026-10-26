@@ -6,12 +6,12 @@ public sealed partial class AnomalyGlobalProjectile
     #region 变种 AI 控制
     public int OverrideType
     {
-        get => InternalAnomalyAI32[1].i;
+        get => InternalAnomalyAI32[1].I;
         set
         {
-            if (InternalAnomalyAI32[1].i != value)
+            if (InternalAnomalyAI32[1].I != value)
             {
-                InternalAnomalyAI32[1].i = value;
+                InternalAnomalyAI32[1].I = value;
                 InternalAIChanged32[1] = true;
             }
         }
@@ -19,12 +19,12 @@ public sealed partial class AnomalyGlobalProjectile
 
     public bool ShouldRunAnomalyAI
     {
-        get => InternalAnomalyAI32[0].bits[0];
+        get => InternalAnomalyAI32[0].Bits[0];
         set
         {
-            if (InternalAnomalyAI32[0].bits[0] != value)
+            if (InternalAnomalyAI32[0].Bits[0] != value)
             {
-                InternalAnomalyAI32[0].bits[0] = value;
+                InternalAnomalyAI32[0].Bits[0] = value;
                 InternalAIChanged32[0] = true;
             }
         }
@@ -39,14 +39,14 @@ public sealed partial class AnomalyGlobalProjectile
     /// </summary>
     public float Z
     {
-        get => InternalAnomalyAI32[2].f;
+        get => InternalAnomalyAI32[2].F;
         set
         {
             if (!float.IsFinite(value))
                 throw new ArgumentOutOfRangeException(nameof(value));
-            if (InternalAnomalyAI32[2].f != value)
+            if (InternalAnomalyAI32[2].F != value)
             {
-                InternalAnomalyAI32[2].f = value;
+                InternalAnomalyAI32[2].F = value;
                 InternalAIChanged32[2] = true;
             }
         }

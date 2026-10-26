@@ -1,4 +1,4 @@
-﻿namespace Anomalies.DataStructures;
+namespace Anomalies.DataStructures;
 
 public interface IDynamicDRHandler
 {

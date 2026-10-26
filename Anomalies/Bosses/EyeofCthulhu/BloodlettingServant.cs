@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.EyeofCthulhu;
+namespace Anomalies.Bosses.EyeofCthulhu;
 
 public partial class BloodlettingServant : AnomalyModNPC
 {
@@ -20,11 +20,11 @@ public partial class BloodlettingServant : AnomalyModNPC
 
     public bool ShouldUsePhase2Frame
     {
-        get => AI_Union_0.bits[0];
+        get => AI_Union_0.Bits[0];
         set
         {
             Union32 union = AI_Union_0;
-            union.bits[0] = value;
+            union.Bits[0] = value;
             AI_Union_0 = union;
         }
     }
@@ -78,7 +78,7 @@ public partial class BloodlettingServant : AnomalyModNPC
 
         if (!NPC.TryGetMaster(NPCID.EyeofCthulhu, out NPC master))
         {
-            if (!TOSharedData.NotClient)
+            if (!TONetworkEnvironment.NotClient)
                 return;
             NPC.life = 0;
             NPC.HitEffect();
@@ -196,7 +196,7 @@ public partial class BloodlettingServant : AnomalyModNPC
             }
 
             float timer = masterBehavior.Timer1;
-            ArenaRadius = MathHelper.Lerp(MaxFollowDistance, EyeofCthulhuHandler.MaxArenaRadius, TOMathUtils.Interpolation.ExponentialEaseInOut(timer / EyeofCthulhu.PhaseChangeGateValue_2To3_1, 4f));
+            ArenaRadius = MathHelper.Lerp(MaxFollowDistance, EyeofCthulhuHandler.MaxArenaRadius, TOMathUtils.Interpolation.ExponentialEaseInOut(timer / EyeofCthulhu.PhaseChangeGateValue2To31, 4f));
 
             float newPositionRotation = PositionRotation;
             float targetPositionRotation = Place == ServantPlace.Left ? MathHelper.Pi : 0f;
@@ -205,9 +205,9 @@ public partial class BloodlettingServant : AnomalyModNPC
 
             Vector2 offset = new Vector2(ArenaRadius, 0f).RotatedBy(PositionRotation);
             Vector2 destination = masterBehavior.Phase3ArenaCenter + offset;
-            NPC.Center = Vector2.SmootherStep(NPC.Center, destination, Math.Clamp(timer / EyeofCthulhu.PhaseChangeGateValue_2To3_1, 0f, 1f));
+            NPC.Center = Vector2.SmootherStep(NPC.Center, destination, Math.Clamp(timer / EyeofCthulhu.PhaseChangeGateValue2To31, 0f, 1f));
 
-            float targetRotation = Place == ServantPlace.Left ^ timer > EyeofCthulhu.PhaseChangeGateValue_2To3_1 ? 0f : MathHelper.Pi;
+            float targetRotation = Place == ServantPlace.Left ^ timer > EyeofCthulhu.PhaseChangeGateValue2To31 ? 0f : MathHelper.Pi;
             EyeofCthulhuHandler.UpdateRotation(ref NPC.rotation, targetRotation, 0.3f * TOMathUtils.Interpolation.CubicEaseInOut(masterBehavior.Timer1 / 10f));
         }
     }
@@ -287,9 +287,9 @@ public partial class BloodlettingServant : AnomalyModNPC
     }
 
     #region Zenith
-    public const float ChargeGateValue_Zenith = 180f;
-    public const float ChargeTelegraphGateValue_Zenith = 90f;
-    public const float ChargeDuration_Zenith = 50f;
+    public const float ChargeGateValueZenith = 180f;
+    public const float ChargeTelegraphGateValueZenith = 90f;
+    public const float ChargeDurationZenith = 50f;
 
     private static readonly ProjectileDamageContainer _BloodDamage = new(30, 60, 75, 90, 84, 108);
     public static int BloodDamage_Zenith => _BloodDamage.Value;
@@ -318,7 +318,7 @@ public partial class BloodlettingServant : AnomalyModNPC
         float yAccelBoost2 = maxSpeedY * 0.0075f;
 
         float chargeVelocity = 12f + enrageScaleMaxSpeedBonus * 2f;
-        bool attemptingToCharge = NPC.ai[0] >= ChargeGateValue_Zenith;
+        bool attemptingToCharge = NPC.ai[0] >= ChargeGateValueZenith;
         bool farEnoughForCharge = NPC.Distance(target.Center) >= 320f;
         bool closeEnoughForCharge = NPC.Distance(target.Center) < 480f;
         bool charging = (attemptingToCharge && farEnoughForCharge && closeEnoughForCharge) || NPC.ai[1] > 0f;
@@ -344,13 +344,13 @@ public partial class BloodlettingServant : AnomalyModNPC
                 NPC.netSpam = 0;
             }
 
-            if (NPC.ai[1] < ChargeDuration_Zenith + 1f)
+            if (NPC.ai[1] < ChargeDurationZenith + 1f)
             {
                 NPC.ai[1] += 1f;
-                if (NPC.ai[1] > ChargeDuration_Zenith + 1f - 10f)
+                if (NPC.ai[1] > ChargeDurationZenith + 1f - 10f)
                     NPC.velocity *= 0.8f;
 
-                if (NPC.ai[1] >= ChargeDuration_Zenith + 1f)
+                if (NPC.ai[1] >= ChargeDurationZenith + 1f)
                 {
                     NPC.ai[0] = 0f;
                     NPC.ai[1] = 0f;
@@ -377,10 +377,10 @@ public partial class BloodlettingServant : AnomalyModNPC
         {
             NPC.damage = (int)Math.Round(NPC.defDamage * 1.3);
 
-            if (NPC.ai[0] < ChargeGateValue_Zenith && !targetDead)
+            if (NPC.ai[0] < ChargeGateValueZenith && !targetDead)
             {
                 NPC.ai[0] += 1f;
-                if (NPC.ai[0] == ChargeGateValue_Zenith)
+                if (NPC.ai[0] == ChargeGateValueZenith)
                 {
                     NPC.netUpdate = true;
                     NPC.netSpam = 0;
@@ -548,7 +548,7 @@ public partial class BloodlettingServant : AnomalyModNPC
 
     public bool PreDraw_Zenith(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        if (NPC.ai[0] >= ChargeTelegraphGateValue_Zenith)
+        if (NPC.ai[0] >= ChargeTelegraphGateValueZenith)
         {
             Texture2D npcTexture = TextureAssets.Npc[NPC.type].Value;
             Color originalColor = Color.Red * 0.75f;
@@ -560,7 +560,7 @@ public partial class BloodlettingServant : AnomalyModNPC
             if (NPC.spriteDirection == 1)
                 spriteEffects = SpriteEffects.FlipHorizontally;
 
-            float telegraphScalar = MathHelper.Clamp((NPC.ai[0] - ChargeTelegraphGateValue_Zenith) / ChargeTelegraphGateValue_Zenith, 0f, 1f);
+            float telegraphScalar = MathHelper.Clamp((NPC.ai[0] - ChargeTelegraphGateValueZenith) / ChargeTelegraphGateValueZenith, 0f, 1f);
             Color telegraphColor = Color.Lerp(originalColor, newColor, telegraphScalar) with { A = NPC.GraphicAlpha };
 
             int afterimageAmount = 10;

@@ -1,4 +1,4 @@
-﻿namespace Anomalies.AnomalyMode;
+namespace Anomalies.AnomalyMode;
 
 public sealed class AnomalyPlayerSync : AnomalyPlayerBehavior
 {

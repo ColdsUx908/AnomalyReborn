@@ -1,4 +1,4 @@
-﻿using Anomalies.Visuals.BossBar;
+using Anomalies.Visuals.BossBar;
 
 namespace Anomalies.Common;
 

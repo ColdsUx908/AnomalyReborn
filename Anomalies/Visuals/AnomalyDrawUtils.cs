@@ -133,7 +133,8 @@ public static class AnomalyDrawUtils
     /// 从世界坐标起点沿 rotation 方向叠层绘制预警线，宽度由外缘向 1 像素亮芯收窄。
     /// </summary>
     public static void DrawLayeredWarning(SpriteBatch spriteBatch, Vector2 position, float rotation,
-        float length, float width, Color outerColor, Color innerColor, float opacity = 1f)
+        float length, float width, Color outerColor, Color innerColor, float opacity = 1f,
+        float startFadeLength = 0f, float coreWidth = 1f)
     {
         if (length <= 0f || width <= 0f || opacity <= 0f)
             return;
@@ -146,11 +147,32 @@ public static class AnomalyDrawUtils
         for (int i = 0; i < Layers; i++)
         {
             float strength = (float)i / (Layers - 1);
-            float layerWidth = MathHelper.Lerp(width, Math.Min(1f, width), strength);
+            float layerWidth = MathHelper.Lerp(width, Math.Min(coreWidth, width), strength);
             Color color = Color.Lerp(outerColor, innerColor, strength * strength)
                 * (MathHelper.Lerp(0.02f, 0.09f, strength) * opacity);
             Vector2 scale = new(length / texture.Width, layerWidth / texture.Height);
-            spriteBatch.Draw(texture, screenPosition, null, color, rotation, origin, scale, SpriteEffects.None, 0f);
+            if (startFadeLength <= 0f)
+            {
+                spriteBatch.Draw(texture, screenPosition, null, color, rotation, origin, scale, SpriteEffects.None, 0f);
+                continue;
+            }
+
+            // Keep the original beam UVs, fading only its first section into the emitter.
+            int fadePixels = Math.Clamp((int)(Math.Min(startFadeLength, length * 0.5f) / length * texture.Width), 1, texture.Width);
+            Vector2 direction = rotation.ToRotationVector2();
+            const int FadeSteps = 16;
+            for (int step = 0; step <= FadeSteps; step++)
+            {
+                int left = step == FadeSteps ? fadePixels : fadePixels * step / FadeSteps;
+                int right = step == FadeSteps ? texture.Width : fadePixels * (step + 1) / FadeSteps;
+                if (right <= left)
+                    continue;
+                float fade = step == FadeSteps ? 1f
+                    : MathHelper.SmoothStep(0f, 1f, (left + right) * 0.5f / fadePixels);
+                Rectangle source = new(left, 0, right - left, texture.Height);
+                Vector2 start = screenPosition + direction * (left * scale.X);
+                spriteBatch.Draw(texture, start, source, color * fade, rotation, origin, scale, SpriteEffects.None, 0f);
+            }
         }
     }
 }

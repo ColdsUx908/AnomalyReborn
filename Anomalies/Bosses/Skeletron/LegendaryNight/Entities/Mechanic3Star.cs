@@ -3,7 +3,7 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 /// <summary>跟随小法阵扩大五角星的落星；ai[0] 为线段采样序号，ai[1] 为小圈索引，ai[2] 为主体索引（1-based）。</summary>
 public sealed class Mechanic3Star : AnomalyModProjectile
 {
-    private bool _spawnParticlesReleased;
+    private bool _SpawnParticlesReleased;
 
     public override string Texture => LegendaryNightHandler.LegendaryNightEntityPath + "FallingStar";
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
@@ -39,9 +39,9 @@ public sealed class Mechanic3Star : AnomalyModProjectile
         }
         Projectile.timeLeft = 100;
         // 每组仅由第0颗星在本地首次更新时释放，兼容客户端接收生成同步。
-        if (!_spawnParticlesReleased && (int)Projectile.ai[0] == 0 && !Main.dedServ)
+        if (!_SpawnParticlesReleased && (int)Projectile.ai[0] == 0 && !Main.dedServ)
         {
-            _spawnParticlesReleased = true;
+            _SpawnParticlesReleased = true;
             Vector2 center = arena.GetMagicCircle((int)Projectile.ai[1]).Center;
             for (int i = 0; i < SkeletronLegendHead.Mechanic3Data.SpawnParticleCount; i++)
                 ParticleHandler.SpawnParticle(new OrbParticle(center,

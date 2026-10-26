@@ -44,7 +44,7 @@ public sealed class SlimeMount : AnomalyModProjectile
 
     public override void AI()
     {
-        if (Projectile.ai[1] == 0f && MasterIndex > 0 && TOSharedData.NotClient)
+        if (Projectile.ai[1] == 0f && MasterIndex > 0 && TONetworkEnvironment.NotClient)
         {
             NPC master = NPC.GetNPCFromIndex(MasterIndex - 1);
             if (!master.active || master.type != NPCID.SkeletronHead || master.Anomaly.CustomAIType != 1

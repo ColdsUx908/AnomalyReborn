@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.EmpressofLight;
+namespace Anomalies.Bosses.EmpressofLight;
 
 #pragma warning disable IDE0078
 #pragma warning disable IDE0090
@@ -109,16 +109,16 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
         int minAlpha = 255 - (int)(255 * maxOpacity);
         if (phase3)
         {
-            if (anomalyNPC.AnomalyAI32[0].f == playSpawnSoundTime)
+            if (anomalyNPC.AnomalyAI32[0].F == playSpawnSoundTime)
                 SoundEngine.PlaySound(SoundID.Item161, npc.Center);
 
-            if (anomalyNPC.AnomalyAI32[0].f > playSpawnSoundTime && anomalyNPC.AnomalyAI32[0].f < stopSpawningDustTime)
+            if (anomalyNPC.AnomalyAI32[0].F > playSpawnSoundTime && anomalyNPC.AnomalyAI32[0].F < stopSpawningDustTime)
                 CreateSpawnDust(npc, false);
 
-            anomalyNPC.AnomalyAI32[0].f += 1f;
-            if (anomalyNPC.AnomalyAI32[0].f >= stopSpawningDustTime)
+            anomalyNPC.AnomalyAI32[0].F += 1f;
+            if (anomalyNPC.AnomalyAI32[0].F >= stopSpawningDustTime)
             {
-                anomalyNPC.AnomalyAI32[0].f = playSpawnSoundTime + 1f;
+                anomalyNPC.AnomalyAI32[0].F = playSpawnSoundTime + 1f;
             }
         }
 
@@ -247,7 +247,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                         attackType = 4;
 
                         // Adjust the upcoming Ethereal Lance attack depending on what random variable is chosen here.
-                        anomalyNPC.AnomalyAI32[3].f = Main.rand.Next(2);
+                        anomalyNPC.AnomalyAI32[3].F = Main.rand.Next(2);
                         anomalyNPC.AIChanged32[3] = true;
                         npc.netUpdate = true;
                     }
@@ -266,7 +266,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                         attackType = 4;
 
                         // Adjust the upcoming Ethereal Lance attack depending on what random variable is chosen here.
-                        anomalyNPC.AnomalyAI32[3].f = Main.rand.Next(2);
+                        anomalyNPC.AnomalyAI32[3].F = Main.rand.Next(2);
                         anomalyNPC.AIChanged32[3] = true;
                         npc.netUpdate = true;
                     }
@@ -299,7 +299,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                         attackType = 7;
 
                         // Adjust the upcoming Ethereal Lance attack depending on what random variable is chosen here.
-                        anomalyNPC.AnomalyAI32[2].f = Main.rand.Next(2);
+                        anomalyNPC.AnomalyAI32[2].F = Main.rand.Next(2);
                         anomalyNPC.AIChanged32[2] = true;
                         npc.netUpdate = true;
                     }
@@ -323,7 +323,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                             attackType = 7;
 
                             // Adjust the upcoming Ethereal Lance attack depending on what random variable is chosen here.
-                            anomalyNPC.AnomalyAI32[2].f = Main.rand.Next(2);
+                            anomalyNPC.AnomalyAI32[2].F = Main.rand.Next(2);
                             anomalyNPC.AIChanged32[2] = true;
                             npc.netUpdate = true;
                         }
@@ -338,7 +338,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                             attackType = 4;
 
                             // Adjust the upcoming Ethereal Lance attack depending on what random variable is chosen here.
-                            anomalyNPC.AnomalyAI32[3].f = Main.rand.Next(2);
+                            anomalyNPC.AnomalyAI32[3].F = Main.rand.Next(2);
                             anomalyNPC.AIChanged32[3] = true;
                             npc.netUpdate = true;
                         }
@@ -351,7 +351,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                         attackType = 4;
 
                         // Adjust the upcoming Ethereal Lance attack depending on what random variable is chosen here.
-                        anomalyNPC.AnomalyAI32[3].f = Main.rand.Next(2);
+                        anomalyNPC.AnomalyAI32[3].F = Main.rand.Next(2);
                         anomalyNPC.AIChanged32[3] = true;
                         npc.netUpdate = true;
                     }
@@ -414,7 +414,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                 if (npc.ai[1] < 60f)
                     AI_120_HallowBoss_DoMagicEffect(npc, npc.Center + randomStreakOffset, 1, Utils.GetLerpValue(0f, 60f, npc.ai[1], clamped: true));
 
-                int streakSpawnFrequency = TOSharedData.LegendaryMode ? 1 : 2;
+                int streakSpawnFrequency = TOWorldState.LegendaryMode ? 1 : 2;
                 if (phase3)
                     streakSpawnFrequency *= 2;
 
@@ -437,14 +437,14 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                         if (phase3)
                         {
                             int proj2 = Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center + randomStreakOffset, -rainbowStreakVelocity, projectileType, projectileDamage, 0f, Main.myPlayer, npc.target, 1f - ai3);
-                            if (Main.rand.NextBool(60) && TOSharedData.LegendaryMode)
+                            if (Main.rand.NextBool(60) && TOWorldState.LegendaryMode)
                             {
                                 Main.projectile[proj2].extraUpdates += 1;
                                 Main.projectile[proj2].netUpdate = true;
                             }
                         }
 
-                        if (Main.rand.NextBool(60) && TOSharedData.LegendaryMode)
+                        if (Main.rand.NextBool(60) && TOWorldState.LegendaryMode)
                         {
                             Main.projectile[proj].extraUpdates += 1;
                             Main.projectile[proj].netUpdate = true;
@@ -530,7 +530,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                         int lanceFrequency = (int)(npc.ai[1] / (dayTimeEnrage ? 2f : 3f));
                         lanceRotation += (masterMode ? 5 : 4) * i;
                         Vector2 lanceDirection = Vector2.UnitX.RotatedBy((float)Math.PI / (lanceRotation * 2) + lanceFrequency * ((float)Math.PI / lanceRotation));
-                        if (anomalyNPC.AnomalyAI32[3].f == 0f)
+                        if (anomalyNPC.AnomalyAI32[3].F == 0f)
                             lanceDirection.X += (lanceDirection.X > 0f) ? 0.5f : -0.5f;
 
                         lanceDirection = lanceDirection.SafeNormalize(Vector2.UnitY);
@@ -598,7 +598,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                 {
                     npc.ai[0] = 1f;
                     npc.ai[1] = 0f;
-                    anomalyNPC.AnomalyAI32[3].f = 0f;
+                    anomalyNPC.AnomalyAI32[3].F = 0f;
                     npc.netUpdate = true;
                 }
 
@@ -626,7 +626,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                 if (npc.ai[1] % 42f == 0f && npc.ai[1] < 42f)
                 {
                     float projRotation = MathHelper.TwoPi * Main.rand.NextFloat();
-                    float totalProjectiles = TOSharedData.LegendaryMode ? 30f : death ? (dayTimeEnrage ? 22f : 15f) : (dayTimeEnrage ? 18f : 13f);
+                    float totalProjectiles = TOWorldState.LegendaryMode ? 30f : death ? (dayTimeEnrage ? 22f : 15f) : (dayTimeEnrage ? 18f : 13f);
                     int projIndex = 0;
                     bool inversePhase2SpreadPattern = Main.rand.NextBool();
                     for (float i = 0f; i < 1f; i += 1f / totalProjectiles)
@@ -642,7 +642,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                         float initialVelocity = death ? 2f : 1.75f;
                         if (dayTimeEnrage && projIndex % 2 == 0)
                             initialVelocity *= 2f;
-                        if (TOSharedData.LegendaryMode)
+                        if (TOWorldState.LegendaryMode)
                             initialVelocity *= 1.5f;
 
                         // Given that maxAddedVelocity = 2
@@ -738,7 +738,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                 npc.damage = 0;
 
                 // Expert attack or not.
-                bool expertAttack = anomalyNPC.AnomalyAI32[2].f == 0f;
+                bool expertAttack = anomalyNPC.AnomalyAI32[2].F == 0f;
 
                 int numLanceWalls = expertAttack ? 6 : 4;
                 float lanceWallSpawnGateValue = expertAttack ? 36f : 54f;
@@ -774,13 +774,13 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
 
                         int randomLanceWallType;
                         do randomLanceWallType = Main.rand.Next(numLanceWalls);
-                        while (randomLanceWallType == anomalyNPC.AnomalyAI32[3].f);
+                        while (randomLanceWallType == anomalyNPC.AnomalyAI32[3].F);
 
                         // This is set so that Empress doesn't use the same wall type twice in a row.
-                        anomalyNPC.AnomalyAI32[3].f = randomLanceWallType;
+                        anomalyNPC.AnomalyAI32[3].F = randomLanceWallType;
 
                         // Keeps track of the total number of lance walls used.
-                        anomalyNPC.AnomalyAI32[1].f += 1f;
+                        anomalyNPC.AnomalyAI32[1].F += 1f;
 
                         npc.netUpdate = true;
 
@@ -843,7 +843,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                     }
 
                     // Chance to stop using the lance walls and switch to a different attack after 3 lance walls are used.
-                    if (anomalyNPC.AnomalyAI32[1].f >= 2f && Main.rand.NextBool(Math.Max(1, 7 - (int)anomalyNPC.AnomalyAI32[1].f)))
+                    if (anomalyNPC.AnomalyAI32[1].F >= 2f && Main.rand.NextBool(Math.Max(1, 7 - (int)anomalyNPC.AnomalyAI32[1].F)))
                     {
                         npc.ai[1] = lanceWallPhaseTime;
                         npc.netUpdate = true;
@@ -856,9 +856,9 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                 {
                     npc.ai[0] = 1f;
                     npc.ai[1] = 0f;
-                    anomalyNPC.AnomalyAI32[3].f = 0f;
-                    anomalyNPC.AnomalyAI32[1].f = 0f;
-                    anomalyNPC.AnomalyAI32[2].f = 0f;
+                    anomalyNPC.AnomalyAI32[3].F = 0f;
+                    anomalyNPC.AnomalyAI32[1].F = 0f;
+                    anomalyNPC.AnomalyAI32[2].F = 0f;
                     npc.netUpdate = true;
                 }
 
@@ -923,7 +923,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                         if (Main.netMode != NetmodeID.MultiplayerClient)
                         {
                             int proj = Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, rainbowStreakVelocity, projectileType, projectileDamage, 0f, Main.myPlayer, npc.target, ai3);
-                            if (Main.rand.NextBool(30) && TOSharedData.LegendaryMode)
+                            if (Main.rand.NextBool(30) && TOWorldState.LegendaryMode)
                             {
                                 Main.projectile[proj].extraUpdates += 1;
                                 Main.projectile[proj].netUpdate = true;
@@ -1144,14 +1144,14 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
                         if (phase3)
                         {
                             int proj2 = Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center + projRandomOffset, -vector, projectileType, projectileDamage, 0f, Main.myPlayer, npc.target, 1f - streakHomeTime);
-                            if (Main.rand.NextBool(15) && TOSharedData.LegendaryMode)
+                            if (Main.rand.NextBool(15) && TOWorldState.LegendaryMode)
                             {
                                 Main.projectile[proj2].extraUpdates += 1;
                                 Main.projectile[proj2].netUpdate = true;
                             }
                         }
 
-                        if (Main.rand.NextBool(15) && TOSharedData.LegendaryMode)
+                        if (Main.rand.NextBool(15) && TOWorldState.LegendaryMode)
                         {
                             Main.projectile[proj].extraUpdates += 1;
                             Main.projectile[proj].netUpdate = true;
@@ -1289,7 +1289,7 @@ public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aro
     private static void CreateSpawnDust(NPC npc, bool useAI = true)
     {
         int spawnDustAmount = 2;
-        float timer = useAI ? npc.ai[1] : npc.Anomaly.AnomalyAI32[0].f;
+        float timer = useAI ? npc.ai[1] : npc.Anomaly.AnomalyAI32[0].F;
         float spawnTime = 180f;
         for (int i = 0; i < spawnDustAmount; i++)
         {

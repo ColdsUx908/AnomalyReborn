@@ -1,4 +1,4 @@
-﻿using Anomalies.AnomalyMode;
+using Anomalies.AnomalyMode;
 using Anomalies.SpecialContents.Contributor.ImmaculateWhite;
 using Anomalies.SpecialContents.Contributor.VacuousBlack;
 

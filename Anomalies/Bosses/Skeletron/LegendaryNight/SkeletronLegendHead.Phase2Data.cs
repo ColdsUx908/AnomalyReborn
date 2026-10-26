@@ -1,4 +1,4 @@
-namespace Anomalies.Bosses.Skeletron.LegendaryNight;
+﻿namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed partial class SkeletronLegendHead
 {
@@ -42,9 +42,9 @@ public sealed partial class SkeletronLegendHead
     public static class Mechanic2Data
     {
         public const int StartMusicTime = Mechanic1Data.End;
-        public const int FirstStrikeMusicTime = 53 * 60 + 30;
-        public const int SecondStrikeMusicTime = 59 * 60 + 50;
-        public const int ThirdStrikeMusicTime = 66 * 60 + 10;
+        public const int FirstStrikeMusicTime = 52 * 60;
+        public const int SecondStrikeMusicTime = 55 * 60 + 8;
+        public const int ThirdStrikeMusicTime = 58 * 60 + 16;
         public const int Star1MusicTime = 56 * 60 + 45;
         public const int Star2MusicTime = 57 * 60 + 20;
         public const int Star3MusicTime = 63 * 60;
@@ -78,7 +78,8 @@ public sealed partial class SkeletronLegendHead
         public const float BodyReturnArcHeight = 1200f;
         public const float BodyExitZ = AnomalyDepthDrawSystem.MinimumZ - 250f;
         public const int LaserDuration = 24;
-        public const int HalfFieldWarningDuration = 3 * 60;
+        // 下一次预警在前一次拍击伤害窗口结束后开始，避免连续拍击的提示重叠。
+        public const int HalfFieldWarningDuration = StrikeInterval - LaserDuration;
         public const int LaserWarningDuration = HalfFieldWarningDuration;
         public const int LaserFadeInDuration = 12;
         public const int LaserFadeOutDuration = 18;
@@ -186,7 +187,7 @@ public sealed partial class SkeletronLegendHead
         public static float HandSlamProgress(int relativeAge) => MathF.Pow(
             MathHelper.Clamp((relativeAge + HandSlamDuration) / (float)HandSlamDuration, 0f, 1f), 3f);
 
-        /// <summary>提前3秒提示半场，与抬手同步增强；拍击时转为白色冲击。</summary>
+        /// <summary>在前一次拍击伤害窗口结束后提示半场，与抬手同步增强；拍击时转为白色冲击。</summary>
         public static float HalfFieldOpacity(int relativeAge)
         {
             if (relativeAge is < -HalfFieldWarningDuration or >= LaserDuration)

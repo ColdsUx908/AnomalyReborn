@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.EyeofCthulhu;
+namespace Anomalies.Bosses.EyeofCthulhu;
 
 public sealed partial class EyeofCthulhu
 {
@@ -154,7 +154,7 @@ public sealed partial class EyeofCthulhu
 
             void SelectNextBehavior()
             {
-                if (!TOSharedData.NotClient)
+                if (!TONetworkEnvironment.NotClient)
                     return;
 
                 CurrentLocalPhase = 0;
@@ -239,7 +239,7 @@ public sealed partial class EyeofCthulhu
                                 Dust.NewDustAction(servantSpawnCenter, 20, 20, DustID.Blood, servantSpawnVelocity * 0.4f);
                         }
 
-                        if (TOSharedData.NotClient)
+                        if (TONetworkEnvironment.NotClient)
                         {
                             if (shouldSpawnServant)
                             {
@@ -314,7 +314,7 @@ public sealed partial class EyeofCthulhu
 
             NPC.damage = 0;
             StopMovement();
-            NPC.rotation += PhaseChange_1To2_RotationSpeedFunction.Process(Timer1);
+            NPC.rotation += PhaseChange1To2RotationSpeedFunction.Process(Timer1);
 
             Dust.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.Blood, new Vector2(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-6f, 6f)));
 
@@ -322,7 +322,7 @@ public sealed partial class EyeofCthulhu
 
             const int offset = 0;
             int adjustedTimer = Timer1 - offset;
-            int num = adjustedTimer is >= PhaseChangeGateValue_1To2_2 - 50 and <= PhaseChangeGateValue_1To2_2 && adjustedTimer % 10 == 0 ? (adjustedTimer + 60 - PhaseChangeGateValue_1To2_2) / 10 : 0; //1~6
+            int num = adjustedTimer is >= PhaseChangeGateValue1To22 - 50 and <= PhaseChangeGateValue1To22 && adjustedTimer % 10 == 0 ? (adjustedTimer + 60 - PhaseChangeGateValue1To22) / 10 : 0; //1~6
             if (num > 0)
             {
                 if (Ultra || num % 2 == 0)
@@ -361,7 +361,7 @@ public sealed partial class EyeofCthulhu
 
             switch (Timer1)
             {
-                case PhaseChangeGateValue_1To2_2:
+                case PhaseChangeGateValue1To22:
                     SoundEngine.PlaySound(SoundID.NPCHit1, NPC.Center);
                     SoundEngine.PlaySound(Roar, NPC.Center);
 
@@ -413,7 +413,7 @@ public sealed partial class EyeofCthulhu
                     CurrentLocalPhase = 1;
                     break;
 
-                case PhaseChangeTime_1To2: //进入二阶段
+                case PhaseChangeTime1To2: //进入二阶段
                     CurrentPhase = Phase.Phase2;
                     CurrentBehavior = Behavior.Phase2_Hover;
                     CurrentLocalPhase = 0;
@@ -453,7 +453,7 @@ public sealed partial class EyeofCthulhu
 
             void SelectNextBehavior()
             {
-                if (!TOSharedData.NotClient)
+                if (!TONetworkEnvironment.NotClient)
                     return;
 
                 CurrentLocalPhase = 0;
@@ -579,7 +579,7 @@ public sealed partial class EyeofCthulhu
 
                 if (Timer1 > 0 && Timer1 % projectileGateValue == 0 && CanShootProjectile())
                 {
-                    if (TOSharedData.NotClient)
+                    if (TONetworkEnvironment.NotClient)
                     {
                         int type = ProjectileID.BloodNautilusShot;
                         int damage = BloodDamage;
@@ -757,7 +757,7 @@ public sealed partial class EyeofCthulhu
                 switch (CurrentLocalPhase)
                 {
                     case 0:
-                        if (!TOSharedData.NotClient)
+                        if (!TONetworkEnvironment.NotClient)
                             return;
                         int direction = NextChargeTypeIsHorizontal ? Math.Sign(AttackCounter2 == 0 ? -Target.velocity.X : NPC.Center.X - Target.Center.X) : Math.Sign(NPC.Center.Y - Target.Center.Y);
                         if (direction == 0)
@@ -803,7 +803,7 @@ public sealed partial class EyeofCthulhu
                         if (adjustedTimer1 % projectileGateValue == 0)
                         {
                             int num = adjustedTimer1 / projectileGateValue;
-                            if (num > 0 && num <= maxProjectileSpawnsPerAttack && TOSharedData.NotClient && CanShootProjectile() && Timer2 == 0)
+                            if (num > 0 && num <= maxProjectileSpawnsPerAttack && TONetworkEnvironment.NotClient && CanShootProjectile() && Timer2 == 0)
                             {
                                 int amount = Ultra ? 5 : 3;
                                 float halfRange = Ultra ? TOMathUtils.PiOver3 : TOMathUtils.PiOver6;
@@ -910,7 +910,7 @@ public sealed partial class EyeofCthulhu
                         StopMovement();
                         NormalUpdateRotation(Math.Clamp(Timer1 * 0.015f, 0f, 3.5f));
 
-                        if (TOSharedData.NotClient)
+                        if (TONetworkEnvironment.NotClient)
                         {
                             int projectileAmountOver4 = Ultra ? 8 : 6;
                             int particleAmount = projectileAmountOver4 * 8;
@@ -930,7 +930,7 @@ public sealed partial class EyeofCthulhu
                 else
                 {
                     StopMovement();
-                    NPC.rotation += PhaseChange_1To2_RotationSpeedFunction.Process(Timer1);
+                    NPC.rotation += PhaseChange1To2RotationSpeedFunction.Process(Timer1);
 
                     TrySpawnEyeSpinServant(Timer1);
 
@@ -938,7 +938,7 @@ public sealed partial class EyeofCthulhu
 
                     switch (Timer1)
                     {
-                        case PhaseChangeGateValue_1To2_2:
+                        case PhaseChangeGateValue1To22:
                             SoundEngine.PlaySound(SoundID.NPCHit1, NPC.Center);
                             SoundEngine.PlaySound(Roar, NPC.Center);
 
@@ -964,7 +964,7 @@ public sealed partial class EyeofCthulhu
                                 NPC.NewNPCAction<BloodlettingServant>(SourceAI, NPC.Center, NPC.whoAmI, n => n.velocity = Main.rand.NextPolarVector2(10f, 15f));
                             break;
 
-                        case PhaseChangeTime_1To2:
+                        case PhaseChangeTime1To2:
                             CheckPhaseChange();
                             SelectNextBehavior();
                             break;
@@ -978,20 +978,20 @@ public sealed partial class EyeofCthulhu
             Timer1++;
 
             NPC.damage = 0;
-            NPC.rotation += PhaseChange_2To3_RotationSpeedFunction.Process(Timer1);
+            NPC.rotation += PhaseChange2To3RotationSpeedFunction.Process(Timer1);
             StopMovement();
 
             Dust.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.Blood, new Vector2(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-6f, 6f)));
 
-            if (Timer1 >= PhaseChangeGateValue_2To3_1) //改变颜色
+            if (Timer1 >= PhaseChangeGateValue2To31) //改变颜色
                 Phase3ChangeRatio += 0.025f;
 
-            if (Timer1 is > 0 and <= PhaseChangeGateValue_2To3_2) //移动竞技场中心
-                Phase3ArenaCenter = Vector2.SmootherStep(Phase3ArenaCenter, Target.Center, TOMathUtils.Interpolation.ExponentialEaseIn(Timer1 * 1.5f / PhaseChangeGateValue_2To3_2, 4f));
+            if (Timer1 is > 0 and <= PhaseChangeGateValue2To32) //移动竞技场中心
+                Phase3ArenaCenter = Vector2.SmootherStep(Phase3ArenaCenter, Target.Center, TOMathUtils.Interpolation.ExponentialEaseIn(Timer1 * 1.5f / PhaseChangeGateValue2To32, 4f));
 
-            if (Timer1 is >= PhaseChangeGateValue_2To3_2 and <= PhaseChangeGateValue_2To3_2 + 60) //回复血量
+            if (Timer1 is >= PhaseChangeGateValue2To32 and <= PhaseChangeGateValue2To32 + 60) //回复血量
             {
-                float ratio = (Timer1 - PhaseChangeGateValue_2To3_2) / 60f;
+                float ratio = (Timer1 - PhaseChangeGateValue2To32) / 60f;
                 int newLife = (int)MathHelper.Lerp(NPC.life, NPC.lifeMax * MathHelper.Lerp(0.1f, 0.5f, ratio), TOMathUtils.Interpolation.LogarithmicEaseOut(ratio));
                 int increasedLife = Math.Clamp(newLife - NPC.life, 0, NPC.lifeMax / 2 - NPC.life);
 
@@ -1005,15 +1005,15 @@ public sealed partial class EyeofCthulhu
                     NPC.life = NPC.lifeMax;
             }
 
-            if (Timer1 is >= PhaseChangeGateValue_2To3_2 - 15 and < PhaseChangeGateValue_2To3_2) //提前开始第三阶段传送
-                TeleportTo(Vector2.Zero, Timer1 - (PhaseChangeGateValue_2To3_2 - 15), EyeofCthulhuHandler.NormalTeleportDuration + 29, 1);
+            if (Timer1 is >= PhaseChangeGateValue2To32 - 15 and < PhaseChangeGateValue2To32) //提前开始第三阶段传送
+                TeleportTo(Vector2.Zero, Timer1 - (PhaseChangeGateValue2To32 - 15), EyeofCthulhuHandler.NormalTeleportDuration + 29, 1);
 
             switch (Timer1)
             {
                 case 0:
                     Phase3ArenaCenter = NPC.Center;
                     SendCommandToServants(BehaviorCommand_Servant.GetToArenaPosition);
-                    if (TOSharedData.NotClient)
+                    if (TONetworkEnvironment.NotClient)
                     {
                         Projectile.NewProjectileAction<EyeofCthulhuArena>(SourceAI, Phase3ArenaCenter, Vector2.Zero, ArenaDamage, 0f, action: p =>
                         {
@@ -1024,7 +1024,7 @@ public sealed partial class EyeofCthulhu
 
                     break;
 
-                case PhaseChangeGateValue_2To3_2:
+                case PhaseChangeGateValue2To32:
                     SoundEngine.PlaySound(SoundID.NPCHit1, NPC.Center);
                     SoundEngine.PlaySound(Roar, NPC.Center);
 
@@ -1032,7 +1032,7 @@ public sealed partial class EyeofCthulhu
                         Dust.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.Blood, new Vector2(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-6f, 6f)));
 
                     //生成冲击波清除克苏鲁之仆；使竞技场激活，流血仆从脱战（通过弹幕实现），克苏鲁之仆死亡
-                    if (TOSharedData.NotClient)
+                    if (TONetworkEnvironment.NotClient)
                     {
                         Projectile.NewProjectileAction<BloodShockwave>(SourceAI, NPC.Center, Vector2.Zero, 100, 0f, action: p =>
                         {
@@ -1072,7 +1072,7 @@ public sealed partial class EyeofCthulhu
                     CurrentLocalPhase = 1;
                     break;
 
-                case PhaseChangeTime_2To3: //进入三阶段
+                case PhaseChangeTime2To3: //进入三阶段
                     CurrentPhase = Phase.Phase3;
                     CurrentBehavior = Behavior.Phase3_Charge;
                     CurrentLocalPhase = 0;
@@ -1107,7 +1107,7 @@ public sealed partial class EyeofCthulhu
 
             void SelectNextBehavior()
             {
-                if (!TOSharedData.NotClient)
+                if (!TONetworkEnvironment.NotClient)
                     return;
 
                 CurrentLocalPhase = 0;
@@ -1209,7 +1209,7 @@ public sealed partial class EyeofCthulhu
                     switch (CurrentLocalPhase)
                     {
                         case 0: //初始化
-                            if (!TOSharedData.NotClient)
+                            if (!TONetworkEnvironment.NotClient)
                                 return;
                             CurrentLocalPhase = 1;
 
@@ -1265,7 +1265,7 @@ public sealed partial class EyeofCthulhu
                     switch (CurrentLocalPhase)
                     {
                         case 0: //初始化：一次性生成4个Index
-                            if (!TOSharedData.NotClient)
+                            if (!TONetworkEnvironment.NotClient)
                                 return;
                             CurrentLocalPhase = 1;
 
@@ -1467,7 +1467,7 @@ public sealed partial class EyeofCthulhu
                     switch (CurrentLocalPhase)
                     {
                         case 0:
-                            if (!TOSharedData.NotClient)
+                            if (!TONetworkEnvironment.NotClient)
                                 return;
                             int usedIndex1 = Main.rand.Next(0, 32);
                             UsedEyeIndex1 = usedIndex1;
@@ -1499,7 +1499,7 @@ public sealed partial class EyeofCthulhu
                     switch (CurrentLocalPhase)
                     {
                         case 0:
-                            if (!TOSharedData.NotClient)
+                            if (!TONetworkEnvironment.NotClient)
                                 return;
                             int usedIndex1 = (int)TOMathUtils.NormalizeWithPeriod(UsedEyeIndex1 + Main.rand.Next(5, 12) * Main.rand.NextBool(2).ToDirectionInt(), 32);
                             UsedEyeIndex1 = usedIndex1;
@@ -1533,7 +1533,7 @@ public sealed partial class EyeofCthulhu
                     switch (CurrentLocalPhase)
                     {
                         case 0:
-                            if (!TOSharedData.NotClient)
+                            if (!TONetworkEnvironment.NotClient)
                                 return;
                             int usedIndex1 = (int)TOMathUtils.NormalizeWithPeriod(UsedEyeIndex1 + Main.rand.Next(5, 12) * Main.rand.NextBool(2).ToDirectionInt(), 32);
                             UsedEyeIndex1 = usedIndex1;
@@ -1566,7 +1566,7 @@ public sealed partial class EyeofCthulhu
                 {
                     SoundEngine.PlaySound(SoundID.Item17, NPC.Center);
 
-                    if (TOSharedData.NotClient)
+                    if (TONetworkEnvironment.NotClient)
                     {
                         PolarVector2 offset = ArenaModProjectile.GetEyeCenterDirection(UsedEyeIndex1) * (ArenaModProjectile.Radius - 15f) * EyeofCthulhuHandler.EyeShapeHelper.InnerVelocityMultiplier;
                         float singleRadian = MathHelper.TwoPi / projectileAmount;
@@ -1576,7 +1576,7 @@ public sealed partial class EyeofCthulhu
                             BloodOrbProjectile modP = p.GetModProjectile<BloodOrbProjectile>();
                             modP.Master = NPC;
                             modP.ArenaProjectile = ArenaProjectile;
-                            modP.BehaviorType = BloodOrbProjectile.Behavior_Still;
+                            modP.BehaviorType = BloodOrbProjectile.BehaviorStill;
                             modP.Destination = p.Center + p.velocity * BloodOrbProjectile.StillTime;
                         });
                     }

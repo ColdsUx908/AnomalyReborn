@@ -1,24 +1,24 @@
-namespace Anomalies.Bosses.Skeletron.LegendaryNight;
+﻿namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed partial class SkeletronLegendHead
 {
     // 6：三次拍击的随机左右侧位图（bit3 标记已初始化）；7：本轮机制的音乐起点。
     public int Mechanic2HandPattern
     {
-        get => AnomalyNPC.AnomalyAI32[6].i;
+        get => AnomalyNPC.AnomalyAI32[6].I;
         private set
         {
-            AnomalyNPC.AnomalyAI32[6].i = value;
+            AnomalyNPC.AnomalyAI32[6].I = value;
             AnomalyNPC.AIChanged32[6] = true;
         }
     }
 
     public int Mechanic2StartMusicTime
     {
-        get => AnomalyNPC.AnomalyAI32[7].i;
+        get => AnomalyNPC.AnomalyAI32[7].I;
         private set
         {
-            AnomalyNPC.AnomalyAI32[7].i = value;
+            AnomalyNPC.AnomalyAI32[7].I = value;
             AnomalyNPC.AIChanged32[7] = true;
         }
     }
@@ -47,7 +47,7 @@ public sealed partial class SkeletronLegendHead
         if (Phase2ElapsedTime < Phase2MinimumDuration)
         {
             Phase2ElapsedTime++;
-            if (TOSharedData.NotClient && Phase2ElapsedTime % 60 == 0)
+            if (TONetworkEnvironment.NotClient && Phase2ElapsedTime % 60 == 0)
                 NPC.netUpdate = true;
         }
 
@@ -74,9 +74,10 @@ public sealed partial class SkeletronLegendHead
             case Phase.Phase2_2:
                 Mechanic2();
                 break;
-            case Phase.Phase2_3:
-                Mechanic3();
-                break;
+            // 后续机制入口暂时注释备用。
+            // case Phase.Phase2_3:
+            //     Mechanic3();
+            //     break;
             default:
                 // 后续机制尚未实现时的待机移动。
                 NormalMovement();
@@ -131,7 +132,7 @@ public sealed partial class SkeletronLegendHead
                 };
                 SoundEngine.PlaySound(SoundID.ForceRoar, NPC.Center);
                 ReleaseSpellShockwave(shockwave);
-                if (CurrentLocalPhase == 3 && TOSharedData.NotClient)
+                if (CurrentLocalPhase == 3 && TONetworkEnvironment.NotClient)
                 {
                     Projectile.NewProjectileAction<DemonShadow>(SourceAI, Target.Center + Vector2.UnitX * 500f,
                         Vector2.Zero, 0, 0f, action: p =>
@@ -155,7 +156,7 @@ public sealed partial class SkeletronLegendHead
                 if (firePlatinumCoin)
                     SoundEngine.PlaySound(PlatinumCoin.UnlimitedTossSound, NPC.Center);
             }
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
             {
                 if (Phase2StarRainActive && (Phase2MusicElapsedTime - Mechanic1Data.RotationEnd) % Mechanic1Data.StarRainInterval == 0)
                 {
@@ -198,7 +199,7 @@ public sealed partial class SkeletronLegendHead
         {
             int age = Mechanic2Age;
             LegendaryNightPhase2Arena arena = Phase2Arena;
-            if (Mechanic2HandPattern == 0 && TOSharedData.NotClient)
+            if (Mechanic2HandPattern == 0 && TONetworkEnvironment.NotClient)
             {
                 int hand = Main.rand.Next(2);
                 int pattern = hand | (1 << Mechanic2Data.StrikeCount);
@@ -209,38 +210,39 @@ public sealed partial class SkeletronLegendHead
                     pattern |= hand << strike;
                 }
                 Mechanic2HandPattern = pattern;
-                AnomalyNPC.AnomalyAI32[12].i = 0;
+                AnomalyNPC.AnomalyAI32[12].I = 0;
                 AnomalyNPC.AIChanged32[12] = true;
                 NPC.netUpdate = true;
             }
-            if (age >= Mechanic2Data.End)
-            {
-                AnomalyNPC.Z = 0f;
-                CurrentPhase = Phase.Phase2_3;
-                CurrentLocalPhase = 0;
-                Timer1 = 0;
-                NPC.netUpdate = true;
-                Mechanic3();
-                return;
-            }
-            // 每个音乐节点独立保留速度、数量参数，方便逐波调整。
-            switch (Phase2MusicElapsedTime)
-            {
-                case Mechanic2Data.Star1MusicTime: SpawnRadialStars(10f, 12); break;
-                case Mechanic2Data.Star2MusicTime: SpawnRadialStars(8f, 30); break;
-                case Mechanic2Data.Star3MusicTime: SpawnRadialStars(10f, 6); break;
-                case Mechanic2Data.Star4MusicTime: SpawnRadialStars(9f, 8); break;
-                case Mechanic2Data.Star5MusicTime: SpawnRadialStars(8f, 10); break;
-                case Mechanic2Data.Star6MusicTime: SpawnRadialStars(7f, 20); break;
-                case Mechanic2Data.Star7MusicTime: SpawnRadialStars(6f, 3); break;
-                case Mechanic2Data.Star8MusicTime: SpawnRadialStars(6f, 5); break;
-                case Mechanic2Data.Star9MusicTime: SpawnRadialStars(6f, 6); break;
-                case Mechanic2Data.Star10MusicTime: SpawnRadialStars(6f, 8); break;
-                case Mechanic2Data.Star11MusicTime: SpawnRadialStars(8f, 4); break;
-                case Mechanic2Data.Star12MusicTime: SpawnRadialStars(7f, 3); break;
-                case Mechanic2Data.Star13MusicTime: SpawnRadialStars(6f, 16); break;
-            }
-
+            // 拍击之后的机制切换暂时注释备用。
+            // if (age >= Mechanic2Data.End)
+            // {
+            //     AnomalyNPC.Z = 0f;
+            //     CurrentPhase = Phase.Phase2_3;
+            //     CurrentLocalPhase = 0;
+            //     Timer1 = 0;
+            //     NPC.netUpdate = true;
+            //     Mechanic3();
+            //     return;
+            // }
+            // 拍击后的场地中心放射星星暂时注释备用。
+            // // 每个音乐节点独立保留速度、数量参数，方便逐波调整。
+            // switch (Phase2MusicElapsedTime)
+            // {
+            //     case Mechanic2Data.Star1MusicTime: SpawnRadialStars(10f, 12); break;
+            //     case Mechanic2Data.Star2MusicTime: SpawnRadialStars(8f, 30); break;
+            //     case Mechanic2Data.Star3MusicTime: SpawnRadialStars(10f, 6); break;
+            //     case Mechanic2Data.Star4MusicTime: SpawnRadialStars(9f, 8); break;
+            //     case Mechanic2Data.Star5MusicTime: SpawnRadialStars(8f, 10); break;
+            //     case Mechanic2Data.Star6MusicTime: SpawnRadialStars(7f, 20); break;
+            //     case Mechanic2Data.Star7MusicTime: SpawnRadialStars(6f, 3); break;
+            //     case Mechanic2Data.Star8MusicTime: SpawnRadialStars(6f, 5); break;
+            //     case Mechanic2Data.Star9MusicTime: SpawnRadialStars(6f, 6); break;
+            //     case Mechanic2Data.Star10MusicTime: SpawnRadialStars(6f, 8); break;
+            //     case Mechanic2Data.Star11MusicTime: SpawnRadialStars(8f, 4); break;
+            //     case Mechanic2Data.Star12MusicTime: SpawnRadialStars(7f, 3); break;
+            //     case Mechanic2Data.Star13MusicTime: SpawnRadialStars(6f, 16); break;
+            // }
             if (age >= Mechanic2Data.ReturnStart + Mechanic2Data.ReturnDuration)
             {
                 AnomalyNPC.Z = 0f;
@@ -262,73 +264,74 @@ public sealed partial class SkeletronLegendHead
                 if (age != Mechanic2Data.GetStrikeTime(strike))
                     continue;
                 SoundEngine.PlaySound(SoundID.Item14, center);
-                if (TOSharedData.NotClient && arena is not null)
+                if (TONetworkEnvironment.NotClient && arena is not null)
                     SpawnMechanic2Stars(arena, Mechanic2StrikeSide(strike), strike);
                 NPC.netUpdate = true;
             }
 
-            void SpawnRadialStars(float speed, int count)
-            {
-                if (arena is null || speed <= 0f || count <= 0)
-                    return;
-                if (!Main.dedServ)
-                {
-                    SoundEngine.PlaySound(SoundID.Item9, arena.Projectile.Center);
-                    for (int i = 0; i < count * 5; i++)
-                    {
-                        ParticleHandler.SpawnParticle(new OrbParticle(
-                            arena.Projectile.Center + Main.rand.NextVector2Circular(12f, 12f),
-                            Main.rand.NextPolarVector2(speed * 0.5f, speed * 1.5f),
-                            Main.rand.Next(20, 36), Main.rand.NextFloat(0.5f, 1.3f),
-                            Color.Lerp(LegendaryNightHandler.StarColor, Color.White, Main.rand.NextFloat(0.5f))));
-                    }
-                }
-                if (!TOSharedData.NotClient)
-                    return;
-                Projectile.NewProjectilesArc<FallingStar>(count, MathHelper.TwoPi / count, SourceAI, arena.Projectile.Center, Main.rand.NextPolarVector2(speed),
-                    FallingStarDamage, 0f, action: p =>
-                    {
-                        p.ai[2] = NPC.whoAmI + 1;
-                        p.scale = 0.2f;
-                        p.Resize(16, 16);
-                        p.timeLeft = Math.Max(1, (int)MathF.Ceiling((arena.Radius + 32f) / speed));
-                        FallingStar star = p.GetModProjectile<FallingStar>();
-                        star.TrailType = 2;
-                        star.AccelerationStartTime = int.MaxValue;
-                        p.velocity.Rotation += Main.rand.NextFloat(-0.1f, 0.1f);
-                        p.netUpdate = true;
-                    });
-            }
+            // 场地中心放射星星实现保留备用。
+            // void SpawnRadialStars(float speed, int count)
+            // {
+            //     if (arena is null || speed <= 0f || count <= 0)
+            //         return;
+            //     if (!Main.dedServ)
+            //     {
+            //         SoundEngine.PlaySound(SoundID.Item9, arena.Projectile.Center);
+            //         for (int i = 0; i < count * 5; i++)
+            //         {
+            //             ParticleHandler.SpawnParticle(new OrbParticle(
+            //                 arena.Projectile.Center + Main.rand.NextVector2Circular(12f, 12f),
+            //                 Main.rand.NextPolarVector2(speed * 0.5f, speed * 1.5f),
+            //                 Main.rand.Next(20, 36), Main.rand.NextFloat(0.5f, 1.3f),
+            //                 Color.Lerp(LegendaryNightHandler.StarColor, Color.White, Main.rand.NextFloat(0.5f))));
+            //         }
+            //     }
+            //     if (!TONetworkEnvironment.NotClient)
+            //         return;
+            //     Projectile.NewProjectilesArc<FallingStar>(count, MathHelper.TwoPi / count, SourceAI, arena.Projectile.Center, Main.rand.NextPolarVector2(speed),
+            //         FallingStarDamage, 0f, action: p =>
+            //         {
+            //             p.ai[2] = NPC.whoAmI + 1;
+            //             p.scale = 0.2f;
+            //             p.Resize(16, 16);
+            //             p.timeLeft = Math.Max(1, (int)MathF.Ceiling((arena.Radius + 32f) / speed));
+            //             FallingStar star = p.GetModProjectile<FallingStar>();
+            //             star.TrailType = 2;
+            //             star.AccelerationStartTime = int.MaxValue;
+            //             p.velocity.Rotation += Main.rand.NextFloat(-0.1f, 0.1f);
+            //             p.netUpdate = true;
+            //         });
+            // }
         }
 
-        void Mechanic3()
-        {
-            NormalMovement();
-            LegendaryNightPhase2Arena arena = Phase2Arena;
-            if (arena is null || CurrentLocalPhase >= Mechanic3Data.CircleCount || !TOSharedData.NotClient)
-                return;
-
-            int circleIndex = CurrentLocalPhase + 1;
-            int age = Phase2MusicElapsedTime - Mechanic3Data.GetStartMusicTime(circleIndex);
-            if (age < 0)
-                return;
-            for (int i = 0; i < Mechanic3Data.StarCount; i++)
-            {
-                int index = i;
-                Projectile.NewProjectileAction<Mechanic3Star>(SourceAI,
-                    Mechanic3Data.GetStarPosition(arena, index, age, circleIndex), Vector2.Zero, FallingStarDamage, 0f,
-                    action: p =>
-                    {
-                        p.ai[0] = index;
-                        p.ai[1] = circleIndex;
-                        p.ai[2] = NPC.whoAmI + 1;
-                        p.netUpdate = true;
-                    });
-            }
-            CurrentLocalPhase = circleIndex;
-            NPC.netUpdate = true;
-        }
-
+        // 拍击之后的机制3实现保留备用。
+        // void Mechanic3()
+        // {
+        //     NormalMovement();
+        //     LegendaryNightPhase2Arena arena = Phase2Arena;
+        //     if (arena is null || CurrentLocalPhase >= Mechanic3Data.CircleCount || !TONetworkEnvironment.NotClient)
+        //         return;
+        //
+        //     int circleIndex = CurrentLocalPhase + 1;
+        //     int age = Phase2MusicElapsedTime - Mechanic3Data.GetStartMusicTime(circleIndex);
+        //     if (age < 0)
+        //         return;
+        //     for (int i = 0; i < Mechanic3Data.StarCount; i++)
+        //     {
+        //         int index = i;
+        //         Projectile.NewProjectileAction<Mechanic3Star>(SourceAI,
+        //             Mechanic3Data.GetStarPosition(arena, index, age, circleIndex), Vector2.Zero, FallingStarDamage, 0f,
+        //             action: p =>
+        //             {
+        //                 p.ai[0] = index;
+        //                 p.ai[1] = circleIndex;
+        //                 p.ai[2] = NPC.whoAmI + 1;
+        //                 p.netUpdate = true;
+        //             });
+        //     }
+        //     CurrentLocalPhase = circleIndex;
+        //     NPC.netUpdate = true;
+        // }
         void UpdateMechanic2BodyStrike(int age)
         {
             for (int strike = 0; strike < Mechanic2Data.StrikeCount; strike++)
@@ -340,22 +343,22 @@ public sealed partial class SkeletronLegendHead
 
                 // 8/9：预警开始时的位置；10/11：锁定目标点；12：已锁定的拍击序号（1-based）。
                 // 保存在 NPC 的同步数据中，避免玩家移动改变冲刺方向，也避免 Behavior 单例保存实体状态。
-                if (AnomalyNPC.AnomalyAI32[12].i != strike + 1)
+                if (AnomalyNPC.AnomalyAI32[12].I != strike + 1)
                 {
                     Vector2 impact = Target.Center - Vector2.UnitY * Mechanic2Data.BodyImpactHeight;
-                    AnomalyNPC.AnomalyAI32[8].f = NPC.Center.X;
-                    AnomalyNPC.AnomalyAI32[9].f = NPC.Center.Y;
-                    AnomalyNPC.AnomalyAI32[10].f = impact.X;
-                    AnomalyNPC.AnomalyAI32[11].f = impact.Y;
-                    AnomalyNPC.AnomalyAI32[12].i = strike + 1;
+                    AnomalyNPC.AnomalyAI32[8].F = NPC.Center.X;
+                    AnomalyNPC.AnomalyAI32[9].F = NPC.Center.Y;
+                    AnomalyNPC.AnomalyAI32[10].F = impact.X;
+                    AnomalyNPC.AnomalyAI32[11].F = impact.Y;
+                    AnomalyNPC.AnomalyAI32[12].I = strike + 1;
                     for (int slot = 8; slot <= 12; slot++)
                         AnomalyNPC.AIChanged32[slot] = true;
-                    if (TOSharedData.NotClient)
+                    if (TONetworkEnvironment.NotClient)
                         NPC.netUpdate = true;
                 }
 
-                Vector2 origin = new(AnomalyNPC.AnomalyAI32[8].f, AnomalyNPC.AnomalyAI32[9].f);
-                Vector2 target = new(AnomalyNPC.AnomalyAI32[10].f, AnomalyNPC.AnomalyAI32[11].f);
+                Vector2 origin = new(AnomalyNPC.AnomalyAI32[8].F, AnomalyNPC.AnomalyAI32[9].F);
+                Vector2 target = new(AnomalyNPC.AnomalyAI32[10].F, AnomalyNPC.AnomalyAI32[11].F);
                 Vector2 retreatEnd = target - Vector2.UnitY * (Mechanic2Data.HeightAbovePlayer - Mechanic2Data.BodyImpactHeight);
                 (float advance, _) = Mechanic2Data.BodyStrikeMotion(relativeAge);
                 Vector2 position = relativeAge < -Mechanic2Data.BodyRushDuration
@@ -409,7 +412,7 @@ public sealed partial class SkeletronLegendHead
 
     private void EndMechanic1Attacks()
     {
-        if (!TOSharedData.NotClient)
+        if (!TONetworkEnvironment.NotClient)
             return;
         foreach (Projectile p in Projectile.ActiveProjectiles)
         {
@@ -426,7 +429,7 @@ public sealed partial class SkeletronLegendHead
 
     private void EnsureArenaForPhase2()
     {
-        if (!TOSharedData.NotClient)
+        if (!TONetworkEnvironment.NotClient)
             return;
         // 正常由现存一阶段竞技场交接；引用缺失时先补回交接方。
         Projectile.NewProjectileAction<LegendaryNightArena>(SourceAI, Target.Center, Vector2.Zero, ArenaDamage, 0f,

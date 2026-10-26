@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.EmpressofLight;
+namespace Anomalies.Bosses.EmpressofLight;
 
 public sealed partial class EmpressofLight_Night
 {

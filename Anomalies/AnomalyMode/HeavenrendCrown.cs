@@ -1,4 +1,4 @@
-﻿using Anomalies.GameContents;
+using Anomalies.GameContents;
 using Terraria.GameContent.Creative;
 
 namespace Anomalies.AnomalyMode;
@@ -36,7 +36,7 @@ public sealed class HeavenrendCrown : AnomalyModItem
     public override bool CanUseItem(Player player)
     {
         bool result = Main.GameMode != GameModeID.Creative
-            ? !TOSharedData.BossActive
+            ? !TOBossChallenge.BossActive
             : CreativePowerManager.Instance.GetPower<CreativePowers.DifficultySliderPower>().GetIsUnlocked();
 
         return result;
@@ -91,7 +91,7 @@ public sealed class HeavenrendCrownHoldout : AnomalyModProjectile
         {
             case 1:
                 SoundEngine.PlaySound(AnomalyHandler.ActivationSound);
-                if (!TOSharedData.NotClient)
+                if (!TONetworkEnvironment.NotClient)
                     break;
                 Projectile.ai[0] = AnomalySharedData.Anomaly ? -1f : 1f;
                 Projectile.netUpdate = true;

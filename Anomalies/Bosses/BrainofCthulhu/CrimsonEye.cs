@@ -143,7 +143,7 @@ public class CrimsonEye : AnomalyModProjectile
                 opacity *= (Time - 45) / 20f;
             if (Projectile.timeLeft <= 20)
                 opacity *= Projectile.timeLeft / 20f;
-            Transoceanic.DataStructures.Rendering.SpriteBatchSnapshot state = Main.spriteBatch.ChangeState(sortMode: SpriteSortMode.Immediate);
+            Transoceanic.Graphics.Rendering.SpriteBatchSnapshot state = Main.spriteBatch.ChangeState(sortMode: SpriteSortMode.Immediate);
             Texture2D telegraphBase = TOTextures.InvisibleTexture;
             telegraph.Data.UseOpacity(opacity);
             telegraph.Data.UseColor(Color.Lerp(Color.Red, Color.OrangeRed, 0.7f * (float)Math.Pow(0.5 + 0.5 * Math.Sin(Main.GlobalTimeWrappedHourly), 3)));

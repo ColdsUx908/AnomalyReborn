@@ -1,9 +1,10 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using CalamityMod;
 using CalamityMod.Systems;
 using CalamityMod.UI.ModeIndicator;
 using CalamityMod.World;
 using Terraria.UI.Chat;
+using Transoceanic.Runtime.Detours;
 using static Anomalies.AnomalyMode.AnomalyHandler;
 using static Anomalies.ModCompatibility.DifficultyModeSystem_Publicizer;
 using static Anomalies.ModCompatibility.ModeIndicatorUI_Publicizer;
@@ -26,8 +27,8 @@ public sealed class AnomalyDifficulty : DifficultyMode, ILocalizationPrefix
     }
 
     public override Asset<Texture2D> Texture => Ultra ? _UltraIndicator : _Indicator;
-    public override Asset<Texture2D> OutlineTexture => Ultra ? _UltraIndicator_Border : _Indicator_Border;
-    public override Asset<Texture2D> TextureDisabled => Ultra ? _UltraIndicator_Off : _Indicator_Off;
+    public override Asset<Texture2D> OutlineTexture => Ultra ? _UltraIndicatorBorder : _IndicatorBorder;
+    public override Asset<Texture2D> TextureDisabled => Ultra ? _UltraIndicatorOff : _IndicatorOff;
 
     public override SoundStyle ActivationSound => Main.zenithWorld ? AromalyActivationSound : AnomalyHandler.ActivationSound;
 

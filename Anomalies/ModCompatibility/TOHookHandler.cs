@@ -1,5 +1,5 @@
-﻿using CalamityMod.NPCs.SlimeGod;
-using Transoceanic.Hooks.Framework.Helpers;
+using CalamityMod.NPCs.SlimeGod;
+using Transoceanic.Runtime.Hooks;
 
 namespace Anomalies.ModCompatibility;
 

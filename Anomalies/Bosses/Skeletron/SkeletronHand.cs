@@ -1,4 +1,4 @@
-﻿using static Anomalies.Bosses.Skeletron.SkeletronHead;
+using static Anomalies.Bosses.Skeletron.SkeletronHead;
 
 namespace Anomalies.Bosses.Skeletron;
 
@@ -31,12 +31,12 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
 
     public Phase CurrentPhase
     {
-        get => (Phase)AnomalyNPC.AnomalyAI32[7].byte0;
+        get => (Phase)AnomalyNPC.AnomalyAI32[7].Byte0;
         set
         {
             if (CurrentPhase == value)
                 return;
-            AnomalyNPC.AnomalyAI32[7].byte0 = (byte)value;
+            AnomalyNPC.AnomalyAI32[7].Byte0 = (byte)value;
             AnomalyNPC.AIChanged32[7] = true;
             if (Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
@@ -45,12 +45,12 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
 
     public Behavior CurrentBehavior
     {
-        get => (Behavior)AnomalyNPC.AnomalyAI32[7].byte1;
+        get => (Behavior)AnomalyNPC.AnomalyAI32[7].Byte1;
         set
         {
             if (CurrentBehavior == value)
                 return;
-            AnomalyNPC.AnomalyAI32[7].byte1 = (byte)value;
+            AnomalyNPC.AnomalyAI32[7].Byte1 = (byte)value;
             AnomalyNPC.AIChanged32[7] = true;
             if (Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
@@ -69,11 +69,11 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
         }
     }
 
-    private ref float VerticalSide => ref AnomalyNPC.AnomalyAI32[0].f;
-    private ref float SpawnTimer => ref AnomalyNPC.AnomalyAI32[1].f;
-    private ref float SlapTelegraphTimer => ref AnomalyNPC.AnomalyAI32[2].f;
-    private ref float SlapReadiness => ref AnomalyNPC.AnomalyAI32[3].f;
-    private ref float ResyncTimer => ref AnomalyNPC.AnomalyAI32[8].f;
+    private ref float VerticalSide => ref AnomalyNPC.AnomalyAI32[0].F;
+    private ref float SpawnTimer => ref AnomalyNPC.AnomalyAI32[1].F;
+    private ref float SlapTelegraphTimer => ref AnomalyNPC.AnomalyAI32[2].F;
+    private ref float SlapReadiness => ref AnomalyNPC.AnomalyAI32[3].F;
+    private ref float ResyncTimer => ref AnomalyNPC.AnomalyAI32[8].F;
 
     public bool Phase2 => CurrentPhase >= Phase.Phase2;
     public bool Phase3 => CurrentPhase == Phase.Phase3;
@@ -157,7 +157,7 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
         velocityIncrement *= 1.5f;
         handSwipeVelocity *= 1.35f;
         deceleration *= 0.75f;
-        float handSwipeDistance = HandSwipeDistance_Master;
+        float handSwipeDistance = HandSwipeDistanceMaster;
         float handSwipeDuration = handSwipeDistance / handSwipeVelocity;
         float slapGateValue = HandSlapGateValue;
 
@@ -309,7 +309,7 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
             NPC.rotation = (float)Math.Atan2(handIdleYPos, handIdleXPos) + MathHelper.PiOver2;
 
             return;
-                }
+        }
 
         void VerticalDrawback()
         {
@@ -334,7 +334,7 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
                 NPC.velocity = (Main.player[NPC.target].Center - NPC.Center).SafeNormalize(Vector2.UnitY) * handSwipeVelocity;
                 NPC.netUpdate = true;
             }
-                }
+        }
 
         void VerticalSwipe()
         {
@@ -365,7 +365,7 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
                     }
                 }
             }
-                }
+        }
 
         void HorizontalDrawback()
         {
@@ -390,7 +390,7 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
                 NPC.velocity = (Main.player[NPC.target].Center - NPC.Center).SafeNormalize(Vector2.UnitY) * handSwipeVelocity;
                 NPC.netUpdate = true;
             }
-                }
+        }
 
         void HorizontalSwipe()
         {
@@ -421,7 +421,7 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
                     }
                 }
             }
-                }
+        }
     }
 
     public override void PostDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)

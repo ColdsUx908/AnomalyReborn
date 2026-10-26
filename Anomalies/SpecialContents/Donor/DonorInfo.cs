@@ -1,4 +1,4 @@
-﻿namespace Anomalies.SpecialContents.Donor;
+namespace Anomalies.SpecialContents.Donor;
 
 public record struct DonationInfo(DateOnly Date, decimal Price, string Message);
 

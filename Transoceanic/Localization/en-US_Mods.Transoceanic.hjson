@@ -1,4 +1,6 @@
 Core: {
+	AutoHosting.Active: Auto-hosting in progress
+
 	UpdateReminder: {
 		Header: TRANSOCEANIC UPDATE REMINDER
 		ExternalHeader: From External Mods:

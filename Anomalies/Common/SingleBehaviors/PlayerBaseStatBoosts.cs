@@ -1,4 +1,4 @@
-﻿using MonoMod.Cil;
+using MonoMod.Cil;
 
 namespace Anomalies.Common.SingleBehaviors;
 

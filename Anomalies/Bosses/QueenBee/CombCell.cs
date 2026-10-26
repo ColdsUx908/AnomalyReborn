@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.QueenBee;
+namespace Anomalies.Bosses.QueenBee;
 
 public sealed class CombCell : AnomalyModProjectile
 {
@@ -28,12 +28,12 @@ public sealed class CombCell : AnomalyModProjectile
         get
         {
             Union32 union = AI_Union_1;
-            return (Behavior)union.byte0;
+            return (Behavior)union.Byte0;
         }
         set
         {
             Union32 union = AI_Union_1;
-            union.byte0 = (byte)value;
+            union.Byte0 = (byte)value;
             AI_Union_1 = union;
         }
     }
@@ -43,12 +43,12 @@ public sealed class CombCell : AnomalyModProjectile
         get
         {
             Union32 union = AI_Union_2;
-            return union.bits[0];
+            return union.Bits[0];
         }
         set
         {
             Union32 union = AI_Union_2;
-            union.bits[0] = value;
+            union.Bits[0] = value;
             AI_Union_2 = union;
         }
     }
@@ -66,11 +66,11 @@ public sealed class CombCell : AnomalyModProjectile
     /// </summary>
     public Vector2 Offset
     {
-        get => new(ExtraUnion0.f, ExtraUnion1.f);
+        get => new(ExtraUnion0.F, ExtraUnion1.F);
         set
         {
-            ExtraUnion0.f = value.X;
-            ExtraUnion1.f = value.Y;
+            ExtraUnion0.F = value.X;
+            ExtraUnion1.F = value.Y;
         }
     }
 
@@ -83,15 +83,15 @@ public sealed class CombCell : AnomalyModProjectile
     /// </summary>
     public float CurrentPositionParameter
     {
-        get => ExtraUnion0.f;
-        set => ExtraUnion0.f = TOMathUtils.NormalizeWithPeriod(value, 6f);
+        get => ExtraUnion0.F;
+        set => ExtraUnion0.F = TOMathUtils.NormalizeWithPeriod(value, 6f);
     }
     /// <summary>
     /// 移动方向。
     /// <br/>为 1 表示顺时针移动，为 -1 表示逆时针移动。
     /// <br/>仅应被赋值为 1 或 -1。
     /// </summary>
-    public ref int MoveDirection => ref ExtraUnion1.i;
+    public ref int MoveDirection => ref ExtraUnion1.I;
     #endregion 联合数据
 
     public override string LocalizationCategory => "Bosses.QueenBee";
@@ -116,7 +116,7 @@ public sealed class CombCell : AnomalyModProjectile
     {
         if (Master is not { active: true, type: NPCID.QueenBee })
         {
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();
             return;
         }
@@ -313,23 +313,23 @@ public sealed class CombCell : AnomalyModProjectile
     {
         base.SendAnomalyExtraAI(writer);
         writer.Write(FinalScale);
-        writer.Write(ExtraUnion0.i);
-        writer.Write(ExtraUnion1.i);
+        writer.Write(ExtraUnion0.I);
+        writer.Write(ExtraUnion1.I);
     }
 
     protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
     {
         base.ReceiveAnomalyExtraAI(reader);
         FinalScale = reader.ReadSingle();
-        ExtraUnion0.i = reader.ReadInt32();
-        ExtraUnion1.i = reader.ReadInt32();
+        ExtraUnion0.I = reader.ReadInt32();
+        ExtraUnion1.I = reader.ReadInt32();
     }
 
     public override void OnKill(int timeLeft)
     {
         QueenBeeHandler.SpawnGores(this);
 
-        if (Aroma && TOSharedData.NotClient)
+        if (Aroma && TONetworkEnvironment.NotClient)
         {
             int amount = Main.rand.Next(1, 4);
             for (int i = 0; i < amount; i++)

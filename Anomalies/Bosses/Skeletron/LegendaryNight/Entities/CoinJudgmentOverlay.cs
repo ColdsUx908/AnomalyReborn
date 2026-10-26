@@ -1,6 +1,5 @@
 using Anomalies.Visuals.Overlays;
 using Terraria.Graphics.Effects;
-using Transoceanic.DataStructures.Rendering;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 

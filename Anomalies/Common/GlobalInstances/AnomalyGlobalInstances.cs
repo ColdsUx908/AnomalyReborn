@@ -1,5 +1,3 @@
-using Transoceanic.Framework.Helpers.Utilities;
-
 namespace Anomalies.Common;
 
 public sealed partial class AnomalyPlayer : ModPlayer
@@ -51,16 +49,16 @@ public sealed partial class AnomalyGlobalNPC : GlobalNPC, IContentLoader
     public Union32[] AnomalyAI32 { get; private set; } = new Union32[AISlot];
     public Union64[] AnomalyAI64 { get; private set; } = new Union64[AISlot2];
 
-    public ref BitArray32 AIChanged32 => ref AnomalyAI32[^2].bits;
-    public ref BitArray32 AIChanged32_2 => ref AnomalyAI32[^1].bits;
-    public ref BitArray64 AIChanged64 => ref AnomalyAI64[^1].bits;
+    public ref BitArray32 AIChanged32 => ref AnomalyAI32[^2].Bits;
+    public ref BitArray32 AIChanged32_2 => ref AnomalyAI32[^1].Bits;
+    public ref BitArray64 AIChanged64 => ref AnomalyAI64[^1].Bits;
 
     public Projectile GetProjectileReference(int slot)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _Network_ProjectileReferenceCache.Length);
         ref ProjectileNetReference reference = ref _Network_ProjectileReferenceCache[slot];
-        reference.SetPackedValue(AnomalyAI64[slot].l);
+        reference.SetPackedValue(AnomalyAI64[slot].L);
         return reference.Resolve();
     }
 
@@ -71,19 +69,19 @@ public sealed partial class AnomalyGlobalNPC : GlobalNPC, IContentLoader
         ref ProjectileNetReference reference = ref _Network_ProjectileReferenceCache[slot];
         reference.Set(projectile);
         long packed = reference.PackedValue;
-        if (AnomalyAI64[slot].l == packed)
+        if (AnomalyAI64[slot].L == packed)
             return;
-        AnomalyAI64[slot].l = packed;
+        AnomalyAI64[slot].L = packed;
         AIChanged64[slot] = true;
-        if (TOSharedData.NotClient)
+        if (TONetworkEnvironment.NotClient)
             npc.netUpdate = true;
     }
 
     private Union32[] InternalAnomalyAI32 { get; set; } = new Union32[AISlot3];
     private Union64[] InternalAnomalyAI64 { get; set; } = new Union64[AISlot4];
 
-    private ref BitArray32 InternalAIChanged32 => ref InternalAnomalyAI32[^1].bits;
-    private ref BitArray64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;
+    private ref BitArray32 InternalAIChanged32 => ref InternalAnomalyAI32[^1].Bits;
+    private ref BitArray64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].Bits;
 
     public override void ResetEffects(NPC npc) => ResetExtraData();
 
@@ -138,14 +136,14 @@ public sealed partial class AnomalyGlobalProjectile : GlobalProjectile
     public Union32[] AnomalyAI32 { get; private set; } = new Union32[AISlot];
     public Union64[] AnomalyAI64 { get; private set; } = new Union64[AISlot2];
 
-    public ref BitArray32 AIChanged32 => ref AnomalyAI32[^1].bits;
-    public ref BitArray64 AIChanged64 => ref AnomalyAI64[^1].bits;
+    public ref BitArray32 AIChanged32 => ref AnomalyAI32[^1].Bits;
+    public ref BitArray64 AIChanged64 => ref AnomalyAI64[^1].Bits;
 
     private Union32[] InternalAnomalyAI32 { get; set; } = new Union32[AISlot];
     private Union64[] InternalAnomalyAI64 { get; set; } = new Union64[AISlot2];
 
-    private ref BitArray32 InternalAIChanged32 => ref InternalAnomalyAI32[^1].bits;
-    private ref BitArray64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;
+    private ref BitArray32 InternalAIChanged32 => ref InternalAnomalyAI32[^1].Bits;
+    private ref BitArray64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].Bits;
 
     public override GlobalProjectile Clone(Projectile from, Projectile to)
     {
@@ -188,7 +186,7 @@ public sealed partial class AnomalyGlobalProjectile : GlobalProjectile
     }
 }
 
-public sealed class AnomalyGlobalItem : GlobalItem
+public sealed partial class AnomalyGlobalItem : GlobalItem
 {
     public override bool InstancePerEntity => true;
 
@@ -200,11 +198,11 @@ public sealed class AnomalyGlobalItem : GlobalItem
     public readonly Union64[] DebugData = new Union64[4];
 #endif
 
-    private const int dataSlot = 64;
-    private const int dataSlot2 = 32;
+    private const int DataSlot = 64;
+    private const int DataSlot2 = 32;
 
-    public Union32[] Data { get; private set; } = new Union32[dataSlot];
-    public Union64[] Data2 { get; private set; } = new Union64[dataSlot2];
+    public Union32[] Data { get; private set; } = new Union32[DataSlot];
+    public Union64[] Data2 { get; private set; } = new Union64[DataSlot2];
 
     public override GlobalItem Clone(Item from, Item to)
     {

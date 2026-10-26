@@ -51,7 +51,7 @@ public sealed class CoinRoulette : AnomalyModProjectile
             || SkeletronLegendHead.GetInstance(master).CurrentAvatar != SkeletronLegendHead.Avatar.PlatinumCoin
             || !Player.TryGetPlayerFromIndex((int)Projectile.ai[0] - 1, out Player target) || !target.active || target.dead)
         {
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();
             return;
         }
@@ -61,7 +61,7 @@ public sealed class CoinRoulette : AnomalyModProjectile
         if (timer <= LockTime)
             Projectile.Center = target.Center - Vector2.UnitY * HeightAbovePlayer;
 
-        if (timer < LockTime && timer % CycleTime == SpinTime && TOSharedData.NotClient)
+        if (timer < LockTime && timer % CycleTime == SpinTime && TONetworkEnvironment.NotClient)
         {
             // 每圈结束时换为另一种币，然后短暂停顿。
             Projectile.ai[2] = ((int)Projectile.ai[2] + Main.rand.Next(1, 4)) % 4;
@@ -71,7 +71,7 @@ public sealed class CoinRoulette : AnomalyModProjectile
         if (timer == LockTime)
         {
             Projectile.netUpdate = true;
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
             {
                 Projectile.NewProjectileAction<CoinJudgment>(SourceAI, Projectile.Center, Vector2.Zero, SkeletronLegendHead.CoinJudgmentDamage, 0f, action: p =>
                 {

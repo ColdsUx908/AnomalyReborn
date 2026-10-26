@@ -48,7 +48,7 @@ public sealed partial class BrainofCthulhu
                     PreviousAttack = CurrentBehavior;
                     foreach (NPC creep in Main.npc.Where(n => n.active && n.type == NPCID.Creeper))
                         creep.GetCreeperBehavior().Time = -1;
-                    SoundEngine.PlaySound(GrowlSound, NPC.Center);
+                    SoundEngine.PlaySound(_GrowlSound, NPC.Center);
                     NPC.netUpdate = true;
                 }
             }

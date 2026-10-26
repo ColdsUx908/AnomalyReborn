@@ -12,14 +12,6 @@ public sealed class LegendaryNightCloudSystem : ModSystem
         On_Cloud.UpdateClouds += ClearExistingClouds;
     }
 
-    public override void Unload()
-    {
-        if (Main.dedServ)
-            return;
-        On_Cloud.addCloud -= PreventNewClouds;
-        On_Cloud.UpdateClouds -= ClearExistingClouds;
-    }
-
     private static void PreventNewClouds(On_Cloud.orig_addCloud orig)
     {
         if (LegendaryNightSky.Instance?.CloudSuppressionActive != true)

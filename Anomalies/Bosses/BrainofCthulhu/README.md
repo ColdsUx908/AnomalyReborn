@@ -19,9 +19,9 @@
 
 粒子更新、分组绘制、上限与生命周期统一使用 Transoceanic 的 `Particle` / `ParticleHandler`。普通和定向圆环统一复用已有 `PulseRing`；BloomCircle、HollowCircleHardEdge 与透明纹理不再保留重复副本。
 
-血液粒子和星芒粒子归入 `Transoceanic/DataStructures/Particles`，并共享该目录的纹理。`TexturePulseParticle` 提供任意纹理的扩散、非等比缩放、混合模式和淡出；克脑只保留纹理和种子特殊表现的薄封装。`PathAfterimageParticle` 复用现有残影基类，提供按路径移动且由调用者决定绘制顺序的残影。
+血液粒子和星芒粒子归入 `Transoceanic/Graphics/Particles/BuiltIn`，纹理统一位于 `Transoceanic/Assets/Textures/Particles`。`TexturePulseParticle` 提供任意纹理的扩散、非等比缩放、混合模式和淡出；克脑只保留纹理和种子特殊表现的薄封装。`PathAfterimageParticle` 复用现有残影基类，提供按路径移动且由调用者决定绘制顺序的残影。
 
-`Transoceanic/DataStructures/BezierCurve` 提供包含两个端点、数量确定的采样；`VerletSimulatedSegment` 提供带端点锁定、重力和可选惯性衰减的链模拟。克脑直接调用这些通用 API。
+`Transoceanic/Primitives/Mathematics/BezierCurve.cs` 提供包含两个端点、数量确定的采样；`VerletSimulatedSegment` 提供带端点锁定、重力和可选惯性衰减的链模拟。克脑直接调用这些通用 API。
 
 Behavior 不保存实体实例字段。主脑的普通状态使用 NPC.ai 与 AnomalyAI32/64；攻击队列和玩家目标历史通过 BrainByteList/BrainTargetSet 打包到同一套快照。触须、动画帧和残影是客户端视觉数据。具体数组布局写在 State 文件中。
 

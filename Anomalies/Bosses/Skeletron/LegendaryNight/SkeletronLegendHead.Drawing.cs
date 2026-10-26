@@ -19,12 +19,12 @@ public sealed partial class SkeletronLegendHead
     // AnomalyAI32[1].byte0：当前化身。AnomalyAI32[2].i：当前化身持续帧数。
     public Avatar CurrentAvatar
     {
-        get => (Avatar)AnomalyNPC.AnomalyAI32[1].byte0;
+        get => (Avatar)AnomalyNPC.AnomalyAI32[1].Byte0;
         private set
         {
-            if (AnomalyNPC.AnomalyAI32[1].byte0 != (byte)value)
+            if (AnomalyNPC.AnomalyAI32[1].Byte0 != (byte)value)
             {
-                AnomalyNPC.AnomalyAI32[1].byte0 = (byte)value;
+                AnomalyNPC.AnomalyAI32[1].Byte0 = (byte)value;
                 AnomalyNPC.AIChanged32[1] = true;
             }
         }
@@ -32,12 +32,12 @@ public sealed partial class SkeletronLegendHead
 
     public int AvatarTimer
     {
-        get => AnomalyNPC.AnomalyAI32[2].i;
+        get => AnomalyNPC.AnomalyAI32[2].I;
         private set
         {
-            if (AnomalyNPC.AnomalyAI32[2].i != value)
+            if (AnomalyNPC.AnomalyAI32[2].I != value)
             {
-                AnomalyNPC.AnomalyAI32[2].i = value;
+                AnomalyNPC.AnomalyAI32[2].I = value;
                 AnomalyNPC.AIChanged32[2] = true;
             }
         }
@@ -46,12 +46,12 @@ public sealed partial class SkeletronLegendHead
     // AnomalyAI32[3].f：化身独立旋转角，与 NPC.rotation 无关。
     public float AvatarRotation
     {
-        get => AnomalyNPC.AnomalyAI32[3].f;
+        get => AnomalyNPC.AnomalyAI32[3].F;
         private set
         {
-            if (AnomalyNPC.AnomalyAI32[3].f != value)
+            if (AnomalyNPC.AnomalyAI32[3].F != value)
             {
-                AnomalyNPC.AnomalyAI32[3].f = value;
+                AnomalyNPC.AnomalyAI32[3].F = value;
                 AnomalyNPC.AIChanged32[3] = true;
             }
         }

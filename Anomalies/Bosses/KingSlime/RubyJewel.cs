@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.KingSlime;
+namespace Anomalies.Bosses.KingSlime;
 
 public sealed class RubyJewel : JewelNPC
 {
@@ -16,13 +16,13 @@ public sealed class RubyJewel : JewelNPC
 
     public Behavior CurrentBehavior
     {
-        get => (Behavior)AI_Union_0.byte0;
+        get => (Behavior)AI_Union_0.Byte0;
         set
         {
             if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte0 = (byte)value;
+            union.Byte0 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -128,7 +128,7 @@ public sealed class RubyJewel : JewelNPC
             if (validSapphire)
                 JewelHandler.CreateDustFromJewelTo(sapphire, NPC.Center, Aroma ? DustID.GemTopaz : DustID.GemSapphire);
 
-            if (!TOSharedData.NotClient)
+            if (!TONetworkEnvironment.NotClient)
                 return;
 
             int amount = HasEnteredPhase2 ? (Aroma ? 7 : buff && Ultra ? 3 : 1) : (Aroma ? 17 : buff ? (Ultra ? 5 : 3) : (Ultra ? 3 : 1));
@@ -138,8 +138,8 @@ public sealed class RubyJewel : JewelNPC
             {
                 if (Aroma)
                 {
-                    p.velocity.Modulus *= Main.rand.NextFloat(0.7f, TOSharedData.LegendaryMode ? 1f : 0.85f);
-                    if (TOSharedData.LegendaryMode)
+                    p.velocity.Modulus *= Main.rand.NextFloat(0.7f, TOWorldState.LegendaryMode ? 1f : 0.85f);
+                    if (TOWorldState.LegendaryMode)
                         p.velocity.Rotation += Main.rand.NextFloat(-0.15f, 0.15f);
                 }
             });
@@ -155,11 +155,11 @@ public sealed class RubyJewel : JewelNPC
             {
                 if (Aroma)
                 {
-                    p.velocity.Modulus *= Main.rand.NextFloat(1.2f, TOSharedData.LegendaryMode ? 1.5f : 1.3f);
-                    if (TOSharedData.LegendaryMode)
+                    p.velocity.Modulus *= Main.rand.NextFloat(1.2f, TOWorldState.LegendaryMode ? 1.5f : 1.3f);
+                    if (TOWorldState.LegendaryMode)
                         p.velocity.Rotation += Main.rand.NextFloat(-0.2f, 0.2f);
                     p.VelocityToRotation(MathHelper.PiOver2);
-                    p.timeLeft = (int)(p.timeLeft * (TOSharedData.LegendaryMode ? 2.25f : 1.5f));
+                    p.timeLeft = (int)(p.timeLeft * (TOWorldState.LegendaryMode ? 2.25f : 1.5f));
                 }
             }
         }

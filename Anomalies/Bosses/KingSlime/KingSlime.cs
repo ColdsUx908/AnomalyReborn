@@ -1,4 +1,4 @@
-﻿using Anomalies.Assets.Effects;
+using Anomalies.Assets.Effects;
 using Anomalies.Visuals.BossBar;
 
 namespace Anomalies.Bosses.KingSlime;
@@ -36,22 +36,22 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
     public static float SpawnSlimeDistance => Aroma ? 0.01f : 0.05f;
     public static float SpawnSlimePow => Aroma ? 0.5f : Ultra ? 0.3f : 0.2f;
 
-    public const float JewelRubyLifeRatio_Anomaly = 0.7f;
-    public const float JewelRubyLifeRatio_Ultra = 0.8f;
-    public const float JewelEmeraldLifeRatio_Anomaly = 0.5f;
-    public const float JewelEmeraldLifeRatio_Ultra = 0.6f;
-    public const float JewelSapphireLifeRatio_Anomaly = 0.3f;
-    public const float JewelSapphireLifeRatio_Ultra = 0.4f;
-    public const float Phase2LifeRatio_Anomaly = 0f;
-    public const float Phase2LifeRatio_Ultra = 0.1f;
-    public const float Phase2_2LifeRatio_Anomaly = 0f;
-    public const float Phase2_2LifeRatio_Ultra = 0.25f;
+    public const float JewelRubyLifeRatioAnomaly = 0.7f;
+    public const float JewelRubyLifeRatioUltra = 0.8f;
+    public const float JewelEmeraldLifeRatioAnomaly = 0.5f;
+    public const float JewelEmeraldLifeRatioUltra = 0.6f;
+    public const float JewelSapphireLifeRatioAnomaly = 0.3f;
+    public const float JewelSapphireLifeRatioUltra = 0.4f;
+    public const float Phase2LifeRatioAnomaly = 0f;
+    public const float Phase2LifeRatioUltra = 0.1f;
+    public const float Phase22LifeRatioAnomaly = 0f;
+    public const float Phase22LifeRatioUltra = 0.25f;
 
-    public static float JewelRubyLifeRatio => Ultra ? JewelRubyLifeRatio_Ultra : JewelRubyLifeRatio_Anomaly;
-    public static float JewelEmeraldLifeRatio => Ultra ? JewelEmeraldLifeRatio_Ultra : JewelEmeraldLifeRatio_Anomaly;
-    public static float JewelSapphireLifeRatio => Ultra ? JewelSapphireLifeRatio_Ultra : JewelSapphireLifeRatio_Anomaly;
-    public static float Phase2LifeRatio => Ultra ? Phase2LifeRatio_Ultra : Phase2LifeRatio_Anomaly;
-    public static float Phase2_2LifeRatio => Ultra ? Phase2_2LifeRatio_Ultra : Phase2_2LifeRatio_Anomaly;
+    public static float JewelRubyLifeRatio => Ultra ? JewelRubyLifeRatioUltra : JewelRubyLifeRatioAnomaly;
+    public static float JewelEmeraldLifeRatio => Ultra ? JewelEmeraldLifeRatioUltra : JewelEmeraldLifeRatioAnomaly;
+    public static float JewelSapphireLifeRatio => Ultra ? JewelSapphireLifeRatioUltra : JewelSapphireLifeRatioAnomaly;
+    public static float Phase2LifeRatio => Ultra ? Phase2LifeRatioUltra : Phase2LifeRatioAnomaly;
+    public static float Phase2_2LifeRatio => Ultra ? Phase22LifeRatioUltra : Phase22LifeRatioAnomaly;
 
     private static readonly ProjectileDamageContainer _GelDamage = new(40, 60, 90, 120, 120, 150);
     public static int GelDamage => _GelDamage.Value;
@@ -63,14 +63,14 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
         get
         {
             Union32 union = AI_Union_0;
-            return (Phase)union.byte0;
+            return (Phase)union.Byte0;
         }
         set
         {
             if (CurrentPhase != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte0 = (byte)value;
+            union.Byte0 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -88,14 +88,14 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
         get
         {
             Union32 union = AI_Union_0;
-            return (Behavior)union.byte1;
+            return (Behavior)union.Byte1;
         }
         set
         {
             if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte1 = (byte)value;
+            union.Byte1 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -123,12 +123,12 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
     #region 宝石
     public bool JewelRubySpawned
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[0];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[0];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[0] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[0] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[0] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[0] = value;
                 AnomalyNPC.AIChanged32[0] = true;
             }
         }
@@ -139,13 +139,13 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
     /// </summary>
     public NPC JewelRuby
     {
-        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte0);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].Byte0);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
-            if (AnomalyNPC.AnomalyAI32[1].byte0 != temp)
+            if (AnomalyNPC.AnomalyAI32[1].Byte0 != temp)
             {
-                AnomalyNPC.AnomalyAI32[1].byte0 = temp;
+                AnomalyNPC.AnomalyAI32[1].Byte0 = temp;
                 AnomalyNPC.AIChanged32[1] = true;
             }
         }
@@ -155,12 +155,12 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public bool JewelEmeraldSpawned
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[1];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[1];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[1] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[1] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[1] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[1] = value;
                 AnomalyNPC.AIChanged32[0] = true;
             }
         }
@@ -171,13 +171,13 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
     /// </summary>
     public NPC JewelEmerald
     {
-        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte1);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].Byte1);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
-            if (AnomalyNPC.AnomalyAI32[1].byte1 != temp)
+            if (AnomalyNPC.AnomalyAI32[1].Byte1 != temp)
             {
-                AnomalyNPC.AnomalyAI32[1].byte1 = temp;
+                AnomalyNPC.AnomalyAI32[1].Byte1 = temp;
                 AnomalyNPC.AIChanged32[1] = true;
             }
         }
@@ -187,12 +187,12 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public bool JewelSapphireSpawned
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[2];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[2];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[2] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[2] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[2] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[2] = value;
                 AnomalyNPC.AIChanged32[0] = true;
             }
         }
@@ -203,13 +203,13 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
     /// </summary>
     public NPC JewelSapphire
     {
-        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte2);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].Byte2);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
-            if (AnomalyNPC.AnomalyAI32[1].byte2 != temp)
+            if (AnomalyNPC.AnomalyAI32[1].Byte2 != temp)
             {
-                AnomalyNPC.AnomalyAI32[1].byte2 = temp;
+                AnomalyNPC.AnomalyAI32[1].Byte2 = temp;
                 AnomalyNPC.AIChanged32[1] = true;
             }
         }
@@ -220,12 +220,12 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public bool JewelRainbowSpawned
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[3];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[3];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[3] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[3] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[3] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[3] = value;
                 AnomalyNPC.AIChanged32[0] = true;
             }
         }
@@ -236,13 +236,13 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
     /// </summary>
     public NPC JewelRainbow
     {
-        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte3);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].Byte3);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
-            if (AnomalyNPC.AnomalyAI32[1].byte3 != temp)
+            if (AnomalyNPC.AnomalyAI32[1].Byte3 != temp)
             {
-                AnomalyNPC.AnomalyAI32[1].byte3 = temp;
+                AnomalyNPC.AnomalyAI32[1].Byte3 = temp;
                 AnomalyNPC.AIChanged32[1] = true;
             }
         }
@@ -253,12 +253,12 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public float TeleportTimer
     {
-        get => AnomalyNPC.AnomalyAI32[2].f;
+        get => AnomalyNPC.AnomalyAI32[2].F;
         set
         {
-            if (AnomalyNPC.AnomalyAI32[2].f != value)
+            if (AnomalyNPC.AnomalyAI32[2].F != value)
             {
-                AnomalyNPC.AnomalyAI32[2].f = value;
+                AnomalyNPC.AnomalyAI32[2].F = value;
                 AnomalyNPC.AIChanged32[2] = true;
             }
         }
@@ -266,12 +266,12 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public int SmallJumpCounter
     {
-        get => AnomalyNPC.AnomalyAI32[3].i;
+        get => AnomalyNPC.AnomalyAI32[3].I;
         set
         {
-            if (AnomalyNPC.AnomalyAI32[3].i != value)
+            if (AnomalyNPC.AnomalyAI32[3].I != value)
             {
-                AnomalyNPC.AnomalyAI32[3].i = value;
+                AnomalyNPC.AnomalyAI32[3].I = value;
                 AnomalyNPC.AIChanged32[3] = true;
             }
         }
@@ -279,12 +279,12 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public int DirectionChangeCounter
     {
-        get => AnomalyNPC.AnomalyAI32[4].i;
+        get => AnomalyNPC.AnomalyAI32[4].I;
         set
         {
-            if (AnomalyNPC.AnomalyAI32[4].i != value)
+            if (AnomalyNPC.AnomalyAI32[4].I != value)
             {
-                AnomalyNPC.AnomalyAI32[4].i = value;
+                AnomalyNPC.AnomalyAI32[4].I = value;
                 AnomalyNPC.AIChanged32[4] = true;
             }
         }
@@ -292,13 +292,13 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public float DespawnScaleMultiplier
     {
-        get => AnomalyNPC.AnomalyAI32[5].f;
+        get => AnomalyNPC.AnomalyAI32[5].F;
         set
         {
             float temp = Math.Clamp(value, 0f, 1f);
-            if (AnomalyNPC.AnomalyAI32[5].f != temp)
+            if (AnomalyNPC.AnomalyAI32[5].F != temp)
             {
-                AnomalyNPC.AnomalyAI32[5].f = temp;
+                AnomalyNPC.AnomalyAI32[5].F = temp;
                 AnomalyNPC.AIChanged32[5] = true;
             }
         }
@@ -306,13 +306,13 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public float TeleportScaleMultiplier
     {
-        get => AnomalyNPC.AnomalyAI32[6].f;
+        get => AnomalyNPC.AnomalyAI32[6].F;
         set
         {
             float temp = Math.Clamp(value, 0f, 1f);
-            if (AnomalyNPC.AnomalyAI32[6].f != temp)
+            if (AnomalyNPC.AnomalyAI32[6].F != temp)
             {
-                AnomalyNPC.AnomalyAI32[6].f = temp;
+                AnomalyNPC.AnomalyAI32[6].F = temp;
                 AnomalyNPC.AIChanged32[6] = true;
             }
         }
@@ -320,13 +320,13 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public float SapphireBuffRatio
     {
-        get => AnomalyNPC.AnomalyAI32[7].f;
+        get => AnomalyNPC.AnomalyAI32[7].F;
         set
         {
             float temp = Math.Clamp(value, 0f, 1f);
-            if (AnomalyNPC.AnomalyAI32[7].f != temp)
+            if (AnomalyNPC.AnomalyAI32[7].F != temp)
             {
-                AnomalyNPC.AnomalyAI32[7].f = temp;
+                AnomalyNPC.AnomalyAI32[7].F = temp;
                 AnomalyNPC.AIChanged32[7] = true;
             }
         }
@@ -334,13 +334,13 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public float RainbowRatio
     {
-        get => AnomalyNPC.AnomalyAI32[8].f;
+        get => AnomalyNPC.AnomalyAI32[8].F;
         set
         {
             float temp = Math.Clamp(value, 0f, 1f);
-            if (AnomalyNPC.AnomalyAI32[8].f != temp)
+            if (AnomalyNPC.AnomalyAI32[8].F != temp)
             {
-                AnomalyNPC.AnomalyAI32[8].f = temp;
+                AnomalyNPC.AnomalyAI32[8].F = temp;
                 AnomalyNPC.AIChanged32[8] = true;
             }
         }
@@ -348,12 +348,12 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public float PhaseChangeLifeRatio
     {
-        get => AnomalyNPC.AnomalyAI32[9].f;
+        get => AnomalyNPC.AnomalyAI32[9].F;
         set
         {
-            if (AnomalyNPC.AnomalyAI32[9].f != value)
+            if (AnomalyNPC.AnomalyAI32[9].F != value)
             {
-                AnomalyNPC.AnomalyAI32[9].f = value;
+                AnomalyNPC.AnomalyAI32[9].F = value;
                 AnomalyNPC.AIChanged32[9] = true;
             }
         }
@@ -433,11 +433,11 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
             new TimedDDRHandler.SingleDDRHandler(0.5f, 0f, n => GetInstance(n).Phase2, null, 30)
         );
 
-        NPC.AddAnomalyHPIndicator(JewelRubyLifeRatio_Anomaly, JewelRubyLifeRatio_Ultra, true);
-        NPC.AddAnomalyHPIndicator(JewelEmeraldLifeRatio_Anomaly, JewelEmeraldLifeRatio_Ultra, true);
-        NPC.AddAnomalyHPIndicator(JewelSapphireLifeRatio_Anomaly, JewelSapphireLifeRatio_Ultra, true);
-        NPC.AddAnomalyHPIndicator(Phase2LifeRatio_Anomaly, Phase2LifeRatio_Ultra);
-        NPC.AddAnomalyHPIndicator(Phase2_2LifeRatio_Anomaly, Phase2_2LifeRatio_Ultra, true, n => GetInstance(n).Phase2);
+        NPC.AddAnomalyHPIndicator(JewelRubyLifeRatioAnomaly, JewelRubyLifeRatioUltra, true);
+        NPC.AddAnomalyHPIndicator(JewelEmeraldLifeRatioAnomaly, JewelEmeraldLifeRatioUltra, true);
+        NPC.AddAnomalyHPIndicator(JewelSapphireLifeRatioAnomaly, JewelSapphireLifeRatioUltra, true);
+        NPC.AddAnomalyHPIndicator(Phase2LifeRatioAnomaly, Phase2LifeRatioUltra);
+        NPC.AddAnomalyHPIndicator(Phase22LifeRatioAnomaly, Phase22LifeRatioUltra, true, n => GetInstance(n).Phase2);
     }
 
     public override void SetDefaultsFinal()
@@ -453,7 +453,7 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
 
     public override Color? GetAlpha(Color drawColor)
     {
-        Color newColor = Color.Lerp(new Color(0, 0, 150, NPC.GraphicAlpha), new Color(125, 125, 255, NPC.GraphicAlpha), TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 1.5f, unsigned: true));
+        Color newColor = Color.Lerp(new Color(0, 0, 150, NPC.GraphicAlpha), new Color(125, 125, 255, NPC.GraphicAlpha), TOGameTimeFunctions.GetTimeSin(0.5f, 1.5f, unsigned: true));
         Color preRainbow = Color.Lerp(Aroma ? new Color(125, 125, 255, NPC.alpha) : drawColor, newColor, SapphireBuffRatio);
         preRainbow.A -= (byte)MathHelper.Lerp(0, 200, SapphireBuffRatio);
 

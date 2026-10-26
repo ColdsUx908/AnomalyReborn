@@ -1,4 +1,4 @@
-﻿using Anomalies.GameContents.Drinks;
+using Anomalies.GameContents.Drinks;
 
 namespace Anomalies.Common.SingleBehaviors;
 

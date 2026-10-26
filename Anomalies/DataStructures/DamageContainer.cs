@@ -1,4 +1,4 @@
-﻿namespace Anomalies.DataStructures;
+namespace Anomalies.DataStructures;
 
 /// <summary>
 /// 用于存储弹幕在不同游戏难度与特殊模式下的预设伤害值的容器结构。
@@ -73,7 +73,7 @@ public readonly record struct ProjectileDamageContainer(
     /// <list type="bullet">
     /// <item/><description/>异象超凡（<see cref=" AnomalySharedData.AnomalyUltramundane"/>）
     /// <item/><description/>异象模式（<see cref=" AnomalySharedData.Anomaly"/>）
-    /// <item/><description/>传奇模式（<see cref="TOSharedData.LegendaryMode"/>）
+    /// <item/><description/>传奇模式（<see cref="TOWorldState.LegendaryMode"/>）
     /// <item/><description/>大师模式（<see cref="Main.masterMode"/>）
     /// <item/><description/>专家模式（<see cref="Main.expertMode"/>）
     /// <item/><description/>普通模式（默认）
@@ -94,7 +94,7 @@ public readonly record struct ProjectileDamageContainer(
             float expectedDamage =
                 AnomalySharedData.AnomalyUltramundane ? AnomalyUltramundaneDamage
                 : AnomalySharedData.Anomaly ? AnomalyDamage
-                : TOSharedData.LegendaryMode ? LegendaryDamage
+                : TOWorldState.LegendaryMode ? LegendaryDamage
                 : Main.masterMode ? MasterDamage
                 : Main.expertMode ? ExpertDamage
                 : NormalDamage;

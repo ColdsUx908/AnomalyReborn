@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using Anomalies.Visuals.BossBar;
 using Terraria.Graphics.Shaders;
 
@@ -70,7 +70,7 @@ public static class AnomalyExtensions
                 IsSubPhaseIndicator = isSubPhaseIndicator,
 
                 ParticleSet = new EnchantedParticleSet(-1, 0f,
-                    () => isSubPhaseIndicator ? TOSharedData.CelestialColor : AnomalySharedData.AnomalyUltramundaneColor,
+                    () => isSubPhaseIndicator ? TOColors.CelestialColor : AnomalySharedData.AnomalyUltramundaneColor,
                     () => Color.White, 0.1f, 0f)
             });
         }

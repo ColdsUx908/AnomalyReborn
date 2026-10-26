@@ -1,4 +1,4 @@
-﻿namespace Anomalies.SpecialContents.Contributor.VacuousBlack;
+namespace Anomalies.SpecialContents.Contributor.VacuousBlack;
 
 public sealed class VacuousBlackMinion : AnomalyModProjectile
 {
@@ -82,7 +82,7 @@ public sealed class VacuousBlackMinion : AnomalyModProjectile
         SpriteBatch spriteBatch = Main.spriteBatch;
         Texture2D texture = BloomParticle.BloomCircleLarge;
         //spriteBatch.ChangeBlendState(BlendState.Additive);
-        spriteBatch.DrawFromCenter(texture, Projectile.Center - Main.screenPosition, null, Color.Black, 0f, Projectile.scale * (1f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.01f, 30f)));
+        spriteBatch.DrawFromCenter(texture, Projectile.Center - Main.screenPosition, null, Color.Black, 0f, Projectile.scale * (1f + TOGameTimeFunctions.GetTimeSin(0.01f, 30f)));
         //spriteBatch.ChangeBlendState(BlendState.AlphaBlend);
         return false;
     }
@@ -91,7 +91,7 @@ public sealed class VacuousBlackMinion : AnomalyModProjectile
 
     public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
     {
-        if (TOSharedData.AprilFools || (!target.IsBossEnemy && !target.IsImportantBossMinion))
+        if (TOWorldState.AprilFools || (!target.IsBossEnemy && !target.IsImportantBossMinion))
         {
             target.velocity = Owner.GetVelocityTowards(target.Center, GetInterpolation(10f, 1.35f));
         }

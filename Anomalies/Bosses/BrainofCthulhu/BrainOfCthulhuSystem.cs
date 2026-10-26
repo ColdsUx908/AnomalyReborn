@@ -5,9 +5,9 @@ namespace Anomalies.Bosses.BrainofCthulhu;
 
 public class BrainOfCthulhuSystem : ModSystem
 {
-    public static bool IsBrainOfCthulhuTextureVanilla => _vanillaBoCTexture;
+    public static bool IsBrainOfCthulhuTextureVanilla => _VanillaBoCTexture;
 
-    private static bool _vanillaBoCTexture = true;
+    private static bool _VanillaBoCTexture = true;
     [LoadTexture("Terraria/Images/Chain12")]
     internal static Asset<Texture2D> Tendril;
 
@@ -16,14 +16,14 @@ public class BrainOfCthulhuSystem : ModSystem
 
     [LoadTexture("Anomalies/Bosses/BrainofCthulhu/ReferenceBrainOfCthulhu")]
     private static Asset<Texture2D> _ReferenceBrain;
-    private static Texture2D tendrilGlow = null;
-    private static Texture2D brainGlow = null;
-    private static Texture2D creeperGlow = null;
-    private static Texture2D bloodScytheMask = null;
+    private static Texture2D _TendrilGlow = null;
+    private static Texture2D _BrainGlow = null;
+    private static Texture2D _CreeperGlow = null;
+    private static Texture2D _BloodScytheMask = null;
     internal static float ScreenBlurStrength = 0f;
     internal static (int creeper, List<VerletSimulatedSegment> tendril, int reelInTimer)[] VerletTendrils;
-    private static int previousMusic = -1;
-    public static int PreviousMusic => previousMusic;
+    private static int _PreviousMusic = -1;
+    public static int PreviousMusic => _PreviousMusic;
 
     public override void OnModLoad()
     {
@@ -38,21 +38,21 @@ public class BrainOfCthulhuSystem : ModSystem
         orig(self);
         if (NPC.crimsonBoss == -1 || !AnomalySharedData.Anomaly || !Main.npc[NPC.crimsonBoss].active || !Main.npc[NPC.crimsonBoss].TryGetBrainBehavior(out BrainofCthulhu brainAI))
             return;
-        if (previousMusic < 0 || previousMusic >= Main.musicFade.Length)
+        if (_PreviousMusic < 0 || _PreviousMusic >= Main.musicFade.Length)
             return;
         // The last part leaves one frame at the end of the spawn animation where the boss music starts playing, so that it can be instantly maxed out
         if (brainAI.CurrentPhase == BrainofCthulhu.Phase.Introduction && (brainAI.Time - Math.Abs(brainAI.SpawnTime) < 420))
         {
             if (Main.newMusic == MusicID.Boss3)
-                Main.newMusic = previousMusic;
+                Main.newMusic = _PreviousMusic;
             if (Main.curMusic == MusicID.Boss3)
-                Main.curMusic = previousMusic;
+                Main.curMusic = _PreviousMusic;
         }
 
         if (Main.newMusic == MusicID.Boss1)
-            Main.newMusic = previousMusic;
+            Main.newMusic = _PreviousMusic;
         if (Main.curMusic == MusicID.Boss1)
-            Main.curMusic = previousMusic;
+            Main.curMusic = _PreviousMusic;
     }
 
     private void StopOWBoss1FromStarting(On_Main.orig_UpdateAudio_DecideOnTOWMusic orig, Main self)
@@ -60,15 +60,15 @@ public class BrainOfCthulhuSystem : ModSystem
         orig(self);
         if (NPC.crimsonBoss == -1 || !AnomalySharedData.Anomaly || !Main.npc[NPC.crimsonBoss].TryGetBrainBehavior(out BrainofCthulhu brainAI))
             return;
-        if (previousMusic < 0 || previousMusic >= Main.musicFade.Length)
+        if (_PreviousMusic < 0 || _PreviousMusic >= Main.musicFade.Length)
             return;
         // The last part leaves one frame at the end of the spawn animation where the boss music starts playing, so that it can be instantly maxed out
         if (brainAI.CurrentPhase == BrainofCthulhu.Phase.Introduction && (brainAI.Time - Math.Abs(brainAI.SpawnTime) < 420))
         {
             if (Main.newMusic == MusicID.OtherworldlyBoss1)
-                Main.newMusic = previousMusic;
+                Main.newMusic = _PreviousMusic;
             if (Main.curMusic == MusicID.OtherworldlyBoss1)
-                Main.curMusic = previousMusic;
+                Main.curMusic = _PreviousMusic;
         }
     }
 
@@ -100,13 +100,13 @@ public class BrainOfCthulhuSystem : ModSystem
             NPC.crimsonBoss = brain.whoAmI;
             brain.target = targetPlayerIndex;
             brain.timeLeft *= 20;
-            previousMusic = Main.curMusic;
+            _PreviousMusic = Main.curMusic;
         });
     }
 
     internal static Texture2D GetBloodScytheMask()
     {
-        if (bloodScytheMask == null)
+        if (_BloodScytheMask == null)
         {
             Texture2D source = _BloodScytheSource.Value;
             Color[] pixels = new Color[source.Width * source.Height];
@@ -119,15 +119,15 @@ public class BrainOfCthulhuSystem : ModSystem
                 byte coverage = Math.Max(pixels[i].R, Math.Max(pixels[i].G, pixels[i].B));
                 pixels[i] = new Color(coverage, coverage, coverage, coverage);
             }
-            bloodScytheMask = new Texture2D(Main.graphics.GraphicsDevice, source.Width, source.Height);
-            bloodScytheMask.SetData(pixels);
+            _BloodScytheMask = new Texture2D(Main.graphics.GraphicsDevice, source.Width, source.Height);
+            _BloodScytheMask.SetData(pixels);
         }
-        return bloodScytheMask;
+        return _BloodScytheMask;
     }
 
     internal static Texture2D GetTendrilGlow()
     {
-        if (tendrilGlow == null)
+        if (_TendrilGlow == null)
         {
             Texture2D tex = new(Main.graphics.GraphicsDevice, Tendril.Value.Width, Tendril.Value.Height);
             Color[] BaseArray = new Color[tex.Width * tex.Height];
@@ -139,15 +139,15 @@ public class BrainOfCthulhuSystem : ModSystem
             }
 
             tex.SetData(ColorArray);
-            tendrilGlow = tex;
+            _TendrilGlow = tex;
         }
 
-        return tendrilGlow;
+        return _TendrilGlow;
     }
 
     internal static Texture2D GetBrainGlow()
     {
-        if (brainGlow == null)
+        if (_BrainGlow == null)
         {
             Texture2D tex = new(Main.graphics.GraphicsDevice, TextureAssets.Npc[NPCID.BrainofCthulhu].Value.Width, TextureAssets.Npc[NPCID.BrainofCthulhu].Value.Height);
             Color[] BaseArray = new Color[tex.Width * tex.Height];
@@ -159,15 +159,15 @@ public class BrainOfCthulhuSystem : ModSystem
             }
 
             tex.SetData(ColorArray);
-            brainGlow = tex;
+            _BrainGlow = tex;
         }
 
-        return brainGlow;
+        return _BrainGlow;
     }
 
     internal static Texture2D GetCreeperGlow()
     {
-        if (creeperGlow == null)
+        if (_CreeperGlow == null)
         {
             Texture2D tex = new(Main.graphics.GraphicsDevice, TextureAssets.Npc[NPCID.Creeper].Value.Width, TextureAssets.Npc[NPCID.Creeper].Value.Height);
             Color[] BaseArray = new Color[tex.Width * tex.Height];
@@ -179,10 +179,10 @@ public class BrainOfCthulhuSystem : ModSystem
             }
 
             tex.SetData(ColorArray);
-            creeperGlow = tex;
+            _CreeperGlow = tex;
         }
 
-        return creeperGlow;
+        return _CreeperGlow;
     }
 
     public override void OnWorldLoad()
@@ -208,7 +208,7 @@ public class BrainOfCthulhuSystem : ModSystem
                         break;
                     }
 
-                _vanillaBoCTexture = match;
+                _VanillaBoCTexture = match;
             });
         }
     }
@@ -242,21 +242,21 @@ public class BrainOfCthulhuSystem : ModSystem
                     {
                         // Preserve the existing curve and move its anchors without
                         // releasing the end or injecting spring energy during the fade.
-                        Vector2 startDelta = startPoint - segments[0].position;
-                        Vector2 endDelta = endPoint - segments[^1].position;
+                        Vector2 startDelta = startPoint - segments[0].Position;
+                        Vector2 endDelta = endPoint - segments[^1].Position;
                         for (int i = 0; i < segments.Count; i++)
                         {
-                            segments[i].position += Vector2.Lerp(startDelta, endDelta, i / (float)(segments.Count - 1));
-                            segments[i].oldPosition = segments[i].position;
+                            segments[i].Position += Vector2.Lerp(startDelta, endDelta, i / (float)(segments.Count - 1));
+                            segments[i].OldPosition = segments[i].Position;
                         }
                         continue;
                     }
-                    segments[0].position = startPoint;
-                    segments[0].oldPosition = startPoint;
-                    segments[0].locked = true;
-                    segments[^1].position = endPoint;
-                    segments[^1].oldPosition = endPoint;
-                    segments[^1].locked = true;
+                    segments[0].Position = startPoint;
+                    segments[0].OldPosition = startPoint;
+                    segments[0].Locked = true;
+                    segments[^1].Position = endPoint;
+                    segments[^1].OldPosition = endPoint;
+                    segments[^1].Locked = true;
                     float segmentDistance = Math.Max(16f, Vector2.Distance(startPoint, endPoint) / (segments.Count - 1));
                     VerletSimulatedSegment.SimpleSimulation(segments, segmentDistance, 10, 3, 0.85f);
                 }
@@ -338,9 +338,9 @@ public class BrainOfCthulhuSystem : ModSystem
         if (NPC.crimsonBoss != -1 && Main.npc[NPC.crimsonBoss].active && Main.npc[NPC.crimsonBoss].TryGetBrainBehavior(out BrainofCthulhu brainAI) && brainAI.CurrentBehavior > BrainofCthulhu.Behavior.SurfaceSpawnAnimation)
             allowBossMusic = true;
         if (((Main.curMusic != MusicID.Boss3 && Main.curMusic != MusicID.OtherworldlyBoss1) || allowBossMusic) && Main.curMusic != MusicID.Boss1)
-            previousMusic = Main.curMusic;
-        if (previousMusic == -1)
-            previousMusic = MusicID.Crimson;
+            _PreviousMusic = Main.curMusic;
+        if (_PreviousMusic == -1)
+            _PreviousMusic = MusicID.Crimson;
     }
 
     public override void OnWorldUnload()
@@ -357,12 +357,15 @@ public class BrainOfCthulhuSystem : ModSystem
     public override void Unload()
     {
         OnWorldUnload();
-        tendrilGlow?.Dispose();
-        brainGlow?.Dispose();
-        creeperGlow?.Dispose();
-        bloodScytheMask?.Dispose();
-        bloodScytheMask = null;
-        tendrilGlow = brainGlow = creeperGlow = null;
-        previousMusic = -1;
+        // Unload can run on a worker thread; capture the owned textures before clearing the cache.
+        Texture2D[] textures = [_TendrilGlow, _BrainGlow, _CreeperGlow, _BloodScytheMask];
+        _BloodScytheMask = null;
+        _TendrilGlow = _BrainGlow = _CreeperGlow = null;
+        Main.QueueMainThreadAction(() =>
+        {
+            foreach (Texture2D texture in textures)
+                texture?.Dispose();
+        });
+        _PreviousMusic = -1;
     }
 }

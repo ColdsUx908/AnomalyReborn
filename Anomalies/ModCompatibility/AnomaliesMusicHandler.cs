@@ -1,4 +1,5 @@
-﻿namespace Anomalies.ModCompatibility;
+using Transoceanic.Runtime.Reflection;
+namespace Anomalies.ModCompatibility;
 
 public sealed class AnomaliesMusicHandler : IContentLoader
 {

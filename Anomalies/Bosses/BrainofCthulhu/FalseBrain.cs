@@ -45,20 +45,20 @@ public class FalseBrain : AnomalyModNPC
 
     public bool BeenHit
     {
-        get => AnomalyNPC.AnomalyAI32[0].i != 0;
+        get => AnomalyNPC.AnomalyAI32[0].I != 0;
         set
         {
-            AnomalyNPC.AnomalyAI32[0].i = value ? 1 : 0;
+            AnomalyNPC.AnomalyAI32[0].I = value ? 1 : 0;
             AnomalyNPC.AIChanged32[0] = true;
         }
     }
 
     public int SpawnTime
     {
-        get => AnomalyNPC.AnomalyAI32[1].i;
+        get => AnomalyNPC.AnomalyAI32[1].I;
         set
         {
-            AnomalyNPC.AnomalyAI32[1].i = value;
+            AnomalyNPC.AnomalyAI32[1].I = value;
             AnomalyNPC.AIChanged32[1] = true;
         }
     }
@@ -66,7 +66,7 @@ public class FalseBrain : AnomalyModNPC
     public static float TimeDivisor => 360f;
     public float DrawPriority => (float)Math.Cos(-Time * MathHelper.TwoPi / TimeDivisor);
 
-    internal static List<int> blackListedProjectiles = [];
+    internal static List<int> BlackListedProjectiles = [];
     public override void AI()
     {
         if (!BrainBehaviorAccess.ActiveBrain)

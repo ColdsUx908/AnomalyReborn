@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.Skeletron.LegendaryNight;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class LegendaryNightHandler
 {

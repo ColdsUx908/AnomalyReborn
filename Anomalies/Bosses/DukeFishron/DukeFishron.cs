@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.DukeFishron;
+namespace Anomalies.Bosses.DukeFishron;
 
 public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
 {
@@ -30,16 +30,16 @@ public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
     public static float Phase2ContactDamageMult = 1.436f; // 201
     public static float Phase3ContactDamageMult = 1.315f; // 184
 
-    public const float Phase2LifeRatio_Anomaly = 0.7f;
-    public const float Phase2LifeRatio_Ultra = 0.75f;
-    public const float Phase3LifeRatio_Anomaly = 0.4f;
-    public const float Phase3LifeRatio_Ultra = 0.45f;
-    public const float Phase3_2LifeRatio_Anomaly = 0.2f;
-    public const float Phase3_2LifeRatio_Ultra = 0.25f;
+    public const float Phase2LifeRatioAnomaly = 0.7f;
+    public const float Phase2LifeRatioUltra = 0.75f;
+    public const float Phase3LifeRatioAnomaly = 0.4f;
+    public const float Phase3LifeRatioUltra = 0.45f;
+    public const float Phase32LifeRatioAnomaly = 0.2f;
+    public const float Phase32LifeRatioUltra = 0.25f;
 
-    public static float Phase2LifeRatio => Ultra ? Phase2LifeRatio_Ultra : Phase2LifeRatio_Anomaly;
-    public static float Phase3LifeRatio => Ultra ? Phase3LifeRatio_Ultra : Phase3LifeRatio_Anomaly;
-    public static float Phase3_2LifeRatio => Ultra ? Phase3_2LifeRatio_Ultra : Phase3_2LifeRatio_Anomaly;
+    public static float Phase2LifeRatio => Ultra ? Phase2LifeRatioUltra : Phase2LifeRatioAnomaly;
+    public static float Phase3LifeRatio => Ultra ? Phase3LifeRatioUltra : Phase3LifeRatioAnomaly;
+    public static float Phase3_2LifeRatio => Ultra ? Phase32LifeRatioUltra : Phase32LifeRatioAnomaly;
 
     public static int InitializeTime => Ultra ? 90 : 90;
     public static int SharknadoTime => Ultra ? 45 : 60;
@@ -52,14 +52,14 @@ public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
         get
         {
             Union32 union = AI_Union_1;
-            return (Phase)union.byte0;
+            return (Phase)union.Byte0;
         }
         set
         {
             if (CurrentPhase != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_1;
-            union.byte0 = (byte)value;
+            union.Byte0 = (byte)value;
             AI_Union_1 = union;
         }
     }
@@ -77,14 +77,14 @@ public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
         get
         {
             Union32 union = AI_Union_1;
-            return (Behavior)union.byte1;
+            return (Behavior)union.Byte1;
         }
         set
         {
             if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_1;
-            union.byte1 = (byte)value;
+            union.Byte1 = (byte)value;
             AI_Union_1 = union;
         }
     }
@@ -103,12 +103,12 @@ public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
         get
         {
             Union32 union = AI_Union_3;
-            return union.short0;
+            return union.Short0;
         }
         set
         {
             Union32 union = AI_Union_3;
-            union.short0 = (short)value;
+            union.Short0 = (short)value;
             AI_Union_3 = union;
         }
     }
@@ -118,24 +118,24 @@ public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
         get
         {
             Union32 union = AI_Union_3;
-            return union.short1;
+            return union.Short1;
         }
         set
         {
             Union32 union = AI_Union_3;
-            union.short1 = (short)value;
+            union.Short1 = (short)value;
             AI_Union_3 = union;
         }
     }
 
     public float OffsetX
     {
-        get => AnomalyNPC.AnomalyAI32[1].f;
+        get => AnomalyNPC.AnomalyAI32[1].F;
         set
         {
-            if (AnomalyNPC.AnomalyAI32[1].f != value)
+            if (AnomalyNPC.AnomalyAI32[1].F != value)
             {
-                AnomalyNPC.AnomalyAI32[1].f = value;
+                AnomalyNPC.AnomalyAI32[1].F = value;
                 AnomalyNPC.AIChanged32[1] = true;
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.netUpdate = true;
@@ -145,12 +145,12 @@ public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
 
     public int ChargeCounter
     {
-        get => AnomalyNPC.AnomalyAI32[2].i;
+        get => AnomalyNPC.AnomalyAI32[2].I;
         set
         {
-            if (AnomalyNPC.AnomalyAI32[2].i != value)
+            if (AnomalyNPC.AnomalyAI32[2].I != value)
             {
-                AnomalyNPC.AnomalyAI32[2].i = value;
+                AnomalyNPC.AnomalyAI32[2].I = value;
                 AnomalyNPC.AIChanged32[2] = true;
             }
         }
@@ -166,9 +166,9 @@ public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
 
     public override void SetDefaults()
     {
-        NPC.AddAnomalyHPIndicator(Phase2LifeRatio_Anomaly, Phase2LifeRatio_Ultra);
-        NPC.AddAnomalyHPIndicator(Phase3LifeRatio_Anomaly, Phase3LifeRatio_Ultra);
-        NPC.AddAnomalyHPIndicator(Phase3_2LifeRatio_Anomaly, Phase3_2LifeRatio_Ultra, true);
+        NPC.AddAnomalyHPIndicator(Phase2LifeRatioAnomaly, Phase2LifeRatioUltra);
+        NPC.AddAnomalyHPIndicator(Phase3LifeRatioAnomaly, Phase3LifeRatioUltra);
+        NPC.AddAnomalyHPIndicator(Phase32LifeRatioAnomaly, Phase32LifeRatioUltra, true);
     }
 
     public override void FindFrame(int frameHeight)

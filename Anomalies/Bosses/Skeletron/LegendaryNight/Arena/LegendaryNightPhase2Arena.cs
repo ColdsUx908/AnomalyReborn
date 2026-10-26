@@ -91,7 +91,7 @@ public sealed class LegendaryNightPhase2Arena : BaseRingArenaProjectile
         SkeletronLegendHead head = MasterBehavior;
         if (head is null || !head.Phase2ArenaRequested)
         {
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();
             return;
         }

@@ -25,20 +25,20 @@ public sealed partial class BrainofCthulhu : AnomalyNPCBehavior<BrainofCthulhu>
         TONPCUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
 
     public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => type != CalamityLogicType_NPCBehavior.VanillaOverrideAI;
-    private static SoundStyle StunHitSound = new("Anomalies/Bosses/BrainofCthulhu/Sounds/StunHit", 3);
-    private static SoundStyle ShieldDownSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/ShieldDown") with
+    private static SoundStyle _StunHitSound = new("Anomalies/Bosses/BrainofCthulhu/Sounds/StunHit", 3);
+    private static SoundStyle _ShieldDownSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/ShieldDown") with
     {
         PauseBehavior = PauseBehavior.PauseWithGame
     };
-    private static SoundStyle ShieldUpSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/ShieldUp") with
+    private static SoundStyle _ShieldUpSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/ShieldUp") with
     {
         PauseBehavior = PauseBehavior.PauseWithGame
     };
-    private static SoundStyle RoarSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/Roar") with
+    private static SoundStyle _RoarSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/Roar") with
     {
         PauseBehavior = PauseBehavior.PauseWithGame
     };
-    private static SoundStyle ShortRoarSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/ShortRoar") with
+    private static SoundStyle _ShortRoarSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/ShortRoar") with
     {
         PauseBehavior = PauseBehavior.PauseWithGame
     };
@@ -47,17 +47,17 @@ public sealed partial class BrainofCthulhu : AnomalyNPCBehavior<BrainofCthulhu>
         PauseBehavior = PauseBehavior.PauseWithGame,
         MaxInstances = 5
     };
-    private static SoundStyle GrowlSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/Growl", 2) with
+    private static SoundStyle _GrowlSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/Growl", 2) with
     {
         PauseBehavior = PauseBehavior.PauseWithGame
     };
-    private static SoundStyle DeathRoarSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/DeathRoar") with
+    private static SoundStyle _DeathRoarSound = new SoundStyle("Anomalies/Bosses/BrainofCthulhu/Sounds/DeathRoar") with
     {
         PauseBehavior = PauseBehavior.PauseWithGame
     };
-    private static SoundStyle BloodShotSound = new("Anomalies/Bosses/BrainofCthulhu/Sounds/BloodShot");
-    private static SoundStyle BloodBombSound = new("Anomalies/Bosses/BrainofCthulhu/Sounds/BloodBomb");
-    private static SoundStyle ExplosionSound = new("Anomalies/Bosses/BrainofCthulhu/Sounds/Explosion", 2);
+    private static SoundStyle _BloodShotSound = new("Anomalies/Bosses/BrainofCthulhu/Sounds/BloodShot");
+    private static SoundStyle _BloodBombSound = new("Anomalies/Bosses/BrainofCthulhu/Sounds/BloodBomb");
+    private static SoundStyle _ExplosionSound = new("Anomalies/Bosses/BrainofCthulhu/Sounds/Explosion", 2);
     public bool SummonedViaItem { get => Read(15) != 0; set => Write(15, value ? 1 : 0); }
     public List<BrainOfCthulhuAfterImage> BoCAfterImages { get => AnomalyNPC.BrainOfCthulhu_AfterImages; set => AnomalyNPC.BrainOfCthulhu_AfterImages = value; }
 

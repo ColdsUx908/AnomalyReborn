@@ -9,12 +9,12 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
     // AnomalyAI32[5].bits[0]：正在召唤手。
     public bool IsSummoningHands
     {
-        get => AnomalyNPC.AnomalyAI32[5].bits[0];
+        get => AnomalyNPC.AnomalyAI32[5].Bits[0];
         private set
         {
-            if (AnomalyNPC.AnomalyAI32[5].bits[0] == value)
+            if (AnomalyNPC.AnomalyAI32[5].Bits[0] == value)
                 return;
-            AnomalyNPC.AnomalyAI32[5].bits[0] = value;
+            AnomalyNPC.AnomalyAI32[5].Bits[0] = value;
             AnomalyNPC.AIChanged32[5] = true;
         }
     }
@@ -69,12 +69,12 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
     // AnomalyAI32[4].i：二阶段总运行时间，独立于攻击状态机计时器。
     public int Phase2ElapsedTime
     {
-        get => AnomalyNPC.AnomalyAI32[4].i;
+        get => AnomalyNPC.AnomalyAI32[4].I;
         private set
         {
-            if (AnomalyNPC.AnomalyAI32[4].i == value)
+            if (AnomalyNPC.AnomalyAI32[4].I == value)
                 return;
-            AnomalyNPC.AnomalyAI32[4].i = value;
+            AnomalyNPC.AnomalyAI32[4].I = value;
             AnomalyNPC.AIChanged32[4] = true;
         }
     }
@@ -122,14 +122,14 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         get
         {
             Union32 union = AI_Union_0;
-            return (Phase)union.byte0;
+            return (Phase)union.Byte0;
         }
         set
         {
             if (CurrentPhase != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte0 = (byte)value;
+            union.Byte0 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -149,14 +149,14 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         get
         {
             Union32 union = AI_Union_0;
-            return (BaseBehavior)union.byte1;
+            return (BaseBehavior)union.Byte1;
         }
         set
         {
             if (CurrentBaseBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte1 = (byte)value;
+            union.Byte1 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -166,14 +166,14 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         get
         {
             Union32 union = AI_Union_0;
-            return (Spell)union.byte2;
+            return (Spell)union.Byte2;
         }
         set
         {
             if (CurrentSpell != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte2 = (byte)value;
+            union.Byte2 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -181,11 +181,11 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
     // byte0：符卡池剩余位掩码；byte2：首次循环是否已结束。
     public bool FirstSpellCycleCompleted
     {
-        get => AI_Union_2.byte2 != 0;
+        get => AI_Union_2.Byte2 != 0;
         set
         {
             Union32 union = AI_Union_2;
-            union.byte2 = (byte)(value ? 1 : 0);
+            union.Byte2 = (byte)(value ? 1 : 0);
             AI_Union_2 = union;
         }
     }
@@ -206,14 +206,14 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
 
     public override int ApplyingType => NPCID.SkeletronHead;
 
+    public override bool CanHitPlayer(Player target, ref int cooldownSlot) => CurrentPhase != Phase.PhaseChange_1To2 && !Mechanic2InBackground;
+
     private void StopMovement(float factor = 0.9f)
     {
         NPC.velocity *= factor;
         if (NPC.velocity.Length() < 0.1f)
             NPC.velocity = Vector2.Zero;
     }
-
-    public override bool CanHitPlayer(Player target, ref int cooldownSlot) => CurrentPhase != Phase.PhaseChange_1To2 && !Mechanic2InBackground;
 
     public override decimal Priority => 10m;
 

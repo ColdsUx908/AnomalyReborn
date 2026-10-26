@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.KingSlime;
+namespace Anomalies.Bosses.KingSlime;
 
 public sealed class SapphireJewel : JewelNPC
 {

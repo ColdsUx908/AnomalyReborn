@@ -1,4 +1,4 @@
-﻿using Terraria.GameContent.UI.Elements;
+using Terraria.GameContent.UI.Elements;
 
 namespace Anomalies.AnomalyMode;
 
@@ -14,32 +14,32 @@ public sealed class AnomalyHandler : ModSystem, IContentLoader
     public static Texture2D Indicator => _Indicator?.Value;
 
     [LoadTexture(Path + "Indicator_Off")]
-    internal static Asset<Texture2D> _Indicator_Off;
-    public static Texture2D Indicator_Off => _Indicator_Off?.Value;
+    internal static Asset<Texture2D> _IndicatorOff;
+    public static Texture2D Indicator_Off => _IndicatorOff?.Value;
 
     [LoadTexture(Path + "Indicator_Border")]
-    internal static Asset<Texture2D> _Indicator_Border;
-    public static Texture2D Indicator_Border => _Indicator_Border?.Value;
+    internal static Asset<Texture2D> _IndicatorBorder;
+    public static Texture2D Indicator_Border => _IndicatorBorder?.Value;
 
     [LoadTexture(Path + "Indicator_Locked")]
-    internal static Asset<Texture2D> _Indicator_Locked;
-    public static Texture2D Indicator_Locked => _Indicator_Locked?.Value;
+    internal static Asset<Texture2D> _IndicatorLocked;
+    public static Texture2D Indicator_Locked => _IndicatorLocked?.Value;
 
     [LoadTexture(Path + "UltraIndicator")]
     internal static Asset<Texture2D> _UltraIndicator;
     public static Texture2D UltraIndicator => _UltraIndicator?.Value;
 
     [LoadTexture(Path + "UltraIndicator_Off")]
-    internal static Asset<Texture2D> _UltraIndicator_Off;
-    public static Texture2D UltraIndicator_Off => _UltraIndicator_Off?.Value;
+    internal static Asset<Texture2D> _UltraIndicatorOff;
+    public static Texture2D UltraIndicator_Off => _UltraIndicatorOff?.Value;
 
     [LoadTexture(Path + "UltraIndicator_Border")]
-    internal static Asset<Texture2D> _UltraIndicator_Border;
-    public static Texture2D UltraIndicator_Border => _UltraIndicator_Border?.Value;
+    internal static Asset<Texture2D> _UltraIndicatorBorder;
+    public static Texture2D UltraIndicator_Border => _UltraIndicatorBorder?.Value;
 
     [LoadTexture(Path + "UltraIndicator_Locked")]
-    internal static Asset<Texture2D> _UltraIndicator_Locked;
-    public static Texture2D UltraIndicator_Locked => _UltraIndicator_Locked?.Value;
+    internal static Asset<Texture2D> _UltraIndicatorLocked;
+    public static Texture2D UltraIndicator_Locked => _UltraIndicatorLocked?.Value;
 
     public static readonly SoundStyle ActivationSound = new(Path + "Activation");
     public static readonly SoundStyle AromalyActivationSound = new(Path + "AromalyActivation") { Volume = 0.6f };
@@ -62,7 +62,7 @@ public sealed class AnomalyHandler : ModSystem, IContentLoader
                 return;
             }
 
-            if (!TOSharedData.MasterMode)
+            if (!TOWorldState.MasterMode)
             {
                 DisableAnomaly();
                 return;
@@ -76,7 +76,7 @@ public sealed class AnomalyHandler : ModSystem, IContentLoader
 
     public static void DisableAnomaly()
     {
-        if (TOSharedData.NotClient)
+        if (TONetworkEnvironment.NotClient)
             TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Invalid", Color.Red);
         AnomalySharedData.Anomaly = false;
     }
@@ -93,13 +93,13 @@ public sealed class AnomalyHandler : ModSystem, IContentLoader
 
     public static void InvalidInfo_NotLegendary()
     {
-        if (TOSharedData.NotClient)
+        if (TONetworkEnvironment.NotClient)
             TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "UltraInvalid_NotLegendary", Color.Red);
     }
 
     public static void InvalidInfo_Aromaly()
     {
-        if (TOSharedData.NotClient)
+        if (TONetworkEnvironment.NotClient)
             TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "UltraInvalid_Aromaly", AnomalySharedData.AromalyColor);
         //SoundEngine.PlaySound();
     }
@@ -108,7 +108,7 @@ public sealed class AnomalyHandler : ModSystem, IContentLoader
     {
         if (AnomalySharedData.Anomaly)
         {
-            switch (TOSharedData.LegendaryMode, !Main.zenithWorld)
+            switch (TOWorldState.LegendaryMode, !Main.zenithWorld)
             {
                 case (false, true) when AnomalySharedData.AnomalyUltramundane: //不是传奇难度，不在GFB世界
                     InvalidInfo_NotLegendary();

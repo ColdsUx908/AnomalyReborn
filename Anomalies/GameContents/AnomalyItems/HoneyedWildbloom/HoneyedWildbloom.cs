@@ -1,4 +1,4 @@
-﻿namespace Anomalies.GameContents.AnomalyItems.HoneyedWildbloom;
+namespace Anomalies.GameContents.AnomalyItems.HoneyedWildbloom;
 
 public sealed class HoneyedWildbloom : AnomalyModItem
 {

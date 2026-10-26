@@ -184,7 +184,7 @@ public sealed partial class BrainofCthulhu
             float roarTime = Time - 60;
             if (roarTime == 0)
             {
-                SoundEngine.PlaySound(RoarSound, NPC.Center);
+                SoundEngine.PlaySound(_RoarSound, NPC.Center);
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     TOLocalizationUtils.ChatLocalizedTextFormat("Announcement.HasAwoken", new Color(175, 75, 255), NPC.TypeName);
             }
@@ -229,12 +229,12 @@ public sealed partial class BrainofCthulhu
                     if (Time == bloodGushingData[i].time)
                     {
                         if (i == 3)
-                            SoundEngine.PlaySound(DeathRoarSound, NPC.Center);
+                            SoundEngine.PlaySound(_DeathRoarSound, NPC.Center);
                         Vector2 bloodDir = bloodGushingData[i].angle.ToRotationVector2();
                         BloodParticle2 p2 = new(NPC.Center + bloodGushingData[i].offset.RotatedBy(NPC.rotation), bloodDir * 7.5f, 16, 0.5f, Color.Red);
                         ParticleHandler.SpawnParticle(p2);
                         NPC.velocity = bloodDir * -4f;
-                        SoundStyle bleed = BloodShotSound with
+                        SoundStyle bleed = _BloodShotSound with
                         {
                             Pitch = i / (float)(bloodGushingData.Length - 1)
                         };
@@ -252,8 +252,8 @@ public sealed partial class BrainofCthulhu
 
             if (Time >= EndTime)
             {
-                SoundEngine.PlaySound(ExplosionSound, NPC.Center);
-                SoundEngine.PlaySound(BloodShotSound, NPC.Center);
+                SoundEngine.PlaySound(_ExplosionSound, NPC.Center);
+                SoundEngine.PlaySound(_BloodShotSound, NPC.Center);
                 Main.LocalPlayer.SetScreenshake(2f);
                 int pCount = 10;
                 for (int i = 0; i < pCount; i++)

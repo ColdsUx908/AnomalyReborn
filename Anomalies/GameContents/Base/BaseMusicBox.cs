@@ -1,4 +1,4 @@
-﻿using Terraria.GameContent.Drawing;
+using Terraria.GameContent.Drawing;
 using Terraria.GameContent.ObjectInteractions;
 using Terraria.ObjectData;
 using Terraria.Utilities;

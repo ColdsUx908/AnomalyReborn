@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Visuals.BossBar;
+namespace Anomalies.Visuals.BossBar;
 
 public sealed class BossBarTextures : IContentLoader
 {

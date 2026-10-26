@@ -51,7 +51,7 @@ public sealed class LegendaryNightFlightPlayer : AnomalyPlayerBehavior
             return;
 
         // 淡金色呼吸光与上浮星尘持续提示祝福，避免遮挡玩家和战斗弹幕。
-        float glow = TOMathUtils.TimeWrappingFunction.GetTimeSin(0.3f, 3f) + 0.7f;
+        float glow = TOGameTimeFunctions.GetTimeSin(0.3f, 3f) + 0.7f;
         Lighting.AddLight(Player.Center, LegendaryNightHandler.StarColor.ToVector3() * (glow * AnomalyPlayer.LegendaryNight_StarGodBlessingOpacity));
         if (Main.rand.NextBool(3))
         {

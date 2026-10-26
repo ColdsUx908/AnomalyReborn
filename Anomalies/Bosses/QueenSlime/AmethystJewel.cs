@@ -18,13 +18,13 @@ public sealed class AmethystJewel : JewelNPC
 
     public Behavior CurrentBehavior
     {
-        get => (Behavior)AI_Union_0.byte0;
+        get => (Behavior)AI_Union_0.Byte0;
         set
         {
             if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte0 = (byte)value;
+            union.Byte0 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -114,7 +114,7 @@ public sealed class AmethystJewel : JewelNPC
 
             JewelHandler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
 
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
             {
                 int amount = 9;
                 float singleRadian = MathHelper.TwoPi / amount;

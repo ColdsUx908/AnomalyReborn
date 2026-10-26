@@ -1,4 +1,4 @@
-﻿using Anomalies.GameContents;
+using Anomalies.GameContents;
 
 namespace Anomalies.SpecialContents.Contributor.ImmaculateWhite;
 

@@ -58,8 +58,8 @@ public sealed partial class BrainofCthulhu
                 ichorful = Color.Lerp(ichorful, Color.MediumPurple * 0.8f, appearance);
                 for (int i = 0; i < curvePoints.Count; i++)
                 {
-                    Vector2 start = curvePoints[i].position;
-                    Vector2 end = i == curvePoints.Count - 1 ? (creeper == null ? curvePoints[i].position : creeper.Center) : curvePoints[i + 1].position;
+                    Vector2 start = curvePoints[i].Position;
+                    Vector2 end = i == curvePoints.Count - 1 ? (creeper == null ? curvePoints[i].Position : creeper.Center) : curvePoints[i + 1].Position;
                     Vector2 center = (end + start) / 2f;
                     start -= Main.screenPosition;
                     end -= Main.screenPosition;

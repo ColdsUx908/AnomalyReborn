@@ -1,9 +1,9 @@
-﻿namespace Anomalies.GameContents;
+namespace Anomalies.GameContents;
 
 public sealed class Celestial : ModRarity
 {
     public const int CelestialPrice = 1000000;
-    public override Color RarityColor => TOSharedData.CelestialColor;
+    public override Color RarityColor => TOColors.CelestialColor;
     public override int GetPrefixedRarity(int offset, float valueMult) => Type;
 }
 

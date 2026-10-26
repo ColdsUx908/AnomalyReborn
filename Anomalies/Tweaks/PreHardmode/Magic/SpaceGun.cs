@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Tweaks.PreHardmode.Magic;
+namespace Anomalies.Tweaks.PreHardmode.Magic;
 
 public sealed class SpaceGun : AnomalyItemBehavior<SpaceGun>
 {

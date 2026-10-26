@@ -1,35 +1,4 @@
-global using System;
-global using System.Collections.Generic;
-global using System.IO;
-global using System.Linq;
-global using System.Reflection;
-global using System.Runtime.CompilerServices;
-global using Anomalies.Assets;
-global using Anomalies.Common;
-global using Anomalies.DataStructures;
-global using Anomalies.ModCompatibility;
-global using Anomalies.Visuals;
-global using Microsoft.Xna.Framework;
-global using Microsoft.Xna.Framework.Graphics;
-global using ReLogic.Content;
-global using ReLogic.Graphics;
-global using Terraria;
-global using Terraria.Audio;
-global using Terraria.DataStructures;
-global using Terraria.GameContent;
-global using Terraria.ID;
-global using Terraria.Localization;
-global using Terraria.ModLoader;
-global using Terraria.ModLoader.IO;
-global using Transoceanic.Common;
-global using Transoceanic.DataStructures;
-global using Transoceanic.DataStructures.Assets;
-global using Transoceanic.DataStructures.Geometry;
-global using Transoceanic.DataStructures.Particles;
-global using Transoceanic.Framework;
-global using Transoceanic.Framework.Abstractions;
-global using Transoceanic.Framework.Helpers;
-global using static Anomalies.Common.AnomalySharedData.QuickAccess;
+using Transoceanic.Runtime.Reflection;
 
 [assembly: SupportedByTransoceanic]
 

@@ -43,19 +43,19 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
     public static float SpawnSlimeDistance => Aroma ? 0.01f : 0.05f;
     public static float SpawnSlimePow => Aroma ? 0.5f : Ultra ? 0.3f : 0.2f;
 
-    public const float Phase1_2LifeRatio_Anomaly = 0.75f;
-    public const float Phase1_2LifeRatio_Ultra = 0.8f;
-    public const float Phase2LifeRatio_Anomaly = 0.5f;
-    public const float Phase2LifeRatio_Ultra = 0.6f;
-    public const float Phase2_2LifeRatio_Anomaly = 0.25f;
-    public const float Phase2_2LifeRatio_Ultra = 0.35f;
-    public const float Phase3LifeRatio_Anomaly = 0f;
-    public const float Phase3LifeRatio_Ultra = 0.1f;
+    public const float Phase12LifeRatioAnomaly = 0.75f;
+    public const float Phase12LifeRatioUltra = 0.8f;
+    public const float Phase2LifeRatioAnomaly = 0.5f;
+    public const float Phase2LifeRatioUltra = 0.6f;
+    public const float Phase22LifeRatioAnomaly = 0.25f;
+    public const float Phase22LifeRatioUltra = 0.35f;
+    public const float Phase3LifeRatioAnomaly = 0f;
+    public const float Phase3LifeRatioUltra = 0.1f;
 
-    public static float Phase1_2LifeRatio => Ultra ? Phase1_2LifeRatio_Ultra : Phase1_2LifeRatio_Anomaly;
-    public static float Phase2LifeRatio => Ultra ? Phase2LifeRatio_Ultra : Phase2LifeRatio_Anomaly;
-    public static float Phase2_2LifeRatio => Ultra ? Phase2_2LifeRatio_Ultra : Phase2_2LifeRatio_Anomaly;
-    public static float Phase3LifeRatio => Ultra ? Phase3LifeRatio_Ultra : Phase3LifeRatio_Anomaly;
+    public static float Phase1_2LifeRatio => Ultra ? Phase12LifeRatioUltra : Phase12LifeRatioAnomaly;
+    public static float Phase2LifeRatio => Ultra ? Phase2LifeRatioUltra : Phase2LifeRatioAnomaly;
+    public static float Phase2_2LifeRatio => Ultra ? Phase22LifeRatioUltra : Phase22LifeRatioAnomaly;
+    public static float Phase3LifeRatio => Ultra ? Phase3LifeRatioUltra : Phase3LifeRatioAnomaly;
 
     public static int GelProjectileType => Aroma ? ProjectileID.BouncyBoulder : ProjectileID.QueenSlimeGelAttack;
 
@@ -89,14 +89,14 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
         get
         {
             Union32 union = AI_Union_0;
-            return (Phase)union.byte0;
+            return (Phase)union.Byte0;
         }
         set
         {
             if (CurrentPhase != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte0 = (byte)value;
+            union.Byte0 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -119,14 +119,14 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
         get
         {
             Union32 union = AI_Union_0;
-            return (Behavior)union.byte1;
+            return (Behavior)union.Byte1;
         }
         set
         {
             if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte1 = (byte)value;
+            union.Byte1 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -154,12 +154,12 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
     #region 宝石
     public bool JewelAmethystSpawned
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[0];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[0];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[0] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[0] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[0] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[0] = value;
                 AnomalyNPC.AIChanged32[0] = true;
             }
         }
@@ -170,13 +170,13 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
     /// </summary>
     public NPC JewelAmethyst
     {
-        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte0);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].Byte0);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
-            if (AnomalyNPC.AnomalyAI32[1].byte0 != temp)
+            if (AnomalyNPC.AnomalyAI32[1].Byte0 != temp)
             {
-                AnomalyNPC.AnomalyAI32[1].byte0 = temp;
+                AnomalyNPC.AnomalyAI32[1].Byte0 = temp;
                 AnomalyNPC.AIChanged32[1] = true;
             }
         }
@@ -188,12 +188,12 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
 
     public float TeleportTimer
     {
-        get => AnomalyNPC.AnomalyAI32[2].f;
+        get => AnomalyNPC.AnomalyAI32[2].F;
         set
         {
-            if (AnomalyNPC.AnomalyAI32[2].f != value)
+            if (AnomalyNPC.AnomalyAI32[2].F != value)
             {
-                AnomalyNPC.AnomalyAI32[2].f = value;
+                AnomalyNPC.AnomalyAI32[2].F = value;
                 AnomalyNPC.AIChanged32[2] = true;
             }
         }
@@ -201,12 +201,12 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
 
     public int CurrentAttackCounter
     {
-        get => AnomalyNPC.AnomalyAI32[3].i;
+        get => AnomalyNPC.AnomalyAI32[3].I;
         set
         {
-            if (AnomalyNPC.AnomalyAI32[3].i != value)
+            if (AnomalyNPC.AnomalyAI32[3].I != value)
             {
-                AnomalyNPC.AnomalyAI32[3].i = value;
+                AnomalyNPC.AnomalyAI32[3].I = value;
                 AnomalyNPC.AIChanged32[3] = true;
             }
         }
@@ -214,12 +214,12 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
 
     public int DirectionChangeCounter
     {
-        get => AnomalyNPC.AnomalyAI32[4].i;
+        get => AnomalyNPC.AnomalyAI32[4].I;
         set
         {
-            if (AnomalyNPC.AnomalyAI32[4].i != value)
+            if (AnomalyNPC.AnomalyAI32[4].I != value)
             {
-                AnomalyNPC.AnomalyAI32[4].i = value;
+                AnomalyNPC.AnomalyAI32[4].I = value;
                 AnomalyNPC.AIChanged32[4] = true;
             }
         }
@@ -227,13 +227,13 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
 
     public float DespawnScaleMultiplier
     {
-        get => AnomalyNPC.AnomalyAI32[5].f;
+        get => AnomalyNPC.AnomalyAI32[5].F;
         set
         {
             float temp = Math.Clamp(value, 0f, 1f);
-            if (AnomalyNPC.AnomalyAI32[5].f != temp)
+            if (AnomalyNPC.AnomalyAI32[5].F != temp)
             {
-                AnomalyNPC.AnomalyAI32[5].f = temp;
+                AnomalyNPC.AnomalyAI32[5].F = temp;
                 AnomalyNPC.AIChanged32[5] = true;
             }
         }
@@ -241,13 +241,13 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
 
     public float TeleportScaleMultiplier
     {
-        get => AnomalyNPC.AnomalyAI32[6].f;
+        get => AnomalyNPC.AnomalyAI32[6].F;
         set
         {
             float temp = Math.Clamp(value, 0f, 1f);
-            if (AnomalyNPC.AnomalyAI32[6].f != temp)
+            if (AnomalyNPC.AnomalyAI32[6].F != temp)
             {
-                AnomalyNPC.AnomalyAI32[6].f = temp;
+                AnomalyNPC.AnomalyAI32[6].F = temp;
                 AnomalyNPC.AIChanged32[6] = true;
             }
         }
@@ -282,8 +282,8 @@ public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocali
         DespawnScaleMultiplier = 1f;
         TeleportScaleMultiplier = 1f;
 
-        NPC.AddAnomalyHPIndicator(Phase1_2LifeRatio_Anomaly, Phase1_2LifeRatio_Ultra, true);
-        NPC.AddAnomalyHPIndicator(Phase2LifeRatio_Anomaly, Phase2LifeRatio_Ultra);
+        NPC.AddAnomalyHPIndicator(Phase12LifeRatioAnomaly, Phase12LifeRatioUltra, true);
+        NPC.AddAnomalyHPIndicator(Phase2LifeRatioAnomaly, Phase2LifeRatioUltra);
     }
 
     public override void FindFrame(int frameHeight)

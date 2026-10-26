@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.DukeFishron;
+namespace Anomalies.Bosses.DukeFishron;
 
 public sealed class DetonatingBubble : AnomalyNPCBehavior<DetonatingBubble>
 {

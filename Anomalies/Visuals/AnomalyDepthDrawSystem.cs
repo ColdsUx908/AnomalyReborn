@@ -1,6 +1,5 @@
-﻿using Mono.Cecil.Cil;
+using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using Transoceanic.DataStructures.Rendering;
 
 namespace Anomalies.Visuals;
 
@@ -29,17 +28,6 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
             On_Main.DrawNPC += DrawNPC;
             On_Main.DrawProj += DrawProjectile;
             LoadNPCInterface();
-        }
-    }
-
-    public override void Unload()
-    {
-        UnloadNPCCollision();
-        if (!Main.dedServ)
-        {
-            On_Main.DrawNPC -= DrawNPC;
-            On_Main.DrawProj -= DrawProjectile;
-            UnloadNPCInterface();
         }
     }
 
@@ -125,7 +113,7 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
     private static SpriteBatchScope BeginPerspective(float z, NPC npc = null)
     {
         SpriteBatch spriteBatch = Main.spriteBatch;
-        Matrix view = new SpriteBatchSnapshot(spriteBatch).transformMatrix;
+        Matrix view = new SpriteBatchSnapshot(spriteBatch).TransformMatrix;
         // 投影在镜头变换前进行；逆变换确保缩放/翻转后消失点仍位于屏幕中心。
         // UI 阶段 screenWidth/Height 会被 UIScale 改写，使用真实视口避免消失点偏移。
         Vector2 vanishingPoint = GetVanishingPoint(view, ViewportSize);
@@ -144,13 +132,6 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
         On_Main.DrawInterface_14_EntityHealthBars += DrawNPCInterface;
         IL_Main.HoverOverNPCs += ProjectNPCHover;
         IL_Main.DrawInterface_14_EntityHealthBars += ProjectNPCInterface;
-    }
-
-    private static void UnloadNPCInterface()
-    {
-        On_Main.DrawInterface_14_EntityHealthBars -= DrawNPCInterface;
-        IL_Main.HoverOverNPCs -= ProjectNPCHover;
-        IL_Main.DrawInterface_14_EntityHealthBars -= ProjectNPCInterface;
     }
 
     private static bool CheckNPCHover(ref Rectangle mouse, Rectangle bounds, NPC npc)
@@ -254,12 +235,6 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
     {
         IL_Projectile.Damage += ProjectProjectileNPCCollision;
         IL_Player.ProcessHitAgainstNPC += ProjectMeleeNPCCollision;
-    }
-
-    private static void UnloadNPCCollision()
-    {
-        IL_Projectile.Damage -= ProjectProjectileNPCCollision;
-        IL_Player.ProcessHitAgainstNPC -= ProjectMeleeNPCCollision;
     }
 
     /// <summary>投影后的世界碰撞箱；使用向外取整保留边缘不足一像素的区域。</summary>

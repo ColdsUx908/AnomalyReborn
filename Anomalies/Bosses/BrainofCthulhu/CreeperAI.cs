@@ -50,15 +50,15 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
 
     public bool UseBossAIState
     {
-        get => AnomalyNPC.AnomalyAI32[5].i != 0;
+        get => AnomalyNPC.AnomalyAI32[5].I != 0;
         set
         {
-            AnomalyNPC.AnomalyAI32[5].i = value ? 1 : 0;
+            AnomalyNPC.AnomalyAI32[5].I = value ? 1 : 0;
             AnomalyNPC.AIChanged32[5] = true;
         }
     }
 
-    private static readonly BrainBehavior[] bossAIStatesToUse = [BrainBehavior.SurfaceSpawnAnimation, BrainBehavior.CreeperSwipes, BrainBehavior.CreeperSwings, BrainBehavior.CreeperOrbit, BrainBehavior.CreeperSpiral];
+    private static readonly BrainBehavior[] _BossAIStatesToUse = [BrainBehavior.SurfaceSpawnAnimation, BrainBehavior.CreeperSwipes, BrainBehavior.CreeperSwings, BrainBehavior.CreeperOrbit, BrainBehavior.CreeperSpiral];
     public override void SetDefaults()
     {
         NPC.damage = NPC.defDamage = 36; // 64 (1.8x expert scaling)
@@ -123,7 +123,7 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
             }
             return false;
         }
-        UseBossAIState = bossAIStatesToUse.Contains(BoCAI.CurrentBehavior) && BossCounter >= 0;
+        UseBossAIState = _BossAIStatesToUse.Contains(BoCAI.CurrentBehavior) && BossCounter >= 0;
         NPC.dontTakeDamage = IsPhantom || CurrentPhase == Phase.Introduction;
         NPC.chaseable = !IsPhantom;
         if (UseBossAIState)
@@ -172,8 +172,8 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
                 for (int i = 0; i < segments.Count; i++)
                 {
                     Vector2 position = Vector2.Lerp(Brain.Center + Vector2.UnitY * 32, NPC.Center, i / (float)(segments.Count - 1));
-                    segments[i].position = position;
-                    segments[i].oldPosition = position;
+                    segments[i].Position = position;
+                    segments[i].OldPosition = position;
                 }
             }
         }
@@ -656,7 +656,7 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
         SoundEngine.PlaySound(NPC.DeathSound, NPC.Center);
         if (BrainOfCthulhuSystem.VerletTendrils is { } tendrils && (uint)CreeperID < tendrils.Length && tendrils[CreeperID].tendril is { Count: >= 2 } segments)
         {
-            Vector2 direction = (NPC.Center - segments[^2].position).SafeNormalize(Vector2.UnitY);
+            Vector2 direction = (NPC.Center - segments[^2].Position).SafeNormalize(Vector2.UnitY);
             for (int i = 0; i < 5; i++)
                 ParticleHandler.SpawnParticle(new BloodParticle(NPC.Center, direction.RotatedBy(Main.rand.NextFloat(-MathHelper.Pi / 10f, MathHelper.Pi / 10f)) * Main.rand.NextFloat(6f, 10f), 24, Main.rand.NextFloat(0.5f, 1f), Color.Yellow * 0.75f));
         }

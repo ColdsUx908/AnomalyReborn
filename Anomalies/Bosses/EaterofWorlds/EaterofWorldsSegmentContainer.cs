@@ -1,9 +1,9 @@
-﻿namespace Anomalies.Bosses.EaterofWorlds;
+namespace Anomalies.Bosses.EaterofWorlds;
 
 public sealed class EaterofWorldsSegmentContainer
 {
     public NPC NPC { get; }
-    // Behavior is a singleton: reacquire it to bind the correct NPC on every access.
+    // Resolve after type conversion so the container never retains a body behavior for a new head.
     public IEaterofWorldsSegment SegmentBehavior => EaterofWorldsHandler.TryGetSegment(NPC);
 
     public EaterofWorldsSegmentContainer(NPC npc)

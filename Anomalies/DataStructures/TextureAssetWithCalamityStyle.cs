@@ -1,4 +1,5 @@
-﻿namespace Anomalies.DataStructures;
+using Transoceanic.Runtime.Reflection;
+namespace Anomalies.DataStructures;
 
 public sealed class TextureAssetWithCalamityStyle
 {

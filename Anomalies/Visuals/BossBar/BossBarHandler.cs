@@ -18,7 +18,7 @@ using CalamityMod.NPCs.SunkenSea;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.VanillaNPCAIOverrides.Bosses.BrainOfCthulhu;
 using Terraria.GameContent.Events;
-using static Terraria.ModLoader.ModContent;
+using static global::Terraria.ModLoader.ModContent;
 
 namespace Anomalies.Visuals.BossBar;
 

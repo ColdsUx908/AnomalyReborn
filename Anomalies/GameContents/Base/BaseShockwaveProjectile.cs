@@ -1,4 +1,4 @@
-﻿namespace Anomalies.GameContents.Base;
+namespace Anomalies.GameContents.Base;
 
 /// <summary>
 /// 冲击波弹幕的抽象基类。

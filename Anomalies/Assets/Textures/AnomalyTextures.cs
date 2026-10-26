@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Assets;
+namespace Anomalies.Assets;
 
 public sealed class AnomalyTextures
 {

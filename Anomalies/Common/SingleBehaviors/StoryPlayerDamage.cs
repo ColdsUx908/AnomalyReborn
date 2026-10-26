@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Common.SingleBehaviors;
+namespace Anomalies.Common.SingleBehaviors;
 
 public sealed class StoryPlayerDamage : AnomalyPlayerBehavior
 {

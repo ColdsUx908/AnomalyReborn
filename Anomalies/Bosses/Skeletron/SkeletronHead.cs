@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.Skeletron;
+namespace Anomalies.Bosses.Skeletron;
 
 public sealed partial class SkeletronHead : AnomalyNPCBehavior<SkeletronHead>
 {
@@ -34,26 +34,26 @@ public sealed partial class SkeletronHead : AnomalyNPCBehavior<SkeletronHead>
 
     public Phase CurrentPhase
     {
-        get => (Phase)AI_Union_0.byte0;
+        get => (Phase)AI_Union_0.Byte0;
         set
         {
             if (CurrentPhase != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte0 = (byte)value;
+            union.Byte0 = (byte)value;
             AI_Union_0 = union;
         }
     }
 
     public Behavior CurrentBehavior
     {
-        get => (Behavior)AI_Union_0.byte1;
+        get => (Behavior)AI_Union_0.Byte1;
         set
         {
             if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte1 = (byte)value;
+            union.Byte1 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -70,13 +70,13 @@ public sealed partial class SkeletronHead : AnomalyNPCBehavior<SkeletronHead>
         }
     }
 
-    private ref float AttackTimer => ref AnomalyNPC.AnomalyAI32[1].f;
-    private ref float TeleportX => ref AnomalyNPC.AnomalyAI32[2].f;
-    private ref float TeleportY => ref AnomalyNPC.AnomalyAI32[3].f;
-    private ref float ChargeReadiness => ref AnomalyNPC.AnomalyAI32[4].f;
-    private ref float ChargeTelegraphTimer => ref AnomalyNPC.AnomalyAI32[5].f;
-    private ref float RetreatTimer => ref AnomalyNPC.AnomalyAI32[6].f;
-    private ref float ResyncTimer => ref AnomalyNPC.AnomalyAI32[8].f;
+    private ref float AttackTimer => ref AnomalyNPC.AnomalyAI32[1].F;
+    private ref float TeleportX => ref AnomalyNPC.AnomalyAI32[2].F;
+    private ref float TeleportY => ref AnomalyNPC.AnomalyAI32[3].F;
+    private ref float ChargeReadiness => ref AnomalyNPC.AnomalyAI32[4].F;
+    private ref float ChargeTelegraphTimer => ref AnomalyNPC.AnomalyAI32[5].F;
+    private ref float RetreatTimer => ref AnomalyNPC.AnomalyAI32[6].F;
+    private ref float ResyncTimer => ref AnomalyNPC.AnomalyAI32[8].F;
 
     public const float Phase3LifeRatio = 0.9f;
     public const float RespawnHandsLifeRatio = 0.5f;
@@ -95,7 +95,7 @@ public sealed partial class SkeletronHead : AnomalyNPCBehavior<SkeletronHead>
     public const float ChargeTelegraphTime = 120f;
     public const float HandSlapGateValue = 300f;
     public const float HandSlapTelegraphTime = 120f;
-    public const float HandSwipeDistance_Master = 1280f;
+    public const float HandSwipeDistanceMaster = 1280f;
     public const float SpinDamageMult = 1.3f;
     // Vanilla hostile projectiles apply their own difficulty scaling.
     public const int SkullDamage = 17;

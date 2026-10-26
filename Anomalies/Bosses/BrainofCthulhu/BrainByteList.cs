@@ -8,7 +8,7 @@ internal static class BrainPackedData
     public static byte Read(NPC npc, int offset)
     {
         AnomalyGlobalNPC data = npc.GetGlobalNPC<AnomalyGlobalNPC>();
-        return offset < 176 ? (byte)((uint)data.AnomalyAI32[20 + offset / 4].i >> (offset % 4 * 8)) : (byte)((ulong)data.AnomalyAI64[1 + (offset - 176) / 8].l >> ((offset - 176) % 8 * 8));
+        return offset < 176 ? (byte)((uint)data.AnomalyAI32[20 + offset / 4].I >> (offset % 4 * 8)) : (byte)((ulong)data.AnomalyAI64[1 + (offset - 176) / 8].L >> ((offset - 176) % 8 * 8));
     }
 
     public static void Write(NPC npc, int offset, byte value)
@@ -17,15 +17,15 @@ internal static class BrainPackedData
         if (offset < 176)
         {
             int slot = 20 + offset / 4, shift = offset % 4 * 8;
-            uint old = (uint)data.AnomalyAI32[slot].i;
-            data.AnomalyAI32[slot].i = (int)((old & ~(255u << shift)) | ((uint)value << shift));
+            uint old = (uint)data.AnomalyAI32[slot].I;
+            data.AnomalyAI32[slot].I = (int)((old & ~(255u << shift)) | ((uint)value << shift));
             data.AIChanged32[slot] = true;
         }
         else
         {
             int slot = 1 + (offset - 176) / 8, shift = (offset - 176) % 8 * 8;
-            ulong old = (ulong)data.AnomalyAI64[slot].l;
-            data.AnomalyAI64[slot].l = (long)((old & ~(255ul << shift)) | ((ulong)value << shift));
+            ulong old = (ulong)data.AnomalyAI64[slot].L;
+            data.AnomalyAI64[slot].L = (long)((old & ~(255ul << shift)) | ((ulong)value << shift));
             data.AIChanged64[slot] = true;
         }
     }
@@ -33,12 +33,12 @@ internal static class BrainPackedData
 
 public readonly struct BrainByteList<T>(NPC npc, int offset, int capacity, int countSlot) : IEnumerable<T> where T : struct, IConvertible
 {
-    public int Count => npc.GetGlobalNPC<AnomalyGlobalNPC>().AnomalyAI32[countSlot].i;
+    public int Count => npc.GetGlobalNPC<AnomalyGlobalNPC>().AnomalyAI32[countSlot].I;
 
     private void SetCount(int value)
     {
         AnomalyGlobalNPC data = npc.GetGlobalNPC<AnomalyGlobalNPC>();
-        data.AnomalyAI32[countSlot].i = value;
+        data.AnomalyAI32[countSlot].I = value;
         data.AIChanged32[countSlot] = true;
     }
 

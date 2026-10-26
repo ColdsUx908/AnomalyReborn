@@ -32,7 +32,7 @@ public sealed partial class SkeletronLegendHead
         Timer2 = NPC.life; // 保存回血插值的起始血量。
         CurrentPhase = Phase.PhaseChange_1To2;
         NPC.dontTakeDamage = true;
-        if (TOSharedData.NotClient)
+        if (TONetworkEnvironment.NotClient)
         {
             // 化身仍在渐隐时，也必须立即取消它所驱动的延迟攻击。
             foreach (Projectile projectile in Projectile.ActiveProjectiles)
@@ -77,14 +77,14 @@ public sealed partial class SkeletronLegendHead
                 NPC.life = Math.Min(newLife, NPC.lifeMax);
                 NPC.HealEffect(increasedLife, true);
             }
-            if (TOSharedData.NotClient && (Timer1 % 10 == 0 || Timer1 == PhaseChangeHandsTime))
+            if (TONetworkEnvironment.NotClient && (Timer1 % 10 == 0 || Timer1 == PhaseChangeHandsTime))
                 NPC.netUpdate = true;
         }
 
         if (Timer1 == PhaseChangeShockwaveTime)
         {
             SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
             {
                 Projectile.NewProjectileAction<LegendShockwave>(SourceAI, NPC.Center, Vector2.Zero, 0, 0f, action: p =>
                 {
@@ -97,7 +97,7 @@ public sealed partial class SkeletronLegendHead
 
         if (Timer1 == PhaseChangeHandsTime)
         {
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
             {
                 IsSummoningHands = true;
                 try
@@ -125,7 +125,7 @@ public sealed partial class SkeletronLegendHead
 
         if (Timer1 == PhaseChangeBlessingTime)
         {
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
                 TOLocalizationUtils.ChatLocalizedText(AnomalySharedData.ModLocalizationPrefix + LegendaryNightHandler.LocalizationCategory + ".AstralBlessing", LegendaryNightHandler.StarColor);
             if (!Main.dedServ)
             {

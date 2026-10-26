@@ -1,5 +1,5 @@
-using Anomalies.GameContents.AnomalyItems;
 using Anomalies.Bosses.Skeletron.LegendaryNight;
+using Anomalies.GameContents.AnomalyItems;
 using Terraria.GameContent.ItemDropRules;
 
 namespace Anomalies.Bosses.Skeletron;

@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.KingSlime;
+namespace Anomalies.Bosses.KingSlime;
 
 public class RainbowBullet : AnomalyModProjectile
 {
@@ -9,25 +9,25 @@ public class RainbowBullet : AnomalyModProjectile
     public override string Texture => FullTexturePrefix + "Triangle";
 
     [LoadTexture(FullTexturePrefix + "Triangle")]
-    private static Asset<Texture2D> _Texture_Triangle;
-    public static Texture2D Texture_Triangle => _Texture_Triangle.Value;
+    private static Asset<Texture2D> _TextureTriangle;
+    public static Texture2D Texture_Triangle => _TextureTriangle.Value;
 
     [LoadTexture(FullTexturePrefix + "Star")]
-    private static Asset<Texture2D> _Texture_Star;
-    public static Texture2D Texture_Star => _Texture_Star.Value;
+    private static Asset<Texture2D> _TextureStar;
+    public static Texture2D Texture_Star => _TextureStar.Value;
 
     [LoadTexture(FullTexturePrefix + "Square")]
-    private static Asset<Texture2D> _Texture_Square;
-    public static Texture2D Texture_Square => _Texture_Square.Value;
+    private static Asset<Texture2D> _TextureSquare;
+    public static Texture2D Texture_Square => _TextureSquare.Value;
 
     [LoadTexture(FullTexturePrefix + "Circle")]
-    private static Asset<Texture2D> _Texture_Circle;
-    public static Texture2D Texture_Circle => _Texture_Circle.Value;
+    private static Asset<Texture2D> _TextureCircle;
+    public static Texture2D Texture_Circle => _TextureCircle.Value;
 
-    public const int TextureType_Triangle = 0;
-    public const int TextureType_Star = 1;
-    public const int TextureType_Square = 2;
-    public const int TextureType_Circle = 3;
+    public const int TextureTypeTriangle = 0;
+    public const int TextureTypeStar = 1;
+    public const int TextureTypeSquare = 2;
+    public const int TextureTypeCircle = 3;
 
     //用 ai[0] 来区分四种形状
 
@@ -38,10 +38,10 @@ public class RainbowBullet : AnomalyModProjectile
             int type = (int)Projectile.ai[0];
             return type switch
             {
-                TextureType_Triangle => Texture_Triangle,
-                TextureType_Star => Texture_Star,
-                TextureType_Square => Texture_Square,
-                TextureType_Circle => Texture_Circle,
+                TextureTypeTriangle => Texture_Triangle,
+                TextureTypeStar => Texture_Star,
+                TextureTypeSquare => Texture_Square,
+                TextureTypeCircle => Texture_Circle,
                 _ => Texture_Triangle
             };
         }
@@ -52,7 +52,7 @@ public class RainbowBullet : AnomalyModProjectile
         get
         {
             int type = (int)Projectile.ai[0];
-            return type == TextureType_Circle ? 0.22f : 0.25f;
+            return type == TextureTypeCircle ? 0.22f : 0.25f;
         }
     }
 
@@ -113,13 +113,13 @@ public class RainbowBullet : AnomalyModProjectile
         Texture2D texture = RealTexture;
 
         Vector2 origin = texture.Size() / 2f;
-        if (type == TextureType_Star)
+        if (type == TextureTypeStar)
             origin.Y = 41;
-        else if (type == TextureType_Triangle)
+        else if (type == TextureTypeTriangle)
             origin.Y = 47;
 
         float scale = Projectile.scale * ScaleMultiplier;
-        TODrawUtils.DrawBorderTexture(Main.spriteBatch, texture, Projectile.Center - Main.screenPosition, null, Color.Lerp(Main.DiscoColor, Color.White * 0.5f, 0.1f), Projectile.rotation, origin, scale, way: 12, borderWidth: 1.5f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.4f, 1.2f, unsigned: true));
+        TODrawUtils.DrawBorderTexture(Main.spriteBatch, texture, Projectile.Center - Main.screenPosition, null, Color.Lerp(Main.DiscoColor, Color.White * 0.5f, 0.1f), Projectile.rotation, origin, scale, way: 12, borderWidth: 1.5f + TOGameTimeFunctions.GetTimeSin(0.4f, 1.2f, unsigned: true));
         Main.spriteBatch.Draw(texture, Projectile.Center - Main.screenPosition, null, Color.Lerp(Main.DiscoColor, Color.White * 0.5f, 0.1f), Projectile.rotation, origin, scale, SpriteEffects.None, 0f);
         return false;
     }

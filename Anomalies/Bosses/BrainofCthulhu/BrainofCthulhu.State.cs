@@ -16,24 +16,24 @@ public sealed partial class BrainofCthulhu
 
     public Phase CurrentPhase
     {
-        get => (Phase)AI_Union_0.byte0;
+        get => (Phase)AI_Union_0.Byte0;
         set
         {
             Union32 data = AI_Union_0;
-            data.byte0 = (byte)value;
+            data.Byte0 = (byte)value;
             AI_Union_0 = data;
         }
     }
 
     public Behavior CurrentBehavior
     {
-        get => (Behavior)AI_Union_0.byte1;
+        get => (Behavior)AI_Union_0.Byte1;
         set
         {
             if (CurrentBehavior == value && CurrentPhase != Phase.Initialize)
                 return;
             Union32 data = AI_Union_0;
-            data.byte1 = (byte)value;
+            data.Byte1 = (byte)value;
             AI_Union_0 = data;
             CurrentPhase = value switch
             {
@@ -55,12 +55,12 @@ public sealed partial class BrainofCthulhu
     public ref float DespawnTime => ref NPC.ai[2];
     public ref float CachedRatio => ref NPC.ai[3];
 
-    private float Read(int slot) => AnomalyNPC.AnomalyAI32[slot].f;
+    private float Read(int slot) => AnomalyNPC.AnomalyAI32[slot].F;
     private void Write(int slot, float value)
     {
         if (Read(slot) == value)
             return;
-        AnomalyNPC.AnomalyAI32[slot].f = value;
+        AnomalyNPC.AnomalyAI32[slot].F = value;
         AnomalyNPC.AIChanged32[slot] = true;
     }
 
@@ -101,12 +101,12 @@ public sealed partial class CreeperAI
 {
     public BrainofCthulhu.Phase CurrentPhase => BoCAI.CurrentPhase;
 
-    private float Read(int slot) => AnomalyNPC.AnomalyAI32[slot].f;
+    private float Read(int slot) => AnomalyNPC.AnomalyAI32[slot].F;
     private void Write(int slot, float value)
     {
         if (Read(slot) == value)
             return;
-        AnomalyNPC.AnomalyAI32[slot].f = value;
+        AnomalyNPC.AnomalyAI32[slot].F = value;
         AnomalyNPC.AIChanged32[slot] = true;
     }
 

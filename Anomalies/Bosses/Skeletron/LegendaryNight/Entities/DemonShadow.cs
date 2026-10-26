@@ -1,5 +1,3 @@
-using Transoceanic.DataStructures.Rendering;
-
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class DemonShadow : AnomalyModProjectile
@@ -10,7 +8,7 @@ public sealed class DemonShadow : AnomalyModProjectile
     private const float TrackingAcceleration = 0.6f;
     private const float TrackingResponse = 0.08f;
 
-    private Player _drawPlayer;
+    private Player _DrawPlayer;
 
     // 二阶段模式：始终尝试跟随在玩家右侧约500像素处，与玩家同高。
     public bool HorizontalTracking;
@@ -54,7 +52,7 @@ public sealed class DemonShadow : AnomalyModProjectile
                     : SkeletronLegendHead.GetInstance(master).StarAvatarActive))
             {
                 // 由服务端确认所属符卡结束，避免生成包早于 NPC 状态包到达时客户端误删。
-                if (TOSharedData.NotClient)
+                if (TONetworkEnvironment.NotClient)
                     Projectile.Kill();
                 return;
             }
@@ -116,7 +114,7 @@ public sealed class DemonShadow : AnomalyModProjectile
             {
                 Projectile.ai[1] = 0f;
                 Vector2 muzzlePosition = Projectile.Center + aimDirection * (40f * Projectile.scale);
-                if (TOSharedData.NotClient)
+                if (TONetworkEnvironment.NotClient)
                 {
                     Projectile.NewProjectileAction<FallingStar>(SourceAI, muzzlePosition,
                         aimDirection * ShotSpeed, SkeletronLegendHead.FallingStarDamage, Projectile.knockBack, Projectile.owner, action: p =>
@@ -139,41 +137,41 @@ public sealed class DemonShadow : AnomalyModProjectile
         if (Main.dedServ)
             return;
 
-        if (_drawPlayer is null)
+        if (_DrawPlayer is null)
         {
             // new Player() 保留原版默认性别、发型、肤色及衣物颜色，不复制召唤者外观。
-            _drawPlayer = new Player();
-            _drawPlayer.armor[0].SetDefaults(ItemID.ShadowHelmet);
-            _drawPlayer.armor[1].SetDefaults(ItemID.ShadowScalemail);
-            _drawPlayer.armor[2].SetDefaults(ItemID.ShadowGreaves);
-            _drawPlayer.armor[3].SetDefaults(ItemID.DemonWings);
-            _drawPlayer.inventory[0].SetDefaults(ItemID.StarCannon);
-            _drawPlayer.lastVisualizedSelectedItem = _drawPlayer.inventory[0];
+            _DrawPlayer = new Player();
+            _DrawPlayer.armor[0].SetDefaults(ItemID.ShadowHelmet);
+            _DrawPlayer.armor[1].SetDefaults(ItemID.ShadowScalemail);
+            _DrawPlayer.armor[2].SetDefaults(ItemID.ShadowGreaves);
+            _DrawPlayer.armor[3].SetDefaults(ItemID.DemonWings);
+            _DrawPlayer.inventory[0].SetDefaults(ItemID.StarCannon);
+            _DrawPlayer.lastVisualizedSelectedItem = _DrawPlayer.inventory[0];
         }
 
         // 参照原版 PlayerSegment / UICharacter，只更新绘制需要的状态。
-        using Main.CurrentPlayerOverride currentPlayer = new(_drawPlayer);
-        _drawPlayer.ResetEffects();
-        _drawPlayer.ResetVisibleAccessories();
-        _drawPlayer.UpdateMiscCounter();
-        _drawPlayer.UpdateDyes();
-        _drawPlayer.Center = Projectile.Center;
-        _drawPlayer.velocity = Projectile.velocity;
+        using Main.CurrentPlayerOverride currentPlayer = new(_DrawPlayer);
+        _DrawPlayer.ResetEffects();
+        _DrawPlayer.ResetVisibleAccessories();
+        _DrawPlayer.UpdateMiscCounter();
+        _DrawPlayer.UpdateDyes();
+        _DrawPlayer.Center = Projectile.Center;
+        _DrawPlayer.velocity = Projectile.velocity;
         // 只给绘制用 Player 一个非零竖直速度，使悬停时也保持空中姿态。
-        if (_drawPlayer.velocity.Y == 0f)
-            _drawPlayer.velocity.Y = -0.01f;
-        _drawPlayer.direction = Projectile.direction;
-        _drawPlayer.controlJump = true;
-        _drawPlayer.wingsLogic = _drawPlayer.armor[3].wingSlot;
-        _drawPlayer.wingTime = 1f;
-        _drawPlayer.itemAnimationMax = ShotInterval;
-        _drawPlayer.itemAnimation = ShotInterval - (int)Projectile.ai[1];
-        _drawPlayer.itemRotation = (aimDirection * Projectile.direction).ToRotation();
+        if (_DrawPlayer.velocity.Y == 0f)
+            _DrawPlayer.velocity.Y = -0.01f;
+        _DrawPlayer.direction = Projectile.direction;
+        _DrawPlayer.controlJump = true;
+        _DrawPlayer.wingsLogic = _DrawPlayer.armor[3].wingSlot;
+        _DrawPlayer.wingTime = 1f;
+        _DrawPlayer.itemAnimationMax = ShotInterval;
+        _DrawPlayer.itemAnimation = ShotInterval - (int)Projectile.ai[1];
+        _DrawPlayer.itemRotation = (aimDirection * Projectile.direction).ToRotation();
         // 原版 Shoot 使用姿势：武器锚点位于人物中心左移 direction * 2、上移半个物品高度。
         // 不调用完整 ItemCheck，避免虚拟玩家消耗弹药或额外生成原版星星。
-        _drawPlayer.itemLocation = _drawPlayer.MountedCenter + new Vector2(-2f * Projectile.direction, -_drawPlayer.HeldItem.height * 0.5f);
-        _drawPlayer.PlayerFrame();
-        _drawPlayer.WingFrame(wingFlap: true);
+        _DrawPlayer.itemLocation = _DrawPlayer.MountedCenter + new Vector2(-2f * Projectile.direction, -_DrawPlayer.HeldItem.height * 0.5f);
+        _DrawPlayer.PlayerFrame();
+        _DrawPlayer.WingFrame(wingFlap: true);
     }
 
     public override void OnKill(int timeLeft)
@@ -191,24 +189,24 @@ public sealed class DemonShadow : AnomalyModProjectile
 
     public override bool PreDraw(ref Color lightColor)
     {
-        if (_drawPlayer is null)
+        if (_DrawPlayer is null)
             return false;
 
-        using Main.CurrentPlayerOverride currentPlayer = new(_drawPlayer);
-        Vector2 drawOffset = Projectile.Center - _drawPlayer.Center;
-        _drawPlayer.Center = Projectile.Center;
-        _drawPlayer.itemLocation += drawOffset;
-        _drawPlayer.opacityForAnimation = Projectile.Opacity;
+        using Main.CurrentPlayerOverride currentPlayer = new(_DrawPlayer);
+        Vector2 drawOffset = Projectile.Center - _DrawPlayer.Center;
+        _DrawPlayer.Center = Projectile.Center;
+        _DrawPlayer.itemLocation += drawOffset;
+        _DrawPlayer.opacityForAnimation = Projectile.Opacity;
 
         // DrawPlayer 接收世界坐标，内部会减去 Main.screenPosition。
         // 原版以脚底为缩放中心；补偿位置，使缩放后的人物中心仍与弹幕中心重合。
-        Vector2 position = _drawPlayer.position + Vector2.UnitY * (_drawPlayer.height * (Projectile.scale - 1f) * 0.5f);
+        Vector2 position = _DrawPlayer.position + Vector2.UnitY * (_DrawPlayer.height * (Projectile.scale - 1f) * 0.5f);
         // 玩家渲染器直接提交图元；Immediate 确保先应用普通透明混合，避免继承冲击波的叠加状态。
         using SpriteBatchScope drawScope = new(Main.spriteBatch, SpriteSortMode.Immediate, BlendState.AlphaBlend,
             Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer,
             transformMatrix: Main.GameViewMatrix.TransformationMatrix, effectIsNull: true);
-        Main.PlayerRenderer.DrawPlayer(Main.Camera, _drawPlayer, position, Projectile.rotation,
-            _drawPlayer.Size * 0.5f, scale: Projectile.scale);
+        Main.PlayerRenderer.DrawPlayer(Main.Camera, _DrawPlayer, position, Projectile.rotation,
+            _DrawPlayer.Size * 0.5f, scale: Projectile.scale);
         return false;
     }
 }

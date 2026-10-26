@@ -311,3 +311,6 @@ dotnet_diagnostic.IDE0044.severity = silent
 
 # CA1707: 标识符不应包含下划线
 dotnet_diagnostic.CA1707.severity = none
+
+# IDE0305: 简化集合初始化
+dotnet_diagnostic.IDE0305.severity = silent

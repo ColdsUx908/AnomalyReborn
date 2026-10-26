@@ -1,6 +1,6 @@
-﻿using CalamityMod.Systems;
+using CalamityMod.Systems;
 using CalamityMod.UI.ModeIndicator;
-using Transoceanic.Framework.ExternalAttributes;
+using Transoceanic.Runtime.Publicizing;
 
 namespace Anomalies.ModCompatibility;
 

@@ -1,5 +1,3 @@
-using System;
-
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 不依赖实体的计账规则，便于单独验证取整、治疗和标记生命周期。

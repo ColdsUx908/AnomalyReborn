@@ -1,4 +1,4 @@
-﻿using Terraria.GameContent.UI.BigProgressBar;
+using Terraria.GameContent.UI.BigProgressBar;
 
 namespace Anomalies.Visuals.BossBar;
 

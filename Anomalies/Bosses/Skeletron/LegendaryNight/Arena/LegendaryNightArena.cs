@@ -37,7 +37,7 @@ public sealed class LegendaryNightArena : BaseRingArenaProjectile
 
     public override void PostAI()
     {
-        if (TOSharedData.NotClient && IsActivated != _PreviousActivation)
+        if (TONetworkEnvironment.NotClient && IsActivated != _PreviousActivation)
             Projectile.netUpdate = true;
         _PreviousActivation = IsActivated;
     }
@@ -75,14 +75,14 @@ public sealed class LegendaryNightArena : BaseRingArenaProjectile
     {
         if (!IsMasterValid)
         {
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();
             return;
         }
 
         if (MasterBehavior.Phase2ArenaRequested)
         {
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
             {
                 bool created = false;
                 Projectile.NewProjectileAction<LegendaryNightPhase2Arena>(SourceAI, Target?.Center ?? Master.Center,

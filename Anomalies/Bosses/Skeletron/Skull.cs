@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.Skeletron;
+namespace Anomalies.Bosses.Skeletron;
 
 public sealed class Skull : AnomalyProjectileBehavior<Skull>
 {

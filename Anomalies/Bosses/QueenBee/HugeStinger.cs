@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.QueenBee;
+namespace Anomalies.Bosses.QueenBee;
 
 public sealed class HugeStinger : AnomalyModProjectile
 {

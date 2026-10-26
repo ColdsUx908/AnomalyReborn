@@ -1,34 +1,4 @@
-global using System;
-global using System.Collections.Generic;
-global using System.Collections.ObjectModel;
-global using System.Diagnostics.CodeAnalysis;
-global using System.IO;
-global using System.Linq;
-global using System.Reflection;
-global using System.Runtime.CompilerServices;
-global using System.Runtime.InteropServices;
-global using System.Text;
-global using System.Text.RegularExpressions;
-global using Microsoft.Xna.Framework;
-global using Microsoft.Xna.Framework.Graphics;
-global using ReLogic.Content;
-global using ReLogic.Graphics;
-global using Terraria;
-global using Terraria.DataStructures;
-global using Terraria.Enums;
-global using Terraria.GameContent;
-global using Terraria.ID;
-global using Terraria.Localization;
-global using Terraria.ModLoader;
-global using Terraria.ModLoader.Core;
-global using Terraria.ModLoader.IO;
-global using Terraria.Utilities;
-global using Transoceanic.Common;
-global using Transoceanic.DataStructures;
-global using Transoceanic.Framework.Abstractions;
-global using Transoceanic.Framework.ExternalAttributes;
-global using Transoceanic.Framework.Helpers;
-
+using Transoceanic.Game.Networking;
 namespace Transoceanic;
 
 /// <summary>
@@ -97,7 +67,7 @@ public sealed class TOMain : Mod
             if (Loaded)
             {
                 TOLoaderHandler.Loader_Unload();
-                TOSharedData.SyncEnabled = false;
+                TONetworkEnvironment.SyncEnabled = false;
                 Instance = null;
             }
         }

@@ -55,7 +55,7 @@ public sealed partial class BrainofCthulhu
                 }
 
                 BoCAfterImages = [];
-                SoundEngine.PlaySound(ShortRoarSound, NPC.Center);
+                SoundEngine.PlaySound(_ShortRoarSound, NPC.Center);
             }
             else
                 NPC.velocity *= 0.9f;

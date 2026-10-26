@@ -15,7 +15,6 @@ internal static class BrainCalamityBridge
 
         public void OnModUnload()
         {
-            CalamityMod.NPCs.CalamityVanillaAIOverrideNPC.ModifyAIOverride -= SuppressOriginalAI;
             BrainSpriteChanged = null;
         }
 

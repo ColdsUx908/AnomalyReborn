@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.KingSlime;
+namespace Anomalies.Bosses.KingSlime;
 
 public class RubyBullet : AnomalyModProjectile
 {
@@ -51,7 +51,7 @@ public class RubyBullet : AnomalyModProjectile
         Texture2D texture = Projectile.Texture;
 
         float scale = Projectile.scale * 0.22f;
-        TODrawUtils.DrawBorderTextureFromCenter(Main.spriteBatch, texture, Projectile.Center - Main.screenPosition, null, Color.Red, Projectile.rotation, scale, way: 12, borderWidth: 1.5f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.4f, 1.2f, unsigned: true));
+        TODrawUtils.DrawBorderTextureFromCenter(Main.spriteBatch, texture, Projectile.Center - Main.screenPosition, null, Color.Red, Projectile.rotation, scale, way: 12, borderWidth: 1.5f + TOGameTimeFunctions.GetTimeSin(0.4f, 1.2f, unsigned: true));
         Main.spriteBatch.DrawFromCenter(texture, Projectile.Center - Main.screenPosition, null, Color.White, Projectile.rotation, scale, SpriteEffects.None, 0f);
 
         return false;

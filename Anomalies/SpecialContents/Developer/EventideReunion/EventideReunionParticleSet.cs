@@ -24,7 +24,7 @@ public sealed class EventideReunionParticleSet : ParticleSet
 
 public sealed class EventideReunionInventoryParticle : Particle
 {
-    public override string TexturePath => "Transoceanic/DataStructures/Particles/Sparkle";
+    public override string TexturePath => "Transoceanic/Assets/Textures/Particles/Sparkle";
 
     private readonly bool _Star;
     private readonly float _Size;

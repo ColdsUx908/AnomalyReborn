@@ -1,4 +1,4 @@
-﻿using Anomalies.Assets.Effects;
+using Anomalies.Assets.Effects;
 
 namespace Anomalies.GameContents.AnomalyItems;
 

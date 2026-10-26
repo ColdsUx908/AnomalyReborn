@@ -1,6 +1,6 @@
-﻿using Anomalies.GameContents.Base;
+using Anomalies.GameContents.Base;
 using Anomalies.Visuals.Overlays;
-using Transoceanic.DataStructures.Rendering;
+using Transoceanic.Game.Entities;
 
 namespace Anomalies.Bosses.EyeofCthulhu;
 
@@ -17,22 +17,22 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
 
     public bool IsActivated
     {
-        get => AI_Union_1.bits[0];
+        get => AI_Union_1.Bits[0];
         set
         {
             Union32 union = AI_Union_1;
-            union.bits[0] = value;
+            union.Bits[0] = value;
             AI_Union_1 = union;
         }
     }
 
     public bool MasterPhase3_2
     {
-        get => AI_Union_1.bits[1];
+        get => AI_Union_1.Bits[1];
         set
         {
             Union32 union = AI_Union_1;
-            union.bits[1] = value;
+            union.Bits[1] = value;
             AI_Union_1 = union;
         }
     }
@@ -94,7 +94,7 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
         if (deltaArenaRadius != 0f)
         {
             ArenaStatModifiers.Add(new ArenaStatModifier(ArenaStatModifier.ModifierType.ArenaRadius, duration, deltaArenaRadius, linear));
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
                 Projectile.netUpdate = true;
         }
     }
@@ -115,7 +115,7 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
         if (deltaRotationSpeed != 0f)
         {
             ArenaStatModifiers.Add(new ArenaStatModifier(ArenaStatModifier.ModifierType.RotationSpeed, duration, deltaRotationSpeed, linear));
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
                 Projectile.netUpdate = true;
         }
     }
@@ -138,7 +138,7 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
         if (eye is not null)
         {
             action?.Invoke(eye);
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
                 Projectile.netUpdate = true;
         }
     }
@@ -174,7 +174,7 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
     {
         if (Master is null || !Master.active || Master.type != NPCID.EyeofCthulhu)
         {
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();
             return;
         }
@@ -192,7 +192,7 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
                 case 0:
                     ChangeRotationSpeedTo(0.25f, 10);
                     break;
-                case EyeofCthulhu.PhaseChangeGateValue_2To3_1 - 10:
+                case EyeofCthulhu.PhaseChangeGateValue2To31 - 10:
                     ChangeRotationSpeedTo(NormalRotationSpeed, 10);
                     break;
             }
@@ -456,7 +456,7 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
                                 BloodOrbProjectile modP = p.GetModProjectile<BloodOrbProjectile>();
                                 modP.Master = Master;
                                 modP.ArenaProjectile = Projectile;
-                                modP.BehaviorType = BloodOrbProjectile.Behavior_Explode;
+                                modP.BehaviorType = BloodOrbProjectile.BehaviorExplode;
                                 modP.Destination = destination;
 
                                 if (p.whoAmI < Projectile.whoAmI)
@@ -481,7 +481,7 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
                                     BloodOrbProjectile modP = p.GetModProjectile<BloodOrbProjectile>();
                                     modP.Master = Master;
                                     modP.ArenaProjectile = Projectile;
-                                    modP.BehaviorType = BloodOrbProjectile.Behavior_Explode;
+                                    modP.BehaviorType = BloodOrbProjectile.BehaviorExplode;
                                     modP.Destination = destination2;
 
                                     if (p.whoAmI < Projectile.whoAmI)
@@ -645,7 +645,7 @@ public sealed partial class EyeofCthulhuArena : BaseRingArenaProjectile, IConten
         return false;
     }
 
-    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => Timer1 > EyeofCthulhu.PhaseChangeGateValue_2To3_1 && base.Colliding(projHitbox, targetHitbox) == true;
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => Timer1 > EyeofCthulhu.PhaseChangeGateValue2To31 && base.Colliding(projHitbox, targetHitbox) == true;
 
     protected override void SendAnomalyExtraAI(BinaryWriter writer)
     {

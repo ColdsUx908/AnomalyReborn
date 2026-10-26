@@ -3,7 +3,8 @@ using CalamityMod.NPCs.CeaselessVoid;
 using CalamityMod.NPCs.ExoMechs.Apollo;
 using CalamityMod.NPCs.Ravager;
 using MonoMod.Utils;
-using static Terraria.ModLoader.ModContent;
+using Transoceanic.Game.Entities;
+using static global::Terraria.ModLoader.ModContent;
 
 namespace Anomalies.Visuals.BossBar;
 
@@ -513,7 +514,7 @@ public partial class BossHealthBar : IContentLoader, ILocalizationPrefix
             else
                 DrawRetroBar(spriteBatch, x, y);
 
-            (float sin, float cos) = TOMathUtils.TimeWrappingFunction.GetTimeSinCos(0.5f, 1f, 0f, true);
+            (float sin, float cos) = TOGameTimeFunctions.GetTimeSinCos(0.5f, 1f, 0f, true);
 
             Color? mainColor;
             if (AnomalyNPC.AnomalyAI_IsRunning)
@@ -553,11 +554,11 @@ public partial class BossHealthBar : IContentLoader, ILocalizationPrefix
 
             float borderWidth;
             if (AnomalyNPC.AnomalyAI_IsRunning)
-                borderWidth = (1f + TOMathUtils.TimeWrappingFunction.GetTimeSin(1f, 1f, 0f, true)) * Math.Clamp(AnomalyNPC.AnomalyAI_Timer / 120f, 0f, 1f);
+                borderWidth = (1f + TOGameTimeFunctions.GetTimeSin(1f, 1f, 0f, true)) * Math.Clamp(AnomalyNPC.AnomalyAI_Timer / 120f, 0f, 1f);
             else if (EnrageTimer > 0)
-                borderWidth = (1f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(EnrageTimer / 80f, 0f, 1f);
+                borderWidth = (1f + TOGameTimeFunctions.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(EnrageTimer / 80f, 0f, 1f);
             else if (IncreasingDefenseOrDRTimer > 0)
-                borderWidth = (1f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f);
+                borderWidth = (1f + TOGameTimeFunctions.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f);
             else
                 borderWidth = 0f;
 
@@ -737,7 +738,7 @@ public partial class BossHealthBar : IContentLoader, ILocalizationPrefix
         DrawMainBar(spriteBatch, x, y + 43);
         DrawComboBar(spriteBatch, x, y + 43);
 
-        (float sin, float cos) = TOMathUtils.TimeWrappingFunction.GetTimeSinCos(0.5f, 1f, 0f, true);
+        (float sin, float cos) = TOGameTimeFunctions.GetTimeSinCos(0.5f, 1f, 0f, true);
 
         Color seperatorColor;
         if (AnomalyNPC.AnomalyAI_IsRunning)

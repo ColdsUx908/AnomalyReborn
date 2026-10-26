@@ -1,9 +1,9 @@
-﻿namespace Anomalies.Bosses.EyeofCthulhu;
+namespace Anomalies.Bosses.EyeofCthulhu;
 
 public class BloodOrbProjectile : AnomalyModProjectile
 {
-    public const byte Behavior_Still = 1;
-    public const byte Behavior_Explode = 2;
+    public const byte BehaviorStill = 1;
+    public const byte BehaviorExplode = 2;
 
     /* 数组使用约定
      * 
@@ -35,7 +35,7 @@ public class BloodOrbProjectile : AnomalyModProjectile
         set
         {
             _ArenaReference.Set(value);
-            if (TOSharedData.NotClient || Projectile.IsOnOwnerClient)
+            if (TONetworkEnvironment.NotClient || Projectile.IsOnOwnerClient)
                 Projectile.netUpdate = true;
         }
     }
@@ -76,11 +76,11 @@ public class BloodOrbProjectile : AnomalyModProjectile
 
         Projectile.rotation += 0.05f;
 
-        if (BehaviorType is Behavior_Still or Behavior_Explode)
+        if (BehaviorType is BehaviorStill or BehaviorExplode)
         {
             if (!ArenaProjectileAlive)
             {
-                if (TOSharedData.NotClient)
+                if (TONetworkEnvironment.NotClient)
                     Projectile.Kill();
                 return;
             }
@@ -101,7 +101,7 @@ public class BloodOrbProjectile : AnomalyModProjectile
                 switch (Timer2)
                 {
                     case StillTime:
-                        if (BehaviorType == Behavior_Still)
+                        if (BehaviorType == BehaviorStill)
                         {
                             Projectile.Kill();
                             return;
@@ -111,7 +111,7 @@ public class BloodOrbProjectile : AnomalyModProjectile
                         Projectile.SetVelocityandRotation(velocity);
                         break;
                     case > StillTime:
-                        if (BehaviorType == Behavior_Still)
+                        if (BehaviorType == BehaviorStill)
                         {
                             Projectile.Kill();
                             return;

@@ -1,15 +1,15 @@
-﻿namespace Anomalies.Bosses.EaterofWorlds;
+namespace Anomalies.Bosses.EaterofWorlds;
 
 public sealed class EaterofWorldsTail : EaterofWorldsSegment<EaterofWorldsTail>
 {
     public bool HasInitialized
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[0];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[1];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[0] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[1] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[0] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[1] = value;
                 AnomalyNPC.AIChanged32[0] = true;
             }
         }
@@ -27,9 +27,14 @@ public sealed class EaterofWorldsTail : EaterofWorldsSegment<EaterofWorldsTail>
 
     public override bool PreAI()
     {
+        NPC.alpha = 0;
+        UpdateCoilDR();
+        NPC.boss = false;
         if (!ValidHead || !ValidPrevious)
         {
-            EaterofWorldsHandler.DestroySegment(NPC);
+            NPC.damage = 0;
+            if (TONetworkEnvironment.NotClient)
+                NPC.active = false;
             return false;
         }
 
@@ -41,6 +46,8 @@ public sealed class EaterofWorldsTail : EaterofWorldsSegment<EaterofWorldsTail>
         }
 
         NPC.realLife = Head.whoAmI;
+        NPC.lifeMax = Head.lifeMax;
+        NPC.life = Head.life;
         BodyAndTailMovementAI();
 
         OnRunningPreAI?.Invoke(this);
@@ -54,6 +61,8 @@ public sealed class EaterofWorldsTail : EaterofWorldsSegment<EaterofWorldsTail>
         spriteBatch.DrawFromCenter(NPC.Texture, NPC.Center - screenPos, NPC.frame, drawColor, NPC.rotation, NPC.scale);
         return false;
     }
+
+    public override bool CheckActive() => false;
 
     public override bool PreKill()
     {

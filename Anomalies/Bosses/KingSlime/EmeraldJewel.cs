@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.KingSlime;
+namespace Anomalies.Bosses.KingSlime;
 
 public sealed class EmeraldJewel : JewelNPC
 {
@@ -16,13 +16,13 @@ public sealed class EmeraldJewel : JewelNPC
 
     public Behavior CurrentBehavior
     {
-        get => (Behavior)AI_Union_0.byte0;
+        get => (Behavior)AI_Union_0.Byte0;
         set
         {
             if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte0 = (byte)value;
+            union.Byte0 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -153,7 +153,7 @@ public sealed class EmeraldJewel : JewelNPC
                     NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, chargeSpeed), MathHelper.PiOver2);
                     NPC.netSpam = 0;
 
-                    if (TOSharedData.NotClient && validSapphire)
+                    if (TONetworkEnvironment.NotClient && validSapphire)
                     {
                         int type = Aroma ? ModContent.ProjectileType<RubyBullet>() : ModContent.ProjectileType<EmeraldJewelShadow>();
                         Vector2 velocityUnit = NPC.GetVelocityTowards(NPC.PlayerTarget, 1f);

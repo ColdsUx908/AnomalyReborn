@@ -20,52 +20,52 @@ public abstract class JewelNPC : AnomalyModNPC
 
     public bool HasInitialized
     {
-        get => AI_Union_2.bits[0];
+        get => AI_Union_2.Bits[0];
         set
         {
             if (HasInitialized != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_2;
-            union.bits[0] = value;
+            union.Bits[0] = value;
             AI_Union_2 = union;
         }
     }
 
     public bool HasEnteredPhase2
     {
-        get => AI_Union_2.bits[1];
+        get => AI_Union_2.Bits[1];
         set
         {
             if (HasEnteredPhase2 != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_2;
-            union.bits[1] = value;
+            union.Bits[1] = value;
             AI_Union_2 = union;
         }
     }
 
     public bool CanAttack
     {
-        get => AI_Union_2.bits[2];
+        get => AI_Union_2.Bits[2];
         set
         {
             if (CanAttack != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_2;
-            union.bits[2] = value;
+            union.Bits[2] = value;
             AI_Union_2 = union;
         }
     }
 
     public bool MasterDead
     {
-        get => AI_Union_2.bits[3];
+        get => AI_Union_2.Bits[3];
         set
         {
             if (MasterDead != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_2;
-            union.bits[3] = value;
+            union.Bits[3] = value;
             AI_Union_2 = union;
         }
     }

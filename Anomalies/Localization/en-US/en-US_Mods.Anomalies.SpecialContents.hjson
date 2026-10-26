@@ -41,7 +41,6 @@ Developer: {
 			DisplayName: Samsara Resonance
 			Description: Each stack multiplies melee damage by 1.08 and reduces skill cooldowns by 5%; a new aspect refreshes the 30-second duration, while a repeated aspect removes itself and one random remaining mark and increases that cast's cooldown by 20%
 		}
-
 	}
 }
 

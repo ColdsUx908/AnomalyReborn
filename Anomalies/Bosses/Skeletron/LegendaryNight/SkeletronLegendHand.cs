@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.Skeletron.LegendaryNight;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand>
 {
@@ -72,7 +72,7 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
 
         if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master) || master.Anomaly.CustomAIType != 1)
         {
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
             {
                 NPC.active = false;
                 NPC.netUpdate = true;

@@ -5,13 +5,13 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
     public override string LocalizationCategory => "Bosses.BrainofCthulhu";
     public override string Texture => "Anomalies/Bosses/BrainofCthulhu/Assets/BloomRing";
 
-    private BezierCurve curve = null;
+    private BezierCurve _Curve = null;
     public int throwSign
     {
-        get => AnomalyProjectile.AnomalyAI32[0].i;
+        get => AnomalyProjectile.AnomalyAI32[0].I;
         set
         {
-            AnomalyProjectile.AnomalyAI32[0].i = value;
+            AnomalyProjectile.AnomalyAI32[0].I = value;
             AnomalyProjectile.AIChanged32[0] = true;
         }
     }
@@ -38,10 +38,10 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
 
     public int MyTarget
     {
-        get => AnomalyProjectile.AnomalyAI32[1].i;
+        get => AnomalyProjectile.AnomalyAI32[1].I;
         set
         {
-            AnomalyProjectile.AnomalyAI32[1].i = value;
+            AnomalyProjectile.AnomalyAI32[1].I = value;
             AnomalyProjectile.AIChanged32[1] = true;
         }
     }
@@ -49,14 +49,19 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
     public ref float Time => ref Projectile.ai[0];
     public ref float StunTime => ref Projectile.ai[1];
 
-    private static Dictionary<int, Texture2D> EnemyGlowTextures = [];
+    private static Dictionary<int, Texture2D> _EnemyGlowTextures = [];
     public int enemyID { get => (int)Projectile.ai[2]; set => Projectile.ai[2] = value; }
 
     public override void Unload()
     {
-        foreach (Texture2D texture in EnemyGlowTextures.Values)
-            texture.Dispose();
-        EnemyGlowTextures.Clear();
+        // Keep the queued disposal independent of the cache, which is cleared immediately.
+        Texture2D[] textures = [.. _EnemyGlowTextures.Values];
+        _EnemyGlowTextures.Clear();
+        Main.QueueMainThreadAction(() =>
+        {
+            foreach (Texture2D texture in textures)
+                texture.Dispose();
+        });
     }
 
     public override void SetDefaults()
@@ -176,7 +181,7 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
             Vector2 perpindicular = direction.RotatedBy(MathHelper.PiOver2);
             Vector2 controlPoint1 = startPoint + (direction * 0.25f) + (perpindicular * curveIntensity);
             Vector2 controlPoint2 = startPoint + (direction * 0.75f) + (perpindicular * curveIntensity);
-            curve = new BezierCurve(startPoint, controlPoint1, controlPoint2, endPoint);
+            _Curve = new BezierCurve(startPoint, controlPoint1, controlPoint2, endPoint);
         }
         else
         {
@@ -252,13 +257,13 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
         }
     }
 
-    private bool evenRed = false;
+    private bool _EvenRed = false;
     public override bool PreDraw(ref Color lightColor)
     {
         //Handles getting the glow textures
-        if (EnemyGlowTextures.Count == 0)
+        if (_EnemyGlowTextures.Count == 0)
         {
-            EnemyGlowTextures.Clear();
+            _EnemyGlowTextures.Clear();
             int[] enemyIDs = [NPCID.FaceMonster, NPCID.Crimera, NPCID.BloodCrawler];
             foreach (int id in enemyIDs)
             {
@@ -275,7 +280,7 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
                 }
 
                 glow.SetData(ColorArray);
-                EnemyGlowTextures.Add(id, glow);
+                _EnemyGlowTextures.Add(id, glow);
             }
         }
 
@@ -321,17 +326,17 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
             float wrapTime = 60;
             float wrappedTime = MathHelper.Clamp(Time % (wrapTime + 1) / wrapTime, 0f, 1f);
             if (wrappedTime == 0)
-                evenRed = !evenRed;
+                _EvenRed = !_EvenRed;
             float glowOpacity = MathHelper.Clamp(1 - ((throwTime - 75) / 15f), 0f, 1f);
             if (StunTime >= 0)
                 glowOpacity = 1 - (StunTime / 30f);
             if (Time < 15)
                 glowOpacity = Time / 15f;
-            if (curve != null)
+            if (_Curve != null)
             {
-                Transoceanic.DataStructures.Rendering.SpriteBatchSnapshot snapshot = Main.spriteBatch.ChangeState(blendState: BlendState.Additive);
+                Transoceanic.Graphics.Rendering.SpriteBatchSnapshot snapshot = Main.spriteBatch.ChangeState(blendState: BlendState.Additive);
                 Texture2D ring = TextureAssets.Projectile[Type].Value;
-                List<Vector2> points = curve.GetPoints(pCount);
+                List<Vector2> points = _Curve.GetPoints(pCount);
                 for (int i = 1; i < pCount; i++)
                 {
                     float scale1 = MathHelper.Lerp(0.1f, 1f, i / (float)(pCount - 1));
@@ -354,7 +359,7 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
                     else
                         pos = Vector2.Lerp(points[i], points[i + 1], wrappedTime);
                     Color color;
-                    if (evenRed)
+                    if (_EvenRed)
                         color = (i % 2 == 0 ? Color.Red : Color.Magenta) * 0.666f;
                     else
                         color = (i % 2 == 0 ? Color.Magenta : Color.Red) * 0.666f;
@@ -370,7 +375,7 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
 
             Vector2[] offsets = [Vector2.UnitX * 2, Vector2.UnitX * -2, Vector2.UnitY * 2, Vector2.UnitY * -2];
             for (int i = 0; i < 4; i++)
-                Main.EntitySpriteDraw(EnemyGlowTextures[enemyID], Projectile.Center - Main.screenPosition + offsets[i].RotatedBy(Projectile.rotation), frame, Color.Lerp(Color.Red, Color.Magenta, (float)Math.Sin(Main.GlobalTimeWrappedHourly * 5f) / 2f + 0.5f) * glowOpacity, Projectile.rotation, frame.Size() * 0.5f, 1f, 0);
+                Main.EntitySpriteDraw(_EnemyGlowTextures[enemyID], Projectile.Center - Main.screenPosition + offsets[i].RotatedBy(Projectile.rotation), frame, Color.Lerp(Color.Red, Color.Magenta, (float)Math.Sin(Main.GlobalTimeWrappedHourly * 5f) / 2f + 0.5f) * glowOpacity, Projectile.rotation, frame.Size() * 0.5f, 1f, 0);
         }
 
         Main.EntitySpriteDraw(tex, Projectile.Center - Main.screenPosition, frame, lightColor * opacity, Projectile.rotation, frame.Size() * 0.5f, 1f, 0);

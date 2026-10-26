@@ -1,4 +1,4 @@
-﻿using CalamityMod.NPCs.VanillaNPCAIOverrides.Bosses;
+using CalamityMod.NPCs.VanillaNPCAIOverrides.Bosses;
 using Terraria.GameContent.ItemDropRules;
 
 namespace Anomalies.Bosses.EaterofWorlds;
@@ -41,6 +41,9 @@ public sealed class EaterofWorldsHandler
             NPCID.Sets.TrailingMode[NPCID.EaterofWorldsHead] = 1;
             NPCID.Sets.TrailingMode[NPCID.EaterofWorldsBody] = 1;
             NPCID.Sets.TrailingMode[NPCID.EaterofWorldsTail] = 1;
+            NPCID.Sets.TrailCacheLength[NPCID.EaterofWorldsHead] = 16;
+            NPCID.Sets.TrailCacheLength[NPCID.EaterofWorldsBody] = 16;
+            NPCID.Sets.TrailCacheLength[NPCID.EaterofWorldsTail] = 16;
         }
 
         private static void On_NPC_DropEoWLoot(On_NPC.orig_DropEoWLoot orig, NPC self, bool fromCheckDead)

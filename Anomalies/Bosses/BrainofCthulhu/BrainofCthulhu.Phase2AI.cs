@@ -236,7 +236,7 @@ public sealed partial class BrainofCthulhu
                     {
                         if (Time > BloodshotRate + 30 && Time % (IchorRate * 10) == 0)
                         {
-                            SoundEngine.PlaySound(BloodBombSound, NPC.Center);
+                            SoundEngine.PlaySound(_BloodBombSound, NPC.Center);
                             if (Main.netMode != NetmodeID.MultiplayerClient)
                                 NPC.NewNPCAction(source: NPC.GetSource_FromThis(), position: new Vector2((int)NPC.Center.X, (int)NPC.Center.Y), type: ModContent.NPCType<BloodBomb>(), start: NPC.whoAmI);
                         }
@@ -290,7 +290,7 @@ public sealed partial class BrainofCthulhu
                             }
                         }
 
-                        SoundEngine.PlaySound(BloodShotSound with { PitchVariance = 0.5f }, NPC.Center);
+                        SoundEngine.PlaySound(_BloodShotSound with { PitchVariance = 0.5f }, NPC.Center);
                     }
                 }
             }
@@ -299,7 +299,7 @@ public sealed partial class BrainofCthulhu
                 NPC.rotation *= 0.9f;
                 NPC.damage = NPC.defDamage;
                 if (endTime == 0)
-                    SoundEngine.PlaySound(ShortRoarSound, NPC.Center);
+                    SoundEngine.PlaySound(_ShortRoarSound, NPC.Center);
                 if (endTime >= DashPrepTime)
                 {
                     if (endTime < DashPrepTime + DashReelbackTime)
@@ -338,7 +338,7 @@ public sealed partial class BrainofCthulhu
             {
                 if (Time == SanguineAttackEndDelay)
                 {
-                    SoundEngine.PlaySound(ShortRoarSound, NPC.Center);
+                    SoundEngine.PlaySound(_ShortRoarSound, NPC.Center);
                     bool left = Target.Center.X > NPC.Center.X;
                     NPC.velocity = Vector2.UnitX * (left ? 18 : -18);
                     NPC.rotation = MathHelper.Pi / 8f * (left ? 1 : -1);
@@ -367,7 +367,7 @@ public sealed partial class BrainofCthulhu
                     NPC.netUpdate = true;
                 if (Time == -24)
                 {
-                    SoundEngine.PlaySound(ShortRoarSound, NPC.Center);
+                    SoundEngine.PlaySound(_ShortRoarSound, NPC.Center);
                     for (int i = 1; i <= 3; i++)
                     {
                         Color color = i switch
@@ -430,7 +430,7 @@ public sealed partial class BrainofCthulhu
                         CurrentLocalPhase++;
                         if (CurrentLocalPhase <= SanguineTeleportCount)
                         {
-                            SoundEngine.PlaySound(ExplosionSound, NPC.Center);
+                            SoundEngine.PlaySound(_ExplosionSound, NPC.Center);
                             for (int i = 0; i < SanguineScytheCount; i++)
                             {
                                 float initalSpeed = 16f;
@@ -471,7 +471,7 @@ public sealed partial class BrainofCthulhu
                 {
                     if (Time == 6)
                     {
-                        SoundEngine.PlaySound(ShortRoarSound, NPC.Center);
+                        SoundEngine.PlaySound(_ShortRoarSound, NPC.Center);
                         for (int i = 1; i <= 3; i++)
                         {
                             Color color = i switch
@@ -579,7 +579,7 @@ public sealed partial class BrainofCthulhu
 
                     if (Time == CrimsonEyeAttackIdleDuration)
                     {
-                        SoundEngine.PlaySound(ExplosionSound, NPC.Center);
+                        SoundEngine.PlaySound(_ExplosionSound, NPC.Center);
                         if (Main.netMode != NetmodeID.MultiplayerClient)
                         {
                             float projCount = 10;

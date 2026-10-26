@@ -1,4 +1,4 @@
-﻿namespace Anomalies.GameContents;
+namespace Anomalies.GameContents;
 
 public interface ILegendaryItem
 {

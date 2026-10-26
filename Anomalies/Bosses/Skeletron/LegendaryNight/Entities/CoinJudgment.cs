@@ -105,7 +105,7 @@ public sealed class CoinJudgment : AnomalyModProjectile
         if (!master.active || master.type != NPCID.SkeletronHead || master.Anomaly.CustomAIType != 1
             || SkeletronLegendHead.GetInstance(master).CurrentAvatar != SkeletronLegendHead.Avatar.PlatinumCoin)
         {
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();
             return;
         }

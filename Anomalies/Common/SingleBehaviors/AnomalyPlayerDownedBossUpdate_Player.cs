@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Common.SingleBehaviors;
+namespace Anomalies.Common.SingleBehaviors;
 
 public sealed class AnomalyPlayerDownedBossUpdate_Player : AnomalyPlayerBehavior
 {

@@ -1,4 +1,4 @@
-﻿namespace Anomalies.GameContents.AnomalyItems;
+namespace Anomalies.GameContents.AnomalyItems;
 
 public interface IAnomalyItem
 {

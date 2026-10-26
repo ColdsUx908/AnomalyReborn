@@ -102,7 +102,7 @@ public class BloodScythe : AnomalyModProjectile
     internal static void DrawScythe(Projectile projectile)
     {
         // Alpha blending preserves the red silhouette against bright backgrounds.
-        Transoceanic.DataStructures.Rendering.SpriteBatchSnapshot state = Main.spriteBatch.ChangeState(blendState: BlendState.AlphaBlend);
+        Transoceanic.Graphics.Rendering.SpriteBatchSnapshot state = Main.spriteBatch.ChangeState(blendState: BlendState.AlphaBlend);
         try
         {
             Texture2D texture = BrainOfCthulhuSystem.GetBloodScytheMask();

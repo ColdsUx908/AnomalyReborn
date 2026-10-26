@@ -1,0 +1,30 @@
+using Transoceanic.Game.Timing;
+
+namespace Transoceanic.GlobalInstances;
+
+public sealed class TOGlobalItem : GlobalItem
+{
+    public override bool InstancePerEntity => true;
+
+    public override GlobalItem Clone(Item from, Item to)
+    {
+        TOGlobalItem clone = (TOGlobalItem)base.Clone(from, to);
+
+        clone.Equip = Equip;
+        clone.EquipTimer = EquipTimer;
+
+        return clone;
+    }
+
+    internal HysteresisBoolean Equip;
+    internal SwitchTimer EquipTimer;
+
+    /// <summary>
+    /// 获取一个物品的装备时长。
+    /// </summary>
+    /// <param name="max"></param>
+    /// <returns>装备时长。
+    /// <br/>在物品装备时，返回值从0逐渐增加至max；未装备时，从max逐渐减少至0。
+    /// </returns>
+    public long GetEquippedTimer(long max) => EquipTimer.GetValue(TOGameTime.GameTimer.TotalTicks, max);
+}

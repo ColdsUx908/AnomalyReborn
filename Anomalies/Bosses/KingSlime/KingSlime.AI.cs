@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.KingSlime;
+namespace Anomalies.Bosses.KingSlime;
 
 public sealed partial class KingSlime
 {
@@ -85,7 +85,7 @@ public sealed partial class KingSlime
         #region 行为函数
         void SelectNextBehavior()
         {
-            if (!TOSharedData.NotClient)
+            if (!TONetworkEnvironment.NotClient)
                 return;
 
             if (InvalidPhase1)
@@ -226,7 +226,7 @@ public sealed partial class KingSlime
 
         void TrySpawnMinions()
         {
-            if (!TOSharedData.NotClient || NPC.Master is not null) //史莱姆王召唤的史莱姆王不再召唤仆从
+            if (!TONetworkEnvironment.NotClient || NPC.Master is not null) //史莱姆王召唤的史莱姆王不再召唤仆从
                 return;
 
             if (NPC.LifeRatio <= JewelRubyLifeRatio && !JewelRubySpawned)
@@ -376,7 +376,7 @@ public sealed partial class KingSlime
                         {
                             SoundEngine.PlaySound(SoundID.Item155, NPC.Center);
 
-                            if (TOSharedData.NotClient)
+                            if (TONetworkEnvironment.NotClient)
                             {
                                 int outerAmount = Phase2_2 ? 7 : Ultra ? 5 : 0;
                                 int innerAmount = Phase2_2 ? 5 : 3;
@@ -400,7 +400,7 @@ public sealed partial class KingSlime
                             ruby.CurrentBehavior = firstJump || highJump ? RubyJewel.Behavior.BuffedAttack : RubyJewel.Behavior.NormalAttack;
                         }
 
-                        if (JewelRainbowAlive && TOSharedData.NotClient)
+                        if (JewelRainbowAlive && TONetworkEnvironment.NotClient)
                         {
                             RainbowJewel rainbow = JewelRainbow.GetModNPC<RainbowJewel>();
                             rainbow.CurrentBehavior = firstJump ? (Main.rand.NextBool() ? RainbowJewel.Behavior.TriangleAttack : RainbowJewel.Behavior.StarAttack)
@@ -526,7 +526,7 @@ public sealed partial class KingSlime
             switch (CurrentLocalPhase)
             {
                 case 0: //寻的
-                    if (!TOSharedData.NotClient)
+                    if (!TONetworkEnvironment.NotClient)
                         return;
                     Vector2? destination = null;
 
@@ -625,7 +625,7 @@ public sealed partial class KingSlime
                                     SoundEngine.PlaySound(SoundID.Item167, NPC.Center);
                                     SoundEngine.PlaySound(SoundID.Item155, NPC.Center);
 
-                                    if (TOSharedData.NotClient)
+                                    if (TONetworkEnvironment.NotClient)
                                     {
                                         int outerAmount = 11;
                                         int innerAmount = 7;

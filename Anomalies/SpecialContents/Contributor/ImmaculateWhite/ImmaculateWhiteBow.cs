@@ -1,25 +1,25 @@
-﻿namespace Anomalies.SpecialContents.Contributor.ImmaculateWhite;
+namespace Anomalies.SpecialContents.Contributor.ImmaculateWhite;
 
 public sealed class ImmaculateWhiteBow : AnomalyModProjectile
 {
     public bool CanShootSplitBolt
     {
-        get => AI_Union_0.bits[0];
+        get => AI_Union_0.Bits[0];
         set
         {
             Union32 union = AI_Union_0;
-            union.bits[0] = value;
+            union.Bits[0] = value;
             AI_Union_0 = union;
         }
     }
 
     public bool CanUseRightClickFunction
     {
-        get => AI_Union_0.bits[1];
+        get => AI_Union_0.Bits[1];
         set
         {
             Union32 union = AI_Union_0;
-            union.bits[1] = value;
+            union.Bits[1] = value;
             AI_Union_0 = union;
         }
     }

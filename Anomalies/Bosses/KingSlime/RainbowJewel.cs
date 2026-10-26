@@ -1,4 +1,4 @@
-﻿using Anomalies.Assets.Effects;
+using Anomalies.Assets.Effects;
 using Anomalies.Visuals.BossBar;
 
 namespace Anomalies.Bosses.KingSlime;
@@ -22,13 +22,13 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
 
     public Behavior CurrentBehavior
     {
-        get => (Behavior)AI_Union_0.byte0;
+        get => (Behavior)AI_Union_0.Byte0;
         set
         {
             if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte0 = (byte)value;
+            union.Byte0 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -144,13 +144,13 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
 
             JewelHandler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
 
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
             {
                 int amount = 9;
                 float totalAngle = MathHelper.TwoPi;
                 float singleRadian = totalAngle / amount;
                 Vector2 originalVelocity = NPC.GetVelocityTowards(Target, MaxProjectileSpeed * 0.85f);
-                Projectile.NewProjectilesArc<RainbowBullet>(amount, singleRadian, SourceAI, NPC.Center, originalVelocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureType_Circle);
+                Projectile.NewProjectilesArc<RainbowBullet>(amount, singleRadian, SourceAI, NPC.Center, originalVelocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureTypeCircle);
             }
 
             CurrentBehavior = Behavior.None;
@@ -166,7 +166,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
 
             JewelHandler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
 
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
             {
                 int amount = 30;
                 float totalAngle = MathHelper.TwoPi;
@@ -180,7 +180,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
                 for (int i = 0; i < amount; i++)
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
-                    Projectile.NewProjectileAction<RainbowBullet>(SourceAI, NPC.Center, velocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureType_Triangle);
+                    Projectile.NewProjectileAction<RainbowBullet>(SourceAI, NPC.Center, velocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureTypeTriangle);
                 }
             }
 
@@ -197,7 +197,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
 
             JewelHandler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
 
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
             {
                 int amount = 60;
                 float totalAngle = MathHelper.TwoPi;
@@ -213,7 +213,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
                 for (int i = 0; i < amount; i++)
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
-                    Projectile.NewProjectileAction<RainbowBullet>(SourceAI, NPC.Center, velocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureType_Star);
+                    Projectile.NewProjectileAction<RainbowBullet>(SourceAI, NPC.Center, velocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureTypeStar);
                 }
             }
 
@@ -225,7 +225,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
         {
             Timer1++;
 
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
             {
                 if (Timer1 == 1)
                     AttackCore();
@@ -259,7 +259,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
                 for (int i = 0; i < amount; i++)
                 {
                     Vector2 velocity = Vector2.LerpMany(originalVelocityList, (float)i / amount);
-                    Projectile.NewProjectileAction<RainbowBullet>(SourceAI, NPC.Center, velocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureType_Square);
+                    Projectile.NewProjectileAction<RainbowBullet>(SourceAI, NPC.Center, velocity, RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureTypeSquare);
                 }
             }
         }
@@ -298,7 +298,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
 
                 JewelHandler.CreateDustFromJewelTo(NPC, master.Center, -1, true);
 
-                if (TOSharedData.NotClient)
+                if (TONetworkEnvironment.NotClient)
                 {
                     int amount = attackNum switch
                     {
@@ -313,7 +313,7 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
                     float singleRadian = MathHelper.TwoPi / amount;
                     float radian = singleRadian * (amount - 1);
                     float initialRotation = (Target.Center - NPC.Center).ToRotation() + attackNum * TOMathUtils.PiOver5 + Main.rand.NextFloat(TOMathUtils.PiOver12);
-                    Projectile.NewProjectilesArc<RainbowBullet>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(MaxProjectileSpeed - attackNum / 2f, initialRotation), RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureType_Circle);
+                    Projectile.NewProjectilesArc<RainbowBullet>(amount, singleRadian, SourceAI, NPC.Center, new PolarVector2(MaxProjectileSpeed - attackNum / 2f, initialRotation), RainbowJewelProjectileDamage, 0f, action: p => p.ai[0] = RainbowBullet.TextureTypeCircle);
                 }
             }
 

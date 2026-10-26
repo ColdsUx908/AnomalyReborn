@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.EaterofWorlds;
+namespace Anomalies.Bosses.EaterofWorlds;
 
 public enum EaterofWorldsSegmentType : byte
 {
@@ -31,11 +31,11 @@ public abstract class EaterofWorldsSegment<TBehavior> : AnomalyNPCBehavior<TBeha
 
     public NPC Head
     {
-        get => NPC.GetNPCFromIndex(AI_Union_0.byte0 - 1);
+        get => NPC.GetNPCFromIndex(AI_Union_0.Byte0 - 1);
         set
         {
             Union32 union = AI_Union_0;
-            union.byte0 = (byte)((value?.whoAmI ?? Main.maxNPCs) + 1);
+            union.Byte0 = (byte)(value is null || value.whoAmI >= Main.maxNPCs ? 0 : value.whoAmI + 1);
             AI_Union_0 = union;
         }
     }
@@ -45,11 +45,11 @@ public abstract class EaterofWorldsSegment<TBehavior> : AnomalyNPCBehavior<TBeha
 
     public NPC LocalHead
     {
-        get => NPC.GetNPCFromIndex(AI_Union_0.byte1 - 1);
+        get => NPC.GetNPCFromIndex(AI_Union_0.Byte1 - 1);
         set
         {
             Union32 union = AI_Union_0;
-            union.byte1 = (byte)((value?.whoAmI ?? Main.maxNPCs) + 1);
+            union.Byte1 = (byte)(value is null || value.whoAmI >= Main.maxNPCs ? 0 : value.whoAmI + 1);
             AI_Union_0 = union;
         }
     }
@@ -57,11 +57,11 @@ public abstract class EaterofWorldsSegment<TBehavior> : AnomalyNPCBehavior<TBeha
 
     public NPC Previous
     {
-        get => NPC.GetNPCFromIndex(AI_Union_0.byte2 - 1);
+        get => NPC.GetNPCFromIndex(AI_Union_0.Byte2 - 1);
         set
         {
             Union32 union = AI_Union_0;
-            union.byte2 = (byte)((value?.whoAmI ?? Main.maxNPCs) + 1);
+            union.Byte2 = (byte)(value is null || value.whoAmI >= Main.maxNPCs ? 0 : value.whoAmI + 1);
             AI_Union_0 = union;
         }
     }
@@ -69,26 +69,26 @@ public abstract class EaterofWorldsSegment<TBehavior> : AnomalyNPCBehavior<TBeha
 
     public NPC Next
     {
-        get => NPC.GetNPCFromIndex(AI_Union_0.byte3 - 1);
+        get => NPC.GetNPCFromIndex(AI_Union_0.Byte3 - 1);
         set
         {
             Union32 union = AI_Union_0;
-            union.byte3 = (byte)((value?.whoAmI ?? Main.maxNPCs) + 1);
+            union.Byte3 = (byte)(value is null || value.whoAmI >= Main.maxNPCs ? 0 : value.whoAmI + 1);
             AI_Union_0 = union;
         }
     }
     public bool ValidNext => Next.active && Next.EoW;
 
-    public bool IsFirstSegment => !ValidPrevious;
-    public bool IsLastSegment => !ValidNext;
+    public bool IsFirstSegment => SegmentIndex <= 1;
+    public bool IsLastSegment => SegmentIndex == EaterofWorldsHead.TotalSegmentCount;
 
     public int SegmentIndex
     {
-        get => AI_Union_1.i;
+        get => AI_Union_1.I;
         set
         {
             Union32 union = AI_Union_1;
-            union.i = value;
+            union.I = value;
             AI_Union_1 = union;
         }
     }
@@ -103,60 +103,86 @@ public abstract class EaterofWorldsSegment<TBehavior> : AnomalyNPCBehavior<TBeha
         _ => NPCID.None
     };
 
+    protected int GetContactDamage()
+    {
+        if (!ValidHead)
+            return 0;
+        EaterofWorldsHead owner = HeadBehavior;
+        if (owner.ContactSuppressed)
+            return 0;
+        if (IsUnderCoilMask)
+            return 0;
+        if (owner.CurrentBehavior == EaterofWorldsHead.Behavior.Phase1_CrossSweep)
+        {
+            if (owner.CurrentLocalPhase < 2 || !ValidLocalHead)
+                return 0;
+            int group = (EaterofWorldsHead.GetInstance(LocalHead).SegmentIndex - 1) / (EaterofWorldsHead.TotalSegmentCount / 3);
+            if (group == 2 || group == 1 && owner.CurrentLocalPhase == 2 && owner.Timer1 <= 24)
+                return 0;
+        }
+        if (owner.CurrentBehavior == EaterofWorldsHead.Behavior.Phase1_TripleHunt && ValidLocalHead)
+        {
+            int group = (EaterofWorldsHead.GetInstance(LocalHead).SegmentIndex - 1) / (EaterofWorldsHead.TotalSegmentCount / 3);
+            if (owner.CurrentLocalPhase < 2 || group != owner.AttackIndex % 3)
+                return 0;
+        }
+        if (owner.CurrentBehavior is EaterofWorldsHead.Behavior.Phase1_Split or EaterofWorldsHead.Behavior.Phase1_Combine
+            && owner.CurrentLocalPhase == 3)
+        {
+            bool combine = owner.CurrentBehavior == EaterofWorldsHead.Behavior.Phase1_Combine;
+            int ordinal = ValidLocalHead ? EaterofWorldsHead.GetInstance(LocalHead).SegmentIndex : 1;
+            int group = (ordinal - 1) / (EaterofWorldsHead.TotalSegmentCount / 3);
+            if (owner.Timer1 <= (combine ? 42 : 30 + group * EaterofWorldsHead.SplitLaunchDelay))
+                return 0;
+        }
+        return SegmentType switch
+        {
+            EaterofWorldsSegmentType.Head => EaterofWorldsHead.HeadContactDamage,
+            EaterofWorldsSegmentType.Body => EaterofWorldsHead.BodyContactDamage,
+            _ => EaterofWorldsHead.TailContactDamage,
+        };
+    }
+
+    protected bool IsUnderCoilMask => ValidHead && HeadBehavior.CoilMaskStrength > 0f
+        && NPC.Distance(HeadBehavior.CoilingCenter) < 180f;
+
+    protected void UpdateCoilDR()
+    {
+        AnomalyNPC.DR = IsUnderCoilMask ? 0.95f : 0f;
+    }
+
     protected void BodyAndTailMovementAI()
     {
-        EaterofWorldsHead headBehavior = HeadBehavior;
-
-        float amount = headBehavior.CurrentBehavior is EaterofWorldsHead.Behavior.Phase1_Split or EaterofWorldsHead.Behavior.Phase1_Combine && headBehavior.CurrentLocalPhase >= 2
-            ? Math.Clamp(headBehavior.Timer1 / 60f, 0f, 1f) : 0f;
-
-        NPC.velocity = Vector2.Lerp(GetVelocity_Chain(), GetVelocity_Coil(), amount);
-        NPC.rotation = NPC.GetRotationTowards(Previous.Center, MathHelper.PiOver2);
-
-        Vector2 GetVelocity_Chain()
+        NPC.damage = GetContactDamage();
+        NPC.defense = 8;
+        Vector2 delta = Previous.Center - NPC.Center;
+        float spacing = Main.getGoodWorld ? 62f : NPC.width * NPC.scale;
+        Vector2 direction = delta.SafeNormalize(Vector2.UnitY);
+        // Pull only: pushing compressed segments apart unfolds a coil instantly, even with a stationary head.
+        NPC.velocity = direction * Math.Max(0f, delta.Length() - spacing);
+        if (HeadBehavior.CurrentBehavior is EaterofWorldsHead.Behavior.Phase1_Split or EaterofWorldsHead.Behavior.Phase1_Combine
+            && delta.Length() <= spacing + Previous.velocity.Length() + 8f)
         {
-            // 计算到前一个体节的方向向量
-            Vector2 targetPos = Previous.Center - NPC.Center;
-            float targetPosX = targetPos.X;
-            float targetPosY = targetPos.Y;
-
-            // 计算当前体节与前一个体节的距离
-            float targetDistance = (float)Math.Sqrt(targetPosX * targetPosX + targetPosY * targetPosY);
-
-            // 获取期望的间隔宽度（受缩放影响，特殊情况下固定为62）
-            int npcWidth = (int)(NPC.width * NPC.scale);
-            if (Main.getGoodWorld)
-                npcWidth = 62;
-
-            // 将目标向量缩放到保持固定距离
-            targetDistance = (targetDistance - npcWidth) / targetDistance;
-            targetPos *= targetDistance;
-
-            return targetPos;
-        }
-
-        Vector2 GetVelocity_Coil()
-        {
-            int trailLength = NPCID.Sets.TrailCacheLength[NPC.type];
-
-            // 计算要追踪的历史位置索引
-            int pastPos = Math.Clamp(trailLength - 7, 0, trailLength - 1);
-
-            // 核心跟随：把自身中心贴到前一个体节某个历史位置的中心
-            Vector2 targetPos = Previous.oldPos[pastPos];
-
-            // 距离限制：防止体节之间拉得过长
-            int prevIndex = pastPos - 1;
-            if (prevIndex >= 0 && prevIndex < trailLength)
+            // Follow the predecessor's travelled arc, not a chord cutting across its tight orbit.
+            // Otherwise the inner segments stop moving and the distant tail can never enter the coil.
+            Vector2 point = Previous.Center;
+            float remaining = spacing;
+            foreach (Vector2 oldPosition in Previous.oldPos)
             {
-                float maxDistance = Main.getGoodWorld ? 62f : NPC.width * NPC.scale;
-                Vector2 prevOldPosCenter = NPC.oldPos[prevIndex] + NPC.Size / 2f;
-
-                if (NPC.Distance(prevOldPosCenter) > maxDistance)
-                    NPC.oldPos[prevIndex] = targetPos + (NPC.oldPos[prevIndex] - targetPos).ToCustomLength(maxDistance);
+                Vector2 past = oldPosition + Previous.Size * 0.5f;
+                float distance = Vector2.Distance(point, past);
+                if (distance >= remaining && distance > 0.001f)
+                {
+                    Vector2 destination = Vector2.Lerp(point, past, remaining / distance);
+                    Vector2 movement = destination - NPC.Center;
+                    float speed = movement.Length();
+                    NPC.velocity = movement.SafeNormalize(Vector2.Zero) * Math.Min(speed, 40f);
+                    break;
+                }
+                remaining -= distance;
+                point = past;
             }
-
-            return targetPos - NPC.position;
         }
+        NPC.rotation += MathHelper.WrapAngle(direction.ToRotation() + MathHelper.PiOver2 - NPC.rotation) * 0.28f;
     }
 }

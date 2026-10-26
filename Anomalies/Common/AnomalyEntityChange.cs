@@ -1,6 +1,8 @@
-﻿using Anomalies.Visuals.BossBar;
+using Anomalies.Visuals.BossBar;
 using CalamityMod.NPCs;
 using CalamityMod.Projectiles;
+using Transoceanic.Runtime.Detours;
+using Transoceanic.Runtime.Reflection;
 
 namespace Anomalies.Common;
 
@@ -83,6 +85,24 @@ public enum CalamityLogicType_NPCBehavior
 
 public abstract class AnomalyNPCBehavior : SingleNPCBehavior, IAnomalyTweak
 {
+    /// <inheritdoc cref="GlobalNPC.CanBeHitByItem"/>
+    public virtual bool? CanBeHitByItem(Player player, Item item) => null;
+
+    /// <inheritdoc cref="GlobalNPC.CanCollideWithPlayerMeleeAttack"/>
+    public virtual bool? CanCollideWithPlayerMeleeAttack(Player player, Item item, Rectangle meleeAttackHitbox) => null;
+
+    /// <inheritdoc cref="GlobalNPC.CanBeHitByProjectile"/>
+    public virtual bool? CanBeHitByProjectile(Projectile projectile) => null;
+
+    /// <inheritdoc cref="GlobalNPC.CanBeHitByNPC"/>
+    public virtual bool CanBeHitByNPC(NPC attacker) => true;
+
+    /// <inheritdoc cref="GlobalNPC.CanHitPlayer"/>
+    public virtual bool CanHitPlayer(Player target, ref int cooldownSlot) => true;
+
+    /// <inheritdoc cref="GlobalNPC.CanHitNPC"/>
+    public virtual bool CanHitNPC(NPC target) => true;
+
     public sealed override AnomalyMain Mod => AnomalyMain.Instance;
 
     public AnomalyGlobalNPC AnomalyNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Anomaly; }
@@ -190,6 +210,15 @@ public enum CalamityLogicType_ProjectileBehavior
 
 public abstract class AnomalyProjectileBehavior : SingleProjectileBehavior, IAnomalyTweak
 {
+    /// <inheritdoc cref="GlobalProjectile.CanHitNPC"/>
+    public virtual bool? CanHitNPC(NPC target) => null;
+
+    /// <inheritdoc cref="GlobalProjectile.CanHitPvp"/>
+    public virtual bool CanHitPvp(Player target) => true;
+
+    /// <inheritdoc cref="GlobalProjectile.CanHitPlayer"/>
+    public virtual bool CanHitPlayer(Player target) => true;
+
     public sealed override AnomalyMain Mod => AnomalyMain.Instance;
 
     public AnomalyGlobalProjectile AnomalyProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Anomaly; }
@@ -235,12 +264,21 @@ public abstract class AnomalyProjectileBehavior<TModProjectile, TBehavior> : Ano
 
 public abstract class AnomalyItemBehavior : SingleItemBehavior, IAnomalyTweak, IContentLoader
 {
+    /// <inheritdoc cref="GlobalItem.CanHitNPC"/>
+    public virtual bool? CanHitNPC(Player player, NPC target) => null;
+
+    /// <inheritdoc cref="GlobalItem.CanMeleeAttackCollideWithNPC"/>
+    public virtual bool? CanMeleeAttackCollideWithNPC(Rectangle meleeAttackHitbox, Player player, NPC target) => null;
+
+    /// <inheritdoc cref="GlobalItem.CanHitPvp"/>
+    public virtual bool CanHitPvp(Player player, Player target) => true;
+
     public sealed override AnomalyMain Mod => AnomalyMain.Instance;
 
     public AnomalyGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Anomaly; }
 
     /// <summary>
-    /// 设置物品基本属性，确保在 <see cref="Item.SetDefaults(int, bool, Terraria.GameContent.Items.ItemVariant)"/> 方法末尾调用。
+    /// 设置物品基本属性，确保在 <see cref="Item.SetDefaults(int, bool, global::Terraria.GameContent.Items.ItemVariant)"/> 方法末尾调用。
     /// </summary>
     public virtual void SetDefaultsFinal() { }
 
@@ -254,7 +292,7 @@ public abstract class AnomalyItemBehavior : SingleItemBehavior, IAnomalyTweak, I
 
     void IContentLoader.PostSetupContent() => On_Item.SetDefaults_int_bool_ItemVariant += On_Item_SetDefaults_int_bool_ItemVariant;
 
-    private static void On_Item_SetDefaults_int_bool_ItemVariant(On_Item.orig_SetDefaults_int_bool_ItemVariant orig, Item self, int Type, bool noMatCheck, Terraria.GameContent.Items.ItemVariant variant)
+    private static void On_Item_SetDefaults_int_bool_ItemVariant(On_Item.orig_SetDefaults_int_bool_ItemVariant orig, Item self, int Type, bool noMatCheck, global::Terraria.GameContent.Items.ItemVariant variant)
     {
         orig(self, Type, noMatCheck, variant);
         if (self.TryGetBehavior(out AnomalyItemBehavior itemBehavior, nameof(SetDefaultsFinal)))

@@ -1,4 +1,4 @@
-﻿namespace Anomalies.SpecialContents.Developer;
+namespace Anomalies.SpecialContents.Developer;
 
 public interface IDeveloperItem
 {

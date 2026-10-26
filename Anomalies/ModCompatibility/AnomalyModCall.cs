@@ -1,4 +1,4 @@
-﻿namespace Anomalies.ModCompatibility;
+namespace Anomalies.ModCompatibility;
 
 public static class AnomalyModCall
 {

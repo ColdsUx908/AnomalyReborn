@@ -1,11 +1,11 @@
-﻿namespace Anomalies.Bosses.QueenBee;
+namespace Anomalies.Bosses.QueenBee;
 
 public sealed class BeeProjectile : AnomalyModProjectile
 {
-    public const byte Behavior_Accelerate = 1;
-    public const byte Behavior_HomeIn = 2;
-    public const byte Behavior_Rotate = 3;
-    public const byte Behavior_KilledByHoney = 4;
+    public const byte BehaviorAccelerate = 1;
+    public const byte BehaviorHomeIn = 2;
+    public const byte BehaviorRotate = 3;
+    public const byte BehaviorKilledByHoney = 4;
 
     /* 数组使用约定
      * 
@@ -53,7 +53,7 @@ public sealed class BeeProjectile : AnomalyModProjectile
 
         switch ((byte)Projectile.ai[0])
         {
-            case Behavior_Accelerate:
+            case BehaviorAccelerate:
                 if (Timer1 == 120)
                     Projectile.Kill();
                 else if (Timer1 <= 10)
@@ -61,7 +61,7 @@ public sealed class BeeProjectile : AnomalyModProjectile
 
                 break;
 
-            case Behavior_HomeIn:
+            case BehaviorHomeIn:
                 switch (Timer1)
                 {
                     case < 90:
@@ -91,7 +91,7 @@ public sealed class BeeProjectile : AnomalyModProjectile
                 Projectile.velocity *= 1.008f;
                 break;
 
-            case Behavior_Rotate:
+            case BehaviorRotate:
                 if (Timer1 is >= 30 and <= 90)
                 {
                     float rotationSpeed = Projectile.ai[1];
@@ -102,13 +102,13 @@ public sealed class BeeProjectile : AnomalyModProjectile
 
                 break;
 
-            case Behavior_KilledByHoney:
+            case BehaviorKilledByHoney:
                 if (Projectile.honeyWet)
                     Projectile.Kill();
 
                 if (Timer1 >= 40)
                 {
-                    Projectile.ai[0] = Behavior_Rotate;
+                    Projectile.ai[0] = BehaviorRotate;
                     Timer1 = 30;
                 }
                 break;

@@ -1,5 +1,3 @@
-global using Terraria.ModLoader;
-
 namespace AnomaliesMusic;
 
 public sealed class AnomaliesMusicMain : Mod

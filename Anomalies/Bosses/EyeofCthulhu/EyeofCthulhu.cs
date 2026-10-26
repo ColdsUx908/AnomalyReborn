@@ -1,4 +1,4 @@
-﻿using Anomalies.Assets.Effects;
+using Anomalies.Assets.Effects;
 using Anomalies.Visuals.BossBar;
 
 namespace Anomalies.Bosses.EyeofCthulhu;
@@ -45,29 +45,29 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public const float DespawnDistance = 6000f;
     public const float ProjectileOffset = 50f;
-    public const int PhaseChangeTime_1To2 = 150;
-    public const int PhaseChangeGateValue_1To2_1 = PhaseChangeTime_1To2 / 5 * 2;
-    public const int PhaseChangeGateValue_1To2_2 = PhaseChangeTime_1To2 / 5 * 3;
-    public const int PhaseChangeTime_2To3 = 195;
-    public const int PhaseChangeGateValue_2To3_1 = 75;
-    public const int PhaseChangeGateValue_2To3_2 = 120;
+    public const int PhaseChangeTime1To2 = 150;
+    public const int PhaseChangeGateValue1To21 = PhaseChangeTime1To2 / 5 * 2;
+    public const int PhaseChangeGateValue1To22 = PhaseChangeTime1To2 / 5 * 3;
+    public const int PhaseChangeTime2To3 = 195;
+    public const int PhaseChangeGateValue2To31 = 75;
+    public const int PhaseChangeGateValue2To32 = 120;
 
-    public const float Phase2LifeRatio_Anomaly = 0.75f;
-    public const float Phase2LifeRatio_Ultra = 0.8f;
-    public const float Phase2_2LifeRatio_Anomaly = 0.5f;
-    public const float Phase2_2LifeRatio_Ultra = 0.6f;
-    public const float Phase2_3LifeRatio_Anomaly = 0.25f;
-    public const float Phase2_3LifeRatio_Ultra = 0.35f;
-    public const float Phase3LifeRatio_Anomaly = 0f;
-    public const float Phase3LifeRatio_Ultra = 0.1f;
-    public const float Phase3_2LifeRatio_Anomaly = 0f;
-    public const float Phase3_2LifeRatio_Ultra = 0.25f;
+    public const float Phase2LifeRatioAnomaly = 0.75f;
+    public const float Phase2LifeRatioUltra = 0.8f;
+    public const float Phase22LifeRatioAnomaly = 0.5f;
+    public const float Phase22LifeRatioUltra = 0.6f;
+    public const float Phase23LifeRatioAnomaly = 0.25f;
+    public const float Phase23LifeRatioUltra = 0.35f;
+    public const float Phase3LifeRatioAnomaly = 0f;
+    public const float Phase3LifeRatioUltra = 0.1f;
+    public const float Phase32LifeRatioAnomaly = 0f;
+    public const float Phase32LifeRatioUltra = 0.25f;
 
-    public static float Phase2LifeRatio => Ultra ? Phase2LifeRatio_Ultra : Phase2LifeRatio_Anomaly;
-    public static float Phase2_2LifeRatio => Ultra ? Phase2_2LifeRatio_Ultra : Phase2_2LifeRatio_Anomaly;
-    public static float Phase2_3LifeRatio => Ultra ? Phase2_3LifeRatio_Ultra : Phase2_3LifeRatio_Anomaly;
-    public static float Phase3LifeRatio => Ultra ? Phase3LifeRatio_Ultra : Phase3LifeRatio_Anomaly;
-    public static float Phase3_2LifeRatio => Ultra ? Phase3_2LifeRatio_Ultra : Phase3_2LifeRatio_Anomaly;
+    public static float Phase2LifeRatio => Ultra ? Phase2LifeRatioUltra : Phase2LifeRatioAnomaly;
+    public static float Phase2_2LifeRatio => Ultra ? Phase22LifeRatioUltra : Phase22LifeRatioAnomaly;
+    public static float Phase2_3LifeRatio => Ultra ? Phase23LifeRatioUltra : Phase23LifeRatioAnomaly;
+    public static float Phase3LifeRatio => Ultra ? Phase3LifeRatioUltra : Phase3LifeRatioAnomaly;
+    public static float Phase3_2LifeRatio => Ultra ? Phase32LifeRatioUltra : Phase32LifeRatioAnomaly;
 
     public static float TeleportOffset => 150f;
 
@@ -97,13 +97,13 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public int HorizontalChargeTime => Phase2_3 ? 30 : 35;
 
-    public static readonly UnaryFunctionWithDomain PhaseChange_1To2_RotationSpeedFunction = UnaryFunctionWithDomain.Piecewise(
-        (new MathInterval(float.NegativeInfinity, PhaseChangeGateValue_1To2_2, false, false), x => 0.5f * TOMathUtils.Interpolation.QuadraticEaseInOut(x / PhaseChangeGateValue_1To2_1)),
-        (new MathInterval(PhaseChangeGateValue_1To2_2, float.PositiveInfinity, true, false), x => 0.5f * TOMathUtils.Interpolation.QuadraticEaseInOut((PhaseChangeTime_1To2 - x) / PhaseChangeGateValue_1To2_1))
+    public static readonly UnaryFunctionWithDomain PhaseChange1To2RotationSpeedFunction = UnaryFunctionWithDomain.Piecewise(
+        (new MathInterval(float.NegativeInfinity, PhaseChangeGateValue1To22, false, false), x => 0.5f * TOMathUtils.Interpolation.QuadraticEaseInOut(x / PhaseChangeGateValue1To21)),
+        (new MathInterval(PhaseChangeGateValue1To22, float.PositiveInfinity, true, false), x => 0.5f * TOMathUtils.Interpolation.QuadraticEaseInOut((PhaseChangeTime1To2 - x) / PhaseChangeGateValue1To21))
     );
-    public static readonly UnaryFunctionWithDomain PhaseChange_2To3_RotationSpeedFunction = UnaryFunctionWithDomain.Piecewise(
-        (new MathInterval(float.NegativeInfinity, PhaseChangeGateValue_2To3_2, false, false), x => 0.5f * TOMathUtils.Interpolation.QuadraticEaseInOut(x / PhaseChangeGateValue_2To3_1)),
-        (new MathInterval(PhaseChangeGateValue_2To3_2, float.PositiveInfinity, true, false), x => 0.5f * TOMathUtils.Interpolation.QuadraticEaseInOut((PhaseChangeTime_2To3 - x) / PhaseChangeGateValue_2To3_1))
+    public static readonly UnaryFunctionWithDomain PhaseChange2To3RotationSpeedFunction = UnaryFunctionWithDomain.Piecewise(
+        (new MathInterval(float.NegativeInfinity, PhaseChangeGateValue2To32, false, false), x => 0.5f * TOMathUtils.Interpolation.QuadraticEaseInOut(x / PhaseChangeGateValue2To31)),
+        (new MathInterval(PhaseChangeGateValue2To32, float.PositiveInfinity, true, false), x => 0.5f * TOMathUtils.Interpolation.QuadraticEaseInOut((PhaseChangeTime2To3 - x) / PhaseChangeGateValue2To31))
         );
 
     public Phase CurrentPhase
@@ -111,14 +111,14 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
         get
         {
             Union32 union = AI_Union_0;
-            return (Phase)union.byte0;
+            return (Phase)union.Byte0;
         }
         set
         {
             if (CurrentPhase != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte0 = (byte)value;
+            union.Byte0 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -135,14 +135,14 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
         get
         {
             Union32 union = AI_Union_0;
-            return (Behavior)union.byte1;
+            return (Behavior)union.Byte1;
         }
         set
         {
             if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte1 = (byte)value;
+            union.Byte1 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -163,12 +163,12 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public bool Hover2DirectionIsNegative
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[0];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[0];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[0] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[0] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[0] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[0] = value;
                 AnomalyNPC.AIChanged32[0] = true;
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.netUpdate = true;
@@ -184,12 +184,12 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public bool NextChargeTypeIsHorizontal
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[1];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[1];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[1] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[1] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[1] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[1] = value;
                 AnomalyNPC.AIChanged32[0] = true;
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.netUpdate = true;
@@ -199,12 +199,12 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public int ServantSpawnCounter
     {
-        get => AnomalyNPC.AnomalyAI32[3].i;
+        get => AnomalyNPC.AnomalyAI32[3].I;
         set
         {
-            if (AnomalyNPC.AnomalyAI32[3].i != value)
+            if (AnomalyNPC.AnomalyAI32[3].I != value)
             {
-                AnomalyNPC.AnomalyAI32[3].i = value;
+                AnomalyNPC.AnomalyAI32[3].I = value;
                 AnomalyNPC.AIChanged32[3] = true;
             }
         }
@@ -212,12 +212,12 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public int AttackCounter
     {
-        get => AnomalyNPC.AnomalyAI32[4].i;
+        get => AnomalyNPC.AnomalyAI32[4].I;
         set
         {
-            if (AnomalyNPC.AnomalyAI32[4].i != value)
+            if (AnomalyNPC.AnomalyAI32[4].I != value)
             {
-                AnomalyNPC.AnomalyAI32[4].i = value;
+                AnomalyNPC.AnomalyAI32[4].I = value;
                 AnomalyNPC.AIChanged32[4] = true;
             }
         }
@@ -225,12 +225,12 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public int AttackCounter2
     {
-        get => AnomalyNPC.AnomalyAI32[5].i;
+        get => AnomalyNPC.AnomalyAI32[5].I;
         set
         {
-            if (AnomalyNPC.AnomalyAI32[5].i != value)
+            if (AnomalyNPC.AnomalyAI32[5].I != value)
             {
-                AnomalyNPC.AnomalyAI32[5].i = value;
+                AnomalyNPC.AnomalyAI32[5].I = value;
                 AnomalyNPC.AIChanged32[5] = true;
             }
         }
@@ -238,13 +238,13 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public float Phase3ChangeRatio
     {
-        get => AnomalyNPC.AnomalyAI32[6].f;
+        get => AnomalyNPC.AnomalyAI32[6].F;
         set
         {
             float temp = Math.Clamp(value, 0f, 1f);
-            if (AnomalyNPC.AnomalyAI32[6].f != temp)
+            if (AnomalyNPC.AnomalyAI32[6].F != temp)
             {
-                AnomalyNPC.AnomalyAI32[6].f = temp;
+                AnomalyNPC.AnomalyAI32[6].F = temp;
                 AnomalyNPC.AIChanged32[6] = true;
             }
         }
@@ -252,13 +252,13 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public int UsedEyeIndex1
     {
-        get => AnomalyNPC.AnomalyAI32[7].byte0;
+        get => AnomalyNPC.AnomalyAI32[7].Byte0;
         set
         {
             byte temp = (byte)TOMathUtils.NormalizeWithPeriod(value, 32);
-            if (AnomalyNPC.AnomalyAI32[7].byte0 != temp)
+            if (AnomalyNPC.AnomalyAI32[7].Byte0 != temp)
             {
-                AnomalyNPC.AnomalyAI32[7].byte0 = temp;
+                AnomalyNPC.AnomalyAI32[7].Byte0 = temp;
                 AnomalyNPC.AIChanged32[7] = true;
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.netUpdate = true;
@@ -268,13 +268,13 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public int UsedEyeIndex2
     {
-        get => AnomalyNPC.AnomalyAI32[7].byte1;
+        get => AnomalyNPC.AnomalyAI32[7].Byte1;
         set
         {
             byte temp = (byte)(value % 32);
-            if (AnomalyNPC.AnomalyAI32[7].byte1 != temp)
+            if (AnomalyNPC.AnomalyAI32[7].Byte1 != temp)
             {
-                AnomalyNPC.AnomalyAI32[7].byte1 = temp;
+                AnomalyNPC.AnomalyAI32[7].Byte1 = temp;
                 AnomalyNPC.AIChanged32[7] = true;
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.netUpdate = true;
@@ -284,13 +284,13 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public int UsedEyeIndex3
     {
-        get => AnomalyNPC.AnomalyAI32[7].byte2;
+        get => AnomalyNPC.AnomalyAI32[7].Byte2;
         set
         {
             byte temp = (byte)(value % 32);
-            if (AnomalyNPC.AnomalyAI32[7].byte2 != temp)
+            if (AnomalyNPC.AnomalyAI32[7].Byte2 != temp)
             {
-                AnomalyNPC.AnomalyAI32[7].byte2 = temp;
+                AnomalyNPC.AnomalyAI32[7].Byte2 = temp;
                 AnomalyNPC.AIChanged32[7] = true;
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.netUpdate = true;
@@ -300,13 +300,13 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public int UsedEyeIndex4
     {
-        get => AnomalyNPC.AnomalyAI32[7].byte3;
+        get => AnomalyNPC.AnomalyAI32[7].Byte3;
         set
         {
             byte temp = (byte)(value % 32);
-            if (AnomalyNPC.AnomalyAI32[7].byte3 != temp)
+            if (AnomalyNPC.AnomalyAI32[7].Byte3 != temp)
             {
-                AnomalyNPC.AnomalyAI32[7].byte3 = temp;
+                AnomalyNPC.AnomalyAI32[7].Byte3 = temp;
                 AnomalyNPC.AIChanged32[7] = true;
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.netUpdate = true;
@@ -332,12 +332,12 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
     #region 仆从
     public bool ServantLeftSpawned
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[2];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[2];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[2] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[2] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[2] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[2] = value;
                 AnomalyNPC.AIChanged32[0] = true;
             }
         }
@@ -348,13 +348,13 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
     /// </summary>
     public NPC ServantLeft
     {
-        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte0);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].Byte0);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
-            if (AnomalyNPC.AnomalyAI32[1].byte0 != temp)
+            if (AnomalyNPC.AnomalyAI32[1].Byte0 != temp)
             {
-                AnomalyNPC.AnomalyAI32[1].byte0 = temp;
+                AnomalyNPC.AnomalyAI32[1].Byte0 = temp;
                 AnomalyNPC.AIChanged32[1] = true;
             }
         }
@@ -363,12 +363,12 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public bool ServantRightSpawned
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[3];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[3];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[3] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[3] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[3] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[3] = value;
                 AnomalyNPC.AIChanged32[0] = true;
             }
         }
@@ -379,13 +379,13 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
     /// </summary>
     public NPC ServantRight
     {
-        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].byte1);
+        get => NPC.GetNPCFromIndex(AnomalyNPC.AnomalyAI32[1].Byte1);
         set
         {
             byte temp = (byte)(value?.whoAmI ?? Main.maxNPCs);
-            if (AnomalyNPC.AnomalyAI32[1].byte1 != temp)
+            if (AnomalyNPC.AnomalyAI32[1].Byte1 != temp)
             {
-                AnomalyNPC.AnomalyAI32[1].byte1 = temp;
+                AnomalyNPC.AnomalyAI32[1].Byte1 = temp;
                 AnomalyNPC.AIChanged32[1] = true;
             }
         }
@@ -394,12 +394,12 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 
     public bool ArenaProjectileSpawned
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[4];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[4];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[4] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[4] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[4] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[4] = value;
                 AnomalyNPC.AIChanged32[0] = true;
             }
         }
@@ -474,11 +474,11 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
             new TimedDDRHandler.SingleDDRHandler(0.5f, 0f, n => GetInstance(n).Phase3, null, 30)
         );
 
-        NPC.AddAnomalyHPIndicator(Phase2LifeRatio_Anomaly, Phase2LifeRatio_Ultra);
-        NPC.AddAnomalyHPIndicator(Phase2_2LifeRatio_Anomaly, Phase2_2LifeRatio_Ultra, true);
-        NPC.AddAnomalyHPIndicator(Phase2_3LifeRatio_Anomaly, Phase2_3LifeRatio_Ultra, true);
-        NPC.AddAnomalyHPIndicator(Phase3LifeRatio_Anomaly, Phase3LifeRatio_Ultra);
-        NPC.AddAnomalyHPIndicator(Phase3_2LifeRatio_Anomaly, Phase3_2LifeRatio_Ultra, true, n => GetInstance(n).Phase3);
+        NPC.AddAnomalyHPIndicator(Phase2LifeRatioAnomaly, Phase2LifeRatioUltra);
+        NPC.AddAnomalyHPIndicator(Phase22LifeRatioAnomaly, Phase22LifeRatioUltra, true);
+        NPC.AddAnomalyHPIndicator(Phase23LifeRatioAnomaly, Phase23LifeRatioUltra, true);
+        NPC.AddAnomalyHPIndicator(Phase3LifeRatioAnomaly, Phase3LifeRatioUltra);
+        NPC.AddAnomalyHPIndicator(Phase32LifeRatioAnomaly, Phase32LifeRatioUltra, true, n => GetInstance(n).Phase3);
     }
 
     public override void SetDefaultsFinal()
@@ -507,7 +507,7 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
         bool shouldUsePhase2Frame = CurrentPhase switch
         {
             Phase.Phase1 => false,
-            Phase.PhaseChange_1To2 => Timer1 >= PhaseChangeGateValue_1To2_2,
+            Phase.PhaseChange_1To2 => Timer1 >= PhaseChangeGateValue1To22,
             _ => true
         };
 

@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.QueenBee;
+namespace Anomalies.Bosses.QueenBee;
 
 public sealed class FriendlyBee : AnomalyModProjectile
 {
@@ -17,8 +17,8 @@ public sealed class FriendlyBee : AnomalyModProjectile
     }
     */
 
-    public const byte Behavior_SwarmReminder = 1;
-    public const byte Behavior_Pet = byte.MaxValue;
+    public const byte BehaviorSwarmReminder = 1;
+    public const byte BehaviorPet = byte.MaxValue;
 
     /* 数组使用约定
      * 
@@ -56,7 +56,7 @@ public sealed class FriendlyBee : AnomalyModProjectile
 
         switch ((byte)Projectile.ai[0])
         {
-            case Behavior_SwarmReminder:
+            case BehaviorSwarmReminder:
                 const float HalfReminderTime = 20f;
                 float ratio = Timer1 / HalfReminderTime;
                 float maxSpeed = 12f;
@@ -67,7 +67,7 @@ public sealed class FriendlyBee : AnomalyModProjectile
                     Projectile.Kill();
                 break;
 
-            case Behavior_Pet:
+            case BehaviorPet:
                 Projectile.damage = 0;
 
                 Player player = Owner;

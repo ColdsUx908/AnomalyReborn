@@ -1,6 +1,5 @@
-﻿using Anomalies.Assets.Effects;
+using Anomalies.Assets.Effects;
 using Terraria.Graphics.Effects;
-using Transoceanic.DataStructures.Rendering;
 
 namespace Anomalies.Visuals.Overlays;
 
@@ -8,26 +7,26 @@ public class EnhancedDarknessSystem : CustomOverlay, IContentLoader
 {
     public class LightSource
     {
-        public Texture2D texture = _DefaultTexture;
-        public float scale = 1;
-        public Vector2 vectorScale = Vector2.One;
-        public Vector2 center = Main.LocalPlayer.Center;
-        public float rotation = 0;
-        public float opacity = 1;
-        public Color color = Color.White;
-        public int lifetime = 1;
-        public Rectangle? frame = null;
+        public Texture2D Texture = _DefaultTexture;
+        public float Scale = 1;
+        public Vector2 VectorScale = Vector2.One;
+        public Vector2 Center = Main.LocalPlayer.Center;
+        public float Rotation = 0;
+        public float Opacity = 1;
+        public Color Color = Color.White;
+        public int Lifetime = 1;
+        public Rectangle? Frame = null;
         public LightSource() { }
 
         // This constructor only gives the most common arguments. Frame, Color, lifetime, etc. must be set in curly braces afterwards to prevent this constructor getting too unwieldy.
         public LightSource(Vector2? center = null, Texture2D texture = null, float scale = 1, float rotation = 0, Vector2? vectorScale = null, float opacity = 1)
         {
-            this.texture = texture ?? _DefaultTexture;
-            this.scale = scale;
-            this.vectorScale = vectorScale ?? Vector2.One;
-            this.center = center ?? Main.LocalPlayer.Center;
-            this.rotation = rotation;
-            this.opacity = opacity;
+            this.Texture = texture ?? _DefaultTexture;
+            this.Scale = scale;
+            this.VectorScale = vectorScale ?? Vector2.One;
+            this.Center = center ?? Main.LocalPlayer.Center;
+            this.Rotation = rotation;
+            this.Opacity = opacity;
         }
     }
 
@@ -42,8 +41,8 @@ public class EnhancedDarknessSystem : CustomOverlay, IContentLoader
         for (int i = 0; i < Lights.Count; i++)
         {
             LightSource item = Lights[i];
-            item.lifetime--;
-            if (item.lifetime <= 0)
+            item.Lifetime--;
+            if (item.Lifetime <= 0)
             {
                 Lights.Remove(item);
                 i--;
@@ -75,7 +74,7 @@ public class EnhancedDarknessSystem : CustomOverlay, IContentLoader
         {
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.Default, Main.Rasterizer, null, Matrix.Identity);
             foreach (LightSource item in Lights)
-                spriteBatch.Draw(item.texture, item.center - Main.screenPosition, item.frame, item.color * item.opacity, item.rotation, item.frame is null ? item.texture.Size() * 0.5f : item.frame.Value.Size(), item.vectorScale * item.scale, SpriteEffects.None, 0);
+                spriteBatch.Draw(item.Texture, item.Center - Main.screenPosition, item.Frame, item.Color * item.Opacity, item.Rotation, item.Frame is null ? item.Texture.Size() * 0.5f : item.Frame.Value.Size(), item.VectorScale * item.Scale, SpriteEffects.None, 0);
             spriteBatch.End();
         }
 

@@ -1,4 +1,3 @@
-
 namespace Anomalies.Bosses.QueenSlime;
 
 public sealed partial class QueenSlime
@@ -143,7 +142,7 @@ public sealed partial class QueenSlime
 
         void TrySpawnMinions()
         {
-            if (!TOSharedData.NotClient || NPC.Master is not null) //史莱姆皇后召唤的史莱姆皇后不再召唤仆从
+            if (!TONetworkEnvironment.NotClient || NPC.Master is not null) //史莱姆皇后召唤的史莱姆皇后不再召唤仆从
                 return;
 
             /*
@@ -206,7 +205,7 @@ public sealed partial class QueenSlime
 
         void CreateSmash(int smashAmount, float singleDelay)
         {
-            if (!TOSharedData.NotClient)
+            if (!TONetworkEnvironment.NotClient)
                 return;
 
             int smashAmount2 = smashAmount - 1;
@@ -337,7 +336,7 @@ public sealed partial class QueenSlime
 
             void SelectNextBehavior()
             {
-                if (!TOSharedData.NotClient)
+                if (!TONetworkEnvironment.NotClient)
                     return;
 
                 Timer5 = 0;
@@ -415,7 +414,7 @@ public sealed partial class QueenSlime
                                 SoundEngine.PlaySound(SoundID.Item155, NPC.Center);
                                 SpawnOrbParticles(20, 10f);
 
-                                if (TOSharedData.NotClient)
+                                if (TONetworkEnvironment.NotClient)
                                 {
                                     int outerAmount = Ultra ? Main.rand.Next(6, 10) : 0;
                                     int innerAmount = Ultra ? 7 : 5;
@@ -550,7 +549,7 @@ public sealed partial class QueenSlime
                             SoundEngine.PlaySound(SoundID.Item155, NPC.Center);
                             SpawnOrbParticles(20, 10f);
 
-                            if (TOSharedData.NotClient)
+                            if (TONetworkEnvironment.NotClient)
                             {
                                 int outerAmount = Main.rand.Next(Ultra ? 8 : 5, Ultra ? 12 : 10);
                                 int innerAmount = Ultra ? 7 : 5;
@@ -649,7 +648,7 @@ public sealed partial class QueenSlime
                 switch (CurrentLocalPhase)
                 {
                     case 0: //寻的
-                        if (!TOSharedData.NotClient)
+                        if (!TONetworkEnvironment.NotClient)
                             return;
                         Vector2? destination = null;
 
@@ -734,7 +733,7 @@ public sealed partial class QueenSlime
                                         SoundEngine.PlaySound(SoundID.Item167, NPC.Center);
                                         SpawnOrbParticles(20, 10f);
 
-                                        if (TOSharedData.NotClient)
+                                        if (TONetworkEnvironment.NotClient)
                                         {
                                             float speed = 12f;
                                             int type = ProjectileID.QueenSlimeMinionBlueSpike;
@@ -788,7 +787,7 @@ public sealed partial class QueenSlime
                                     {
                                         SoundEngine.PlaySound(SoundID.Item154, NPC.Center);
 
-                                        if (TOSharedData.NotClient)
+                                        if (TONetworkEnvironment.NotClient)
                                         {
                                             for (int j = -1; j <= 1; j += 2)
                                             {
@@ -870,7 +869,7 @@ public sealed partial class QueenSlime
 
             void SelectNextBehavior()
             {
-                if (!TOSharedData.NotClient)
+                if (!TONetworkEnvironment.NotClient)
                     return;
 
                 CurrentLocalPhase = 0;
@@ -913,7 +912,7 @@ public sealed partial class QueenSlime
                     SoundEngine.PlaySound(SoundID.Item155, NPC.Center);
                     SpawnOrbParticles(25, 12.5f);
 
-                    if (TOSharedData.NotClient)
+                    if (TONetworkEnvironment.NotClient)
                     {
                         int amount = Ultra ? 15 : 11;
                         float radian = MathHelper.ToRadians(Ultra ? 210f : 160f);
@@ -944,7 +943,7 @@ public sealed partial class QueenSlime
                     SoundEngine.PlaySound(SoundID.Item155, NPC.Center);
                     SpawnOrbParticles(30, 12.5f);
 
-                    if (TOSharedData.NotClient)
+                    if (TONetworkEnvironment.NotClient)
                     {
                         int amount = Ultra ? 15 : 11;
                         float radian = MathHelper.ToRadians(Ultra ? 300f : 200f);

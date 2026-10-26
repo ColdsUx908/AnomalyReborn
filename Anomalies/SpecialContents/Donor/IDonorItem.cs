@@ -1,4 +1,4 @@
-﻿namespace Anomalies.SpecialContents.Donor;
+namespace Anomalies.SpecialContents.Donor;
 
 public interface IDonorItem
 {

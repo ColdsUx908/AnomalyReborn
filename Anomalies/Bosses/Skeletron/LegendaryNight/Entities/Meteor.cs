@@ -48,7 +48,7 @@ public sealed class Meteor : AnomalyModProjectile
         Projectile.rotation += 0.06f * (Projectile.velocity.X >= 0f).ToDirectionInt();
         Lighting.AddLight(Projectile.Center, new Vector3(1f, 0.55f, 0.12f));
 
-        if (TOSharedData.NotClient
+        if (TONetworkEnvironment.NotClient
             && Player.TryGetPlayerFromIndex((int)Projectile.ai[0] - 1, out Player target)
             && Projectile.Top.Y > target.Bottom.Y + 250f)
         {
@@ -68,7 +68,7 @@ public sealed class Meteor : AnomalyModProjectile
             }
         }
 
-        if (!TOSharedData.NotClient)
+        if (!TONetworkEnvironment.NotClient)
             return;
 
         if (ReducedAttack && Projectile.ai[2] > 0f)

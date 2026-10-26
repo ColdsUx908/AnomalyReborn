@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.QueenBee;
+namespace Anomalies.Bosses.QueenBee;
 
 public sealed partial class QueenBee
 {
@@ -95,7 +95,7 @@ public sealed partial class QueenBee
 
         void SpawnCombCell(Vector2 position, Vector2 velocity, int damage, CombCell.Behavior behavior, float finalScale, Action<Projectile, CombCell> action = null)
         {
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
             {
                 Projectile.NewProjectileAction<CombCell>(SourceAI, position, velocity, damage, 0f, action: p =>
                 {
@@ -120,7 +120,7 @@ public sealed partial class QueenBee
 
         void SpawnFriendlyBee(Vector2 position, Vector2 velocity, byte behavior, float ai1)
         {
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
             {
                 Projectile.NewProjectileAction<FriendlyBee>(SourceAI, position, velocity, 0, 0f, action: p =>
                 {
@@ -188,7 +188,7 @@ public sealed partial class QueenBee
 
             void SelectNextBehavior()
             {
-                if (!TOSharedData.NotClient)
+                if (!TONetworkEnvironment.NotClient)
                     return;
 
                 Timer1 = 0;
@@ -471,7 +471,7 @@ public sealed partial class QueenBee
                     if (num > 0 && NPC.Bottom.Y < Target.Top.Y && Collision.CanHit(stingerSpawnLocation, 1, 1, Target.position, Target.width, Target.height))
                     {
                         SoundEngine.PlaySound(SoundID.Item17, stingerSpawnLocation);
-                        if (TOSharedData.NotClient)
+                        if (TONetworkEnvironment.NotClient)
                         {
                             int type = StingerProjectileType;
 
@@ -531,7 +531,7 @@ public sealed partial class QueenBee
                                 SpawnCombCell(QueenBeeHandler.GetOwnedCombCellCenter(NPC), Vector2.Zero, 0, CombCell.Behavior.BeeSwarm, OwnedCombCellScaleMultiplier * NPC.scale);
                                 break;
                             case 40:
-                                SpawnFriendlyBee(NPC.Center, Vector2.Zero, FriendlyBee.Behavior_SwarmReminder, AttackRandomVariation_BeeSwarm.ToDirectionInt());
+                                SpawnFriendlyBee(NPC.Center, Vector2.Zero, FriendlyBee.BehaviorSwarmReminder, AttackRandomVariation_BeeSwarm.ToDirectionInt());
                                 break;
                             case 50:
                                 Timer1 = 0;
@@ -549,7 +549,7 @@ public sealed partial class QueenBee
                             int num = adjustedTimer / attackTimer;
                             float spread = MathHelper.ToRadians(Ultra ? 60f : 50f);
 
-                            if (TOSharedData.NotClient)
+                            if (TONetworkEnvironment.NotClient)
                             {
                                 for (int i = -1; i <= 1; i += 2)
                                 {
@@ -561,7 +561,7 @@ public sealed partial class QueenBee
                                     Vector2 velocity = new PolarVector2(speed, angleOffset + Main.rand.NextFloat(-spread, spread)) * i;
                                     Projectile.NewProjectileAction<BeeProjectile>(SourceAI, NPC.Center, velocity, BeeDamage, 0f, action: p =>
                                     {
-                                        p.ai[0] = BeeProjectile.Behavior_Rotate;
+                                        p.ai[0] = BeeProjectile.BehaviorRotate;
                                         p.ai[1] = Main.rand.NextFloat(0.012f, 0.015f) * (Ultra ? 1.2f : 1f) * Main.rand.NextDirectionInt();
                                     });
 
@@ -570,7 +570,7 @@ public sealed partial class QueenBee
                                         velocity *= -1.3f;
                                         Projectile.NewProjectileAction<BeeProjectile>(SourceAI, NPC.Center, velocity, BeeDamage, 0f, action: p =>
                                         {
-                                            p.ai[0] = BeeProjectile.Behavior_Rotate;
+                                            p.ai[0] = BeeProjectile.BehaviorRotate;
                                             p.ai[1] = Main.rand.NextFloat(0.012f, 0.015f) * (Ultra ? 1.2f : 1f) * Main.rand.NextDirectionInt();
                                         });
                                     }
@@ -583,7 +583,7 @@ public sealed partial class QueenBee
 
                                 SoundEngine.PlaySound(SoundID.Item17, stingerSpawnLocation);
 
-                                if (TOSharedData.NotClient)
+                                if (TONetworkEnvironment.NotClient)
                                 {
                                     float stingerSpeed = 15f;
 
@@ -608,7 +608,7 @@ public sealed partial class QueenBee
 
                                 SoundEngine.PlaySound(SoundID.Item17, stingerSpawnLocation);
 
-                                if (TOSharedData.NotClient)
+                                if (TONetworkEnvironment.NotClient)
                                 {
                                     float stingerSpeed = 15f;
                                     Vector2 stingerVelocity = (Target.Center - stingerSpawnLocation).ToCustomLength(stingerSpeed);
@@ -677,7 +677,7 @@ public sealed partial class QueenBee
                                 int amount = Ultra ? Main.rand.Next(13, 21) : Main.rand.Next(6, 9);
                                 int safeCombCellNumber = Main.rand.Next(amount);
 
-                                if (TOSharedData.NotClient)
+                                if (TONetworkEnvironment.NotClient)
                                 {
                                     PolarVector2 basis0 = new(0f);
                                     PolarVector2 basis1 = new(TOMathUtils.PiOver3 * 2);
@@ -776,7 +776,7 @@ public sealed partial class QueenBee
                             int num = adjustedTimer / attackTimer;
                             float spread = MathHelper.ToRadians(Ultra ? 55f : 50f);
 
-                            if (TOSharedData.NotClient)
+                            if (TONetworkEnvironment.NotClient)
                             {
                                 for (int i = 0; i < 5; i++)
                                 {
@@ -839,7 +839,7 @@ public sealed partial class QueenBee
 
                         case 90:
                             SoundEngine.PlaySound(SoundID.ForceRoar, NPC.Center);
-                            if (TOSharedData.NotClient)
+                            if (TONetworkEnvironment.NotClient)
                                 Projectile.NewProjectileAction<BeeShockwave>(SourceAI, NPC.Center, Vector2.Zero, 100, 0f, action: p => p.scale = 0f);
                             break;
                         case 161:
@@ -904,7 +904,7 @@ public sealed partial class QueenBee
 
             void SelectNextBehavior()
             {
-                if (!TOSharedData.NotClient)
+                if (!TONetworkEnvironment.NotClient)
                     return;
 
                 Timer1 = 0;
@@ -962,7 +962,7 @@ public sealed partial class QueenBee
                             if (num > 0 && NPC.Bottom.Y < Target.Top.Y && Collision.CanHit(stingerSpawnLocation, 1, 1, Target.position, Target.width, Target.height))
                             {
                                 SoundEngine.PlaySound(HugeStingerShootSound, stingerSpawnLocation);
-                                if (TOSharedData.NotClient)
+                                if (TONetworkEnvironment.NotClient)
                                     Projectile.NewProjectileAction<HugeStinger>(SourceAI, stingerSpawnLocation, stingerVelocity, StingerDamage, 0f, action: p => p.ai[1] = Target.Center.Y);
                             }
 
@@ -997,7 +997,7 @@ public sealed partial class QueenBee
                             if (num > 0 && NPC.Bottom.Y < Target.Top.Y && Collision.CanHit(stingerSpawnLocation, 1, 1, Target.position, Target.width, Target.height))
                             {
                                 SoundEngine.PlaySound(HugeStingerShootSound, stingerSpawnLocation);
-                                if (TOSharedData.NotClient)
+                                if (TONetworkEnvironment.NotClient)
                                 {
                                     Vector2 projectileVelocity = (Target.Center - stingerSpawnLocation).ToCustomLength(stingerSpeed);
                                     int type = ProjectileID.QueenBeeStinger;
@@ -1096,12 +1096,12 @@ public sealed partial class QueenBee
                                 Timer1 = 0;
                                 CurrentLocalPhase = 3;
                             }
-                            else if (TOSharedData.NotClient)
+                            else if (TONetworkEnvironment.NotClient)
                             {
                                 int amount = 100;
                                 Projectile.NewProjectilesArc<BeeProjectile>(amount, MathHelper.TwoPi / amount, SourceAI, NPC.Center, NPC.GetVelocityTowards(Target, 15f), BeeDamage, 0f, action: p =>
                                 {
-                                    p.ai[0] = BeeProjectile.Behavior_KilledByHoney;
+                                    p.ai[0] = BeeProjectile.BehaviorKilledByHoney;
                                     p.ai[1] = Main.rand.NextFloat(0.02f, 0.04f) * Main.rand.NextDirectionInt();
                                     p.ai[2] = Phase2_2 ? 3f : 5f;
                                     p.timeLeft = 300;
@@ -1176,7 +1176,7 @@ public sealed partial class QueenBee
                             Timer1 = 0;
                             CurrentLocalPhase = 3;
                         }
-                        else if (TOSharedData.NotClient)
+                        else if (TONetworkEnvironment.NotClient)
                         {
                             if (!Phase2_2)
                                 SpawnBees(AttackRandomVariation_BeeSwarmPhase2);

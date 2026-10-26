@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Common;
+namespace Anomalies.Common;
 
 public sealed partial class AnomalySharedData : ModSystem
 {

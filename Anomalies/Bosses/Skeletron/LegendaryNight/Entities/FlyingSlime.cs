@@ -34,7 +34,7 @@ public sealed class FlyingSlime : AnomalyModNPC
         {
             SpawnDisappearanceParticles();
             NPC.active = false;
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
                 NetMessage.SendData(MessageID.SyncNPC, number: NPC.whoAmI);
             return;
         }
@@ -48,7 +48,7 @@ public sealed class FlyingSlime : AnomalyModNPC
         else
         {
             NPC.damage = NPC.defDamage;
-            if (NPC.ai[0] == 30f && TOSharedData.NotClient)
+            if (NPC.ai[0] == 30f && TONetworkEnvironment.NotClient)
             {
                 NPC.velocity = NPC.GetVelocityTowards(NPC.PlayerTarget, 20f);
                 NPC.netUpdate = true;

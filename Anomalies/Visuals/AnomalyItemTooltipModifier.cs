@@ -1,4 +1,5 @@
-﻿namespace Anomalies.Visuals;
+using Transoceanic.Game.Items;
+namespace Anomalies.Visuals;
 
 /// <summary>
 /// 针对 Anomalies 模组扩展的 <see cref="ItemTooltipModifier"/> 实现，

@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.QueenSlime;
+namespace Anomalies.Bosses.QueenSlime;
 
 public sealed class QueenSlimeMinionBlue : AnomalyNPCBehavior<QueenSlimeMinionBlue>
 {

@@ -73,7 +73,7 @@ public sealed partial class AnomalySynchronization : IAnomalyLoader
                 bool requested = reader.ReadBoolean();
                 if (Main.netMode == NetmodeID.Server && (uint)whoAmI < Main.maxPlayers && Main.player[whoAmI].active)
                 {
-                    if (!TOSharedData.BossActive && (!requested || TOSharedData.MasterMode))
+                    if (!TOBossChallenge.BossActive && (!requested || TOWorldState.MasterMode))
                         AnomalySharedData.Anomaly = requested;
                     // Always reply, including when the request was rejected or was a no-op.
                     SyncAnomalyModeFromServer(whoAmI);
@@ -124,6 +124,6 @@ public sealed partial class AnomalySynchronization : IAnomalyLoader
 
     void IAnomalyLoader.Load()
     {
-        TOSharedData.SyncEnabled = true;
+        TONetworkEnvironment.SyncEnabled = true;
     }
 }

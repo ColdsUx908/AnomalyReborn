@@ -71,7 +71,7 @@ public static class JewelHandler
     /// <param name="jewel">宝石。</param>
     public static void Despawn(NPC jewel)
     {
-        if (!TOSharedData.NotClient)
+        if (!TONetworkEnvironment.NotClient)
             return;
         jewel.life = 0;
         jewel.HitEffect();
@@ -151,7 +151,7 @@ public static class JewelHandler
         bool isRainbowJewel = jewel.ModNPC is RainbowJewel;
         Color jewelColor = GetColor(jewel);
         if (isRainbowJewel)
-            TODrawUtils.DrawBorderTextureFromCenter(spriteBatch, jewel.Texture, jewel.Center - screenPos, null, jewelColor, jewel.rotation, jewel.scale, borderWidth: 3f + TOMathUtils.TimeWrappingFunction.GetTimeSin(1f, unsigned: true));
+            TODrawUtils.DrawBorderTextureFromCenter(spriteBatch, jewel.Texture, jewel.Center - screenPos, null, jewelColor, jewel.rotation, jewel.scale, borderWidth: 3f + TOGameTimeFunctions.GetTimeSin(1f, unsigned: true));
         spriteBatch.DrawFromCenter(jewel.Texture, jewel.Center - screenPos, null, isRainbowJewel ? jewelColor : Color.White with { A = jewel.GraphicAlpha }, jewel.rotation, jewel.scale);
     }
 

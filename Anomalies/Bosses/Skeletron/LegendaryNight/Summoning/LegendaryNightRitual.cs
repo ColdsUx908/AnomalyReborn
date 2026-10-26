@@ -45,7 +45,7 @@ public sealed class LegendaryNightRitual : AnomalyModProjectile
             if (NPC.TryGetNPCFromIndex(SummonedSkeletronHeadIndex, out NPC skeletronHead) && skeletronHead.active && skeletronHead.type == NPCID.SkeletronHead)
             {
             }
-            else if (TOSharedData.NotClient)
+            else if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();
 
             Projectile.Center = RitualCenter + new Vector2(0f, 8f * MathF.Sin((Timer1 - RitualTime) / 60f)); //上下摆动
@@ -89,7 +89,7 @@ public sealed class LegendaryNightRitual : AnomalyModProjectile
                     for (int i = 0; i < 100; i++)
                         ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Main.rand.NextPolarVector2(15f, 40f), Main.rand.Next(40, 60), Main.rand.NextFloat(1f, 1.6f), Color.Lerp(LegendaryNightHandler.StarColor, Color.White, Main.rand.NextFloat(0.5f))));
 
-                    if (TOSharedData.NotClient)
+                    if (TONetworkEnvironment.NotClient)
                     {
                         TOLocalizationUtils.ChatLocalizedText(AnomalySharedData.ModLocalizationPrefix + LocalizationCategory + ".Summon", LegendaryNightHandler.StarColor);
 
@@ -107,7 +107,7 @@ public sealed class LegendaryNightRitual : AnomalyModProjectile
                         });
                     }
 
-                    if (TOSharedData.NotClient)
+                    if (TONetworkEnvironment.NotClient)
                         Projectile.netUpdate = true;
                 }
                 finally

@@ -1,4 +1,4 @@
-﻿using Anomalies.AnomalyMode;
+using Anomalies.AnomalyMode;
 
 namespace Anomalies.Common;
 
@@ -17,7 +17,7 @@ public sealed partial class AnomalySharedData : ModSystem
     public static readonly Color SecondaryColor = Color.Pink;
 
     public static readonly List<Color> ColorList = [MainColor, SecondaryColor, MainColor];
-    public static readonly List<Color> ColorList2 = [MainColor, TOSharedData.CelestialColor, MainColor];
+    public static readonly List<Color> ColorList2 = [MainColor, TOColors.CelestialColor, MainColor];
 
     public static readonly Color AnomalyUltramundaneColor = new(232, 151, 255);
 
@@ -27,14 +27,14 @@ public sealed partial class AnomalySharedData : ModSystem
 
     public static readonly Color RebornColor = new(0xff, 0xa5, 0x00);
 
-    public static Color AnomalyTitleColor => Color.LerpMany(ColorList2, TOMathUtils.Interpolation.QuadraticEaseIn(TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 2.5f, unsigned: true)) / 2f);
-    public static Color AnomalyUltramundaneTitleColor => Color.LerpMany(ColorList3, TOMathUtils.Interpolation.QuadraticEaseIn(TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 3f, unsigned: true)) / 1.5f);
+    public static Color AnomalyTitleColor => Color.LerpMany(ColorList2, TOMathUtils.Interpolation.QuadraticEaseIn(TOGameTimeFunctions.GetTimeSin(0.5f, 2.5f, unsigned: true)) / 2f);
+    public static Color AnomalyUltramundaneTitleColor => Color.LerpMany(ColorList3, TOMathUtils.Interpolation.QuadraticEaseIn(TOGameTimeFunctions.GetTimeSin(0.5f, 3f, unsigned: true)) / 1.5f);
 
     public static Assembly Assembly => field ??= AnomalyMain.Instance.Code;
 
     public static string ModName => field ??= AnomalyMain.Instance.Name;
 
-    public static Color GetGradientColor(float maxRatio = 0.5f) => Color.LerpMany(ColorList, TOMathUtils.TimeWrappingFunction.GetTimeSin(maxRatio / 2f, unsigned: true));
+    public static Color GetGradientColor(float maxRatio = 0.5f) => Color.LerpMany(ColorList, TOGameTimeFunctions.GetTimeSin(maxRatio / 2f, unsigned: true));
 
     /// <summary>
     /// 是否使用 Anomalies 的着色器。
@@ -89,7 +89,7 @@ public sealed partial class AnomalySharedData : ModSystem
 
             field = value;
 
-            if (TOSharedData.NotClient && !AnomalySynchronization.ReceivingWorldState)
+            if (TONetworkEnvironment.NotClient && !AnomalySynchronization.ReceivingWorldState)
             {
                 string key = ModLocalizationPrefix + "AnomalyMode." + (Main.zenithWorld ? "Aromaly." : "") + (value ? "Activate" : "Deactivate");
                 Color color = Main.zenithWorld ? AromalyColor : MainColor;
@@ -118,7 +118,7 @@ public sealed partial class AnomalySharedData : ModSystem
                 return;
 
             field = value;
-            if (TOSharedData.NotClient && !AnomalySynchronization.ReceivingWorldState)
+            if (TONetworkEnvironment.NotClient && !AnomalySynchronization.ReceivingWorldState)
                 TOLocalizationUtils.ChatLocalizedText(ModLocalizationPrefix + "AnomalyMode." + (value ? "UltraActivate" : "UltraDeactivate"), Color.Red);
 
             OnAnomalyUltramundaneToggled?.Invoke(value);

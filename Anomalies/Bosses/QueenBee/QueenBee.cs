@@ -1,4 +1,4 @@
-﻿using Anomalies.Assets.Effects;
+using Anomalies.Assets.Effects;
 using Anomalies.Visuals.BossBar;
 
 namespace Anomalies.Bosses.QueenBee;
@@ -43,16 +43,16 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
     public const float DespawnDistance = 8000f;
     public const float EnrageDistance = 1250f;
 
-    public const float Phase1_2LifeRatio_Anomaly = 0.5f;
-    public const float Phase1_2LifeRatio_Ultra = 0.65f;
-    public const float Phase2LifeRatio_Anomaly = 0f;
-    public const float Phase2LifeRatio_Ultra = 0.1f;
-    public const float Phase2_2LifeRatio_Anomaly = 0f;
-    public const float Phase2_2LifeRatio_Ultra = 0.25f;
+    public const float Phase12LifeRatioAnomaly = 0.5f;
+    public const float Phase12LifeRatioUltra = 0.65f;
+    public const float Phase2LifeRatioAnomaly = 0f;
+    public const float Phase2LifeRatioUltra = 0.1f;
+    public const float Phase22LifeRatioAnomaly = 0f;
+    public const float Phase22LifeRatioUltra = 0.25f;
 
-    public static float Phase1_2LifeRatio => Ultra ? Phase1_2LifeRatio_Ultra : Phase1_2LifeRatio_Anomaly;
-    public static float Phase2LifeRatio => Ultra ? Phase2LifeRatio_Ultra : Phase2LifeRatio_Anomaly;
-    public static float Phase2_2LifeRatio => Ultra ? Phase2_2LifeRatio_Ultra : Phase2_2LifeRatio_Anomaly;
+    public static float Phase1_2LifeRatio => Ultra ? Phase12LifeRatioUltra : Phase12LifeRatioAnomaly;
+    public static float Phase2LifeRatio => Ultra ? Phase2LifeRatioUltra : Phase2LifeRatioAnomaly;
+    public static float Phase2_2LifeRatio => Ultra ? Phase22LifeRatioUltra : Phase22LifeRatioAnomaly;
 
     public static float OwnedCombCellScaleMultiplier => 0.875f;
 
@@ -77,14 +77,14 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
         get
         {
             Union32 union = AI_Union_0;
-            return (Phase)union.byte0;
+            return (Phase)union.Byte0;
         }
         set
         {
             if (CurrentPhase != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte0 = (byte)value;
+            union.Byte0 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -103,14 +103,14 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
         get
         {
             Union32 union = AI_Union_0;
-            return (Behavior)union.byte1;
+            return (Behavior)union.Byte1;
         }
         set
         {
             if (CurrentBehavior != value && Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.netUpdate = true;
             Union32 union = AI_Union_0;
-            union.byte1 = (byte)value;
+            union.Byte1 = (byte)value;
             AI_Union_0 = union;
         }
     }
@@ -137,12 +137,12 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
     public bool IsCharging
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[0];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[0];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[0] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[0] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[0] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[0] = value;
                 AnomalyNPC.AIChanged32[0] = true;
             }
         }
@@ -150,12 +150,12 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
     public bool ShouldDecelerate
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[1];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[1];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[1] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[1] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[1] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[1] = value;
                 AnomalyNPC.AIChanged32[0] = true;
             }
         }
@@ -163,12 +163,12 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
     public bool HasBeenEnraged
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[2];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[2];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[2] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[2] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[2] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[2] = value;
                 AnomalyNPC.AIChanged32[0] = true;
             }
         }
@@ -176,12 +176,12 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
     public bool AttackRandomVariation_Charge
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[3];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[3];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[3] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[3] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[3] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[3] = value;
                 AnomalyNPC.AIChanged32[0] = true;
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.netUpdate = true;
@@ -191,12 +191,12 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
     public bool AttackRandomVariation_Stinger
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[4];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[4];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[4] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[4] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[4] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[4] = value;
                 AnomalyNPC.AIChanged32[0] = true;
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.netUpdate = true;
@@ -206,12 +206,12 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
     public bool AttackRandomVariation_BeeSwarm
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[5];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[5];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[5] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[5] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[5] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[5] = value;
                 AnomalyNPC.AIChanged32[0] = true;
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.netUpdate = true;
@@ -221,12 +221,12 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
     public bool LastPhase1BeeSwarmAttackIsType2
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[6];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[6];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[6] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[6] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[6] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[6] = value;
                 AnomalyNPC.AIChanged32[0] = true;
             }
         }
@@ -234,12 +234,12 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
     public bool AttackRandomVariation_BeeSwarmPhase2
     {
-        get => AnomalyNPC.AnomalyAI32[0].bits[7];
+        get => AnomalyNPC.AnomalyAI32[0].Bits[7];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[0].bits[7] != value)
+            if (AnomalyNPC.AnomalyAI32[0].Bits[7] != value)
             {
-                AnomalyNPC.AnomalyAI32[0].bits[7] = value;
+                AnomalyNPC.AnomalyAI32[0].Bits[7] = value;
                 AnomalyNPC.AIChanged32[0] = true;
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.netUpdate = true;
@@ -264,12 +264,12 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
     public int CurrentAttackCounter
     {
-        get => AnomalyNPC.AnomalyAI32[3].i;
+        get => AnomalyNPC.AnomalyAI32[3].I;
         set
         {
-            if (AnomalyNPC.AnomalyAI32[3].i != value)
+            if (AnomalyNPC.AnomalyAI32[3].I != value)
             {
-                AnomalyNPC.AnomalyAI32[3].i = value;
+                AnomalyNPC.AnomalyAI32[3].I = value;
                 AnomalyNPC.AIChanged32[3] = true;
             }
         }
@@ -329,7 +329,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 
     public override void SetDefaults()
     {
-        if (TOSharedData.NotClient)
+        if (TONetworkEnvironment.NotClient)
         {
             AttackRandomVariation_BeeSwarm = Main.rand.NextBool();
             AttackRandomVariation_BeeSwarmPhase2 = Main.rand.NextBool();
@@ -340,9 +340,9 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
             new TimedDDRHandler.SingleDDRHandler(0.5f, 0f, n => GetInstance(n).Phase2, null, 45)
         );
 
-        NPC.AddAnomalyHPIndicator(Phase1_2LifeRatio_Anomaly, Phase1_2LifeRatio_Ultra, true);
-        NPC.AddAnomalyHPIndicator(Phase2LifeRatio_Anomaly, Phase2LifeRatio_Ultra);
-        NPC.AddAnomalyHPIndicator(Phase2_2LifeRatio_Anomaly, Phase2_2LifeRatio_Ultra, true, n => GetInstance(n).Phase2);
+        NPC.AddAnomalyHPIndicator(Phase12LifeRatioAnomaly, Phase12LifeRatioUltra, true);
+        NPC.AddAnomalyHPIndicator(Phase2LifeRatioAnomaly, Phase2LifeRatioUltra);
+        NPC.AddAnomalyHPIndicator(Phase22LifeRatioAnomaly, Phase22LifeRatioUltra, true, n => GetInstance(n).Phase2);
     }
 
     public override void SetDefaultsFinal()

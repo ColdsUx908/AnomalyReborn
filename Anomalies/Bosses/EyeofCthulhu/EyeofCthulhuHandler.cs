@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.EyeofCthulhu;
+namespace Anomalies.Bosses.EyeofCthulhu;
 
 public enum BehaviorCommand_Servant
 {
@@ -169,7 +169,7 @@ public static class EyeofCthulhuHandler
 
         Vector2 innerVector = EyeShapeHelper.GetInnerVector(originalVelocity);
 
-        if (TOSharedData.NotClient)
+        if (TONetworkEnvironment.NotClient)
         {
             for (int i = 0; i < amount; i++)
             {

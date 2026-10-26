@@ -122,14 +122,6 @@ public sealed class SkeletronHandBloodDustSystem : ModSystem
         }
     }
 
-    public override void Unload()
-    {
-        if (!Main.dedServ)
-        {
-            IL_Main.DrawNPCDirect -= RedirectHandBloodDust;
-        }
-    }
-
     private static void RedirectHandBloodDust(ILContext il)
     {
         ILCursor cursor = new(il);

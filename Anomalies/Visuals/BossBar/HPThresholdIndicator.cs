@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Visuals.BossBar;
+namespace Anomalies.Visuals.BossBar;
 
 /// <summary>
 /// 血量阈值指示器，用于在异象模式下 Boss 血条上标记关键血量百分比。

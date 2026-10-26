@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.EyeofCthulhu;
+namespace Anomalies.Bosses.EyeofCthulhu;
 
 public sealed partial class EyeofCthulhuArena
 {
@@ -16,7 +16,7 @@ public sealed partial class EyeofCthulhuArena
         public bool ShouldFaceTarget;
         public int Timer;
         public int Timer2;
-        public bool MasterPhase3_2;
+        public bool MasterPhase32;
         public List<EyeHighlight> Highlights = [];
 
         public Projectile MasterProjectile => Master.Projectile;
@@ -62,7 +62,7 @@ public sealed partial class EyeofCthulhuArena
             writer.Write(ShouldFaceTarget);
             writer.Write(Timer);
             writer.Write(Timer2);
-            writer.Write(MasterPhase3_2);
+            writer.Write(MasterPhase32);
             writer.Write(Highlights.Count);
             foreach (EyeHighlight highlight in Highlights)
             {
@@ -84,7 +84,7 @@ public sealed partial class EyeofCthulhuArena
                 ShouldFaceTarget = reader.ReadBoolean(),
                 Timer = reader.ReadInt32(),
                 Timer2 = reader.ReadInt32(),
-                MasterPhase3_2 = reader.ReadBoolean()
+                MasterPhase32 = reader.ReadBoolean()
             };
             if (eye.CustomRotationOriginIndex is < -1 or >= 32)
                 throw new InvalidDataException("Invalid eye rotation origin.");

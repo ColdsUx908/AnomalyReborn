@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.EyeofCthulhu;
+namespace Anomalies.Bosses.EyeofCthulhu;
 
 public sealed class BloodShot : AnomalyProjectileBehavior<BloodShot>
 {

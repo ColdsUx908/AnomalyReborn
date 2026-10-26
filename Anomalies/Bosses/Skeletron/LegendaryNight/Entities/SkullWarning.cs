@@ -32,7 +32,7 @@ public sealed class SkullWarning : AnomalyModProjectile
             && target.active && !target.dead;
         if (!master.active || master.type != NPCID.SkeletronHead || master.Anomaly.CustomAIType != 1 || !validTarget)
         {
-            if (TOSharedData.NotClient)
+            if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();
             return;
         }
@@ -47,7 +47,7 @@ public sealed class SkullWarning : AnomalyModProjectile
         }
 
         Projectile.ai[1]++;
-        if (Projectile.ai[1] >= WarningTime && TOSharedData.NotClient)
+        if (Projectile.ai[1] >= WarningTime && TONetworkEnvironment.NotClient)
         {
             // ai[0] = 1 跳过 Skull 的追踪和加速分支，发射后保持直线匀速。
             Projectile.NewProjectileAction(SourceAI, Projectile.Center,

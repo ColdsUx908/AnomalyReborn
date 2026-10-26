@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.Skeletron;
+namespace Anomalies.Bosses.Skeletron;
 
 public sealed partial class SkeletronHead
 {
@@ -48,9 +48,9 @@ public sealed partial class SkeletronHead
             }
 
             // Respawn hands
-            if (RespawnHands && AnomalyNPC.AnomalyAI32[0].f == 0f && Vector2.Distance(Main.player[NPC.target].Center, NPC.Center) > 160f)
+            if (RespawnHands && AnomalyNPC.AnomalyAI32[0].F == 0f && Vector2.Distance(Main.player[NPC.target].Center, NPC.Center) > 160f)
             {
-                AnomalyNPC.AnomalyAI32[0].f = 1f;
+                AnomalyNPC.AnomalyAI32[0].F = 1f;
                 SoundEngine.PlaySound(SoundID.ForceRoar with { Pitch = SoundID.ForceRoar.Pitch - 0.25f }, NPC.Center);
                 SpawnHands();
 
@@ -73,8 +73,8 @@ public sealed partial class SkeletronHead
                     hand.ai[1] = NPC.whoAmI;
                     hand.ai[3] = timer;
                     hand.target = NPC.target;
-                    hand.Anomaly.AnomalyAI32[0].f = verticalSide;
-                    hand.Anomaly.AnomalyAI32[2].f = timer;
+                    hand.Anomaly.AnomalyAI32[0].F = verticalSide;
+                    hand.Anomaly.AnomalyAI32[2].F = timer;
                     hand.netUpdate = true;
                 });
             }
@@ -668,7 +668,7 @@ public sealed partial class SkeletronHead
                 else
                     NPC.velocity = headSpinVelocity;
             }
-                }
+        }
 
         void Enraged()
         {
@@ -680,7 +680,7 @@ public sealed partial class SkeletronHead
             AnomalyNPC.BossBar_IncreasingDefenseOrDR = true;
 
             RotatingMovement(NPC, Main.player[NPC.target], 0.3f, 8f);
-                }
+        }
 
         void Despawn()
         {
@@ -699,6 +699,6 @@ public sealed partial class SkeletronHead
             NPC.velocity.X *= 0.95f;
             if (NPC.timeLeft > 50)
                 NPC.timeLeft = 50;
-                }
+        }
     }
 }

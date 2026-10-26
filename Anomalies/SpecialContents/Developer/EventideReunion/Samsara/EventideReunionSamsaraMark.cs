@@ -39,12 +39,6 @@ public sealed class EventideReunionSamsaraSystem : ModSystem
         On_NPC.UpdateNPC_BuffApplyDOTs += RecordDebuffs;
     }
 
-    public override void Unload()
-    {
-        On_NPC.StrikeNPC_HitInfo_bool_bool -= RecordStrike;
-        On_NPC.UpdateNPC_BuffApplyDOTs -= RecordDebuffs;
-    }
-
     // 观察共享生命根实体的实际生命差，不能逐个部件叠加命中数值。
     private static void Observe(NPC npc)
     {

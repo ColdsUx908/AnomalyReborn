@@ -1,4 +1,3 @@
-using Anomalies.Assets.Effects;
 using Anomalies.GameContents;
 using Terraria.Utilities;
 

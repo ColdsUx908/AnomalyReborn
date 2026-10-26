@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Common.EXChanges;
+namespace Anomalies.Common.EXChanges;
 
 public sealed class DangerousTreeAndCactus : GlobalTile
 {

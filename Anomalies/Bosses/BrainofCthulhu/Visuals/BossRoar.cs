@@ -4,36 +4,36 @@ public class BossRoar : Particle
 {
     public override string TexturePath => "Anomalies/Bosses/BrainofCthulhu/Assets/RoarPulse";
 
-    private float OriginalScale;
-    private float FinalScale;
-    private float BaseOpacity;
-    private float opacity;
-    private Color BaseColor;
+    private float _OriginalScale;
+    private float _FinalScale;
+    private float _BaseOpacity;
+    private float _Opacity;
+    private Color _BaseColor;
     public BossRoar(Vector2 position, Color color, float rotation, float originalScale, float finalScale, int lifeTime, float baseOpacity = 1f)
     {
         Center = position;
-        BaseColor = color;
-        OriginalScale = originalScale;
-        FinalScale = finalScale;
+        _BaseColor = color;
+        _OriginalScale = originalScale;
+        _FinalScale = finalScale;
         Scale = originalScale;
         Lifetime = lifeTime;
-        BaseOpacity = baseOpacity;
+        _BaseOpacity = baseOpacity;
         Rotation = rotation;
     }
 
     public override void Update()
     {
-        Scale = MathHelper.Lerp(OriginalScale, FinalScale, LifetimeCompletion);
-        opacity = 1f;
+        Scale = MathHelper.Lerp(_OriginalScale, _FinalScale, LifetimeCompletion);
+        _Opacity = 1f;
         if (LifetimeCompletion < 0.1f)
-            opacity = MathHelper.Lerp(0f, 1f, LifetimeCompletion * 10);
-        Color = BaseColor * opacity;
+            _Opacity = MathHelper.Lerp(0f, 1f, LifetimeCompletion * 10);
+        Color = _BaseColor * _Opacity;
     }
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 drawOffset = default)
     {
         Texture2D tex = Texture;
-        spriteBatch.Draw(tex, Center + drawOffset - Main.screenPosition, null, Color * BaseOpacity, Rotation, tex.Size() / 2f, Scale, SpriteEffects.None, 0);
+        spriteBatch.Draw(tex, Center + drawOffset - Main.screenPosition, null, Color * _BaseOpacity, Rotation, tex.Size() / 2f, Scale, SpriteEffects.None, 0);
         return false;
     }
 }

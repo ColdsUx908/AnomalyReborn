@@ -99,7 +99,7 @@
 - Boss AI 统一围绕 `Phase + Behavior + LocalPhase + Timer` 组织：`Phase` 表示战斗阶段（含初始化、转阶段等），`Behavior` 表示当前攻击或退场行为，`CurrentLocalPhase` 表示行为内部步骤，`Timer`（或已有的 `Timer1`、`Timer2`）表示计时。不得继续用裸 AI 数值同时表达多种职责。
 - 阶段与行为分别声明为嵌套的 `Phase : byte`、`Behavior : byte` 枚举，使用有意义的成员名；阶段按战斗进程排列，跨阶段共用行为可复用成员，退场可使用 `Despawn = byte.MaxValue`。LocalPhase 通常使用整数，并在属性或行为函数处注明各值含义；它不是另一个战斗阶段枚举。
 - 按整体逻辑规模决定是否拆分 AI 文件。规模较大的 Boss 使用 `partial`，将 `AI`、`PreAI` 等 AI 入口及其本地行为函数放到 `<BossName>.AI.cs`；主文件 `<BossName>.cs` 按“枚举、常量与参数、状态属性、其他回调及共享辅助方法”组织。整体逻辑较小的 Boss 或部件（如常规骷髅王手部）应保持单文件，将 AI 放在状态属性之后、绘制及共享辅助方法之前，不为拆分而创建 `.AI.cs`。是否拆分不以主 Boss 或部件身份决定，也不以单个 AI 方法的行数作为唯一依据。较大的阶段 AI 可继续拆到 `<BossName>.Phase1AI.cs`、`<BossName>.Phase2AI.cs` 等阶段文件，由 `.AI.cs` 中的入口分派；状态及绘制也可按规模分别拆入 `.State.cs`、`.Drawing.cs`。
-- 通用入口为 `CurrentPhase`、`CurrentBehavior`、`CurrentLocalPhase` 和计时属性。参考蜂王、克苏鲁之眼，将阶段和行为打包进 `AI_Union_0` 的 `byte0`、`byte1`；写入时先取出 `Union32`，只修改对应字节再写回，避免覆盖其他状态。状态改变时由服务器设置 `NPC.netUpdate`。
+- 通用入口为 `CurrentPhase`、`CurrentBehavior`、`CurrentLocalPhase` 和计时属性。参考蜂王、克苏鲁之眼，将阶段和行为打包进 `AI_Union_0` 的 `Byte0`、`Byte1`；写入时先取出 `Union32`，只修改对应字节再写回，避免覆盖其他状态。状态改变时由服务器设置 `NPC.netUpdate`。
 - `CurrentLocalPhase` 通过属性封装同步槽位，改变时请求同步；计时器可使用 `ref float` 属性映射 AI 槽位，不能为逐帧增长无条件请求同步。额外状态使用现有 `AnomalyAI32` 存储，按同步协议设置相应变化标记。仅绘制数据遵循 2.3 节，不放入网络状态。
 - 若原版槽位承担部件主人索引、左右侧等不可复用的职责，应保留这些槽位，并在额外同步槽位打包阶段与行为。记录每个槽位的用途；部件通过主人 Behavior 的属性读取状态，禁止直接依赖主人的裸 AI 槽位或魔法数。
 - 使用 `Phase2`、`Phase3`、`ShouldEnterPhase2` 等派生属性集中表达阶段范围与进入条件。血量阈值和攻击参数集中命名，阶段判定不能散落在各行为中。重构时保留原有阈值边界、阶段重叠关系及难度差异。
@@ -123,6 +123,12 @@
 - 永远不要使用 `Collision` 类的带宽度线段碰撞检测（`Collision.CheckAABBvLineCollision` 的带宽度重载），也不得通过包装方法间接调用；该检测存在严重漏检问题。
 - 矛身、刀刃、射线及位移扫掠等带宽度区域统一使用 Transoceanic 的 `RotatedRectangle.FromLineSegment(start, end, width).Collides(targetHitbox)`。`width` 为完整宽度，端点对应矩形两条短边的中点；保持原有端点、宽度、缩放和扫掠采样，检查零位移、包围和斜向接触。
 - 需要首次接触距离或目标排序时，基于旋转矩形另行求解，不得依赖上述线段检测接口。圆形、实体 AABB 和地形碰撞继续使用适用的几何或地形接口。
+
+### 2.8 钩子生命周期
+
+- Anomalies 项目中禁止手动卸载钩子；钩子的卸载由 tModLoader 统一管理。注册 `On_*`、`IL_*` 等钩子后，不得在 `Unload`、`OnModUnload` 或辅助方法中重复退订、移除、撤销或释放钩子，也不得为此保留卸载调用链。
+- 删除手动卸载逻辑后，同时删除仅承担该职责的空回调和辅助方法。钩子注册及其执行逻辑保持原有时机与行为。
+- 此规定仅针对钩子卸载；运行时创建的纹理等自有资源仍需释放，静态引用、缓存与世界状态仍按原有生命周期清理，不得将这些必要清理一并删除。
 
 ## 3. 着色器规范
 

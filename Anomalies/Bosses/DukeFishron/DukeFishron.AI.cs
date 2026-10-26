@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.DukeFishron;
+namespace Anomalies.Bosses.DukeFishron;
 
 public sealed partial class DukeFishron
 {
@@ -192,7 +192,7 @@ public sealed partial class DukeFishron
 
                 if (Phase3)
                 {
-                    if (TOSharedData.NotClient && Main.rand.NextBool(Ultra ? 15 : 20))
+                    if (TONetworkEnvironment.NotClient && Main.rand.NextBool(Ultra ? 15 : 20))
                     {
                         NPC.NewNPCAction(SourceAI, Target.Center + new Vector2(Main.rand.NextFloat(-2000f, 2000f), Main.rand.NextFloat(-1500f, -1000f)), NPCID.Sharkron2, action: n =>
                         {
@@ -210,7 +210,7 @@ public sealed partial class DukeFishron
 
             void SelectNextBehavior()
             {
-                if (!TOSharedData.NotClient)
+                if (!TONetworkEnvironment.NotClient)
                     return;
 
                 Timer1 = 0;
@@ -421,7 +421,7 @@ public sealed partial class DukeFishron
                             {
                                 SoundEngine.PlaySound(SoundID.NPCDeath19, NPC.Center);
 
-                                if (TOSharedData.NotClient)
+                                if (TONetworkEnvironment.NotClient)
                                 {
                                     Vector2 bubbleSpawnDirection = Vector2.Normalize(Target.Center - NPC.Center) * (NPC.width + 20) / 2f + NPC.Center + new Vector2(0, 45f);
                                     NPC.NewNPCAction(SourceAI, bubbleSpawnDirection, NPCID.DetonatingBubble);
@@ -477,7 +477,7 @@ public sealed partial class DukeFishron
                             {
                                 SoundEngine.PlaySound(SoundID.NPCDeath19, NPC.Center);
 
-                                if (TOSharedData.NotClient)
+                                if (TONetworkEnvironment.NotClient)
                                 {
                                     Vector2 phase2BubbleSharkronDirection = Vector2.Normalize(NPC.velocity) * (NPC.width + 20) / 2f + NPC.Center + new Vector2(0, 45f);
                                     NPC.NewNPCAction(SourceAI, phase2BubbleSharkronDirection, NPCID.DetonatingBubble, action: n =>
@@ -519,7 +519,7 @@ public sealed partial class DukeFishron
                 {
                     SoundEngine.PlaySound(SoundID.Zombie9, NPC.Center);
 
-                    if (TOSharedData.NotClient)
+                    if (TONetworkEnvironment.NotClient)
                     {
                         if (Phase1)
                         {

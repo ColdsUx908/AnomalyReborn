@@ -1,4 +1,4 @@
-﻿using Anomalies.GameContents.Base;
+using Anomalies.GameContents.Base;
 
 namespace Anomalies.SpecialContents.Contributor.VacuousBlack;
 

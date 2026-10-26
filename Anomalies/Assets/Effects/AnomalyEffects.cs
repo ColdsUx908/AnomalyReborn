@@ -1,5 +1,6 @@
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
+using Transoceanic.Runtime.Reflection;
 
 namespace Anomalies.Assets.Effects;
 

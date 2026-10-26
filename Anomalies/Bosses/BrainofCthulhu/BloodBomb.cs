@@ -15,8 +15,10 @@ public class BloodBomb : AnomalyModNPC
 
     public override void Unload()
     {
-        BloodBombGlow?.Dispose();
+        Texture2D texture = BloodBombGlow;
         BloodBombGlow = null;
+        if (texture is not null)
+            Main.QueueMainThreadAction(texture.Dispose);
     }
 
     internal static Texture2D GetBombGlow()
@@ -69,7 +71,7 @@ public class BloodBomb : AnomalyModNPC
             NPC.ai[1] = n.whoAmI;
         else
             NPC.ai[1] = -1;
-        int targetIndex = BrainBehaviorAccess.ActiveBrain ? Main.npc[Terraria.NPC.crimsonBoss].target : Player.FindClosest(NPC.position, NPC.width, NPC.height);
+        int targetIndex = BrainBehaviorAccess.ActiveBrain ? Main.npc[global::Terraria.NPC.crimsonBoss].target : Player.FindClosest(NPC.position, NPC.width, NPC.height);
         Vector2 goal = Main.player[targetIndex].Center - NPC.Center;
         float vyi = 6;
         float vyisq = 36;
@@ -150,7 +152,7 @@ public class BloodBomb : AnomalyModNPC
         if (NPC.life <= 0)
         {
             if (NPC.ai[1] == -1)
-                NPC.ai[1] = BrainBehaviorAccess.ActiveBrain ? Terraria.NPC.crimsonBoss : -1;
+                NPC.ai[1] = BrainBehaviorAccess.ActiveBrain ? global::Terraria.NPC.crimsonBoss : -1;
             if (Main.netMode == NetmodeID.MultiplayerClient || (uint)NPC.ai[1] >= Main.maxNPCs || !Main.npc[(int)NPC.ai[1]].active)
                 return;
             Projectile.NewProjectileAction(source: NPC.GetSource_FromThis(), position: NPC.Center, velocity: NPC.DirectionTo(Main.npc[(int)NPC.ai[1]].Center) * 16f, type: ModContent.ProjectileType<BloodBombRTS>(), damage: BrainofCthulhu.BloodBombDamage, knockback: 1f, owner: -1, action: entity =>

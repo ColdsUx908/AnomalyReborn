@@ -1,4 +1,6 @@
 Core: {
+	AutoHosting.Active: 正在托管
+
 	UpdateReminder: {
 		Header: TRANSOCEANIC 更新提醒
 		ExternalHeader: 来自外部 Mod：

@@ -29,8 +29,12 @@ public sealed partial class EventideReunionSamsaraSkill : AnomalyModProjectile
     private Vector2 Grip => Projectile.Owner.MountedCenter;
     private float Progress => Timer / (float)(Phase switch
     {
-        SamsaraPhase.Charge => ChargeDuration, SamsaraPhase.Spin => SpinDuration,
-        SamsaraPhase.Turn => TurnDuration, SamsaraPhase.Pullback => PullbackDuration, SamsaraPhase.Thrust => ThrustDuration, _ => RecoveryDuration
+        SamsaraPhase.Charge => ChargeDuration,
+        SamsaraPhase.Spin => SpinDuration,
+        SamsaraPhase.Turn => TurnDuration,
+        SamsaraPhase.Pullback => PullbackDuration,
+        SamsaraPhase.Thrust => ThrustDuration,
+        _ => RecoveryDuration
     });
     private float PlanarWeaponAngle => Phase switch
     {
@@ -140,8 +144,12 @@ public sealed partial class EventideReunionSamsaraSkill : AnomalyModProjectile
         }
         int duration = Phase switch
         {
-            SamsaraPhase.Charge => ChargeDuration, SamsaraPhase.Spin => SpinDuration,
-            SamsaraPhase.Turn => TurnDuration, SamsaraPhase.Pullback => PullbackDuration, SamsaraPhase.Thrust => ThrustDuration, _ => RecoveryDuration
+            SamsaraPhase.Charge => ChargeDuration,
+            SamsaraPhase.Spin => SpinDuration,
+            SamsaraPhase.Turn => TurnDuration,
+            SamsaraPhase.Pullback => PullbackDuration,
+            SamsaraPhase.Thrust => ThrustDuration,
+            _ => RecoveryDuration
         };
         // 转身首帧由持有者读取光标并同步；其他端在旋身结束处等待这一状态。
         if (Phase is SamsaraPhase.Spin or SamsaraPhase.Turn && !Projectile.IsOnOwnerClient)

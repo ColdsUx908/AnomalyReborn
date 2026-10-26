@@ -12,10 +12,10 @@ public class BrainIllusion : AnomalyModNPC
 
     public float TeleportDuration
     {
-        get => AnomalyNPC.AnomalyAI32[0].f;
+        get => AnomalyNPC.AnomalyAI32[0].F;
         set
         {
-            AnomalyNPC.AnomalyAI32[0].f = value;
+            AnomalyNPC.AnomalyAI32[0].F = value;
             AnomalyNPC.AIChanged32[0] = true;
         }
     }

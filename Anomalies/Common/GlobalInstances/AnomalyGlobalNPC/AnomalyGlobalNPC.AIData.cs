@@ -10,12 +10,12 @@ public sealed partial class AnomalyGlobalNPC
     /// </summary>
     public int CustomAIType
     {
-        get => InternalAnomalyAI32[2].i;
+        get => InternalAnomalyAI32[2].I;
         set
         {
-            if (InternalAnomalyAI32[2].i != value)
+            if (InternalAnomalyAI32[2].I != value)
             {
-                InternalAnomalyAI32[2].i = value;
+                InternalAnomalyAI32[2].I = value;
                 InternalAIChanged32[2] = true;
             }
         }
@@ -23,12 +23,12 @@ public sealed partial class AnomalyGlobalNPC
 
     public bool ShouldRunAnomalyAI
     {
-        get => InternalAnomalyAI32[0].bits[0];
+        get => InternalAnomalyAI32[0].Bits[0];
         set
         {
-            if (InternalAnomalyAI32[0].bits[0] != value)
+            if (InternalAnomalyAI32[0].Bits[0] != value)
             {
-                InternalAnomalyAI32[0].bits[0] = value;
+                InternalAnomalyAI32[0].Bits[0] = value;
                 InternalAIChanged32[0] = true;
             }
         }
@@ -38,12 +38,12 @@ public sealed partial class AnomalyGlobalNPC
     #region 减益
     public bool Debuff_DimensionalRend
     {
-        get => InternalAnomalyAI32[1].bits[0];
+        get => InternalAnomalyAI32[1].Bits[0];
         set
         {
-            if (InternalAnomalyAI32[1].bits[0] != value)
+            if (InternalAnomalyAI32[1].Bits[0] != value)
             {
-                InternalAnomalyAI32[1].bits[0] = value;
+                InternalAnomalyAI32[1].Bits[0] = value;
                 InternalAIChanged32[1] = true;
             }
         }
@@ -60,14 +60,14 @@ public sealed partial class AnomalyGlobalNPC
     /// </summary>
     public float Z
     {
-        get => InternalAnomalyAI32[3].f;
+        get => InternalAnomalyAI32[3].F;
         set
         {
             if (!float.IsFinite(value))
                 throw new ArgumentOutOfRangeException(nameof(value));
-            if (InternalAnomalyAI32[3].f != value)
+            if (InternalAnomalyAI32[3].F != value)
             {
-                InternalAnomalyAI32[3].f = value;
+                InternalAnomalyAI32[3].F = value;
                 InternalAIChanged32[3] = true;
             }
         }
@@ -81,12 +81,12 @@ public sealed partial class AnomalyGlobalNPC
     /// <remarks>谨慎使用。</remarks>
     public float DR
     {
-        get => InternalAnomalyAI32[4].f;
+        get => InternalAnomalyAI32[4].F;
         set
         {
-            if (InternalAnomalyAI32[4].f != value)
+            if (InternalAnomalyAI32[4].F != value)
             {
-                InternalAnomalyAI32[4].f = value;
+                InternalAnomalyAI32[4].F = value;
                 InternalAIChanged32[4] = true;
             }
         }
@@ -98,12 +98,12 @@ public sealed partial class AnomalyGlobalNPC
     /// <remarks>谨慎使用。</remarks>
     public float ExtraDR
     {
-        get => InternalAnomalyAI32[5].f;
+        get => InternalAnomalyAI32[5].F;
         set
         {
-            if (InternalAnomalyAI32[5].f != value)
+            if (InternalAnomalyAI32[5].F != value)
             {
-                InternalAnomalyAI32[5].f = value;
+                InternalAnomalyAI32[5].F = value;
                 InternalAIChanged32[5] = true;
             }
         }
