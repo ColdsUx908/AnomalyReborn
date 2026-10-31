@@ -5,6 +5,10 @@ namespace Anomalies.Bosses.EaterofWorlds;
 
 public sealed partial class EaterofWorldsHead : EaterofWorldsSegment<EaterofWorldsHead>
 {
+    protected override int AI32Capacity => 5;
+
+    protected override int AI64Capacity => 4;
+
     #region 数据
     public enum Phase : byte
     {
@@ -143,7 +147,7 @@ public sealed partial class EaterofWorldsHead : EaterofWorldsSegment<EaterofWorl
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) =>
-        TONPCUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
+        AnomalyUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
 
     public override bool CheckActive() => false;
 

@@ -2,7 +2,7 @@ using MonoMod.Cil;
 
 namespace Anomalies.Common.SingleBehaviors;
 
-public sealed class PlayerBaseStatBoosts : AnomalyPlayerBehavior, IContentLoader
+public sealed class PlayerBaseStatBoosts : AnomalyPlayerBehavior
 {
     public override decimal Priority => -10m; //在最后应用
 
@@ -105,7 +105,8 @@ public sealed class PlayerBaseStatBoosts : AnomalyPlayerBehavior, IContentLoader
             Player.moveSpeed *= 1.5f;
     }
 
-    void IContentLoader.PostSetupContent()
+    /// <summary>在 tML 行为内容加载时安装玩家跳跃速度 IL 修改，不等待后置内容阶段。</summary>
+    public override void Load()
     {
         IL_Player.Update += IL_Player_Update;
     }
@@ -123,7 +124,7 @@ public sealed class PlayerBaseStatBoosts : AnomalyPlayerBehavior, IContentLoader
         // The jumpSpeed variable is set to this specific value before anything else occurs.
         if (!cursor.TryGotoNext(MoveType.Before, i => i.MatchLdcR4(VanillaBaseJumpSpeed)))
         {
-            AnomalyUtils.ILFailure("Base Jump Height Buff", "Could not locate the jump height variable.");
+            AnomalyUtils.ILFailure(Mod, "Base Jump Height Buff", "Could not locate the jump height variable.");
             return;
         }
         cursor.Remove();

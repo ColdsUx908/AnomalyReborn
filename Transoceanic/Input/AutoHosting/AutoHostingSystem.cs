@@ -3,9 +3,15 @@ using Terraria.UI;
 
 namespace Transoceanic.Input.AutoHosting;
 
-/// <summary>Applies owned input and draws the shared hosting status.</summary>
-public sealed class AutoHostingSystem : ModSystem
+/// <summary>
+/// 应用当前托管输入并绘制共享托管状态。
+/// </summary>
+internal sealed class AutoHostingSystem : ModSystem
 {
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 客户端注册输入钩子，在原版输入更新周围校验中断并应用托管鼠标。
+    /// </remarks>
     public override void Load()
     {
         if (Main.dedServ)
@@ -29,8 +35,16 @@ public sealed class AutoHostingSystem : ModSystem
         AutoHosting.ApplyCurrentMouse();
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 每次 UI 更新时检查托管是否被用户操作或游戏状态中断。
+    /// </remarks>
     public override void UpdateUI(GameTime gameTime) => AutoHosting.CheckCurrentInput();
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 托管有效且不在主菜单时，在光标层前插入托管状态提示。
+    /// </remarks>
     public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
     {
         if (!AutoHosting.IsHosting || Main.gameMenu)
@@ -50,9 +64,21 @@ public sealed class AutoHostingSystem : ModSystem
         return true;
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 保存退出前中断托管并释放输入控制。
+    /// </remarks>
     public override void PreSaveAndQuit() => AutoHosting.InterruptCurrent();
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 退出世界时中断托管并释放输入控制。
+    /// </remarks>
     public override void OnWorldUnload() => AutoHosting.InterruptCurrent();
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 在主线程中断托管；专用服务器跳过。
+    /// </remarks>
     public override void Unload()
     {
         if (Main.dedServ)

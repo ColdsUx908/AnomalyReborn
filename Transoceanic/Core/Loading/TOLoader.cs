@@ -19,7 +19,7 @@ public class LoadPriorityAttribute : Attribute
 }
 
 /// <summary>
-/// 定义内容加载生命周期的接口，用于在 Mod 加载流程中的特定节点执行自定义操作。
+/// 定义需要后置内容、世界或配方阶段的有序回调；无内容依赖的初始化应使用 tML 原生 Load。
 /// </summary>
 public interface IContentLoader
 {
@@ -50,7 +50,7 @@ public interface IContentLoader
 }
 
 /// <summary>
-/// 内部 Mod 加载器接口，提供比 <see cref="IContentLoader"/> 更早或更晚的加载时机。
+/// 保留给需要集中排序的框架内部加载任务；无顺序依赖的类型使用 tML 原生 Load 和 TOCleanup。
 /// </summary>
 internal interface ITOLoader
 {

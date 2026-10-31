@@ -3,11 +3,21 @@ using Transoceanic.GlobalInstances;
 
 namespace Transoceanic.Behaviors;
 
+/// <summary>
+/// 玩家行为；不提供 CopyClientState、SyncPlayer、SendClientChanges。
+/// 玩家网络同步应在实际存储数据的 ModPlayer 中实现。
+/// </summary>
 public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
 {
-    public Player Player { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity; }
+    /// <summary>
+    /// 获取当前绑定实体的 Player 引用；行为共享此绑定，不应跨回调缓存。
+    /// </summary>
+    public Player Player { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Entity; }
 
-    public TOPlayer OceanPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Ocean; }
+    /// <summary>
+    /// 获取当前绑定实体的 OceanPlayer 引用；行为共享此绑定，不应跨回调缓存。
+    /// </summary>
+    public TOPlayer OceanPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Entity.Ocean; }
 
     #region 虚成员
     /// <inheritdoc cref="ModPlayer.Initialize"/>
@@ -46,15 +56,6 @@ public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
 
     /// <inheritdoc cref="ModPlayer.PostSavePlayer"/>
     public virtual void PostSavePlayer() { }
-
-    /// <inheritdoc cref="ModPlayer.CopyClientState"/>
-    public virtual void CopyClientState(ModPlayer targetCopy) { }
-
-    /// <inheritdoc cref="ModPlayer.SyncPlayer"/>
-    public virtual void SyncPlayer(int toWho, int fromWho, bool newPlayer) { }
-
-    /// <inheritdoc cref="ModPlayer.SendClientChanges"/>
-    public virtual void SendClientChanges(ModPlayer clientPlayer) { }
 
     /// <inheritdoc cref="ModPlayer.UpdateBadLifeRegen"/>
     public virtual void UpdateBadLifeRegen() { }

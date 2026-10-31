@@ -31,48 +31,68 @@ public sealed class TOMain : Mod
     /// </summary>
     internal static bool Unloaded { get; private set; }
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 模组加载入口点。
     /// 加载过程的状态由 <see cref="Loading"/> 和 <see cref="Loaded"/> 标志跟踪。
-    /// </summary>
+    /// </remarks>
     public override void Load()
     {
         Loading = true;
+        Loaded = false;
+        Unloaded = false;
+        List<Exception> failures = [];
         try
         {
             Instance = this;
             TOLoaderHandler.Loader_Load();
+            Loaded = true;
+        }
+        catch (Exception exception)
+        {
+            failures.Add(exception);
         }
         finally
         {
-            Loaded = true;
             Loading = false;
         }
+
+        if (failures.Count > 0)
+            throw new AggregateException("Transoceanic loading failed.", failures).Flatten();
     }
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 在所有模组的内容加载完成后调用。
-    /// </summary>
-    public override void PostSetupContent() => TOLoaderHandler.Loader_PostSetupContent();
+    /// </remarks>
+    public override void PostSetupContent()
+    {
+        TOLoaderHandler.Loader_PostSetupContent();
+        TONetworkEnvironment.CompleteSetup();
+    }
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 模组卸载入口点。
     /// 卸载过程的状态由 <see cref="Unloading"/> 和 <see cref="Unloaded"/> 标志跟踪。
-    /// </summary>
+    /// </remarks>
     public override void Unload()
     {
         Unloading = true;
+        List<Exception> failures = [];
         try
         {
-            if (Loaded)
-            {
-                TOLoaderHandler.Loader_Unload();
-                TONetworkEnvironment.SyncEnabled = false;
-                Instance = null;
-            }
+            try { TOLoaderHandler.Loader_Unload(); }
+            catch (Exception exception) { failures.Add(exception); }
+            try { TOCleanup.Run(); }
+            catch (Exception exception) { failures.Add(exception); }
+            if (failures.Count > 0)
+                throw new AggregateException("Transoceanic unloading failed.", failures).Flatten();
         }
         finally
         {
+            TONetworkEnvironment.Reset();
+            Instance = null;
             Loaded = false;
             Unloaded = true;
             Unloading = false;

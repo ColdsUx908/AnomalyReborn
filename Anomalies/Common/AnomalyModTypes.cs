@@ -33,7 +33,20 @@ public interface IAnomalyModNPC
 
 public abstract class AnomalyModNPC : TOModNPC, IAnomalyModNPC
 {
-    public AnomalyGlobalNPC AnomalyNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => NPC.Anomaly; }
+    /// <summary>内容使用的 AI32 数据槽数，不含变化标记。</summary>
+    protected virtual int AI32Capacity => 4;
+    /// <summary>内容使用的 AI64 数据槽数，不含变化标记。</summary>
+    protected virtual int AI64Capacity => 1;
+
+    public AnomalyGlobalNPC AnomalyNPC
+    {
+        get
+        {
+            AnomalyGlobalNPC data = NPC.Anomaly;
+            data.EnsureAICapacity(AI32Capacity, AI64Capacity);
+            return data;
+        }
+    }
 
     // Seal the public pair so a derived payload cannot accidentally skip shared state.
     public sealed override void SendExtraAI(BinaryWriter writer)
@@ -64,7 +77,20 @@ public interface IAnomalyModProjectile
 
 public abstract class AnomalyModProjectile : TOModProjectile, IAnomalyModProjectile
 {
-    public AnomalyGlobalProjectile AnomalyProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Projectile.Anomaly; }
+    /// <summary>内容使用的 AI32 数据槽数，不含变化标记。</summary>
+    protected virtual int AI32Capacity => 4;
+    /// <summary>内容使用的 AI64 数据槽数，不含变化标记。</summary>
+    protected virtual int AI64Capacity => 1;
+
+    public AnomalyGlobalProjectile AnomalyProjectile
+    {
+        get
+        {
+            AnomalyGlobalProjectile data = Projectile.Anomaly;
+            data.EnsureAICapacity(AI32Capacity, AI64Capacity);
+            return data;
+        }
+    }
 
     public sealed override void SendExtraAI(BinaryWriter writer)
     {

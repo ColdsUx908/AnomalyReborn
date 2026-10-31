@@ -199,9 +199,10 @@ public readonly struct TerrariaTime : IEquatable<TerrariaTime>
     /// <returns>如果小时、分钟、秒和月相均相等，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public bool Equals(TerrariaTime other) => Hour == other.Hour && Minute == other.Minute && Second == other.Second && MoonPhase == other.MoonPhase;
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 指示此实例与指定对象是否相等。
-    /// </summary>
+    /// </remarks>
     /// <param name="obj">要与当前实例进行比较的对象。</param>
     /// <returns>如果 <paramref name="obj"/> 是 <see cref="TerrariaTime"/> 且其值相等，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public override bool Equals(object obj) => obj is TerrariaTime other && Equals(other);
@@ -222,9 +223,10 @@ public readonly struct TerrariaTime : IEquatable<TerrariaTime>
     /// <returns>如果两个实例不相等，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public static bool operator !=(TerrariaTime left, TerrariaTime right) => !(left == right);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回此实例的哈希代码。
-    /// </summary>
+    /// </remarks>
     /// <returns>基于小时、分钟、秒和月相结合的哈希代码。</returns>
     public override int GetHashCode() => HashCode.Combine(Hour, Minute, Second, MoonPhase);
 
@@ -234,9 +236,10 @@ public readonly struct TerrariaTime : IEquatable<TerrariaTime>
     /// <value>零填充的 24 小时制时间字符串。</value>
     public string TimeString => $"{Hour:D2}:{Minute:D2}:{Second:D2}";
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回表示当前对象的字符串。
-    /// </summary>
+    /// </remarks>
     /// <returns>如果包含月相，则为 "HH:MM:SS, MoonPhase" 格式；否则仅返回 "HH:MM:SS"。</returns>
     public override string ToString() => MoonPhase.HasValue ? $"{TimeString}, {MoonPhase}" : TimeString;
 
@@ -463,9 +466,10 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
         ticks = Tick;
     }
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 指示此实例与指定对象是否相等。
-    /// </summary>
+    /// </remarks>
     /// <param name="obj">要与当前实例进行比较的对象。</param>
     /// <returns>如果 <paramref name="obj"/> 是 <see cref="TerrariaTimer"/> 且总刻数相等，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public override readonly bool Equals([NotNullWhen(true)] object obj) => obj is TerrariaTimer other && Equals(other);
@@ -509,9 +513,10 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     /// <returns>如果计时器的 <see cref="TotalTicks"/> 不等于 <paramref name="right"/>，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public static bool operator !=(TerrariaTimer left, long right) => !(left == right);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回此实例的哈希代码。
-    /// </summary>
+    /// </remarks>
     /// <returns>基于总刻数的哈希代码。</returns>
     public override readonly int GetHashCode() => TotalTicks.GetHashCode();
 
@@ -626,9 +631,10 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     /// <param name="time">包含 (分钟, 秒, 刻) 的元组。</param>
     public static implicit operator TerrariaTimer((int minutes, int seconds, int ticks) time) => new(time.minutes, time.seconds, time.ticks);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回表示当前对象的字符串，格式为 "(H:)MM:SS:TT"。
-    /// </summary>
+    /// </remarks>
     /// <returns>零填充的分钟:秒:刻字符串。</returns>
     public override readonly string ToString() => ToString(true, true);
 

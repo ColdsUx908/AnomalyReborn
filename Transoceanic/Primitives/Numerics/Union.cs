@@ -22,23 +22,41 @@ public struct Union32
             throw new InvalidOperationException("Union32 must be 4 bytes in size.");
     }
 
-    /// <summary>32 位单精度浮点数视图。</summary>
+    /// <summary>
+    /// 32 位单精度浮点数视图。
+    /// </summary>
     [FieldOffset(0)] public float F;
-    /// <summary>32 位有符号整数视图。</summary>
+    /// <summary>
+    /// 32 位有符号整数视图。
+    /// </summary>
     [FieldOffset(0)] public int I;
-    /// <summary>低 16 位有符号短整数视图。</summary>
+    /// <summary>
+    /// 低 16 位有符号短整数视图。
+    /// </summary>
     [FieldOffset(0)] public short Short0;
-    /// <summary>高 16 位有符号短整数视图。</summary>
+    /// <summary>
+    /// 高 16 位有符号短整数视图。
+    /// </summary>
     [FieldOffset(2)] public short Short1;
-    /// <summary>最低有效字节（字节 0）。</summary>
+    /// <summary>
+    /// 最低有效字节（字节 0）。
+    /// </summary>
     [FieldOffset(0)] public byte Byte0;
-    /// <summary>字节 1。</summary>
+    /// <summary>
+    /// 字节 1。
+    /// </summary>
     [FieldOffset(1)] public byte Byte1;
-    /// <summary>字节 2。</summary>
+    /// <summary>
+    /// 字节 2。
+    /// </summary>
     [FieldOffset(2)] public byte Byte2;
-    /// <summary>最高有效字节（字节 3）。</summary>
+    /// <summary>
+    /// 最高有效字节（字节 3）。
+    /// </summary>
     [FieldOffset(3)] public byte Byte3;
-    /// <summary>32 位位域视图，允许按位操作。</summary>
+    /// <summary>
+    /// 32 位位域视图，允许按位操作。
+    /// </summary>
     [FieldOffset(0)] public BitArray32 Bits;
 
     /// <summary>
@@ -63,11 +81,17 @@ public struct Union32
         return Unsafe.As<float, T>(ref F);
     }
 
-    /// <summary>从 <see cref="float"/> 显式转换为 <see cref="Union32"/>。</summary>
+    /// <summary>
+    /// 从 <see cref="float"/> 显式转换为 <see cref="Union32"/>。
+    /// </summary>
     public static explicit operator Union32(float f) => new(f);
-    /// <summary>从 <see cref="int"/> 显式转换为 <see cref="Union32"/>。</summary>
+    /// <summary>
+    /// 从 <see cref="int"/> 显式转换为 <see cref="Union32"/>。
+    /// </summary>
     public static explicit operator Union32(int i) => new() { I = i };
-    /// <summary>从 <see cref="BitArray32"/> 显式转换为 <see cref="Union32"/>。</summary>
+    /// <summary>
+    /// 从 <see cref="BitArray32"/> 显式转换为 <see cref="Union32"/>。
+    /// </summary>
     public static explicit operator Union32(BitArray32 bits) => new() { Bits = bits };
 }
 
@@ -91,11 +115,17 @@ public struct Union64
             throw new InvalidOperationException("Union64 must be 8 bytes in size.");
     }
 
-    /// <summary>64 位双精度浮点数视图。</summary>
+    /// <summary>
+    /// 64 位双精度浮点数视图。
+    /// </summary>
     [FieldOffset(0)] public double D;
-    /// <summary>64 位有符号长整数视图。</summary>
+    /// <summary>
+    /// 64 位有符号长整数视图。
+    /// </summary>
     [FieldOffset(0)] public long L;
-    /// <summary>64 位位域视图，允许按位操作。</summary>
+    /// <summary>
+    /// 64 位位域视图，允许按位操作。
+    /// </summary>
     [FieldOffset(0)] public BitArray64 Bits;
 
     /// <summary>
@@ -120,10 +150,16 @@ public struct Union64
         return Unsafe.As<double, T>(ref D);
     }
 
-    /// <summary>从 <see cref="double"/> 显式转换为 <see cref="Union64"/>。</summary>
+    /// <summary>
+    /// 从 <see cref="double"/> 显式转换为 <see cref="Union64"/>。
+    /// </summary>
     public static explicit operator Union64(double d) => new(d);
-    /// <summary>从 <see cref="long"/> 显式转换为 <see cref="Union64"/>。</summary>
+    /// <summary>
+    /// 从 <see cref="long"/> 显式转换为 <see cref="Union64"/>。
+    /// </summary>
     public static explicit operator Union64(long l) => new() { L = l };
-    /// <summary>从 <see cref="BitArray64"/> 显式转换为 <see cref="Union64"/>。</summary>
+    /// <summary>
+    /// 从 <see cref="BitArray64"/> 显式转换为 <see cref="Union64"/>。
+    /// </summary>
     public static explicit operator Union64(BitArray64 bits) => new() { Bits = bits };
 }

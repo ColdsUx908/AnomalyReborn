@@ -8,12 +8,18 @@ namespace Transoceanic.Primitives.Mathematics;
 /// <remarks>
 /// 本类按功能领域划分为多个嵌套静态类：
 /// <list type="bullet">
-/// <item/><see cref="BitOperation"/>：针对多种整数类型的位读取与修改操作。
-/// <item/><see cref="Collision"/>：碰撞检测相关操作。
-/// <item/><see cref="Geometry"/>：二维几何计算，包含距离测算，SAT检测等。
-/// <item/><see cref="Interpolation"/>：常用缓动函数（Easing Functions）的实现。
-/// <item/><see cref="PolarEquation"/>：基于极坐标的曲线方程。
-/// <item/><see cref="UnitConversion"/>：物理单位换算。
+/// <item><description><see cref="BitOperation"/>：针对多种整数类型的位读取与修改操作。
+/// </description></item>
+/// <item><description><see cref="Collision"/>：碰撞检测相关操作。
+/// </description></item>
+/// <item><description><see cref="Geometry"/>：二维几何计算，包含距离测算，SAT检测等。
+/// </description></item>
+/// <item><description><see cref="Interpolation"/>：常用缓动函数（Easing Functions）的实现。
+/// </description></item>
+/// <item><description><see cref="PolarEquation"/>：基于极坐标的曲线方程。
+/// </description></item>
+/// <item><description><see cref="UnitConversion"/>：物理单位换算。
+/// </description></item>
 /// </list>
 /// 同时，本类还直接提供常用的基础数学方法（请参见 <see cref="TOMathUtils"/> 的主成员）。
 /// </remarks>
@@ -85,10 +91,15 @@ public static partial class TOMathUtils
     /// <param name="value">要规范化的值。</param>
     /// <param name="period">周期长度，默认为 2π。</param>
     /// <returns>规范化后的值，范围 [0, period)。</returns>
+    /// <exception cref="ArgumentOutOfRangeException">周期不是有限正数。</exception>
+    /// <remarks>非有限 value 返回 NaN；有效输入结果为 [0, period)。</remarks>
     public static float NormalizeWithPeriod(float value, float period = MathHelper.TwoPi)
     {
+        if (!float.IsFinite(period) || period <= 0f)
+            throw new ArgumentOutOfRangeException(nameof(period));
         float temp = value % period;
-        return temp < 0 ? temp + period : temp;
+        float normalized = temp < 0 ? temp + period : temp;
+        return normalized == period ? 0f : normalized;
     }
 
     /// <summary>
@@ -99,7 +110,7 @@ public static partial class TOMathUtils
     /// <param name="period">周期长度，默认为 2π。</param>
     /// <returns>
     /// 从 <paramref name="from"/> 到 <paramref name="to"/> 的最短差值，
-    /// 结果范围在 [-<paramref name="period"/>/2, <paramref name="period"/>/2) 之间。
+    /// 结果范围在 (-<paramref name="period"/>/2, <paramref name="period"/>/2] 之间。
     /// 正数表示沿正方向最近，负数表示沿负方向最近。
     /// </returns>
     /// <remarks>
@@ -178,7 +189,7 @@ public static partial class TOMathUtils
     /// <summary>
     /// 必要时交换 <paramref name="left"/> 和 <paramref name="right"/> 的值，确保 <paramref name="left"/> 不大于 <paramref name="right"/>。
     /// </summary>
-    /// <typeparam name="T">实现了 <see cref="IComparisonOperators{T, T, bool}"/> 接口的数值类型。</typeparam>
+    /// <typeparam name="T">实现了 <see cref="IComparisonOperators{TSelf, TOther, TResult}"/> 接口的数值类型。</typeparam>
     /// <param name="left">第一个值，方法返回时该值将小于或等于 <paramref name="right"/>。</param>
     /// <param name="right">第二个值，方法返回时该值将大于或等于 <paramref name="left"/>。</param>
     public static void NormalizeMinMax<T>(ref T left, ref T right) where T : IComparisonOperators<T, T, bool>

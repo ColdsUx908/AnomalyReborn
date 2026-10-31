@@ -5,10 +5,9 @@ using Terraria.GameInput;
 namespace Transoceanic.Input.AutoHosting;
 
 /// <summary>
-/// Owns one local automated interaction. Call <see cref="End"/> explicitly when
-/// every stage finishes. Conflicting physical input or Escape cancels the interaction before
-/// simulated input is applied, and invokes the supplied interruption callback.
+/// 管理一次本地输入托管会话，全部步骤完成后须显式调用 <see cref="End"/>。检测到冲突的真实输入或 Escape 时，在应用模拟输入前取消托管并调用中断回调。
 /// </summary>
+/// <remarks>仅托管本地输入，不提供服务器权限，也不会替代实体或玩家数据的网络同步。</remarks>
 public sealed class AutoHosting
 {
     private static AutoHosting _Current;
@@ -23,12 +22,26 @@ public sealed class AutoHosting
     private string _PreviousChatText;
     private string _ExpectedChatText;
 
+    /// <summary>
+    /// 当前输入托管会话是否有效，由启动、结束与中断流程维护。
+    /// </summary>
     public bool Active { get; private set; }
+    /// <summary>
+    /// 当前是否存在有效的输入托管会话。
+    /// </summary>
     public static bool IsHosting => _Current?.Active == true;
+    /// <summary>
+    /// 托管有效且聊天框仍打开、文本仍为托管写入值时返回 true。
+    /// </summary>
     public bool HasChatInput => Active && _ControlsChat && Main.drawingPlayerChat && Main.chatText == _ExpectedChatText;
+    /// <summary>
+    /// 会话有效且已接管游戏内鼠标时返回 true。
+    /// </summary>
     public bool HasMouseControl => Active && _ControlsMouse;
 
-    /// <summary>Starts a session; keys already held at startup may be released normally.</summary>
+    /// <summary>
+    /// 尝试启动托管会话；启动前已经按住的按键可以正常松开，不因此中断托管。
+    /// </summary>
     public bool TryStart(Action interrupted)
     {
         if (Active)
@@ -50,7 +63,9 @@ public sealed class AutoHosting
         return true;
     }
 
-    /// <summary>Polls hardware state, never the mouse/keyboard fields being simulated.</summary>
+    /// <summary>
+    /// 检查真实硬件输入与游戏状态；无有效会话或托管被中断时返回 false，不读取模拟输入字段作为硬件状态。
+    /// </summary>
     public bool ValidateInput()
     {
         if (!Active)
@@ -71,6 +86,9 @@ public sealed class AutoHosting
         return true;
     }
 
+    /// <summary>
+    /// 本地托管有效且聊天框未被占用时打开聊天输入，保存原文本；成功返回 true。
+    /// </summary>
     public bool TryBeginChatInput()
     {
         if (!ValidateInput() || Main.drawingPlayerChat || Main.CurrentInputTextTakerOverride != null)
@@ -85,7 +103,9 @@ public sealed class AutoHosting
         return true;
     }
 
-    /// <summary>Changes the real local chat input without submitting a command.</summary>
+    /// <summary>
+    /// 尝试修改本地聊天框文本，不提交消息或命令。
+    /// </summary>
     public bool TrySetChatInput(string text, bool playTypingSound = true)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -98,6 +118,9 @@ public sealed class AutoHosting
         return true;
     }
 
+    /// <summary>
+    /// 释放聊天控制；仅当文本仍是托管写入值时恢复原文本并关闭聊天框。
+    /// </summary>
     public void EndChatInput()
     {
         if (!_ControlsChat)
@@ -110,6 +133,9 @@ public sealed class AutoHosting
             Main.ClosePlayerChat();
     }
 
+    /// <summary>
+    /// 验证输入后接管游戏内鼠标并保存起始位置；成功返回 true，不移动系统光标。
+    /// </summary>
     public bool TryBeginMouseControl()
     {
         if (!ValidateInput())
@@ -123,7 +149,9 @@ public sealed class AutoHosting
         return true;
     }
 
-    /// <summary>Interpolates and applies a position in physical screen coordinates.</summary>
+    /// <summary>
+    /// 在托管有效且已接管鼠标时，按限制到 0 至 1 的进度插值并应用游戏内鼠标的屏幕像素坐标，不移动系统光标。
+    /// </summary>
     public void MoveMouse(Vector2 from, Vector2 to, float progress)
     {
         if (!ValidateInput() || !_ControlsMouse)
@@ -132,6 +160,9 @@ public sealed class AutoHosting
         ApplyMouse();
     }
 
+    /// <summary>
+    /// 释放鼠标控制并恢复开始托管时的游戏内鼠标位置；未接管时不执行操作。
+    /// </summary>
     public void EndMouseControl()
     {
         if (!_ControlsMouse)
@@ -170,7 +201,9 @@ public sealed class AutoHosting
         Main.LocalPlayer.controlUseItem = Main.LocalPlayer.controlUseTile = false;
     }
 
-    /// <summary>Explicitly completes hosting, restores the cursor, and closes owned chat input.</summary>
+    /// <summary>
+    /// 显式结束托管，恢复接管前的游戏内鼠标位置，并释放托管占用的聊天输入。
+    /// </summary>
     public void End()
     {
         if (!Active)
@@ -202,6 +235,9 @@ public sealed class AutoHosting
         callback?.Invoke();
     }
 
+    /// <summary>
+    /// 检查当前托管是否应被用户输入中断；无托管时清除已经松开的中断按键记录。
+    /// </summary>
     internal static void CheckCurrentInput()
     {
         if (_Current != null)
@@ -212,6 +248,12 @@ public sealed class AutoHosting
             _InterruptedKeys.RemoveWhere(key => keyboard.IsKeyUp(key));
         }
     }
+    /// <summary>
+    /// 应用当前托管的游戏内鼠标位置并抑制合成点击，不移动系统光标。
+    /// </summary>
     internal static void ApplyCurrentMouse() => _Current?.ApplyMouse();
+    /// <summary>
+    /// 中断当前托管，保留用户实际鼠标位置，在释放控制后调用中断回调。
+    /// </summary>
     internal static void InterruptCurrent() => _Current?.Interrupt();
 }

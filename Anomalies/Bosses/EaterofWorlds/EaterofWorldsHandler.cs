@@ -20,24 +20,30 @@ public sealed class EaterofWorldsHandler
         npc.checkDead();
     }
 
-    public sealed class DefaultsChange : AnomalyGlobalItemBehavior, IContentLoader
+    public sealed class DefaultsChange : AnomalyGlobalItemBehavior
     {
         public override void ModifyItemLoot(Item item, ItemLoot itemLoot)
         {
             //因世界吞噬怪体节不再掉落物品，故在此处添加掉落物品
             //灾厄已经添加了相同机制，此处不再重复添加
-            if (item.type == ItemID.EaterOfWorldsBossBag && !ModReference.Calamity.IsLoaded)
+            if (item.type == ItemID.EaterOfWorldsBossBag && !AnomalyModReferences.Calamity.IsLoaded)
             {
                 itemLoot.Add(ItemDropRule.Common(ItemID.DemoniteOre, 1, 70, 90));
                 itemLoot.Add(ItemDropRule.Common(ItemID.ShadowScale, 1, 20, 30));
             }
         }
 
-        void IContentLoader.PostSetupContent()
+        /// <summary>在行为内容加载时安装生成和掉落钩子，不提前修改 NPC 静态数组。</summary>
+        public override void Load()
         {
             On_NPC.DropEoWLoot += On_NPC_DropEoWLoot;
             On_NPC.NewNPC += On_NPC_NewNPC;
+        }
 
+        /// <summary>在 tML 完成内容数组扩容后设置原版吞噬怪的残影表，避免加载后被重置。</summary>
+        public override void SetStaticDefaults()
+        {
+            base.SetStaticDefaults();
             NPCID.Sets.TrailingMode[NPCID.EaterofWorldsHead] = 1;
             NPCID.Sets.TrailingMode[NPCID.EaterofWorldsBody] = 1;
             NPCID.Sets.TrailingMode[NPCID.EaterofWorldsTail] = 1;
@@ -83,14 +89,26 @@ public sealed class EaterofWorldsHandler
     }
 
     [ExtendsFromMod(CalamityModName)]
-    public sealed class CalamitySupport : IContentLoader
+    public sealed class CalamitySupport : ILoadable
     {
-        void IContentLoader.PostSetupContent()
+        /// <summary>在 tML 内容加载时订阅运行期减伤兼容，不立即读取实体状态。</summary>
+        /// <param name="mod">由 tML 提供的所属模组。</param>
+        void ILoadable.Load(Mod mod)
         {
+            // 这些是本模块自定义事件，不属于 tML 自动卸载的 On/IL 钩子。
+            TOCleanup.Register(() =>
+            {
+                EaterofWorldsHead.OnRunningPreAI -= BreakEaterofWorldsDR;
+                EaterofWorldsBody.OnRunningPreAI -= BreakEaterofWorldsDR;
+                EaterofWorldsTail.OnRunningPreAI -= BreakEaterofWorldsDR;
+            });
             EaterofWorldsHead.OnRunningPreAI += BreakEaterofWorldsDR;
             EaterofWorldsBody.OnRunningPreAI += BreakEaterofWorldsDR;
             EaterofWorldsTail.OnRunningPreAI += BreakEaterofWorldsDR;
         }
+
+        // 自定义事件订阅由 TOCleanup 清理，不增加手动 On/IL 钩子卸载。
+        void ILoadable.Unload() { }
 
         private static void BreakEaterofWorldsDR(AnomalyNPCBehavior behavior)
         {

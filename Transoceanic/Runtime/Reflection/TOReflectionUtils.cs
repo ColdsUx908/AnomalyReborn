@@ -19,11 +19,12 @@ public static class TOReflectionUtils
     /// <summary>
     /// 获取泰拉瑞亚程序集中按名称分组的类型字典（键为类型短名称，值为可能的类型数组，用于处理同名类型）。
     /// </summary>
-    public static Dictionary<string, Type[]> TerrariaTypes => field ??= TerrariaAssembly.GetTypes().GroupBy(t => t.Name).ToDictionary(g => g.Key, g => g.ToArray());
+    /// <remarks>字典只读，但 Type[] 值仍是共享缓存，不可修改其中的数组。</remarks>
+    public static IReadOnlyDictionary<string, Type[]> TerrariaTypes => field ??= new System.Collections.ObjectModel.ReadOnlyDictionary<string, Type[]>(TerrariaAssembly.GetTypes().GroupBy(t => t.Name).ToDictionary(g => g.Key, g => g.ToArray()));
     /// <summary>
     /// 获取泰拉瑞亚程序集中按完整名称索引的类型字典。
     /// </summary>
-    public static Dictionary<string, Type> TerrariaTypesByFullName => field ??= TerrariaAssembly.GetTypes().ToDictionary(t => t.FullName, t => t);
+    public static IReadOnlyDictionary<string, Type> TerrariaTypesByFullName => field ??= new System.Collections.ObjectModel.ReadOnlyDictionary<string, Type>(TerrariaAssembly.GetTypes().ToDictionary(t => t.FullName, t => t));
 
     /// <summary>
     /// 通过类型短名称获取泰拉瑞亚程序集中的唯一类型。
@@ -86,48 +87,23 @@ public static class TOReflectionUtils
     ];
 
     /// <summary>
-    /// 安全地尝试创建类型的实例。此方法不会因为构造函数抛出异常而导致调用失败，但可能返回未初始化或默认值的对象。
+    /// 执行无参构造函数创建实例；构造失败时抛出原有反射异常，不返回半初始化对象。
     /// </summary>
-    /// <param name="type">要创建实例的类型。</param>
-    /// <param name="notInitialize">
-    /// 为 <see langword="true"/> 时，即使存在无参构造函数也跳过调用（仅对引用类型有效；值类型始终尝试调用无参构造函数）。
-    /// </param>
-    /// <returns>
-    /// 创建的实例。如果 <paramref name="type"/> 为抽象类或接口，返回 <see langword="null"/>；
-    /// 对于引用类型，在构造函数被跳过或抛出异常时，返回通过 <see cref="RuntimeHelpers.GetUninitializedObject"/> 创建的未初始化对象（所有字段为零或 null）；
-    /// 对于值类型，若构造函数抛出异常，则返回该值类型的默认值。
-    /// </returns>
-    /// <remarks>
-    /// <para>
-    /// 该方法适用于先获取对象实例、再通过字段赋值完成初始化的受控场景。
-    /// 返回的引用类型实例可能处于不完整甚至无效的状态，值类型实例可能为默认值，
-    /// 调用方必须通过后续逻辑正确初始化对象，切勿直接用于业务操作。
-    /// </para>
-    /// <para>
-    /// 如果希望始终调用构造函数并在失败时抛出异常，请使用 <see cref="Activator.CreateInstance(Type)"/> 或其他标准方法。
-    /// </para>
-    /// </remarks>
+    /// <param name="type">待实例化的具体类型；抽象类、接口和开放泛型返回 null。</param>
+    /// <param name="notInitialize">仅显式设为 true 时，引用类型才允许跳过构造，供受控模板使用。</param>
+    /// <returns>构造后的对象，或显式请求的未初始化模板。</returns>
     public static object CreateInstanceSafe(Type type, bool notInitialize = false)
     {
         ArgumentNullException.ThrowIfNull(type);
 
-        if (type.IsAbstract || type.IsInterface)
+        if (type.IsAbstract || type.IsInterface || type.ContainsGenericParameters)
             return null;
 
-        if (type.IsValueType || (type.HasParameterlessConstructor && !notInitialize))
-        {
-            try
-            {
-                return Activator.CreateInstance(type, true);
-            }
-            catch (TargetInvocationException)
-            {
-                // 值类型不能使用 GetUninitializedObject，需要返回默认值，此处使用数组来实现
-                return type.IsValueType ? Array.CreateInstance(type, 1).GetValue(0) : RuntimeHelpers.GetUninitializedObject(type);
-            }
-        }
-        else
+        if (notInitialize && !type.IsValueType)
             return RuntimeHelpers.GetUninitializedObject(type);
+
+        // 普通自动发现必须执行构造函数；缺少构造函数或构造失败都保留异常。
+        return Activator.CreateInstance(type, true);
     }
 
     /// <inheritdoc cref="CreateInstanceSafe(Type, bool)"/>
@@ -140,7 +116,19 @@ public static class TOReflectionUtils
     /// <param name="type">要实例化的类型。</param>
     /// <param name="instance">输出的实例。</param>
     /// <returns>若成功创建非空实例，返回 <see langword="true"/>；否则返回 <see langword="false"/>。</returns>
-    public static bool TryCreateInstanceSafe(Type type, out object instance) => (instance = CreateInstanceSafe(type)) is not null;
+    public static bool TryCreateInstanceSafe(Type type, out object instance)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        try
+        {
+            return (instance = CreateInstanceSafe(type)) is not null;
+        }
+        catch (Exception exception) when (exception is TargetInvocationException or MissingMethodException or MemberAccessException)
+        {
+            instance = null;
+            return false;
+        }
+    }
 
     /// <summary>
     /// 尝试安全地创建指定类型的实例（泛型版本）。
@@ -194,7 +182,7 @@ public static class TOReflectionUtils
     /// <returns>符合条件的类型枚举。</returns>
     public static IEnumerable<Type> GetTypesDerivedFrom(Type baseType, Assembly assemblyToSearch) =>
         from type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
-        where baseType.IsAssignableTo(type) && !type.IsAbstract
+        where type.IsAssignableTo(baseType) && !type.IsAbstract && !type.ContainsGenericParameters
         select type;
 
     /// <summary>
@@ -205,7 +193,7 @@ public static class TOReflectionUtils
     /// <remarks>使用此方法的加载器应在 <see cref="Mod.PostSetupContent"/> 中调用，以确保所有 Mod 的类型均已加载。</remarks>
     public static IEnumerable<Type> GetTypesDerivedFrom(Type baseType) =>
         from type in GetAllSupportedTypes()
-        where baseType.IsAssignableTo(type) && !type.IsAbstract
+        where type.IsAssignableTo(baseType) && !type.IsAbstract && !type.ContainsGenericParameters
         select type;
 
     /// <summary>
@@ -233,7 +221,7 @@ public static class TOReflectionUtils
     /// <returns>符合条件的类型实例枚举。</returns>
     public static IEnumerable<T> GetTypeInstancesDerivedFrom<T>(Assembly assemblyToSearch, bool notInitialize = false) where T : class =>
         AssemblyManager.GetLoadableTypes(assemblyToSearch)
-        .Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
+        .Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract && !type.ContainsGenericParameters)
         .Select(type => (T)CreateInstanceSafe(type, notInitialize))
         .Where(instance => instance is not null);
 
@@ -245,7 +233,7 @@ public static class TOReflectionUtils
     /// <returns>符合条件的类型实例枚举。</returns>
     /// <remarks>使用此方法的加载器应在 <see cref="Mod.PostSetupContent"/> 中调用。</remarks>
     public static IEnumerable<T> GetTypeInstancesDerivedFrom<T>(bool notInitialize = false) where T : class =>
-        GetAllSupportedTypes().Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
+        GetAllSupportedTypes().Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract && !type.ContainsGenericParameters)
         .Select(type => (T)CreateInstanceSafe(type, notInitialize))
         .Where(instance => instance is not null);
 
@@ -257,7 +245,7 @@ public static class TOReflectionUtils
     /// <param name="notInitialize">是否创建未初始化的实例（跳过构造函数）。</param>
     /// <returns>包含类型与实例的元组枚举。</returns>
     public static IEnumerable<(Type Type, T Instance)> GetTypesAndInstancesDerivedFrom<T>(Assembly assemblyToSearch, bool notInitialize = false) where T : class =>
-        AssemblyManager.GetLoadableTypes(assemblyToSearch).Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
+        AssemblyManager.GetLoadableTypes(assemblyToSearch).Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract && !type.ContainsGenericParameters)
         .Select(type => (type, instance: (T)CreateInstanceSafe(type, notInitialize)))
         .Where(pair => pair.instance is not null);
 
@@ -269,7 +257,7 @@ public static class TOReflectionUtils
     /// <returns>包含类型与实例的元组枚举。</returns>
     /// <remarks>使用此方法的加载器应在 <see cref="Mod.PostSetupContent"/> 中调用。</remarks>
     public static IEnumerable<(Type type, T instance)> GetTypesAndInstancesDerivedFrom<T>(bool notInitialize = false) where T : class =>
-        GetAllSupportedTypes().Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
+        GetAllSupportedTypes().Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract && !type.ContainsGenericParameters)
         .Select(type => (type, instance: (T)CreateInstanceSafe(type, notInitialize))).Where(pair => pair.instance is not null);
 
     /// <summary>

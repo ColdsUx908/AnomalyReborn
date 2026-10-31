@@ -1,9 +1,11 @@
+using Transoceanic.Core.ModIntegration;
+
 namespace Transoceanic.Commands;
 
 /// <summary>
 /// 表示一个自定义游戏命令的抽象基类。
 /// </summary>
-public abstract class TOCommand
+public abstract class TOCommand : RegisteredContent<TOCommand>
 {
     /// <summary>
     /// 获取命令的执行环境类型（聊天命令或控制台命令）。

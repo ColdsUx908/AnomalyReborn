@@ -9,6 +9,8 @@ namespace Transoceanic.Behaviors.Collections;
 /// </summary>
 /// <typeparam name="TEntity">行为所附加的实体类型，必须派生自 <see cref="Entity"/>。</typeparam>
 /// <typeparam name="TBehavior">行为的具体类型，必须派生自 <see cref="EntityBehavior{TEntity}"/>。</typeparam>
+/// <remarks>仅对调用方自行拥有的集合使用填充和清理入口；框架登记集合通过 BehaviorQueries 查询。
+/// 集合与共享行为绑定不提供线程安全保证，应在游戏相应主线程阶段使用。</remarks>
 public class SimpleEntityBehaviorSet<TEntity, TBehavior>
     where TEntity : Entity
     where TBehavior : EntityBehavior<TEntity>
@@ -30,7 +32,7 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
         /// 初始化 <see cref="BehaviorProcesser"/> 结构的新实例。
         /// </summary>
         /// <param name="span">包含行为实例的只读跨度。</param>
-        public BehaviorProcesser(Span<TBehavior> span) => _Span = span;
+        internal BehaviorProcesser(Span<TBehavior> span) => _Span = span;
 
         /// <summary>
         /// 返回一个可用于遍历当前方法下满足处理条件（<see cref="EntityBehavior{TEntity}.ShouldProcess"/>）的行为的枚举器。
@@ -46,6 +48,7 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
         {
             private Span<TBehavior>.Enumerator _Enumerator;
             private TBehavior _Current;
+            private EntityBehavior<TEntity>.EntityLock _EntityLock;
 
             /// <summary>
             /// 获取枚举器当前位置的行为实例。
@@ -56,7 +59,12 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
             /// 初始化 <see cref="Enumerator"/> 结构的新实例。
             /// </summary>
             /// <param name="processer">关联的 <see cref="BehaviorProcesser"/> 实例。</param>
-            public Enumerator(BehaviorProcesser processer) => _Enumerator = processer._Span.GetEnumerator();
+            internal Enumerator(BehaviorProcesser processer) => _Enumerator = processer._Span.GetEnumerator();
+
+            /// <summary>
+            /// 释放枚举期间持有的实体绑定锁，由 foreach 或 using 在退出时调用。
+            /// </summary>
+            public void Dispose() => _EntityLock.Dispose();
 
             /// <summary>
             /// 将枚举器推进到下一个满足处理条件的行为元素。
@@ -65,15 +73,19 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
+                Dispose();
                 while (_Enumerator.MoveNext())
                 {
+                    Dispose();
                     TBehavior temp = _Enumerator.Current;
+                    _EntityLock = temp.LockEntity();
                     if (temp.ShouldProcess)
                     {
                         _Current = temp;
                         return true;
                     }
                 }
+                Dispose();
                 return false;
             }
         }
@@ -81,8 +93,8 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
 
     /// <summary>
     /// 提供对特定方法所关联行为并自动设置其所属实体的只读枚举器。
-    /// 该结构体在迭代过程中会将当前实体引用赋给行为实例的 <c>_Entity</c> 字段。
-    /// 由于性能原因，直接操作了内部字段，使用时请谨慎。
+    /// 该结构体在迭代过程中会将当前实体引用赋给行为实例的 <c>Entity</c> 属性。
+    /// 枚举期间锁定当前绑定，跨实体改绑会抛出异常；退出枚举时释放。
     /// </summary>
     public readonly ref struct ConnectedBehaviorProcesser
     {
@@ -99,7 +111,7 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
         /// </summary>
         /// <param name="span">包含行为实例的只读跨度。</param>
         /// <param name="entity">要关联到行为的实体实例。</param>
-        public ConnectedBehaviorProcesser(Span<TBehavior> span, TEntity entity)
+        internal ConnectedBehaviorProcesser(Span<TBehavior> span, TEntity entity)
         {
             _Span = span;
             _Entity = entity;
@@ -120,6 +132,7 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
             private Span<TBehavior>.Enumerator _Enumerator;
             private readonly TEntity _Entity;
             private TBehavior _Current;
+            private EntityBehavior<TEntity>.EntityLock _EntityLock;
 
             /// <summary>
             /// 获取枚举器当前位置的行为实例。
@@ -130,11 +143,16 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
             /// 初始化 <see cref="Enumerator"/> 结构的新实例。
             /// </summary>
             /// <param name="processer">关联的 <see cref="ConnectedBehaviorProcesser"/> 实例。</param>
-            public Enumerator(ConnectedBehaviorProcesser processer)
+            internal Enumerator(ConnectedBehaviorProcesser processer)
             {
                 _Enumerator = processer._Span.GetEnumerator();
                 _Entity = processer._Entity;
             }
+
+            /// <summary>
+            /// 释放枚举期间持有的实体绑定锁，由 foreach 或 using 在退出时调用。
+            /// </summary>
+            public void Dispose() => _EntityLock.Dispose();
 
             /// <summary>
             /// 将枚举器推进到下一个满足处理条件的行为元素，并自动设置其所属实体。
@@ -143,16 +161,20 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
+                Dispose();
                 while (_Enumerator.MoveNext())
                 {
+                    Dispose();
                     TBehavior temp = _Enumerator.Current;
-                    temp._Entity = _Entity;
+                    temp.Entity = _Entity;
+                    _EntityLock = temp.LockEntity();
                     if (temp.ShouldProcess)
                     {
                         _Current = temp;
                         return true;
                     }
                 }
+                Dispose();
                 return false;
             }
         }
@@ -175,7 +197,7 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
         /// 初始化 <see cref="TypedBehaviorProcesser{T}"/> 结构的新实例。
         /// </summary>
         /// <param name="span">包含行为实例的只读跨度。</param>
-        public TypedBehaviorProcesser(Span<TBehavior> span) => _Span = span;
+        internal TypedBehaviorProcesser(Span<TBehavior> span) => _Span = span;
 
         /// <summary>
         /// 返回一个可用于遍历当前方法下满足处理条件且类型为 <typeparamref name="T"/> 的行为的枚举器。
@@ -191,6 +213,7 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
         {
             private Span<TBehavior>.Enumerator _Enumerator;
             private T _Current;
+            private EntityBehavior<TEntity>.EntityLock _EntityLock;
 
             /// <summary>
             /// 获取枚举器当前位置的行为实例。
@@ -201,7 +224,12 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
             /// 初始化 <see cref="Enumerator"/> 结构的新实例。
             /// </summary>
             /// <param name="processer">关联的 <see cref="TypedBehaviorProcesser{T}"/> 实例。</param>
-            public Enumerator(TypedBehaviorProcesser<T> processer) => _Enumerator = processer._Span.GetEnumerator();
+            internal Enumerator(TypedBehaviorProcesser<T> processer) => _Enumerator = processer._Span.GetEnumerator();
+
+            /// <summary>
+            /// 释放枚举期间持有的实体绑定锁，由 foreach 或 using 在退出时调用。
+            /// </summary>
+            public void Dispose() => _EntityLock.Dispose();
 
             /// <summary>
             /// 将枚举器推进到下一个满足处理条件且类型为 <typeparamref name="T"/> 的行为元素。
@@ -210,15 +238,19 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
+                Dispose();
                 while (_Enumerator.MoveNext())
                 {
+                    Dispose();
                     T temp = _Enumerator.Current as T;
+                    _EntityLock = temp is null ? default : temp.LockEntity();
                     if (temp?.ShouldProcess == true)
                     {
                         _Current = temp;
                         return true;
                     }
                 }
+                Dispose();
                 return false;
             }
         }
@@ -226,8 +258,8 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
 
     /// <summary>
     /// 提供对特定方法所关联、派生自指定类型 <typeparamref name="T"/> 并自动设置其所属实体的行为的只读枚举器。
-    /// 该结构体在迭代过程中会将当前实体引用赋给行为实例的 <c>_Entity</c> 字段。
-    /// 由于性能原因，直接操作了内部字段，使用时请谨慎。
+    /// 该结构体在迭代过程中会将当前实体引用赋给行为实例的 <c>Entity</c> 属性。
+    /// 枚举期间锁定当前绑定，跨实体改绑会抛出异常；退出枚举时释放。
     /// </summary>
     /// <typeparam name="T">期望的具体行为类型，必须继承自 <typeparamref name="TBehavior"/>。</typeparam>
     public readonly ref struct TypedConnectedBehaviorProcesser<T> where T : TBehavior
@@ -245,7 +277,7 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
         /// </summary>
         /// <param name="span">包含行为实例的只读跨度。</param>
         /// <param name="entity">要关联到行为的实体实例。</param>
-        public TypedConnectedBehaviorProcesser(Span<TBehavior> span, TEntity entity)
+        internal TypedConnectedBehaviorProcesser(Span<TBehavior> span, TEntity entity)
         {
             _Span = span;
             _Entity = entity;
@@ -266,6 +298,7 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
             private Span<TBehavior>.Enumerator _Enumerator;
             private readonly TEntity _Entity;
             private T _Current;
+            private EntityBehavior<TEntity>.EntityLock _EntityLock;
 
             /// <summary>
             /// 获取枚举器当前位置的行为实例。
@@ -276,11 +309,16 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
             /// 初始化 <see cref="Enumerator"/> 结构的新实例。
             /// </summary>
             /// <param name="processer">关联的 <see cref="TypedConnectedBehaviorProcesser{T}"/> 实例。</param>
-            public Enumerator(TypedConnectedBehaviorProcesser<T> processer)
+            internal Enumerator(TypedConnectedBehaviorProcesser<T> processer)
             {
                 _Enumerator = processer._Span.GetEnumerator();
                 _Entity = processer._Entity;
             }
+
+            /// <summary>
+            /// 释放枚举期间持有的实体绑定锁，由 foreach 或 using 在退出时调用。
+            /// </summary>
+            public void Dispose() => _EntityLock.Dispose();
 
             /// <summary>
             /// 将枚举器推进到下一个满足处理条件且类型为 <typeparamref name="T"/> 的行为元素，并自动设置其所属实体。
@@ -289,12 +327,15 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
+                Dispose();
                 while (_Enumerator.MoveNext())
                 {
+                    Dispose();
                     T temp = _Enumerator.Current as T;
                     if (temp is not null)
                     {
-                        temp._Entity = _Entity;
+                        temp.Entity = _Entity;
+                        _EntityLock = temp.LockEntity();
                         if (temp.ShouldProcess)
                         {
                             _Current = temp;
@@ -302,6 +343,7 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
                         }
                     }
                 }
+                Dispose();
                 return false;
             }
         }
@@ -310,7 +352,7 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
     /// <summary>
     /// 内部存储结构，以方法名为键，存储按优先级降序排列的行为数组。
     /// </summary>
-    protected internal readonly Dictionary<string, TBehavior[]> _Data = [];
+    private readonly Dictionary<string, TBehavior[]> _Data = [];
 
     /// <summary>
     /// 清除集合中所有行为数据。
@@ -326,19 +368,19 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
     /// <summary>
     /// 通过反射自动发现并填充所有派生自 <typeparamref name="TBehavior"/> 的类型实例。
     /// </summary>
-    public void FillSet() => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>());
+    public void FillSet() => Initialize(TOLoaderHandler.GetLoaderInstances<TBehavior>());
 
     /// <summary>
     /// 从指定程序集中通过反射发现并填充所有派生自 <typeparamref name="TBehavior"/> 的类型实例。
     /// </summary>
     /// <param name="assemblyToSearch">要搜索的程序集。</param>
-    public void FillSet(Assembly assemblyToSearch) => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>(assemblyToSearch));
+    public void FillSet(Assembly assemblyToSearch) => Initialize(TOLoaderHandler.GetLoaderInstances<TBehavior>(assemblyToSearch));
 
     /// <summary>
     /// 填充集合，仅包含其所属 Mod 类型为 <typeparamref name="T"/> 的行为实例。
     /// </summary>
     /// <typeparam name="T">用于筛选的 Mod 类型。</typeparam>
-    public void FillSet<T>() where T : Mod => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>().Where(b => b.Mod is T));
+    public void FillSet<T>() where T : Mod => Initialize(TOLoaderHandler.GetLoaderInstances<TBehavior>().Where(b => b.Mod is T));
 
     /// <summary>
     /// 获取用于枚举当前调用者方法所关联的行为的处理器。
@@ -379,7 +421,7 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
     /// <summary>
     /// 按照优先级（<see cref="EntityBehavior{TEntity}.Priority"/>）降序查找当前调用者方法关联的第一个满足处理条件的行为实例。
     /// </summary>
-    /// <param name="entity">要关联的实体实例，将在检查前赋值给行为的 <c>_Entity</c> 字段。</param>
+    /// <param name="entity">要关联的实体实例，将在检查前赋值给行为的 <c>Entity</c> 属性。</param>
     /// <param name="methodName">由 <see cref="CallerMemberNameAttribute"/> 自动填充的调用方法名。</param>
     /// <returns>第一个满足 <see cref="EntityBehavior{TEntity}.ShouldProcess"/> 条件的行为实例；如果不存在，则为 <see langword="null"/>。</returns>
     public TBehavior GetFirstOrDefault(TEntity entity, [CallerMemberName] string methodName = null)
@@ -389,7 +431,8 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
             for (int i = 0; i < behaviors.Length; i++)
             {
                 TBehavior behavior = behaviors[i];
-                behavior._Entity = entity;
+                behavior.Entity = entity;
+                using EntityBehavior<TEntity>.EntityLock entityLock = behavior.LockEntity();
                 if (behavior.ShouldProcess)
                     return behavior;
             }
@@ -408,7 +451,9 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
             behaviors.Select(b =>
             {
                 Type type = b.GetType();
-                return (b, (type.HasAttribute<CriticalBehaviorAttribute>() ? type.GetMethodNamesExceptObject(TOReflectionUtils.UniversalBindingFlags) : type.GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags)).ToHashSet());
+                return (b, (type.HasAttribute<CriticalBehaviorAttribute>()
+                    ? type.GetMethodNamesExceptObject(TOReflectionUtils.UniversalBindingFlags)
+                    : type.GetMethods(TOReflectionUtils.UniversalBindingFlags).Where(method => method.IsOverride).Select(method => method.Name)).ToHashSet());
             }))
         {
             foreach (string method in behaviorMethods)

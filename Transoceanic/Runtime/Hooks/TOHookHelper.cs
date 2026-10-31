@@ -1,6 +1,9 @@
 using Transoceanic.Runtime.Reflection;
 namespace Transoceanic.Runtime.Hooks;
 
+/// <summary>
+/// 提供生成的 Hook 容器所需的静态处理器字段重置工具。
+/// </summary>
 internal static class TOHookHelper
 {
     /// <summary>

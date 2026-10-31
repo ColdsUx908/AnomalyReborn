@@ -6,6 +6,9 @@ using Transoceanic.Runtime.Hooks;
 
 namespace Transoceanic.Extensions.Terraria;
 
+/// <summary>
+/// 提供 Terraria 实体、生成、世界与着色器的便捷扩展。
+/// </summary>
 public static partial class TOTerrariaExtensions
 {
     extension(NPC npc)
@@ -140,6 +143,9 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         public bool IsFacingTarget => npc.direction == npc.TargetDirection;
 
+        /// <summary>
+        /// 执行可追踪目标判定但忽略 chaseable 标志；可选择忽略无敌标志，保留其他有效性限制。
+        /// </summary>
         public bool CanBeChasedBy_IgnoreChaseable(object attacker = null, bool ignoreDontTakeDamage = false) =>
             npc.active && npc.lifeMax > 5 && (!npc.dontTakeDamage || ignoreDontTakeDamage) && !npc.friendly && !npc.immortal;
 
@@ -415,14 +421,14 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         public int Timer1
         {
-            get => npc.Ocean.OceanAI32[^9].I;
+            get => npc.Ocean.OceanAI32[TOGlobalNPC.Timer1Slot].I;
             set
             {
                 TOGlobalNPC ocean = npc.Ocean;
-                if (ocean.OceanAI32[^9].I != value)
+                if (ocean.OceanAI32[TOGlobalNPC.Timer1Slot].I != value)
                 {
-                    ocean.OceanAI32[^9].I = value;
-                    ocean.AIChanged32[^9] = true;
+                    ocean.OceanAI32[TOGlobalNPC.Timer1Slot].I = value;
+                    ocean.AIChanged32[TOGlobalNPC.Timer1Slot] = true;
                 }
             }
         }
@@ -432,14 +438,14 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         public int Timer2
         {
-            get => npc.Ocean.OceanAI32[^8].I;
+            get => npc.Ocean.OceanAI32[TOGlobalNPC.Timer2Slot].I;
             set
             {
                 TOGlobalNPC ocean = npc.Ocean;
-                if (ocean.OceanAI32[^8].I != value)
+                if (ocean.OceanAI32[TOGlobalNPC.Timer2Slot].I != value)
                 {
-                    ocean.OceanAI32[^8].I = value;
-                    ocean.AIChanged32[^8] = true;
+                    ocean.OceanAI32[TOGlobalNPC.Timer2Slot].I = value;
+                    ocean.AIChanged32[TOGlobalNPC.Timer2Slot] = true;
                 }
             }
         }
@@ -449,14 +455,14 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         public int Timer3
         {
-            get => npc.Ocean.OceanAI32[^7].I;
+            get => npc.Ocean.OceanAI32[TOGlobalNPC.Timer3Slot].I;
             set
             {
                 TOGlobalNPC ocean = npc.Ocean;
-                if (ocean.OceanAI32[^7].I != value)
+                if (ocean.OceanAI32[TOGlobalNPC.Timer3Slot].I != value)
                 {
-                    ocean.OceanAI32[^7].I = value;
-                    ocean.AIChanged32[^7] = true;
+                    ocean.OceanAI32[TOGlobalNPC.Timer3Slot].I = value;
+                    ocean.AIChanged32[TOGlobalNPC.Timer3Slot] = true;
                 }
             }
         }
@@ -466,14 +472,14 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         public int Timer4
         {
-            get => npc.Ocean.OceanAI32[^6].I;
+            get => npc.Ocean.OceanAI32[TOGlobalNPC.Timer4Slot].I;
             set
             {
                 TOGlobalNPC ocean = npc.Ocean;
-                if (ocean.OceanAI32[^6].I != value)
+                if (ocean.OceanAI32[TOGlobalNPC.Timer4Slot].I != value)
                 {
-                    ocean.OceanAI32[^6].I = value;
-                    ocean.AIChanged32[^6] = true;
+                    ocean.OceanAI32[TOGlobalNPC.Timer4Slot].I = value;
+                    ocean.AIChanged32[TOGlobalNPC.Timer4Slot] = true;
                 }
             }
         }
@@ -483,14 +489,14 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         public int Timer5
         {
-            get => npc.Ocean.OceanAI32[^5].I;
+            get => npc.Ocean.OceanAI32[TOGlobalNPC.Timer5Slot].I;
             set
             {
                 TOGlobalNPC ocean = npc.Ocean;
-                if (ocean.OceanAI32[^5].I != value)
+                if (ocean.OceanAI32[TOGlobalNPC.Timer5Slot].I != value)
                 {
-                    ocean.OceanAI32[^5].I = value;
-                    ocean.AIChanged32[^5] = true;
+                    ocean.OceanAI32[TOGlobalNPC.Timer5Slot].I = value;
+                    ocean.AIChanged32[TOGlobalNPC.Timer5Slot] = true;
                 }
             }
         }
@@ -500,14 +506,14 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         public float Timer6
         {
-            get => npc.Ocean.OceanAI32[^4].F;
+            get => npc.Ocean.OceanAI32[TOGlobalNPC.Timer6Slot].F;
             set
             {
                 TOGlobalNPC ocean = npc.Ocean;
-                if (ocean.OceanAI32[^4].F != value)
+                if (ocean.OceanAI32[TOGlobalNPC.Timer6Slot].F != value)
                 {
-                    ocean.OceanAI32[^4].F = value;
-                    ocean.AIChanged32[^4] = true;
+                    ocean.OceanAI32[TOGlobalNPC.Timer6Slot].F = value;
+                    ocean.AIChanged32[TOGlobalNPC.Timer6Slot] = true;
                 }
             }
         }
@@ -517,14 +523,14 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         public float Timer7
         {
-            get => npc.Ocean.OceanAI32[^3].F;
+            get => npc.Ocean.OceanAI32[TOGlobalNPC.Timer7Slot].F;
             set
             {
                 TOGlobalNPC ocean = npc.Ocean;
-                if (ocean.OceanAI32[^3].F != value)
+                if (ocean.OceanAI32[TOGlobalNPC.Timer7Slot].F != value)
                 {
-                    ocean.OceanAI32[^3].F = value;
-                    ocean.AIChanged32[^3] = true;
+                    ocean.OceanAI32[TOGlobalNPC.Timer7Slot].F = value;
+                    ocean.AIChanged32[TOGlobalNPC.Timer7Slot] = true;
                 }
             }
         }
@@ -534,14 +540,14 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         public float Timer8
         {
-            get => npc.Ocean.OceanAI32[^2].F;
+            get => npc.Ocean.OceanAI32[TOGlobalNPC.Timer8Slot].F;
             set
             {
                 TOGlobalNPC ocean = npc.Ocean;
-                if (ocean.OceanAI32[^2].F != value)
+                if (ocean.OceanAI32[TOGlobalNPC.Timer8Slot].F != value)
                 {
-                    ocean.OceanAI32[^2].F = value;
-                    ocean.AIChanged32[^2] = true;
+                    ocean.OceanAI32[TOGlobalNPC.Timer8Slot].F = value;
+                    ocean.AIChanged32[TOGlobalNPC.Timer8Slot] = true;
                 }
             }
         }
@@ -554,14 +560,22 @@ public static partial class TOTerrariaExtensions
         /// <param name="drawOffset">绘制偏移量（可选）。</param>
         /// <param name="affectedByLight">残影是否受光照影响（可选），默认为 <see langword="true"/>，即受光照影响。</param>
         /// <param name="useDefaultDraw">是否使用默认绘制方法（可选），默认为 <see langword="true"/>。</param>
-        public void SpawnAfterimage(int lifetime, Color color, Vector2? drawOffset = null, bool affectedByLight = true, bool useDefaultDraw = true) =>
+        public void SpawnAfterimage(int lifetime, Color color, Vector2? drawOffset = null, bool affectedByLight = true, bool useDefaultDraw = true)
+        {
+            if (Main.dedServ)
+                return;
             npc.Ocean.Afterimages.Add(new AfterimageParticle(npc.Texture, npc.frame, npc.Center, lifetime, npc.rotation, npc.scale, color, npc.Opacity, drawOffset, affectedByLight) { UseDefaultDraw = useDefaultDraw });
+        }
 
         /// <summary>
         /// 添加一个自定义的残影粒子到 NPC 的全局数据中。
         /// </summary>
         /// <param name="afterimage">残影粒子实例。</param>
-        public void SpawnAfterimage(AfterimageParticle afterimage) => npc.Ocean.Afterimages.Add(afterimage);
+        public void SpawnAfterimage(AfterimageParticle afterimage)
+        {
+            if (!Main.dedServ)
+                npc.Ocean.Afterimages.Add(afterimage);
+        }
         #endregion GlobalNPC
     }
 
@@ -740,10 +754,11 @@ public static partial class TOTerrariaExtensions
         /// 生成一个新的 NPC 到世界中，并在生成后执行一个 <see cref="Action{NPC}"/>。
         /// </summary>
         /// <param name="source">生成源。</param>
-        /// <param name="position">生成位置。</param>
+        /// <param name="position">世界像素坐标，截断为整数后原样传入 NPC.NewNPC 的 X/Y 参数；不额外修正为中心。</param>
         /// <param name="type">NPC 类型 ID。</param>
-        /// <param name="start">起始索引偏移。</param>
-        /// <param name="action">生成成功后对 NPC 执行的行为。</param>
+        /// <param name="start">原样传给 NPC.NewNPC 的空闲 NPC 槽位搜索起点。</param>
+        /// <param name="action">分配到有效 NPC 槽后、发送 SyncNPC 前执行的初始化回调，可为 null；异常原样传播。</param>
+        /// <remarks>仅单人或服务器执行，多人客户端直接返回；槽位不足时不调用回调。</remarks>
         public static void NewNPCAction(IEntitySource source, Vector2 position, int type, int start = 0, Action<NPC> action = null)
         {
             if (Main.netMode == NetmodeID.MultiplayerClient)
@@ -761,9 +776,10 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         /// <typeparam name="T">继承自 <see cref="ModNPC"/> 的类型。</typeparam>
         /// <param name="source">生成源。</param>
-        /// <param name="position">生成位置。</param>
-        /// <param name="start">起始索引偏移。</param>
-        /// <param name="action">生成成功后对 NPC 执行的行为。</param>
+        /// <param name="position">世界像素坐标，截断为整数后原样传入 NPC.NewNPC 的 X/Y 参数；不额外修正为中心。</param>
+        /// <param name="start">原样传给 NPC.NewNPC 的空闲 NPC 槽位搜索起点。</param>
+        /// <param name="action">分配到有效 NPC 槽后、发送 SyncNPC 前执行的初始化回调，可为 null；异常原样传播。</param>
+        /// <remarks>仅单人或服务器执行，多人客户端直接返回；槽位不足时不调用回调。</remarks>
         public static void NewNPCAction<T>(IEntitySource source, Vector2 position, int start = 0, Action<NPC> action = null) where T : ModNPC =>
             NewNPCAction(source, position, ModContent.NPCType<T>(), start, action);
     }

@@ -71,14 +71,22 @@ public class UnaryFunctionWithDomainBase<R>
     }
 
     /// <summary>
-    /// 检查是否与另一个函数在相同定义域上相等（逐点比较）。
+    /// 比较定义域与函数委托是否相等；不逐点计算函数值。
     /// </summary>
     /// <param name="other">要比较的函数。</param>
-    /// <returns>如果定义域和函数值都相同则返回true。</returns>
+    /// <returns>定义域和委托均相等时返回 true；other 为 null 时会抛出 NullReferenceException。</returns>
     public bool Equals(UnaryFunctionWithDomainBase<R> other) => Domain == other.Domain && _Function == other._Function;
+    /// <inheritdoc/>
     public override bool Equals(object obj) => obj is UnaryFunctionWithDomainBase<R> other && Equals(other);
+    /// <inheritdoc/>
     public override int GetHashCode() => HashCode.Combine(_Function, Domain);
+    /// <summary>
+    /// 按 Equals 比较 函数委托和定义域，相等时返回 true。
+    /// </summary>
     public static bool operator ==(UnaryFunctionWithDomainBase<R> left, UnaryFunctionWithDomainBase<R> right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(UnaryFunctionWithDomainBase<R> left, UnaryFunctionWithDomainBase<R> right) => !(left == right);
 
     /// <summary>

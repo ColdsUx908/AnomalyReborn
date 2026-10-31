@@ -4,6 +4,8 @@ namespace Anomalies.Bosses.Skeletron;
 
 public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
 {
+    protected override int AI32Capacity => 9;
+
     public override int ApplyingType => NPCID.SkeletronHand;
 
     public override bool ShouldProcess => base.ShouldProcess && AnomalyNPC.CustomAIType != 1;

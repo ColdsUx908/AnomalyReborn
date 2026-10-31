@@ -366,10 +366,10 @@ FodyWeavers.xsd
 /CelessTest/*
 /Design/*
 /Tests/*
-!/Tests/Transoceanic/
-!/Tests/BossIsolation/
-!/Tests/EaterofWorlds.Topology/
 /AnomalyReborn.slnx
 /tModLoader.targets
 /docs/*
 /HumanMiracle/*
+
+# Tests and change records are distributed separately from Git.
+/Transoceanic/Transoceanic.xml

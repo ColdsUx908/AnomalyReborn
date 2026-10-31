@@ -4,7 +4,7 @@ namespace Transoceanic.Graphics.Assets.Loading;
 /// <summary>
 /// 血污加载器，负责处理标记了 <see cref="LoadGoreAttribute"/> 特性的静态 <see cref="ModGore"/> 字段的自动加载与卸载。
 /// </summary>
-public sealed class GoreLoader : IContentLoader
+internal sealed class GoreLoader : IContentLoader
 {
     /// <summary>
     /// 内容设置后阶段：扫描所有带有 <see cref="LoadGoreAttribute"/> 的静态 <see cref="ModGore"/> 字段，

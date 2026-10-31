@@ -2,7 +2,7 @@ using Anomalies.GameContents.Base;
 
 namespace Anomalies.Bosses.KingSlime;
 
-public sealed class RainbowShockwave : BaseShockwaveProjectile, IContentLoader
+public sealed class RainbowShockwave : BaseShockwaveProjectile
 {
     public override List<int> NPCTypesToHit => _NpcTypesToHit;
     public override int LifeTime => 150;
@@ -32,8 +32,10 @@ public sealed class RainbowShockwave : BaseShockwaveProjectile, IContentLoader
 
     public override Color? GetAlpha(Color lightColor) => Color.LerpMany(Color.RainbowColors, TOMathUtils.Interpolation.QuadraticEaseOut(LifeCompletion));
 
-    void IContentLoader.PostSetupContent()
+    /// <summary>在 tML 内容加载时建立仅包含原版 NPC 常量的命中集合。</summary>
+    public override void Load()
     {
+        TOCleanup.Register(() => _NpcTypesToHit = null);
         _NpcTypesToHit =
         [
             NPCID.GreenSlime,
@@ -54,9 +56,5 @@ public sealed class RainbowShockwave : BaseShockwaveProjectile, IContentLoader
         ];
     }
 
-    void IContentLoader.OnModUnload()
-    {
-        _NpcTypesToHit = null;
-    }
 }
 

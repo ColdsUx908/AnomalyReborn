@@ -1,5 +1,8 @@
 namespace Transoceanic.Extensions.System;
 
+/// <summary>
+/// 提供集合、反射、文本和参数校验等 System 类型扩展。
+/// </summary>
 public static partial class TOSystemExtensions
 {
     extension(MethodInfo method)

@@ -23,7 +23,7 @@ public struct SwitchTimer : IEquatable<SwitchTimer>
     /// <summary>
     /// 根据当前实际时间计算一个受边界限制的计时值。
     /// </summary>
-    /// <param name="actualTime">当前的参考时间。</param>
+    /// <param name="actualTime">当前参考时间，须与两个时间戳及 max 使用同一单位；框架装备计时使用更新帧。</param>
     /// <param name="max">计时结果允许的最大值（上边界）。</param>
     /// <param name="equal">
     /// 当 <see cref="LastOnTime"/> 与 <see cref="LastOffTime"/> 相等时，是否视为“开启”状态。
@@ -32,20 +32,32 @@ public struct SwitchTimer : IEquatable<SwitchTimer>
     /// <returns>
     /// 若当前状态为“开启”（<see cref="LastOnTime"/> 严格大于 <see cref="LastOffTime"/>，
     /// 或 equal 为 <see langword="true"/> 且两者相等），返回自 <see cref="LastOnTime"/> 以来经过的时间，即 <c>actualTime - LastOnTime</c> 的夹取结果。
-    /// 否则视为“关闭”状态，返回距离下一次可能开启所需的剩余时间（以循环方式计算），即 <c>max - actualTime + LastOffTime</c> 的夹取结果。
+    /// 否则视为“关闭”状态，返回从 max 开始随关闭时间递减的值，即 <c>max - actualTime + LastOffTime</c> 的夹取结果。
     /// 返回值始终在 [0, max] 范围内。
     /// </returns>
     /// <remarks>
     /// 该方法不修改任何字段，仅根据当前时间与存储的时间戳计算差值并限幅。
     /// </remarks>
+    /// <exception cref="ArgumentException">max 小于零，导致 Math.Clamp 的上下界无效。</exception>
     public readonly long GetValue(long actualTime, long max, bool equal = false) => Math.Clamp(
         LastOnTime > LastOffTime || (equal && LastOnTime == LastOffTime) ? actualTime - LastOnTime : max - actualTime + LastOffTime,
         0, max);
 
+    /// <summary>
+    /// 比较 LastOnTime、LastOffTime，使用成员本身的相等语义。
+    /// </summary>
     public readonly bool Equals(SwitchTimer other) => LastOnTime == other.LastOnTime && LastOffTime == other.LastOffTime;
+    /// <inheritdoc/>
     public override readonly bool Equals(object obj) => obj is SwitchTimer other && Equals(other);
+    /// <inheritdoc/>
     public override readonly int GetHashCode() => HashCode.Combine(LastOnTime, LastOffTime);
+    /// <summary>
+    /// 按 Equals 比较 LastOnTime、LastOffTime，相等时返回 true。
+    /// </summary>
     public static bool operator ==(SwitchTimer left, SwitchTimer right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(SwitchTimer left, SwitchTimer right) => !(left == right);
 }
 

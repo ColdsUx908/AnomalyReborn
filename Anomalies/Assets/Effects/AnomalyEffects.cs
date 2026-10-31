@@ -4,7 +4,8 @@ using Transoceanic.Runtime.Reflection;
 
 namespace Anomalies.Assets.Effects;
 
-public sealed class AnomalyEffects : IContentLoader
+/// <summary>通过原生加载入口注册本模组着色器；配置模板与筛选器引用由 TOCleanup 清理。</summary>
+public sealed class AnomalyEffects : ILoadable
 {
     //所有嵌套类、字段按字母顺序排列
 
@@ -63,8 +64,11 @@ public sealed class AnomalyEffects : IContentLoader
     }
 
     #region 处理逻辑
-    void IContentLoader.PostSetupContent()
+    /// <summary>在所属模组资产仓库就绪后加载自身着色器；服务器及关闭着色器时跳过。</summary>
+    /// <param name="mod">由 tML 提供的所属模组，早于 AnomalyMain.Load 可安全使用。</param>
+    void ILoadable.Load(Mod mod)
     {
+        TOCleanup.Register(ClearReferences);
         if (Main.dedServ || !AnomalyClientConfig.Instance.EnableShaders) //配置选项关闭时着色器不会加载
             return;
 
@@ -73,23 +77,22 @@ public sealed class AnomalyEffects : IContentLoader
         HandleType(typeof(Overlays));
         HandleType(typeof(Primitives));
         HandleType(typeof(Texts));
-        ScreenFilters.BrainOfCthulhuForcefield = LoadAndRegisterScreenFilter("BrainOfCthulhuForcefield", "Pass0");
-        ScreenFilters.RadialBlur = LoadAndRegisterScreenFilter("RadialBlur", "Pass0");
+        ScreenFilters.BrainOfCthulhuForcefield = LoadAndRegisterScreenFilter(mod, "BrainOfCthulhuForcefield", "Pass0");
+        ScreenFilters.RadialBlur = LoadAndRegisterScreenFilter(mod, "RadialBlur", "Pass0");
 
         void HandleType(Type type, bool isRoot = false)
         {
             foreach (FieldInfo field in type.GetFields(TOReflectionUtils.StaticBindingFlags))
-                field.SetValue(null, LoadAndRegisterMiscShader(isRoot ? "" : type.Name, field.Name, field.GetCustomAttribute<ShaderPassAttribute>()?.Name ?? "Pass0"));
+                field.SetValue(null, LoadAndRegisterMiscShader(mod, isRoot ? "" : type.Name, field.Name, field.GetCustomAttribute<ShaderPassAttribute>()?.Name ?? "Pass0"));
         }
     }
 
-    void IContentLoader.OnModUnload()
+    // 资产仓库由 tML 管理，自有容器与筛选器状态由 TOCleanup 清理。
+    void ILoadable.Unload() { }
+
+    private static void ClearReferences()
     {
-        if (!Main.dedServ)
-        {
-            ScreenFilters.BrainOfCthulhuForcefield?.Deactivate();
-            ScreenFilters.RadialBlur?.Deactivate();
-        }
+        // 每个筛选器分别登记失活，单项失败不会阻止此处释放其余容器引用。
         ClearType(typeof(ScreenFilters));
         ClearType(typeof(AnomalyEffects));
         ClearType(typeof(BossBars));
@@ -98,22 +101,24 @@ public sealed class AnomalyEffects : IContentLoader
         ClearType(typeof(Texts));
     }
 
-    private static Filter LoadAndRegisterScreenFilter(string name, string passName)
+    private static Filter LoadAndRegisterScreenFilter(Mod mod, string name, string passName)
     {
-        Asset<Effect> asset = AnomalyMain.Instance.Assets.Request<Effect>($"Assets/Effects/ScreenFilters/{name}");
+        Asset<Effect> asset = mod.Assets.Request<Effect>($"Assets/Effects/ScreenFilters/{name}");
         Filter filter = new(new ScreenShaderData(asset, passName), EffectPriority.VeryHigh);
+        // 必须先于 Load 登记：Load 失败时尚未返回给 ScreenFilters 字段。
+        TOCleanup.Register(() => filter.Deactivate());
         Filters.Scene[$"Anomalies:{name}"] = filter;
         filter.Load();
         return filter;
     }
 
-    private static MiscShaderContainer LoadAndRegisterMiscShader(string subDirectory, string registrationName, string passName = "Pass0")
+    private static MiscShaderContainer LoadAndRegisterMiscShader(Mod mod, string subDirectory, string registrationName, string passName = "Pass0")
     {
         string path = "Assets/Effects/";
         if (!string.IsNullOrEmpty(subDirectory))
             path += subDirectory + "/";
         path += registrationName;
-        Asset<Effect> shader = AnomalyMain.Instance.Assets.Request<Effect>(path);
+        Asset<Effect> shader = mod.Assets.Request<Effect>(path);
         MiscShaderData data = new(shader, passName);
         GameShaders.Misc[$"Anomalies:{registrationName}"] = data;
 

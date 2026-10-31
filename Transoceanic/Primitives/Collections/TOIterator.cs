@@ -12,7 +12,7 @@ namespace Transoceanic.Primitives.Collections;
 /// 从而保证了高性能和内存安全。适合在游戏更新循环等性能敏感场景下使用。</para>
 /// <example>
 /// <code>
-/// foreach (string value in new TOIterator<string>(values, value => value.Length > 0))
+/// foreach (string value in new TOIterator&lt;string&gt;(values, value => value.Length > 0))
 /// {
 ///     //代码
 /// }
@@ -238,7 +238,7 @@ public readonly ref struct TOIterator<T> where T : class
 /// <para>该类型 <see langword="ref struct"/>，确保高效且安全的栈分配行为。</para>
 /// <example>
 /// <code>
-/// foreach (string value in new TOExclusiveIterator<string>(values, value => value.Length > 0, excludedValues))
+/// foreach (string value in new TOExclusiveIterator&lt;string&gt;(values, value => value.Length > 0, excludedValues))
 /// {
 ///     //代码
 /// }

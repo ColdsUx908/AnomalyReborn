@@ -47,20 +47,29 @@ public struct BitArray32 : IEquatable<BitArray32>
     /// <returns>如果两个实例的内部值相等，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public readonly bool Equals(BitArray32 other) => _Value == other._Value;
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 指示当前实例是否等于指定对象。
-    /// </summary>
+    /// </remarks>
     /// <param name="obj">要与当前实例进行比较的对象。</param>
     /// <returns>如果 <paramref name="obj"/> 是 <see cref="BitArray32"/> 且其内部值与当前实例相同，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public override readonly bool Equals(object obj) => obj is BitArray32 other && Equals(other);
 
+    /// <inheritdoc/>
     public override readonly int GetHashCode() => _Value.GetHashCode();
+    /// <summary>
+    /// 按 Equals 比较 内部整数位型，相等时返回 true。
+    /// </summary>
     public static bool operator ==(BitArray32 left, BitArray32 right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(BitArray32 left, BitArray32 right) => !(left == right);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回当前位数组的字符串表示形式，以 32 位二进制格式显示。
-    /// </summary>
+    /// </remarks>
     /// <returns>形如 "BitArray32 { 32位二进制字符串 }" 的字符串。</returns>
     public override readonly string ToString() => $"BitArray32 {{ {Convert.ToString(_Value, 2).PadLeft(32, '0')} }}";
 }
@@ -112,20 +121,29 @@ public struct BitArray64 : IEquatable<BitArray64>
     /// <returns>如果两个实例的内部值相等，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public readonly bool Equals(BitArray64 other) => _Value == other._Value;
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 指示当前实例是否等于指定对象。
-    /// </summary>
+    /// </remarks>
     /// <param name="obj">要与当前实例进行比较的对象。</param>
     /// <returns>如果 <paramref name="obj"/> 是 <see cref="BitArray64"/> 且其内部值与当前实例相同，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public override readonly bool Equals(object obj) => obj is BitArray64 other && Equals(other);
 
+    /// <inheritdoc/>
     public override readonly int GetHashCode() => _Value.GetHashCode();
+    /// <summary>
+    /// 按 Equals 比较 内部整数位型，相等时返回 true。
+    /// </summary>
     public static bool operator ==(BitArray64 left, BitArray64 right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(BitArray64 left, BitArray64 right) => !(left == right);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回当前位数组的字符串表示形式，以 64 位二进制格式显示。
-    /// </summary>
+    /// </remarks>
     /// <returns>形如 "BitArray64 { 64位二进制字符串 }" 的字符串。</returns>
     public override readonly string ToString() => $"BitArray64 {{ {Convert.ToString(_Value, 2).PadLeft(64, '0')} }}";
 }
@@ -184,20 +202,29 @@ public struct BitArray128 : IEquatable<BitArray128>
     /// <returns>如果两个实例的内部值相等，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public readonly bool Equals(BitArray128 other) => _Value == other._Value;
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 指示当前实例是否等于指定对象。
-    /// </summary>
+    /// </remarks>
     /// <param name="obj">要与当前实例进行比较的对象。</param>
     /// <returns>如果 <paramref name="obj"/> 是 <see cref="BitArray128"/> 且其内部值与当前实例相同，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public override readonly bool Equals(object obj) => obj is BitArray128 other && Equals(other);
 
+    /// <inheritdoc/>
     public override readonly int GetHashCode() => _Value.GetHashCode();
+    /// <summary>
+    /// 按 Equals 比较 内部整数位型，相等时返回 true。
+    /// </summary>
     public static bool operator ==(BitArray128 left, BitArray128 right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(BitArray128 left, BitArray128 right) => !(left == right);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回当前位数组的字符串表示形式，以两组 64 位二进制格式显示。
-    /// </summary>
+    /// </remarks>
     /// <returns>形如 "BitArray128 { 高64位二进制 低64位二进制 }" 的字符串。</returns>
     public override readonly string ToString() => $"BitArray128 {{ {Convert.ToString((long)(_Value >> 64), 2).PadLeft(64, '0')} {Convert.ToString((long)_Value, 2).PadLeft(64, '0')} }}";
 }
@@ -265,9 +292,10 @@ public class BitArray
         }
     }
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回当前位数组的字符串表示形式，从高位到低位显示每一位（左侧为最高位）。
-    /// </summary>
+    /// </remarks>
     /// <returns>形如 "BitArray { 二进制字符串 }" 的字符串。</returns>
     public override string ToString()
     {

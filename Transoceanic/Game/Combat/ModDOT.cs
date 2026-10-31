@@ -6,9 +6,10 @@ namespace Transoceanic.Game.Combat;
 /// </summary>
 public abstract class ModDOT : ModBuff
 {
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 设置 Buff 的静态默认属性：标记为 Debuff 且不保存到角色数据中。
-    /// </summary>
+    /// </remarks>
     public override void SetStaticDefaults()
     {
         Main.debuff[Type] = true;
@@ -30,14 +31,14 @@ public abstract class ModDOT : ModBuff
     public abstract bool HasBuff(NPC npc);
 
     /// <summary>
-    /// 获取该持续伤害对指定玩家每帧造成的伤害数值（生命回复减少量）。
+    /// 获取要从玩家 lifeRegen 扣除的整数单位量（返回值累加后截断）；不直接表示每帧生命损失。
     /// </summary>
     /// <param name="player">受影响的玩家实例。</param>
     /// <returns>伤害数值（正数表示减少生命回复）。</returns>
     public virtual float GetDamage(Player player) => 0f;
 
     /// <summary>
-    /// 获取该持续伤害对指定 NPC 每帧造成的伤害数值。
+    /// 获取 NPC 持续伤害基数；处理器乘二并累计后作为 lifeRegen 扣减量，不直接表示每帧生命损失。
     /// </summary>
     /// <param name="npc">受影响的 NPC 实例。</param>
     /// <returns>伤害数值（正数表示造成伤害）。</returns>

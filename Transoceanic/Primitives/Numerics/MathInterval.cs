@@ -56,6 +56,7 @@ public readonly struct MathInterval : IEquatable<MathInterval>
     /// 默认值为 <see langword="true"/>。
     /// </param>
     /// <remarks>
+    /// 构造允许正负无穷端点，对应的 inclusive 参数会规范化为 false，无穷端点只能开放。
     /// 构造函数会自动检测无效的输入并将其转换为空区间。具体规则如下：
     /// <list type="bullet">
     /// <item>
@@ -72,7 +73,7 @@ public readonly struct MathInterval : IEquatable<MathInterval>
     public MathInterval(float left, float right, bool leftInclusive = true, bool rightInclusive = true)
     {
         // 检查是否为特殊空区间
-        if (float.IsNaN(left) || float.IsNaN(right) || (left >= right && (!leftInclusive || !rightInclusive)))
+        if (float.IsNaN(left) || float.IsNaN(right) || left > right || (left == right && (!float.IsFinite(left) || !leftInclusive || !rightInclusive)))
         {
             Left = float.NaN;
             Right = float.NaN;
@@ -84,8 +85,8 @@ public readonly struct MathInterval : IEquatable<MathInterval>
 
         Left = left;
         Right = right;
-        LeftInclusive = leftInclusive;
-        RightInclusive = rightInclusive;
+        LeftInclusive = leftInclusive && !float.IsInfinity(left);
+        RightInclusive = rightInclusive && !float.IsInfinity(right);
     }
 
     /// <summary>
@@ -97,17 +98,17 @@ public readonly struct MathInterval : IEquatable<MathInterval>
     /// 则为 <see langword="true"/>；否则为 <see langword="false"/>。
     /// </returns>
     /// <remarks>
-    /// 对于无穷端点（<see cref="float.NegativeInfinity"/> 或 <see cref="float.PositiveInfinity"/>），
-    /// 开闭性不影响比较结果，总是认为满足条件。
+    /// 构造允许无穷端点，但这些端点始终开放；无穷值本身及 NaN 不属于区间。
     /// </remarks>
     public readonly bool Contains(float value) =>
         !IsEmpty
-        && (float.IsNegativeInfinity(Left) || LeftInclusive ? value >= Left : value > Left) // greater than left
-        && (float.IsPositiveInfinity(Right) || RightInclusive ? value <= Right : value < Right); // smaller than right
+        && (LeftInclusive ? value >= Left : value > Left)
+        && (RightInclusive ? value <= Right : value < Right);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回当前区间的字符串表示形式，采用标准的数学区间记法。
-    /// </summary>
+    /// </remarks>
     /// <returns>
     /// 如果区间为空，返回 "∅"；
     /// 否则返回类似 "[a, b]"、"(a, b)"、"[a, b)" 或 "(a, b]" 的字符串，
@@ -143,16 +144,18 @@ public readonly struct MathInterval : IEquatable<MathInterval>
         && LeftInclusive == other.LeftInclusive
         && RightInclusive == other.RightInclusive;
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 指示当前实例是否等于指定的对象。
-    /// </summary>
+    /// </remarks>
     /// <param name="obj">要与当前实例进行比较的对象。</param>
     /// <returns>如果 <paramref name="obj"/> 是 <see cref="MathInterval"/> 且与当前实例相等，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public override readonly bool Equals(object obj) => obj is MathInterval other && Equals(other);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回当前实例的哈希代码。
-    /// </summary>
+    /// </remarks>
     /// <returns>基于 <see cref="Left"/>、<see cref="Right"/>、<see cref="LeftInclusive"/> 和 <see cref="RightInclusive"/> 计算的哈希代码。</returns>
     public override readonly int GetHashCode() => HashCode.Combine(Left, Right, LeftInclusive, RightInclusive);
 
@@ -211,7 +214,7 @@ public readonly struct MathInterval : IEquatable<MathInterval>
     /// <param name="a">第一个区间。</param>
     /// <param name="b">第二个区间。</param>
     /// <returns>
-    /// 如果两个区间都非空且满足 <c>a.Right >= b.Left</c> 且 <c>a.Left <= b.Right</c>，则为 <see langword="true"/>；
+    /// 如果两个区间都非空且满足 <c>a.Right >= b.Left</c> 且 <c>a.Left &lt;= b.Right</c>，则为 <see langword="true"/>；
     /// 否则为 <see langword="false"/>。
     /// </returns>
     /// <remarks>

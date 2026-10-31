@@ -1,6 +1,6 @@
 namespace Anomalies.Visuals.BossBar;
 
-public sealed class BossBarTextures : IContentLoader
+public sealed class BossBarTextures : ILoadable
 {
     public const string Path = "Anomalies/Visuals/BossBar/Textures/";
 
@@ -111,6 +111,15 @@ public sealed class BossBarTextures : IContentLoader
         public static Texture2D SeperatorBar => _SeperatorBar.Value;
     }
 
-    void IContentLoader.PostSetupContent() => _BigLifeFont = ModContent.Request<DynamicSpriteFont>(Path + "BigLifeFont");
-    void IContentLoader.OnModUnload() => _BigLifeFont = null;
+    /// <summary>在 tML 内容加载时请求本模组字体，不依赖实体 ID 或其他加载器。</summary>
+    /// <param name="mod">由 tML 提供的所属模组。</param>
+    void ILoadable.Load(Mod mod)
+    {
+        TOCleanup.Register(() => _BigLifeFont = null);
+        if (!Main.dedServ)
+            _BigLifeFont = mod.Assets.Request<DynamicSpriteFont>("Visuals/BossBar/Textures/BigLifeFont");
+    }
+
+    // 资产引用由 TOCleanup 清空，纹理由 tML 资产仓库管理。
+    void ILoadable.Unload() { }
 }

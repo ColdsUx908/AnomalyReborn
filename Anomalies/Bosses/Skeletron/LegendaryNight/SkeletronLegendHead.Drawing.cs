@@ -59,7 +59,7 @@ public sealed partial class SkeletronLegendHead
 
     public bool StarAvatarActive => CurrentAvatar == Avatar.Star;
 
-    private Avatar RequestedAvatar => CurrentPhase == Phase.Phase1 && CurrentBaseBehavior == BaseBehavior.Rotate && CurrentLocalPhase == 1
+    private Avatar RequestedAvatar => Phase2SlimeAvatarActive ? Avatar.FlyingSlime : CurrentPhase == Phase.Phase1 && CurrentBaseBehavior == BaseBehavior.Rotate && CurrentLocalPhase == 1
         ? CurrentSpell switch
         {
             Spell.Slime => Avatar.FlyingSlime,
@@ -155,7 +155,7 @@ public sealed partial class SkeletronLegendHead
                 DrawPlatinumCoinAvatar(spriteBatch, screenPos);
                 break;
         }
-        return true;
+        return !Phase2SlimeAvatarActive;
     }
 
     private float Phase2GlowOpacity => Phase2 ? 1f : CurrentPhase == Phase.PhaseChange_1To2
@@ -242,7 +242,7 @@ public sealed partial class SkeletronLegendHead
 
         // 沿用史莱姆皇后的四帧振翅动画，先画翅膀再画化身，遮住翅根。
         Texture2D wingTexture = TextureAssets.Extra[ExtrasID.QueenSlimeWing].Value;
-        Rectangle wingFrame = wingTexture.Frame(1, 4, 0, AvatarTimer / 6 % 4);
+        Rectangle wingFrame = wingTexture.Frame(1, 4, 0, Phase2SlimeJumpActive ? 0 : AvatarTimer / 6 % 4);
         for (int side = 0; side < 2; side++)
         {
             bool isRightWing = side == 1;

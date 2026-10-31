@@ -21,8 +21,8 @@ public abstract class BaseMusicBox<TTile> : AnomalyModItem where TTile : BaseMus
             Item.ResearchUnlockCount = 0;
 
         // Register Music Box if the music path exists
-        if (!string.IsNullOrEmpty(MusicFileName) && ModReference.AnomaliesMusic.IsLoaded)
-            MusicLoader.AddMusicBox(Mod, MusicLoader.GetMusicSlot(ModReference.AnomaliesMusic.Mod, "Music/" + MusicFileName), Type, TileType);
+        if (!string.IsNullOrEmpty(MusicFileName) && AnomalyModReferences.AnomaliesMusic.IsLoaded)
+            MusicLoader.AddMusicBox(Mod, MusicLoader.GetMusicSlot(AnomalyModReferences.AnomaliesMusic.Mod, "Music/" + MusicFileName), Type, TileType);
     }
 
     public override void SetDefaults() => Item.DefaultToMusicBox(TileType, 0);

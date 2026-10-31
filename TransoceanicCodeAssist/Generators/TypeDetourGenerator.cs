@@ -1,5 +1,6 @@
 namespace TransoceanicCodeAssist.Generators;
 
+/// <summary>为指定目标类型生成 Detour 委托、默认转发及注册入口。</summary>
 [Generator]
 public class TypeDetourGenerator : IIncrementalGenerator
 {
@@ -15,8 +16,11 @@ public class TypeDetourGenerator : IIncrementalGenerator
 
         public TypeDetourTargetSymbolInfo(INamedTypeSymbol symbol, Compilation compilation) : base(symbol)
         {
-            if (!Valid)
+            if (!Valid || !GeneratorValidation.IsValidDeclaration(symbol, true))
+            {
+                Valid = false;
                 return;
+            }
 
             //原始类必须是泛型类
             if (!Symbol.IsGenericType)
@@ -80,13 +84,13 @@ public class TypeDetourGenerator : IIncrementalGenerator
                 {
                     case IPropertySymbol propertySymbol:
                         IMethodSymbol getter = propertySymbol.GetMethod;
-                        if (getter is not null)
+                        if (getter is not null && GeneratorValidation.IsSupported(getter))
                             instanceMethodSymbols.Add((getter, true));
                         IMethodSymbol setter = propertySymbol.SetMethod;
-                        if (setter is not null)
+                        if (setter is not null && GeneratorValidation.IsSupported(setter))
                             instanceMethodSymbols.Add((setter, true));
                         break;
-                    case IMethodSymbol methodSymbol when methodSymbol.MethodKind == MethodKind.Ordinary && !methodSymbol.IsGenericMethod:
+                    case IMethodSymbol methodSymbol when methodSymbol.MethodKind == MethodKind.Ordinary && GeneratorValidation.IsSupported(methodSymbol):
                         instanceMethodSymbols.Add((methodSymbol, false));
                         break;
                     default:
@@ -94,15 +98,19 @@ public class TypeDetourGenerator : IIncrementalGenerator
                 }
             }
 
-            VirtualMethodSymbols = [.. instanceMethodSymbols.GroupBy(m => m.Symbol.Name).Where(g => g.Count() == 1).Select(g => g.First())]; //不处理重载方法
+            VirtualMethodSymbols = instanceMethodSymbols;
             TypeParameterNames = [.. Symbol.TypeParameters.Select(p => p.Name)];
         }
     }
 
+    /// <summary>获取写入生成源码的 GeneratedCode 特性标记。</summary>
     public static string GeneratedCodeMarker => SourceGeneratorHelper.GetGeneratedCodeMarker("TypeDetourGenerator");
 
+    /// <summary>注册增量生成管线；从当前编译中的目标类型生成源码。</summary>
+    /// <param name="context">Roslyn 提供的增量生成器初始化上下文。</param>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
+        GeneratorValidation.Register(context, "Transoceanic.Runtime.Detours.TypeDetourClassAttribute", true);
         IncrementalValueProvider<ImmutableArray<TypeDetourTargetSymbolInfo>> c = SourceGeneratorHelper.GetCollectedTypeInfos(context, (s, complition) => new TypeDetourTargetSymbolInfo(s, complition));
         context.RegisterSourceOutput(c, RegisterAction);
     }
@@ -142,34 +150,26 @@ public class TypeDetourGenerator : IIncrementalGenerator
                 localBuilder.AppendLine();
 
             string name = methodSymbol.Name;
-            string memberName = fromProperty ? name[4..] : name;
 
-            List<string> paramTypeNames = [..
-                from IParameterSymbol param in methodSymbol.Parameters
-                let typeName = param.Type.Name
-                    .Replace(".", "_")
-                    .Replace("<", "_")
-                    .Replace(">", "_")
-                    .Replace(",", "_")
-                    .Replace(" ", "")
-                    + (param.RefKind != RefKind.None ? "ByRef" : "")
-                select typeName];
-
-            string delegateTypeName = $"Orig_{name}";
-            string methodName = $"Detour_{name}";
+            bool overloaded = typeInfo.VirtualMethodSymbols.Count(candidate => candidate.Symbol.Name == name) > 1;
+            string suffix = overloaded ? "__" + SourceGeneratorHelper.GetSignatureIdentifier(methodSymbol) : "";
+            string delegateTypeName = $"Orig_{name}{suffix}";
+            string methodName = $"Detour_{name}{suffix}";
 
             MethodSymbolInfoBase methodSymbolInfo = new(methodSymbol);
 
-            string parameterDeclarationString = string.Join(", ", [$"{typeInfo.FirstTypeParameterName} self", .. methodSymbolInfo.ParameterDeclarationsWithObjectForNonPublic]);
-            string parameterNameString = string.Join(", ", ["self", .. methodSymbolInfo.ParameterNamesForCall]);
+            string selfName = SourceGeneratorHelper.GetExtraParameterName(methodSymbol, "self");
+            string origName = SourceGeneratorHelper.GetExtraParameterName(methodSymbol, "orig");
+            string parameterDeclarationString = string.Join(", ", [$"{typeInfo.FirstTypeParameterName} {selfName}", .. methodSymbolInfo.ParameterDeclarationsWithObjectForNonPublic]);
+            string parameterNameString = string.Join(", ", [selfName, .. methodSymbolInfo.ParameterNamesForCall]);
             localBuilder.Append($$"""
                 // {{name}}
                 {{GeneratedCodeMarker}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
                 public unsafe delegate {{methodSymbolInfo.ReturnTypeString}} {{delegateTypeName}}({{parameterDeclarationString}});
-                /// <inheritdoc cref="{{typeInfo.TargetTypeSymbol.ToDisplayStringBetter()}}.{{memberName}}"/>
+                /// <inheritdoc cref="{{(fromProperty ? methodSymbol.AssociatedSymbol : methodSymbol).GetDocumentationCommentId()}}"/>
                 {{GeneratedCodeMarker}}
-                public unsafe virtual {{methodSymbolInfo.ReturnTypeString}} {{methodName}}({{delegateTypeName}} orig, {{parameterDeclarationString}}) => orig({{parameterNameString}});
+                public unsafe virtual {{methodSymbolInfo.ReturnTypeString}} {{methodName}}({{delegateTypeName}} {{origName}}, {{parameterDeclarationString}}) => {{origName}}({{parameterNameString}});
                 """);
 
             typeBuilder.AppendLine(localBuilder.ToString());

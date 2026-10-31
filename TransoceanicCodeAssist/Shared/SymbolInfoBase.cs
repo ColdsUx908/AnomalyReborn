@@ -108,7 +108,7 @@ internal class TypeSymbolInfoBase : SymbolInfoBase<INamedTypeSymbol>
     public TypeSymbolInfoBase(INamedTypeSymbol symbol) : base(symbol)
     {
         InitializeCore(
-            symbolNamespace: symbol.ContainingNamespace?.ToDisplayString(),
+            symbolNamespace: symbol.ContainingNamespace is { IsGlobalNamespace: false } space ? space.ToDisplayString() : "",
             containingType: symbol.ContainingType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
             memberType: symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
     }
@@ -475,6 +475,7 @@ internal class MethodSymbolInfoBase : SymbolInfoBase<IMethodSymbol>
 
         foreach (IParameterSymbol param in Symbol.Parameters)
         {
+            string parameterName = "@" + param.Name;
             string modifier = param.RefKind switch
             {
                 RefKind.Ref => "ref ",
@@ -490,14 +491,14 @@ internal class MethodSymbolInfoBase : SymbolInfoBase<IMethodSymbol>
 
             // 原始类型（始终使用 FullyQualifiedFormat）
             string originalType = param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-            paramDeclarations.Add($"{modifier}{originalType} {param.Name}{defaultValue}");
+            paramDeclarations.Add($"{modifier}{originalType} {parameterName}{defaultValue}");
 
             // 使用扩展方法：非 public 类型替换为 object，类型参数保留原名
             string fallbackType = param.Type.ToDisplayStringWithObjectForNonPublic(SymbolDisplayFormat.FullyQualifiedFormat, out _);
-            paramDeclarationsWithObjectForNonPublic.Add($"{(fallbackType == "object" ? "" : modifier)}{fallbackType} {param.Name}{defaultValue}");
+            paramDeclarationsWithObjectForNonPublic.Add($"{(fallbackType == "object" ? "" : modifier)}{fallbackType} {parameterName}{defaultValue}");
 
-            paramNames.Add(param.Name);
-            paramNamesForCall.Add(modifier2 + param.Name);
+            paramNames.Add(parameterName);
+            paramNamesForCall.Add(modifier2 + parameterName);
         }
 
         ParameterDeclarations = [.. paramDeclarations];
@@ -576,7 +577,7 @@ internal class MethodSymbolInfoBase : SymbolInfoBase<IMethodSymbol>
         if (!Symbol.IsStatic)
         {
             string selfType = Symbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-            string selfName = selfOverride ?? "self";
+            string selfName = selfOverride ?? SourceGeneratorHelper.GetExtraParameterName(Symbol, "self");
             parameters.Add($"{selfType} {selfName}");
         }
 

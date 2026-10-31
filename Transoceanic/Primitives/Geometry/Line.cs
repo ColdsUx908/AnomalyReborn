@@ -190,6 +190,9 @@ public struct Line : IEquatable<Line>
     /// <returns>点到直线的距离。</returns>
     public readonly float DistanceToPoint(Vector2 point) => Math.Abs(A * point.X + B * point.Y + C) / (float)Math.Sqrt(A * A + B * B);
 
+    /// <summary>
+    /// 先分别归一化直线，再比较 A、B、C 的绝对差是否均小于 float.Epsilon。
+    /// </summary>
     public readonly bool Equals(Line other)
     {
         Line thisNormalized = Normalize();
@@ -198,18 +201,27 @@ public struct Line : IEquatable<Line>
             && Math.Abs(thisNormalized.B - otherNormalized.B) < float.Epsilon
             && Math.Abs(thisNormalized.C - otherNormalized.C) < float.Epsilon;
     }
+    /// <inheritdoc/>
     public override readonly bool Equals(object obj) => obj is Line other && Equals(other);
+    /// <inheritdoc/>
     public override readonly int GetHashCode()
     {
         Line tempThis = Normalize();
         return HashCode.Combine(tempThis.A, tempThis.B, tempThis.C);
     }
+    /// <summary>
+    /// 按归一化直线的 Equals 判定是否相等。
+    /// </summary>
     public static bool operator ==(Line left, Line right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(Line left, Line right) => !(left == right);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回当前直线的字符串表示形式，以一般式 <c>Ax + By + C = 0</c> 的格式显示。
-    /// </summary>
+    /// </remarks>
     /// <returns>
     /// 一个格式为 <c>"Line { Ax + By + C = 0 }"</c> 的字符串，
     /// 其中系数会进行美化处理：

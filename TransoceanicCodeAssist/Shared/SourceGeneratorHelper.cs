@@ -21,7 +21,7 @@ internal static class SourceGeneratorHelper
         int fileIndex = 1;
         bool hasTypes = false;
 
-        foreach (TInfo typeInfo in source.OrderBy(info => info.Name, StringComparer.Ordinal)
+        foreach (TInfo typeInfo in source.GroupBy(info => info.MemberType, StringComparer.Ordinal).Select(group => group.First()).OrderBy(info => info.Name, StringComparer.Ordinal)
             .ThenBy(info => info.MemberType, StringComparer.Ordinal))
         {
             context.CancellationToken.ThrowIfCancellationRequested();
@@ -48,6 +48,34 @@ internal static class SourceGeneratorHelper
 
         if (hasTypes)
             context.AddSource($"{fileNamePrefix}.{fileIndex}.g.cs", builder.ToString());
+    }
+
+    /// <summary>生成完整签名的可逆标识符，包含命名空间、泛型实参、数组秩和引用修饰。</summary>
+    public static string GetSignatureIdentifier(IMethodSymbol method)
+    {
+        string signature = method.Name + "(" + string.Join(",", method.Parameters.Select(parameter =>
+            parameter.RefKind + ":" + parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))) + ")";
+        return "Signature" + string.Concat(signature.Select(character => ((int)character).ToString("X4", System.Globalization.CultureInfo.InvariantCulture)));
+    }
+
+    /// <summary>保留无冲突的旧辅助名称；短名冲突时使用完整签名。</summary>
+    public static string GetPublicizerMethodSuffix(IMethodSymbol method)
+    {
+        string LegacySuffix(IMethodSymbol candidate) => candidate.Name + (candidate.Parameters.Length == 0 ? "" : "_" +
+            string.Join("_", candidate.Parameters.Select(parameter => parameter.Type.Name
+                .Replace(".", "_").Replace("<", "_").Replace(">", "_").Replace(",", "_").Replace(" ", "")
+                + (parameter.RefKind != RefKind.None ? "ByRef" : ""))));
+        string legacy = LegacySuffix(method);
+        return method.ContainingType.GetMembers().OfType<IMethodSymbol>().Count(candidate =>
+            candidate.MethodKind == MethodKind.Ordinary && LegacySuffix(candidate) == legacy) > 1
+            ? GetSignatureIdentifier(method) : legacy;
+    }
+
+    /// <summary>为额外的生成参数选择不与源参数重名的标识符。</summary>
+    public static string GetExtraParameterName(IMethodSymbol method, string name)
+    {
+        while (method.Parameters.Any(parameter => parameter.Name == name)) name = "_" + name;
+        return name;
     }
 
     private static int CountLineBreaks(string text)
@@ -378,7 +406,7 @@ internal static class SourceGeneratorHelper
                 if (typeSymbol.ContainingType is not null)
                     return typeSymbol.ContainingType.FullMetadataName + "+" + typeSymbol.MetadataName;
 
-                string ns = typeSymbol.ContainingNamespace?.ToString();
+                string ns = typeSymbol.ContainingNamespace is { IsGlobalNamespace: false } space ? space.ToDisplayString() : "";
                 if (!string.IsNullOrEmpty(ns))
                     return ns + "." + typeSymbol.MetadataName;
                 return typeSymbol.MetadataName;
@@ -437,30 +465,38 @@ internal static class SourceGeneratorHelper
         /// 递归判断一个类型符号在完整可访问性意义上是否相当于 <c>public</c>。
         /// </summary>
         /// <returns>
-        /// 若类型（及其所有构成部分）完全可公开访问，则返回 <see langword="true"/>；
+        /// 若类型通过下述可访问性近似判定，则返回 <see langword="true"/>；
         /// 否则返回 <see langword="false"/>。<paramref name="typeSymbol"/> 为 <see langword="null"/> 时也返回 <see langword="false"/>。
         /// </returns>
         /// <remarks>
         /// <para>此方法采用如下递归规则进行判定：</para>
         /// <list type="bullet">
-        /// <item/><description/><b>数组类型</b>（任意维度和交错嵌套）：检查其元素类型的可访问性，例如 <c>int[][,]</c> 会递归到 <see cref="int"/>。
-        /// <item/><description/><b>指针类型</b>：检查指向的目标类型的可访问性。
-        /// <item/><description/><b>函数指针类型</b>：当前实现一律视为可公开访问。
-        /// <item/><description/><b>动态类型</b>（<c>dynamic</c>）：始终视为可公开访问。
-        /// <item/><description/><b>命名类型</b>（含泛型构造类型）：首先要求类型自身的 <see cref="INamedTypeSymbol.DeclaredAccessibility"/> 为 <see cref="Accessibility.Public"/>，然后递归要求其所有类型实参（<see cref="INamedTypeSymbol.TypeArguments"/>）均可公开访问。
+        /// <item><description><b>数组类型</b>（任意维度和交错嵌套）：检查其元素类型的可访问性，例如 <c>int[][,]</c> 会递归到 <see cref="int"/>。
+        /// </description></item>
+        /// <item><description><b>指针类型</b>：检查指向的目标类型的可访问性。
+        /// </description></item>
+        /// <item><description><b>函数指针类型</b>：当前实现一律视为可公开访问。
+        /// </description></item>
+        /// <item><description><b>动态类型</b>（<c>dynamic</c>）：始终视为可公开访问。
+        /// </description></item>
+        /// <item><description><b>命名类型</b>（含泛型构造类型）：未绑定泛型直接通过；其余类型要求自身的 <see cref="ISymbol.DeclaredAccessibility"/> 为 Public 或 NotApplicable，然后递归要求所有类型实参（<see cref="INamedTypeSymbol.TypeArguments"/>）通过同一判定。
         /// <br/>若任何类型实参为内部类型，则整体不可访问。
-        /// <item/><description/><b>其他类型</b>：回退到使用 <see cref="ISymbol.DeclaredAccessibility"/> 与 <see cref="Accessibility.Public"/> 比较。
+        /// </description></item>
+        /// <item><description><b>类型参数</b>：直接通过，不检查泛型约束。
+        /// </description></item>
+        /// <item><description><b>其他类型</b>：回退到使用 <see cref="ISymbol.DeclaredAccessibility"/> 与 <see cref="Accessibility.Public"/> 比较。
+        /// </description></item>
         /// </list>
         /// <para>该方法适用于分析器需要判断类型（例如方法参数、字段或属性类型）
-        /// 能否在程序集外部安全暴露的场景。</para>
+        /// 是否适合生成公开签名的初步筛选；不递归校验函数指针签名，也不校验包含类型的可访问性，因此不能替代编译器检查。</para>
         /// </remarks>
         /// <example>
         /// <code>
         /// // int[] -> true (int is public)
-        /// bool result1 = IsPubliclyAccessible(arrayOfIntType);
+        /// bool result1 = arrayOfIntType.IsPubliclyAccessible;
         /// 
         /// // List&lt;InternalClass&gt; -> false (type argument is internal)
-        /// bool result2 = IsPubliclyAccessible(listOfInternalType);
+        /// bool result2 = listOfInternalType.IsPubliclyAccessible;
         /// </code>
         /// </example>
         public bool IsPubliclyAccessible

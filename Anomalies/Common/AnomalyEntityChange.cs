@@ -9,15 +9,11 @@ namespace Anomalies.Common;
 #region General Behavior
 public abstract class AnomalyPlayerBehavior : PlayerBehavior
 {
-    public sealed override AnomalyMain Mod => AnomalyMain.Instance;
-
-    public AnomalyPlayer AnomalyPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Anomaly; }
+    public AnomalyPlayer AnomalyPlayer { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Entity.Anomaly; }
 }
 
 public abstract class AnomalyGlobalNPCBehavior : GlobalNPCBehavior
 {
-    public sealed override AnomalyMain Mod => AnomalyMain.Instance;
-
     /// <summary>
     /// 在更新灾厄的Boss血条之前调用。
     /// </summary>
@@ -47,8 +43,6 @@ public abstract class AnomalyGlobalNPCBehavior : GlobalNPCBehavior
 
 public abstract class AnomalyGlobalProjectileBehavior : GlobalProjectileBehavior
 {
-    public sealed override AnomalyMain Mod => AnomalyMain.Instance;
-
     /// <summary>
     /// 编辑受击NPC的DR。
     /// </summary>
@@ -58,8 +52,6 @@ public abstract class AnomalyGlobalProjectileBehavior : GlobalProjectileBehavior
 
 public abstract class AnomalyGlobalItemBehavior : GlobalItemBehavior
 {
-    public sealed override AnomalyMain Mod => AnomalyMain.Instance;
-
     /// <summary>
     /// 编辑受击NPC的DR。
     /// </summary>
@@ -103,9 +95,20 @@ public abstract class AnomalyNPCBehavior : SingleNPCBehavior, IAnomalyTweak
     /// <inheritdoc cref="GlobalNPC.CanHitNPC"/>
     public virtual bool CanHitNPC(NPC target) => true;
 
-    public sealed override AnomalyMain Mod => AnomalyMain.Instance;
+    /// <summary>内容使用的 AI32 数据槽数，不含变化标记。</summary>
+    protected virtual int AI32Capacity => 4;
+    /// <summary>内容使用的 AI64 数据槽数，不含变化标记。</summary>
+    protected virtual int AI64Capacity => 1;
 
-    public AnomalyGlobalNPC AnomalyNPC { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Anomaly; }
+    public AnomalyGlobalNPC AnomalyNPC
+    {
+        get
+        {
+            AnomalyGlobalNPC data = Entity.Anomaly;
+            data.EnsureAICapacity(AI32Capacity, AI64Capacity);
+            return data;
+        }
+    }
 
     /// <summary>
     /// 设置NPC基本属性，确保在 <see cref="NPCLoader"/> 类的 SetDefaults 方法末尾调用。
@@ -133,7 +136,7 @@ public abstract class AnomalyNPCBehavior : SingleNPCBehavior, IAnomalyTweak
 
     /// <summary>
     /// 在绘制Boss血条之前调用。
-    /// </summary>    
+    /// </summary>
     /// <param name="newBar">Boss血条实例。</param>
     /// <param name="spriteBatch">SpriteBatch实例。</param>
     /// <param name="x">绘制位置左上角的X坐标。</param>
@@ -171,7 +174,10 @@ public abstract class AnomalyNPCBehavior : SingleNPCBehavior, IAnomalyTweak
         orig(npc, createModNPC);
 
         if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(SetDefaultsFinal)))
+        {
+            using EntityBehavior<NPC>.EntityLock entityLock = npcBehavior.LockEntity();
             npcBehavior.SetDefaultsFinal();
+        }
     }
 
     void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedNPCs[ApplyingType] = true;
@@ -183,7 +189,7 @@ public abstract class AnomalyNPCBehavior<TBehavior> : AnomalyNPCBehavior where T
 
     public override bool ShouldProcess => AnomalySharedData.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
 
-    public static TBehavior GetInstance(NPC npc) => new() { _Entity = npc };
+    public static TBehavior GetInstance(NPC npc) => new() { Entity = npc };
 }
 
 public abstract class AnomalyNPCBehavior<TModNPC, TBehavior> : AnomalyNPCBehavior<TBehavior>
@@ -192,7 +198,7 @@ public abstract class AnomalyNPCBehavior<TModNPC, TBehavior> : AnomalyNPCBehavio
 {
     public static readonly Type Type = typeof(TModNPC);
 
-    public TModNPC ModNPC => _Entity.GetModNPC<TModNPC>();
+    public TModNPC ModNPC => Entity.GetModNPC<TModNPC>();
 
     public override int ApplyingType => ModContent.NPCType<TModNPC>();
 
@@ -219,9 +225,20 @@ public abstract class AnomalyProjectileBehavior : SingleProjectileBehavior, IAno
     /// <inheritdoc cref="GlobalProjectile.CanHitPlayer"/>
     public virtual bool CanHitPlayer(Player target) => true;
 
-    public sealed override AnomalyMain Mod => AnomalyMain.Instance;
+    /// <summary>内容使用的 AI32 数据槽数，不含变化标记。</summary>
+    protected virtual int AI32Capacity => 4;
+    /// <summary>内容使用的 AI64 数据槽数，不含变化标记。</summary>
+    protected virtual int AI64Capacity => 1;
 
-    public AnomalyGlobalProjectile AnomalyProjectile { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Anomaly; }
+    public AnomalyGlobalProjectile AnomalyProjectile
+    {
+        get
+        {
+            AnomalyGlobalProjectile data = Entity.Anomaly;
+            data.EnsureAICapacity(AI32Capacity, AI64Capacity);
+            return data;
+        }
+    }
 
     /// <summary>
     /// 是否允许灾厄的相关逻辑执行。
@@ -244,7 +261,7 @@ public abstract class AnomalyProjectileBehavior<TBehavior> : AnomalyProjectileBe
 
     public override bool ShouldProcess => AnomalySharedData.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
 
-    public static TBehavior GetInstance(Projectile projectile) => new() { _Entity = projectile };
+    public static TBehavior GetInstance(Projectile projectile) => new() { Entity = projectile };
 }
 
 public abstract class AnomalyProjectileBehavior<TModProjectile, TBehavior> : AnomalyProjectileBehavior<TBehavior>
@@ -253,7 +270,7 @@ public abstract class AnomalyProjectileBehavior<TModProjectile, TBehavior> : Ano
 {
     public static readonly Type Type = typeof(TModProjectile);
 
-    public TModProjectile ModProjectile => _Entity.GetModProjectile<TModProjectile>();
+    public TModProjectile ModProjectile => Entity.GetModProjectile<TModProjectile>();
 
     public override int ApplyingType => ModContent.ProjectileType<TModProjectile>();
 
@@ -262,7 +279,7 @@ public abstract class AnomalyProjectileBehavior<TModProjectile, TBehavior> : Ano
     public override bool ShouldProcess => AnomalySharedData.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
 }
 
-public abstract class AnomalyItemBehavior : SingleItemBehavior, IAnomalyTweak, IContentLoader
+public abstract class AnomalyItemBehavior : SingleItemBehavior, IAnomalyTweak
 {
     /// <inheritdoc cref="GlobalItem.CanHitNPC"/>
     public virtual bool? CanHitNPC(Player player, NPC target) => null;
@@ -273,9 +290,7 @@ public abstract class AnomalyItemBehavior : SingleItemBehavior, IAnomalyTweak, I
     /// <inheritdoc cref="GlobalItem.CanHitPvp"/>
     public virtual bool CanHitPvp(Player player, Player target) => true;
 
-    public sealed override AnomalyMain Mod => AnomalyMain.Instance;
-
-    public AnomalyGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Anomaly; }
+    public AnomalyGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Entity.Anomaly; }
 
     /// <summary>
     /// 设置物品基本属性，确保在 <see cref="Item.SetDefaults(int, bool, global::Terraria.GameContent.Items.ItemVariant)"/> 方法末尾调用。
@@ -290,26 +305,30 @@ public abstract class AnomalyItemBehavior : SingleItemBehavior, IAnomalyTweak, I
 
     void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedItems[ApplyingType] = true;
 
-    void IContentLoader.PostSetupContent() => On_Item.SetDefaults_int_bool_ItemVariant += On_Item_SetDefaults_int_bool_ItemVariant;
+    /// <summary>在每个实际注册的物品行为加载时安装末尾属性钩子，保留既有注册次数。</summary>
+    public override void Load() => On_Item.SetDefaults_int_bool_ItemVariant += On_Item_SetDefaults_int_bool_ItemVariant;
 
     private static void On_Item_SetDefaults_int_bool_ItemVariant(On_Item.orig_SetDefaults_int_bool_ItemVariant orig, Item self, int Type, bool noMatCheck, global::Terraria.GameContent.Items.ItemVariant variant)
     {
         orig(self, Type, noMatCheck, variant);
         if (self.TryGetBehavior(out AnomalyItemBehavior itemBehavior, nameof(SetDefaultsFinal)))
+        {
+            using EntityBehavior<Item>.EntityLock entityLock = itemBehavior.LockEntity();
             itemBehavior.SetDefaultsFinal();
+        }
     }
 }
 
 public abstract class AnomalyItemBehavior<TBehavior> : AnomalyItemBehavior where TBehavior : AnomalyItemBehavior<TBehavior>, new()
 {
-    public static TBehavior GetInstance(Item item) => new() { _Entity = item };
+    public static TBehavior GetInstance(Item item) => new() { Entity = item };
 }
 
 public abstract class AnomalyItemBehavior<TModItem, TBehavior> : AnomalyItemBehavior<TBehavior> where TModItem : ModItem where TBehavior : AnomalyItemBehavior<TModItem, TBehavior>, new()
 {
     public static readonly Type Type = typeof(TModItem);
 
-    public TModItem ModItem => _Entity.GetModItem<TModItem>();
+    public TModItem ModItem => Entity.GetModItem<TModItem>();
 
     public override int ApplyingType => ModContent.ItemType<TModItem>();
 }
@@ -318,8 +337,6 @@ public abstract class AnomalyItemBehavior<TModItem, TBehavior> : AnomalyItemBeha
 #region Handler
 public sealed class AnomalySingleNPCBehaviorHandler : SingleNPCBehaviorHandler<AnomalyNPCBehavior>
 {
-    public override AnomalyMain Mod => AnomalyMain.Instance;
-
     public override decimal Priority => 50m;
 
     protected override SingleEntityBehaviorSet<NPC, AnomalyNPCBehavior> BehaviorSet => AnomalyEntityChangeHelper.NPCBehaviors;
@@ -327,8 +344,6 @@ public sealed class AnomalySingleNPCBehaviorHandler : SingleNPCBehaviorHandler<A
 
 public sealed class AnomalySingleProjectileBehaviorHandler : SingleProjectileBehaviorHandler<AnomalyProjectileBehavior>
 {
-    public override AnomalyMain Mod => AnomalyMain.Instance;
-
     public override decimal Priority => 50m;
 
     protected override SingleEntityBehaviorSet<Projectile, AnomalyProjectileBehavior> BehaviorSet => AnomalyEntityChangeHelper.ProjectileBehaviors;
@@ -336,8 +351,6 @@ public sealed class AnomalySingleProjectileBehaviorHandler : SingleProjectileBeh
 
 public sealed class AnomalySingleItemBehaviorHandler : SingleItemBehaviorHandler<AnomalyItemBehavior>
 {
-    public override AnomalyMain Mod => AnomalyMain.Instance;
-
     public override decimal Priority => 50m;
 
     protected override SingleEntityBehaviorSet<Item, AnomalyItemBehavior> BehaviorSet => AnomalyEntityChangeHelper.ItemBehaviors;
@@ -377,27 +390,36 @@ public sealed class CalamityGlobalNPCBehaviorDetour : GlobalNPCDetour<CalamityGl
 {
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalNPC self, NPC npc)
     {
-        if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.PreAI))
-            && !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.PreAI))
-            return true;
+        if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.PreAI)))
+        {
+            using EntityBehavior<NPC>.EntityLock entityLock = npcBehavior.LockEntity();
+            if (!npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.PreAI))
+                return true;
+        }
 
         return orig(self, npc);
     }
 
     public override Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalNPC self, NPC npc, Color drawColor)
     {
-        if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.GetAlpha))
-            && !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.GetAlpha))
-            return null;
+        if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.GetAlpha)))
+        {
+            using EntityBehavior<NPC>.EntityLock entityLock = npcBehavior.LockEntity();
+            if (!npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.GetAlpha))
+                return null;
+        }
 
         return orig(self, npc, drawColor);
     }
 
     public override bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalNPC self, NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.PreDraw))
-            && npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.PreDraw))
-            return true;
+        if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.PreDraw)))
+        {
+            using EntityBehavior<NPC>.EntityLock entityLock = npcBehavior.LockEntity();
+            if (npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.PreDraw))
+                return true;
+        }
 
         return orig(self, npc, spriteBatch, screenPos, drawColor);
     }
@@ -408,9 +430,12 @@ public sealed class CalamityVanillaAIOverrideDetour : GlobalNPCDetour<CalamityVa
 {
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityVanillaAIOverrideNPC self, NPC npc)
     {
-        if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.PreAI))
-            && !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.VanillaOverrideAI))
-            return true;
+        if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.PreAI)))
+        {
+            using EntityBehavior<NPC>.EntityLock entityLock = npcBehavior.LockEntity();
+            if (!npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.VanillaOverrideAI))
+                return true;
+        }
 
         return orig(self, npc);
     }
@@ -421,27 +446,36 @@ public sealed class CalamityGlobalProjectileBehaviorDetour : GlobalProjectileDet
 {
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalProjectile self, Projectile projectile)
     {
-        if (projectile.TryGetBehavior(out AnomalyProjectileBehavior projectileBehavior, nameof(AnomalyProjectileBehavior.PreAI))
-            && !projectileBehavior.AllowCalamityLogic(CalamityLogicType_ProjectileBehavior.PreAI))
-            return true;
+        if (projectile.TryGetBehavior(out AnomalyProjectileBehavior projectileBehavior, nameof(AnomalyProjectileBehavior.PreAI)))
+        {
+            using EntityBehavior<Projectile>.EntityLock entityLock = projectileBehavior.LockEntity();
+            if (!projectileBehavior.AllowCalamityLogic(CalamityLogicType_ProjectileBehavior.PreAI))
+                return true;
+        }
 
         return orig(self, projectile);
     }
 
     public override Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalProjectile self, Projectile projectile, Color lightColor)
     {
-        if (projectile.TryGetBehavior(out AnomalyProjectileBehavior projectileBehavior, nameof(AnomalyProjectileBehavior.GetAlpha))
-            && !projectileBehavior.AllowCalamityLogic(CalamityLogicType_ProjectileBehavior.GetAlpha))
-            return null;
+        if (projectile.TryGetBehavior(out AnomalyProjectileBehavior projectileBehavior, nameof(AnomalyProjectileBehavior.GetAlpha)))
+        {
+            using EntityBehavior<Projectile>.EntityLock entityLock = projectileBehavior.LockEntity();
+            if (!projectileBehavior.AllowCalamityLogic(CalamityLogicType_ProjectileBehavior.GetAlpha))
+                return null;
+        }
 
         return orig(self, projectile, lightColor);
     }
 
     public override bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalProjectile self, Projectile projectile, ref Color lightColor)
     {
-        if (projectile.TryGetBehavior(out AnomalyProjectileBehavior projectileBehavior, nameof(AnomalyProjectileBehavior.PreDraw))
-            && !projectileBehavior.AllowCalamityLogic(CalamityLogicType_ProjectileBehavior.PreDraw))
-            return true;
+        if (projectile.TryGetBehavior(out AnomalyProjectileBehavior projectileBehavior, nameof(AnomalyProjectileBehavior.PreDraw)))
+        {
+            using EntityBehavior<Projectile>.EntityLock entityLock = projectileBehavior.LockEntity();
+            if (!projectileBehavior.AllowCalamityLogic(CalamityLogicType_ProjectileBehavior.PreDraw))
+                return true;
+        }
 
         return orig(self, projectile, ref lightColor);
     }

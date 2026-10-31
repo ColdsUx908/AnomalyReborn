@@ -2,21 +2,27 @@ namespace Transoceanic.Graphics.Particles;
 
 /// <summary>
 /// 粒子系统的抽象基类，定义了粒子的基本属性、生命周期行为以及与 <see cref="ParticleHandler"/> 的交互接口。
-/// <para>派生类应当通过 <see cref="ParticleHandler.SpawnParticle(Particle)"/> 方法进行实例化与生成，
-/// 而非直接使用构造函数。粒子的类型 ID、纹理资源等由 <see cref="ParticleHandler"/> 在内容加载阶段自动缓存与管理。</para>
+/// <para>调用方在类型缓存完成后构造派生类实例，再通过 <see cref="ParticleHandler.SpawnParticle(Particle)"/> 提交生成。粒子的类型 ID、纹理资源等由 <see cref="ParticleHandler"/> 在内容加载阶段自动缓存与管理。</para>
 /// </summary>
-public abstract class Particle
+public abstract class Particle : IAutoload<ParticleAutoloader>
 {
     /// <summary>
-    /// 粒子的内部类型标识符。该值在粒子构造时由 <see cref="ParticleHandler"/> 自动分配，
+    /// 粒子的本地类型标识符。类型注册时分配编号，运行实例构造时从 <see cref="Definition"/> 读取，
     /// 对于同一具体粒子类型的所有实例均相同。
     /// <para>该字段可用于在自定义逻辑中识别粒子种类，或通过 <see cref="ParticleHandler.GetTemplateInstance{T}"/> 获取模板实例。</para>
     /// </summary>
     public int Type;
 
     /// <summary>
+    /// 当前运行粒子对应的已注册内容定义；不保存运动或寿命状态。
+    /// </summary>
+    public ParticleDefinition Definition { get; internal set; }
+
+    internal bool IsTemplate => ReferenceEquals(Definition?.TemplateInstance, this);
+
+    /// <summary>
     /// 粒子自生成以来经过的时间（以游戏帧为单位）。
-    /// <para>当粒子被生成时，该值被初始化为 <c>0</c>；在每次 <see cref="Update"/> 调用<strong>之前</strong>，
+    /// <para>新实例默认从 <c>0</c> 开始；生成接口不会重置已有计时。在每次 <see cref="Update"/> 调用<strong>之前</strong>，
     /// <see cref="ParticleHandler"/> 会自动将其递增 <c>1</c>。</para>
     /// <para>可通过 <see cref="Lifetime"/> 与 <see cref="LifetimeCompletion"/> 计算生命周期进度。</para>
     /// </summary>
@@ -25,15 +31,15 @@ public abstract class Particle
     /// <summary>
     /// 指示该粒子是否为“重要粒子”。重要粒子在 <see cref="ParticleHandler.SpawnParticle(Particle)"/>
     /// 或 <see cref="ParticleHandler.TrySpawnParticle(Particle)"/> 被调用时，
-    /// 即使当前粒子总数已达到 <see cref="ParticleHandler.ParticleLimit"/> 上限，也会被强制生成。
+    /// 可豁免 <see cref="ParticleHandler.ParticleLimit"/> 容量限制；仍受服务器、初始化状态及生成回调等检查约束。
     /// <para>适用于必须显示的视觉效果（如关键技能特效、剧情相关粒子等）。</para>
     /// <para>默认值为 <see langword="false"/>。</para>
     /// </summary>
     public bool Important;
 
     /// <summary>
-    /// 粒子所使用的纹理资源资产。该字段在粒子构造时由 <see cref="ParticleHandler"/> 根据
-    /// <see cref="AutoLoadTexture"/> 与 <see cref="TexturePath"/> 自动加载并赋值。
+    /// 粒子所使用的纹理资源资产。内容初始化时根据
+    /// <see cref="AutoLoadTexture"/> 与 <see cref="TexturePath"/> 为定义模板请求资源，运行实例构造时复用模板资产引用。
     /// <para>通过 <see cref="Texture"/> 属性可获取已加载的 <see cref="Texture2D"/> 实例。</para>
     /// </summary>
     public Asset<Texture2D> Asset;
@@ -41,8 +47,8 @@ public abstract class Particle
     /// <summary>
     /// 粒子的最大生命周期（以游戏帧为单位）。
     /// <para>若 <see cref="AutoKillByLifeTime"/> 为 <see langword="true"/>（默认行为），
-    /// 当 <see cref="Timer"/> 达到此值时，粒子将在下一更新帧被自动移除。</para>
-    /// <para>默认值为 <c>0</c>，表示无限生命周期（需配合 <see cref="AutoKillByLifeTime"/> = <see langword="false"/> 使用）。</para>
+    /// 当 <see cref="Timer"/> 达到此值时，粒子在本次自定义更新及自动位移之后移除。</para>
+    /// <para>默认值为 <c>0</c>，在自动寿命管理开启时会在首次更新后移除；无限寿命须显式关闭 AutoKillByLifeTime。</para>
     /// </summary>
     public int Lifetime = 0;
 
@@ -54,6 +60,13 @@ public abstract class Particle
     public Vector2 Center;
 
     /// <summary>
+    /// 屏外绘制检查的额外边距，单位为世界像素，负值按零处理。
+    /// 在两倍可见视野的基础上向四周扩展；大粒子应设为覆盖其绘制半径的值。
+    /// 不影响更新与寿命，正无穷表示始终允许绘制。
+    /// </summary>
+    public float DrawScreenCheckFluff;
+
+    /// <summary>
     /// 粒子的每帧移动速度（单位：像素/帧）。
     /// <para>仅在 <see cref="AutoUpdatePosition"/> 为 <see langword="true"/> 时自动应用于 <see cref="Center"/>。</para>
     /// </summary>
@@ -61,7 +74,7 @@ public abstract class Particle
 
     /// <summary>
     /// 粒子的绘制颜色。该颜色将与纹理相乘，实现色调变化或透明度渐变。
-    /// <para>默认值为 <see cref="Color.White"/>（需在派生类构造函数中显式赋值）。</para>
+    /// <para>字段默认值为透明黑；需要可见颜色时由派生类构造函数或调用方显式赋值。</para>
     /// </summary>
     public Color Color;
 
@@ -71,7 +84,7 @@ public abstract class Particle
     public float Rotation;
 
     /// <summary>
-    /// 粒子的绘制缩放比例。默认值为 <c>1.0f</c>（需在派生类构造函数中显式赋值）。
+    /// 粒子的绘制缩放比例。字段默认值为 <c>0</c>；通常由派生类构造函数或调用方显式设置为正值。
     /// </summary>
     public float Scale;
 
@@ -84,7 +97,7 @@ public abstract class Particle
     public bool AffectedByLight;
 
     /// <summary>
-    /// 标记粒子是否已死亡。若为 <see langword="true"/>，则粒子将不再参与更新或绘制，并将在下一帧被移除。
+    /// 标记粒子是否已死亡。全局系统与 ParticleSet 在更新循环结束时移除此类粒子；UpdateParticle 和直接绘制入口不检查此标记。
     /// </summary>
     public bool Dead;
 
@@ -104,13 +117,14 @@ public abstract class Particle
     /// <summary>
     /// 初始化 <see cref="Particle"/> 类的新实例。构造函数会自动从 <see cref="ParticleHandler"/> 缓存中
     /// 获取与该粒子具体类型对应的 <see cref="Type"/> 和 <see cref="Asset"/>。
-    /// <para>注意：粒子实例不应直接通过 <c>new</c> 关键字创建，而应通过 <see cref="ParticleHandler.SpawnParticle(Particle)"/>
-    /// 或 <see cref="ParticleHandler.TrySpawnParticle(Particle)"/> 方法生成，以确保正确注册到粒子系统中。</para>
+    /// <para>注意：应在粒子类型缓存完成初始化后构造实例，再通过 <see cref="ParticleHandler.SpawnParticle(Particle)"/>
+    /// 或 <see cref="ParticleHandler.TrySpawnParticle(Particle)"/> 提交给全局系统；ParticleSet 中的实例由集合管理。</para>
     /// </summary>
     public Particle()
     {
-        Type = ParticleHandler._ParticleTypes[GetType()];
-        Asset = ParticleHandler._ParticleCache[Type].TemplateInstance.Asset;
+        Definition = ParticleHandler.GetDefinition(GetType());
+        Type = Definition.ID;
+        Asset = Definition.TemplateInstance.Asset;
     }
 
     /// <summary>
@@ -137,7 +151,7 @@ public abstract class Particle
     public virtual bool AutoLoadTexture => true;
 
     /// <summary>
-    /// 获取自定义纹理路径，相对于模组的根内容目录（通常为模组文件夹下的 "Content" 文件夹）。
+    /// 获取包含模组名称的完整资源路径，不含扩展名，例如 Transoceanic/Assets/Textures/Particles/Light。
     /// <para>若 <see cref="AutoLoadTexture"/> 为 <see langword="true"/> 且此属性返回非空字符串，
     /// <see cref="ParticleHandler"/> 将使用该路径加载纹理；否则将使用默认命名约定：
     /// <c>命名空间.类型名</c>，并将点号 <c>.</c> 替换为路径分隔符 <c>/</c>。</para>
@@ -155,9 +169,9 @@ public abstract class Particle
     public virtual bool PreSpawn() => true;
 
     /// <summary>
-    /// 在粒子成功添加到活动粒子列表后立即调用。
-    /// <para>可用于执行依赖于粒子已处于活动状态的初始化工作（例如，设置初始位置偏移、播放声音等）。
-    /// 注意：此时 <see cref="Timer"/> 仍为 <c>0</c>，且尚未进行第一次 <see cref="Update"/>。</para>
+    /// 在粒子成功添加到待加入缓冲区后立即调用。
+    /// <para>可用于执行已确认生成的初始化工作（例如，设置初始位置偏移、播放声音等）。
+    /// 新构造粒子通常尚未执行第一次 Update；提交不会重置 Timer，也不会阻止同一对象重复提交。</para>
     /// </summary>
     public virtual void PostSpawn() { }
 
@@ -213,7 +227,7 @@ public abstract class Particle
     public virtual void PostDraw(SpriteBatch spriteBatch, Vector2 drawOffset = default) { }
 
     /// <summary>
-    /// 将粒子标记为死亡状态，使其在下一帧被移除。
+    /// 将粒子标记为死亡；全局系统或 ParticleSet 在更新循环结束时移除，直接管理的粒子须由调用方清理。
     /// </summary>
     public void Kill() => Dead = true;
 }

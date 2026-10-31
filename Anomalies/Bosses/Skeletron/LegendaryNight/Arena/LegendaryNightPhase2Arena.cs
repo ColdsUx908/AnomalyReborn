@@ -3,21 +3,23 @@ using Anomalies.GameContents.Buffs;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
-public sealed class LegendaryNightPhase2Arena : BaseRingArenaProjectile
+public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
 {
     public const int AppearanceDuration = 90;
-    public const float MainCircleFullRadius = 800f;
+    public const float MainCircleFullRadius = 600f;
     public const float SmallCircleRadiusRatio = 0.15f;
     public const float OuterCircleRadiusRatio = 1f + 2f * SmallCircleRadiusRatio;
     public const float RotationSpeed = 0.007f;
-    public const float FirstSmallCircleOrbitSpeed = RotationSpeed * 0.8f;
-    public const float SecondSmallCircleOrbitSpeed = -RotationSpeed * 1.1f;
+    public static float FirstSmallCircleOrbitSpeed => SlowOrbitSpeed;
+    public static float GetFastOrbitSpeed(int musicTime) => SlowOrbitSpeed + MathHelper.TwoPi
+        / (musicTime < ThirdStarburstMusicTime ? StarburstInterval : RapidStarburstInterval);
     public const float FirstSmallCircleSpinSpeed = RotationSpeed * 2f;
     public const float SecondSmallCircleSpinSpeed = -RotationSpeed * 3f;
 
     public static readonly SoundStyle SummonSound = new(LegendaryNightHandler.LegendaryNightPath + "Arena/Phase2ArenaSummon");
 
     // ai[0]：所属骷髅王索引（1-based）；ai[1]：法阵出现时的音乐帧数。
+    // ai[2]：首次星爆方位角 + 1，由服务器随机选定并同步；亦为首次拍击时慢法阵的方位。
     public NPC Master
     {
         get => NPC.GetNPCFromIndex((int)Projectile.ai[0] - 1);
@@ -41,21 +43,35 @@ public sealed class LegendaryNightPhase2Arena : BaseRingArenaProjectile
     public bool Materialized => MasterBehavior is { Mechanic2Active: true } head && SkeletronLegendHead.Mechanic2Data.LasersActive(head.Mechanic2Age);
     public float MaterializationWarning => MasterBehavior is { Mechanic2Active: true } head ? SkeletronLegendHead.Mechanic2Data.LaserWarning(head.Mechanic2Age) : 0f;
     public float MaterializationIntensity => MasterBehavior is { Mechanic2Active: true } head ? SkeletronLegendHead.Mechanic2Data.LaserIntensity(head.Mechanic2Age) : 0f;
-    public Pentagon CentralPentagon => GetCentralPentagon(Projectile.Center, MainCircleRadius, MagicCircleRotation);
     public Annulus MaterializedRing => new(Projectile.Center, MainCircleRadius, Radius);
 
-    public static Pentagon GetCentralPentagon(Vector2 center, float starRadius, float rotation) => new(center,
-        starRadius * MathF.Cos(MathHelper.TwoPi / 5f) / MathF.Cos(MathHelper.Pi / 5f), rotation + MathHelper.Pi / 5f);
+    // 中央五边形与五个星角三角形的并集；凹口保持安全。
+    public bool CentralStarCollides(Rectangle hitbox)
+    {
+        Pentagon core = new(Projectile.Center,
+            MainCircleRadius * MathF.Cos(MathHelper.TwoPi / 5f) / MathF.Cos(MathHelper.Pi / 5f), MagicCircleRotation + MathHelper.Pi / 5f);
+        if (core.Collides(hitbox))
+            return true;
+        for (int i = 0; i < 5; i++)
+        {
+            float angle = MagicCircleRotation + MathHelper.TwoPi * i / 5f;
+            Vector2 firstInner = Projectile.Center + (angle + MathHelper.Pi / 5f).ToRotationVector2() * core.CircumRadius;
+            Vector2 secondInner = Projectile.Center + (angle - MathHelper.Pi / 5f).ToRotationVector2() * core.CircumRadius;
+            Triangle triangle = new(GetStarVertex(0, i), firstInner, secondInner);
+            if (triangle.Collides(hitbox))
+                return true;
+        }
+        return false;
+    }
 
     // 统一提供视觉与后续交互使用的几何数据；0 主法阵，1/2 两个附属法阵。
     public (Vector2 Center, float Radius, float Rotation) GetMagicCircle(int index)
     {
         if (index == 0)
             return (Projectile.Center, MainCircleRadius, MagicCircleRotation);
-        // 两个小法阵以不同角速度相向公转，并分别自转；均由音乐时钟确定。
-        float orbitSpeed = index == 1 ? FirstSmallCircleOrbitSpeed : SecondSmallCircleOrbitSpeed;
+        // 同向公转；交汇位置由音乐时钟和同步初始角确定。
         float spinSpeed = index == 1 ? FirstSmallCircleSpinSpeed : SecondSmallCircleSpinSpeed;
-        float angle = MusicAge * orbitSpeed + (index == 1 ? -MathHelper.Pi * 0.8f : MathHelper.Pi * 0.8f);
+        float angle = GetOrbitAngle(index, MasterBehavior?.Phase2MusicElapsedTime ?? AppearanceStartMusicTime);
         Vector2 center = Projectile.Center + angle.ToRotationVector2() * (MainCircleRadius + SmallCircleRadius);
         return (center, SmallCircleRadius, MusicAge * spinSpeed);
     }
@@ -95,6 +111,12 @@ public sealed class LegendaryNightPhase2Arena : BaseRingArenaProjectile
                 Projectile.Kill();
             return;
         }
+        if (Projectile.ai[2] == 0f && TONetworkEnvironment.NotClient)
+        {
+            Projectile.ai[2] = 1f + Main.rand.NextFloat(MathHelper.TwoPi);
+            Projectile.netUpdate = true;
+        }
+        UpdateStarburst();
         Projectile.timeLeft = 100;
         Projectile.velocity = Vector2.Zero;
         // 圆心在生成时固定；半径与所有绘制共用同一份入场缩放。
@@ -120,14 +142,14 @@ public sealed class LegendaryNightPhase2Arena : BaseRingArenaProjectile
     }
 
     public override bool CanHitPlayer(Player target) => Materialized || EnableMovementRestriction && base.CanHitPlayer(target);
-    // 平时圆周安全；每次拍击时将内外圆之间的圆环、五角星线段和中央五边形一起实体化。
+    // 平时圆周安全；每次拍击时将内外圆之间的圆环、五角星线段和整个中央实心五角星一起实体化。
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>
         Materialized && MaterializedGeometryCollides(targetHitbox)
         || EnableMovementRestriction && Vector2.DistanceSquared(targetHitbox.Center.ToVector2(), Projectile.Center) > Radius * Radius;
 
     public bool MaterializedGeometryCollides(Rectangle hitbox)
     {
-        if (CentralPentagon.Collides(hitbox)
+        if (CentralStarCollides(hitbox)
             || MaterializedRing.Collides(hitbox)
             || new Annulus(Projectile.Center, Radius - LaserWidth * 0.5f, Radius + LaserWidth * 0.5f).Collides(hitbox))
             return true;

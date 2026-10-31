@@ -1,5 +1,8 @@
 namespace Transoceanic.Graphics.Assets;
 
+/// <summary>
+/// 提供常用颜色与随游戏时间变化的颜色。
+/// </summary>
 public static class TOColors
 {
     /// <summary>

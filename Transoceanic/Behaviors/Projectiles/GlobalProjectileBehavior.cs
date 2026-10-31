@@ -1,5 +1,8 @@
 namespace Transoceanic.Behaviors;
 
+/// <summary>
+/// 面向全部弹幕的行为基类，由全局弹幕调度器筛选并调用。
+/// </summary>
 public abstract partial class GlobalProjectileBehavior : GlobalEntityBehavior<Projectile>
 {
     /// <inheritdoc cref="GlobalProjectile.CanCutTiles"/>

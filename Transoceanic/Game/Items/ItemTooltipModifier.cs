@@ -21,7 +21,7 @@ public class ItemTooltipDictionary
     public readonly List<TooltipLine> _Tooltips;
 
     /// <summary>
-    /// 以 (Mod, Name) 组合为键的快速查找字典，值为该提示行在 <see cref="_tooltips"/> 中的索引及行的引用。
+    /// 以 (Mod, Name) 组合为键的快速查找字典，值为该提示行在 <see cref="_Tooltips"/> 中的索引及行的引用。
     /// </summary>
     public Dictionary<(string Mod, string Name), (int Index, TooltipLine Line)> _Dictionary;
 
@@ -38,7 +38,7 @@ public class ItemTooltipDictionary
     }
 
     /// <summary>
-    /// 重新构建内部索引字典 <see cref="_dictionary"/>。通常在 <see cref="_tooltips"/> 发生变化后调用。
+    /// 重新构建内部索引字典 <see cref="_Dictionary"/>。通常在 <see cref="_Tooltips"/> 发生变化后调用。
     /// </summary>
     public void UpdateDictionary()
     {
@@ -55,7 +55,7 @@ public class ItemTooltipDictionary
     /// </summary>
     /// <param name="mod">提示行所属的 Mod 标识。若为 <see langword="null"/>，则默认视为 "Terraria"。</param>
     /// <param name="name">提示行的名称。</param>
-    /// <param name="index">当方法返回 <see langword="true"/> 时，包含该提示行在 <see cref="_tooltips"/> 中的索引；否则为 -1。</param>
+    /// <param name="index">当方法返回 <see langword="true"/> 时，包含该提示行在 <see cref="_Tooltips"/> 中的索引；否则为 -1。</param>
     /// <param name="line">当方法返回 <see langword="true"/> 时，包含找到的 <see cref="TooltipLine"/> 实例；否则为 <see langword="null"/>。</param>
     /// <returns>如果找到对应的提示行，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public bool TryGet(string mod, string name, out int index, out TooltipLine line)

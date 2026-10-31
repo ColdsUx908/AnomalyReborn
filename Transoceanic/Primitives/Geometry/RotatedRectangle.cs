@@ -35,13 +35,18 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>, ICollidableWithRe
     /// <param name="rotation">旋转角度（弧度）。</param>
     public RotatedRectangle(Vector2 center, float width, float height, float rotation) : this(FloatRectangle.FromCenter(center, width, height), rotation) { }
 
-    /// <summary>以线段为中轴、指定宽度构造旋转矩形，端点对应两条短边的中点。</summary>
+    /// <summary>
+    /// 以线段为中轴、指定宽度构造旋转矩形，端点对应两条短边的中点。
+    /// </summary>
     /// <param name="start">中轴起点。</param>
     /// <param name="end">中轴终点。</param>
     /// <param name="width">垂直于中轴的完整宽度。</param>
     public static RotatedRectangle FromLineSegment(Vector2 start, Vector2 end, float width)
         => new((start + end) * 0.5f, Vector2.Distance(start, end), width, (end - start).ToRotation());
 
+    /// <summary>
+    /// 根据内部参考点、四向距离及弧度角构造矩形；宽高为 left + right、top + bottom，中心沿旋转横轴偏移 (right - left)/2，沿垂轴偏移 (top - bottom)/2。
+    /// </summary>
     public static RotatedRectangle FromInnerPoint(Vector2 point, float left, float right, float top, float bottom, float rotation)
     {
         Vector2 realCenter = point + new PolarVector2(rotation) * ((right - left) / 2f) + new PolarVector2(rotation + MathHelper.PiOver2) * ((top - bottom) / 2f);
@@ -187,15 +192,27 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>, ICollidableWithRe
     /// <returns>如果点在矩形内，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public readonly bool Contains(Vector2 point) => Source.Contains(Center + (point - Center).RotatedBy(-Rotation));
 
+    /// <summary>
+    /// 比较 Source、Rotation，使用成员本身的相等语义。
+    /// </summary>
     public readonly bool Equals(RotatedRectangle other) => Source == other.Source && Rotation == other.Rotation;
+    /// <inheritdoc/>
     public override readonly bool Equals(object obj) => obj is RotatedRectangle other && Equals(other);
+    /// <inheritdoc/>
     public override readonly int GetHashCode() => HashCode.Combine(Source, Rotation);
+    /// <summary>
+    /// 按 Equals 比较 Source、Rotation，相等时返回 true。
+    /// </summary>
     public static bool operator ==(RotatedRectangle left, RotatedRectangle right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(RotatedRectangle left, RotatedRectangle right) => !(left == right);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回当前旋转矩形的字符串表示形式。
-    /// </summary>
+    /// </remarks>
     /// <returns>
     /// 一个格式为 <c>"RotatedRectangle { Source: FloatRectangle { Position: {X:0 Y:0}, Width:100, Height:50 }, Rotation:1.57 }"</c> 的字符串，
     /// 其中 <c>Source</c> 使用 <see cref="FloatRectangle.ToString"/> 的格式输出，
@@ -209,6 +226,9 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>, ICollidableWithRe
     /// <param name="rect">要转换的 <see cref="FloatRectangle"/>。</param>
     public static implicit operator RotatedRectangle(FloatRectangle rect) => new(rect, 0f);
 
+    /// <summary>
+    /// 判断当前形状与指定形状是否相交；双方坐标和尺寸须使用同一坐标系和单位。
+    /// </summary>
     public readonly bool Collides(RotatedRectangle other)
     {
         //SAT检测
@@ -232,7 +252,16 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>, ICollidableWithRe
         return true;
     }
 
+    /// <summary>
+    /// 判断当前形状与指定形状是否相交；双方坐标和尺寸须使用同一坐标系和单位。
+    /// </summary>
     public readonly bool Collides(Rectangle other) => Collides((FloatRectangle)other);
+    /// <summary>
+    /// 判断当前形状与指定形状是否相交；双方坐标和尺寸须使用同一坐标系和单位。
+    /// </summary>
     public readonly bool Collides(FloatRectangle other) => TOMathUtils.Collision.RotatedRectangleVFloatRectangleCollision(this, other);
+    /// <summary>
+    /// 判断当前形状与指定形状是否相交；双方坐标和尺寸须使用同一坐标系和单位。
+    /// </summary>
     public readonly bool Collides(Circle other) => TOMathUtils.Collision.RotatedRectangleVCircleCollision(this, other);
 }

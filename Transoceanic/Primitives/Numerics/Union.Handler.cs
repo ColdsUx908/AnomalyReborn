@@ -1,5 +1,8 @@
 namespace Transoceanic.Primitives.Numerics;
 
+/// <summary>
+/// 提供 Union 数值与其位字段的便捷访问扩展。
+/// </summary>
 public static class UnionExtensions
 {
     /// <summary>

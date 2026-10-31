@@ -2,16 +2,37 @@ using Transoceanic.Graphics.Assets;
 
 namespace Transoceanic.Graphics.Particles.BuiltIn;
 
+/// <summary>
+/// 随速度改变双轴形状并逐渐缩小的光球粒子。
+/// </summary>
 public class SquashParticle : Particle
 {
+    /// <inheritdoc/>
+    /// <remarks>此实现返回 <c>false</c>。</remarks>
     public override bool AutoLoadTexture => false;
+    /// <inheritdoc/>
+    /// <remarks>此实现返回 <c>TOTextures.InvisibleTexturePath</c>。</remarks>
     public override string TexturePath => TOTextures.InvisibleTexturePath;
+    /// <inheritdoc/>
+    /// <remarks>此实现返回 <c>BlendState.Additive</c>。</remarks>
     public override BlendState DrawBlendState => BlendState.Additive;
 
+    /// <summary>
+    /// 按速度形变前的双轴缩放基准，默认 Vector2.One。
+    /// </summary>
     public Vector2 BaseSize = Vector2.One;
+    /// <summary>
+    /// 是否关闭粒子的随机向下加速度。
+    /// </summary>
     public bool NoGravity;
+    /// <summary>
+    /// 影响缩小速度和重力强度的附加系数，计算时使用 FadeIn + 1。
+    /// </summary>
     public float FadeIn;
 
+    /// <summary>
+    /// 创建随速度形变的光球，设置中心、速度、帧寿命、缩放、颜色、双轴基准尺寸和重力开关。
+    /// </summary>
     public SquashParticle(Vector2 center, Vector2 velocity, int lifetime, float scale, Color color, Vector2? baseSize = null, bool noGravity = false)
     {
         Center = center;
@@ -23,6 +44,10 @@ public class SquashParticle : Particle
         NoGravity = noGravity;
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 按速度旋转、衰减速度并缩小，按开关施加重力，添加光照；尺寸耗尽时死亡，本方法也会应用一次位移。
+    /// </remarks>
     public override void Update()
     {
         float fadeSpeed = FadeIn + 1f;
@@ -47,6 +72,10 @@ public class SquashParticle : Particle
             Center += Velocity;
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 执行该粒子的自定义绘制，将中心加像素偏移后转换到屏幕坐标；返回 false 跳过默认绘制。
+    /// </remarks>
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 drawOffset = default)
     {
         Texture2D bloom = ParticleHandler.GetTexture<BloomParticle>();

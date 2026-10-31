@@ -2,8 +2,14 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Transoceanic.Input.AutoHosting;
 
+/// <summary>
+/// 比较硬件输入快照，判断是否中断当前输入托管。
+/// </summary>
 internal static class AutoHostingInput
 {
+    /// <summary>
+    /// 比较前后硬件输入，判断按键、鼠标按钮或托管范围内的输入变化是否应中断托管。
+    /// </summary>
     internal static bool HasUserInput(MouseState previousMouse, MouseState mouse, KeyboardState previousKeyboard, KeyboardState keyboard,
         bool controlsMouse, bool controlsKeyboard)
     {

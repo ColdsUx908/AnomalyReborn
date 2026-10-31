@@ -5,6 +5,8 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLegendHead>
 {
+    protected override int AI32Capacity => 15;
+
     // 手的 SetDefaults 执行时，Master 和 CustomAIType 尚未由召唤方赋值。
     // AnomalyAI32[5].bits[0]：正在召唤手。
     public bool IsSummoningHands
@@ -269,7 +271,7 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) =>
-        TONPCUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
+        AnomalyUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
 
     public override bool PreAI()
     {

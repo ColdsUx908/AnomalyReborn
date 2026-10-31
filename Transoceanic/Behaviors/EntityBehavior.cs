@@ -1,4 +1,5 @@
 using Transoceanic.Behaviors.Collections;
+using Transoceanic.Core.ModIntegration;
 
 namespace Transoceanic.Behaviors;
 
@@ -7,25 +8,67 @@ namespace Transoceanic.Behaviors;
 /// </summary>
 /// <remarks>
 /// 行为对象按类型单例存储，不能用实例字段或自动属性保存实体状态；应将状态存入实体的 AI 或 Global 实例。
-/// 获取另一个实体的同类型行为会重新绑定当前上下文，因此不能长期缓存行为引用。
+/// 正在分发的回调会锁定绑定引用，明确禁止同一单例跨实体调用；不能长期缓存行为引用。
+/// 如确需在回调内处理其他实体，应显式构造新的具体 Behavior 实例并绑定目标实体，自行完成所需初始化。
 /// </remarks>
 /// <typeparam name="TEntity">行为所附加的实体类型，必须派生自 <see cref="Entity"/>。</typeparam>
-public abstract class EntityBehavior<TEntity> : IEntityBehavior where TEntity : Entity
+public abstract class EntityBehavior<TEntity> : RegisteredContent<IEntityBehavior>, IEntityBehavior where TEntity : Entity
 {
-    /// <summary>
-    /// 存储当前行为所连接的实体实例。
-    /// </summary>
-    /// <remarks>
-    /// 注意：正常情况下，此字段仅在通过 <see cref="SimpleEntityBehaviorSet{TEntity, TBehavior}.Enumerate(TEntity, string)"/> 等方法获取行为实例时被赋值。
-    /// <br/>如果直接实例化行为类，则需要手动为此字段赋值，否则在行为方法中访问此字段会导致 <see cref="NullReferenceException"/> 异常。
-    /// <br/>如果确需要在外部对此字段赋值，请务必谨慎。
-    /// </remarks>
-    public TEntity _Entity;
+    private int _EntityLockCount;
 
     /// <summary>
-    /// 获取行为所属的 <see cref="global::Terraria.ModLoader.Mod"/> 实例。
+    /// 获取或设置当前行为绑定的实体实例。
+    /// 框架在分发行为时负责绑定此引用；分发期间若已由 <see cref="LockEntity"/> 锁定，则禁止改绑到另一个实体。
     /// </summary>
-    public abstract Mod Mod { get; }
+    /// <remarks>
+    /// 正常情况下，此属性仅在通过 <see cref="SimpleEntityBehaviorSet{TEntity, TBehavior}.Enumerate(TEntity, string)"/> 等方法获取行为实例时被赋值。
+    /// <br/>如果直接实例化行为类，则需要手动为此属性赋值，否则在行为方法中访问此属性会导致 <see cref="NullReferenceException"/> 异常。
+    /// <br/>直接查询后调用行为时，用 LockEntity 包围调用；运行期间向本属性赋予其他引用会抛出异常。
+    /// </remarks>
+    public TEntity Entity
+    {
+        get;
+        set
+        {
+            if (_EntityLockCount > 0 && !ReferenceEquals(field, value))
+                throw new InvalidOperationException("Cross-entity calls on a singleton Behavior are forbidden. Construct a new concrete Behavior instance, initialize it, and bind the target entity instead.");
+            field = value;
+        }
+    }
+
+    /// <summary>
+    /// 锁定当前绑定引用，直到回调结束；实体自身的数据仍可正常修改。不提供跨线程同步。
+    /// </summary>
+    public EntityLock LockEntity() => new(this);
+
+    /// <summary>
+    /// 禁止作用域内切换到其他实体的绑定锁；用 using 释放，不可复制，也不是线程互斥锁。
+    /// </summary>
+    public ref struct EntityLock
+    {
+        private EntityBehavior<TEntity> _Owner;
+
+        /// <summary>
+        /// 为行为枚举器持有对应实体的遍历锁。
+        /// 枚举结束或中止时必须调用 <see cref="Dispose"/>，以解除当前实体引用的绑定保护。
+        /// </summary>
+        internal EntityLock(EntityBehavior<TEntity> owner)
+        {
+            _Owner = owner;
+            owner._EntityLockCount++;
+        }
+
+        /// <summary>
+        /// 释放本作用域持有的实体绑定锁；重复释放无效，不应复制作用域或跨线程使用。
+        /// </summary>
+        public void Dispose()
+        {
+            if (_Owner is null)
+                return;
+            _Owner._EntityLockCount--;
+            _Owner = null;
+        }
+    }
 
     /// <summary>
     /// 获取行为的优先级。默认值为 0。数值越大，处理顺序越靠前。
@@ -37,26 +80,12 @@ public abstract class EntityBehavior<TEntity> : IEntityBehavior where TEntity : 
     /// </summary>
     public virtual bool ShouldProcess => true;
 
-    /// <summary>
-    /// 显式实现 <see cref="ILoadable.Load(Mod)"/>，将调用转至虚方法 <see cref="Load(Mod)"/>。
-    /// </summary>
-    void ILoadable.Load(Mod mod) => Load(mod);
-
-    /// <summary>
-    /// 在 Mod 加载时调用，可重写以执行行为的初始化逻辑。
-    /// </summary>
-    /// <param name="mod">当前行为所属的 Mod 实例。</param>
-    public virtual void Load(Mod mod) { }
-
-    /// <summary>
-    /// 显式实现 <see cref="ILoadable.Unload"/>，将调用转至虚方法 <see cref="Unload"/>。
-    /// </summary>
-    void ILoadable.Unload() => Unload();
-
-    /// <summary>
-    /// 在 Mod 卸载时调用，可重写以释放资源或执行清理逻辑。
-    /// </summary>
-    public virtual void Unload() { }
+    /// <inheritdoc/>
+    protected override void ClearReferences()
+    {
+        _EntityLockCount = 0;
+        Entity = null;
+    }
 
     /// <summary>
     /// 将调用转至虚方法 <see cref="PostSetupContent"/>。

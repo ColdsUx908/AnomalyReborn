@@ -1,6 +1,5 @@
 using Mono.Cecil.Cil;
 using MonoMod.Utils;
-using Transoceanic.Runtime.Publicizing;
 
 namespace Transoceanic.Game.NPCs;
 
@@ -11,21 +10,48 @@ public static class TONPCUtils
 {
     private static readonly Lazy<Action<NPC, int, float, float, float>> _VanillaMultiplayerScaling = new(CreateVanillaMultiplayerScaling);
 
+    /// <summary>检查宿主 NPC 缩放方法及 IL 结构并创建隔离委托；框架原生加载时执行，也可离线调用。</summary>
+    /// <exception cref="InvalidOperationException">宿主签名、缩放钩子结构或动态方法生成不兼容；消息包含宿主版本和目标。</exception>
+    public static void ValidateHostCompatibility() => _ = _VanillaMultiplayerScaling.Value;
+
     private static Action<NPC, int, float, float, float> CreateVanillaMultiplayerScaling()
     {
-        // TODO: 升级 tModLoader 时复核 ScaleStats_ApplyMultiplayerStats 的名称、签名及 IL；当前按 NPCLoader 缩放钩子的四个参数移除调用。
-        using DynamicMethodDefinition method = new(PublicizerHandler.GetInstanceMethod(typeof(NPC), "ScaleStats_ApplyMultiplayerStats"));
-        // 仅运行程序集中的原版逻辑，避免探测倍率时递归调用模组缩放钩子。
-        Mono.Collections.Generic.Collection<Instruction> instructions = method.Definition.Body.Instructions;
-        Instruction hook = instructions.Single(i => i.OpCode == OpCodes.Call
-            && i.Operand is Mono.Cecil.MethodReference m && m.DeclaringType.FullName == typeof(NPCLoader).FullName
-            && m.Name == nameof(NPCLoader.ApplyDifficultyAndPlayerScaling));
-        int index = instructions.IndexOf(hook);
-        hook.OpCode = OpCodes.Pop;
-        hook.Operand = null;
+        const string TargetName = "ScaleStats_ApplyMultiplayerStats";
+        try
+        {
+            MethodInfo source = typeof(NPC).GetMethod(TargetName, BindingFlags.Instance | BindingFlags.NonPublic,
+                null, [typeof(int), typeof(float), typeof(float), typeof(float)], null);
+            if (source is null || source.ReturnType != typeof(void) || source.IsGenericMethod)
+                throw new MissingMethodException("Expected instance void NPC." + TargetName + "(int, float, float, float).");
+            using DynamicMethodDefinition method = new(source);
+            RemoveModScalingHook(method.Definition);
+            return method.Generate().CreateDelegate<Action<NPC, int, float, float, float>>();
+        }
+        catch (Exception exception)
+        {
+            throw new InvalidOperationException($"Transoceanic NPC scaling is incompatible with host {typeof(NPC).Assembly.FullName}; target Terraria.NPC.{TargetName}(Int32, Single, Single, Single). Expected exactly one static void NPCLoader.ApplyDifficultyAndPlayerScaling(NPC, Int32, Single, Single) call. No fallback was applied.", exception);
+        }
+    }
+
+    // Validate the entire expected call before mutating the copied body. Kept separate for malformed-IL regression tests.
+    internal static void RemoveModScalingHook(Mono.Cecil.MethodDefinition method)
+    {
+        Mono.Collections.Generic.Collection<Instruction> instructions = method.Body.Instructions;
+        Instruction[] hooks = instructions.Where(instruction => instruction.Operand is Mono.Cecil.MethodReference reference
+            && reference.DeclaringType.FullName == typeof(NPCLoader).FullName
+            && reference.Name == nameof(NPCLoader.ApplyDifficultyAndPlayerScaling)).ToArray();
+        if (hooks.Length != 1 || hooks[0].OpCode != OpCodes.Call
+            || hooks[0].Operand is not Mono.Cecil.MethodReference hook || hook.HasThis
+            || hook.ReturnType.FullName != "System.Void"
+            || !hook.Parameters.Select(parameter => parameter.ParameterType.FullName).SequenceEqual(
+                [typeof(NPC).FullName, "System.Int32", "System.Single", "System.Single"]))
+            throw new InvalidOperationException("NPC scaling IL must contain exactly one matching static void scaling hook with four arguments.");
+        Instruction call = hooks[0];
+        int index = instructions.IndexOf(call);
+        call.OpCode = OpCodes.Pop;
+        call.Operand = null;
         for (int i = 0; i < 3; i++)
             instructions.Insert(++index, Instruction.Create(OpCodes.Pop));
-        return method.Generate().CreateDelegate<Action<NPC, int, float, float, float>>();
     }
 
     /// <summary>
@@ -38,17 +64,6 @@ public static class TONPCUtils
         NPC probe = new() { type = npcType, lifeMax = ProbeLife };
         _VanillaMultiplayerScaling.Value(probe, 1, 1f, 1f, 1f);
         return GameModeData.ExpertMode.EnemyMaxLifeMultiplier * probe.lifeMax / ProbeLife;
-    }
-
-    /// <summary>
-    /// 在异象 Boss 的 ApplyDifficultyAndPlayerScaling 中撤销单人专家倍率、大师的 1.5 倍血量
-    /// 和 bossAdjustment，保留多人 balance，并将血量四舍五入到十的倍数。
-    /// </summary>
-    public static void ApplyAnomalyBossDifficultyAndPlayerScaling(NPC npc, float bossAdjustment)
-    {
-        // TODO: 升级 tModLoader 时复核缩放钩子的执行时机、大师相对专家的 1.5 倍血量及 bossAdjustment 的应用方式，再调整抵消公式。
-        float vanillaExpertLifeMultiplier = GetVanillaExpertLifeMultiplier(npc.type);
-        npc.lifeMax = (int)MathF.Round(npc.lifeMax / (vanillaExpertLifeMultiplier * 1.5f) / bossAdjustment / 10f) * 10;
     }
 
     /// <summary>
@@ -83,4 +98,10 @@ public static class TONPCUtils
             return result;
         return result2;
     }
+}
+
+internal sealed class NPCScalingCompatibility : ILoadable
+{
+    public void Load(Mod mod) => TONPCUtils.ValidateHostCompatibility();
+    public void Unload() { }
 }

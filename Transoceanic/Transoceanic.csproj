@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <Import Project="..\..\tModLoader.targets" />
 
@@ -7,7 +7,8 @@
         <TargetFramework>net8.0</TargetFramework>
         <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
         <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <WarningsAsErrors>$(WarningsAsErrors);CS0419;CS1570;CS1572;CS1573;CS1574;CS1580;CS1581;CS1584;CS1591;CS1658;CS1734</WarningsAsErrors>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <DebugType>embedded</DebugType>
@@ -25,5 +26,9 @@
     <ItemGroup>
         <ProjectReference Include="..\TransoceanicCodeAssist\TransoceanicCodeAssist.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
+
+    <Target Name="CopyDeveloperDocumentation" AfterTargets="Build" Condition="Exists('$(DocumentationFile)')">
+        <Copy SourceFiles="$(DocumentationFile)" DestinationFiles="$(MSBuildProjectDirectory)/Transoceanic.xml" SkipUnchangedFiles="true" />
+    </Target>
 
 </Project>

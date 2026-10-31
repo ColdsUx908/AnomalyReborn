@@ -77,15 +77,27 @@ public struct Parallelogram : IEquatable<Parallelogram>, ICoordinateTransformabl
     /// </summary>
     public readonly bool IsDegenerate => Vector2.Cross(VectorA, VectorB) == 0f;
 
+    /// <summary>
+    /// 比较 Center、VectorA、VectorB，使用成员本身的相等语义。
+    /// </summary>
     public readonly bool Equals(Parallelogram other) => Center == other.Center && VectorA == other.VectorA && VectorB == other.VectorB;
+    /// <inheritdoc/>
     public override readonly bool Equals(object obj) => obj is Parallelogram other && Equals(other);
+    /// <inheritdoc/>
     public override readonly int GetHashCode() => HashCode.Combine(Center, VectorA, VectorB);
+    /// <summary>
+    /// 按 Equals 比较 Center、VectorA、VectorB，相等时返回 true。
+    /// </summary>
     public static bool operator ==(Parallelogram left, Parallelogram right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(Parallelogram left, Parallelogram right) => !(left == right);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回当前平行四边形的字符串表示形式。
-    /// </summary>
+    /// </remarks>
     /// <returns>
     /// 一个格式为 <c>"Parallelogram { Center: {X:0 Y:0}, VectorA: {X:0 Y:0}, VectorB: {X:0 Y:0} }"</c> 的字符串，
     /// 其中每个 <see cref="Vector2"/> 使用其默认格式输出。
@@ -105,16 +117,25 @@ public struct Parallelogram : IEquatable<Parallelogram>, ICoordinateTransformabl
         return local.ManhattanLength <= 1f;
     }
 
+    /// <summary>
+    /// 将中心及半边向量变换到指定局部坐标系，返回新的平行四边形。
+    /// </summary>
     public readonly Parallelogram WorldToLocal(PlaneCoordinateSystem localSystem) => new(
         localSystem.WorldToLocal(Center),
         localSystem.WorldToLocal(VectorA, false),
         localSystem.WorldToLocal(VectorB, false));
 
+    /// <summary>
+    /// 将局部中心及半边向量变换到世界坐标系，返回新的平行四边形。
+    /// </summary>
     public readonly Parallelogram LocalToWorld(PlaneCoordinateSystem localSystem) => new(
         localSystem.LocalToWorld(Center),
         localSystem.LocalToWorld(VectorA, false),
         localSystem.LocalToWorld(VectorB, false));
 
+    /// <summary>
+    /// 判断当前形状与指定形状是否相交；双方坐标和尺寸须使用同一坐标系和单位。
+    /// </summary>
     public readonly bool Collides(Rectangle other) => TOMathUtils.Collision.ParallelogramVFloatRectangleCollision(this, other);
 }
 

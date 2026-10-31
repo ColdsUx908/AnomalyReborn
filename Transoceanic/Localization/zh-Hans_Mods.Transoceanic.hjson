@@ -20,12 +20,7 @@ Commands: {
 			未找到命令。
 			使用 help 关键字查看所有可用命令。
 			'''
-		InvalidArguments:
-			'''
-			无效参数。
-			异常信息：
-			{0}
-			'''
+		InvalidArguments: 无效参数。
 	}
 
 	DebugMode: {

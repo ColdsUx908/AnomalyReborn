@@ -91,15 +91,27 @@ public readonly struct PlaneCoordinateSystem : IEquatable<PlaneCoordinateSystem>
         return new Vector2(u, v);
     }
 
+    /// <summary>
+    /// 比较 Origin、BasisU、BasisV，使用成员本身的相等语义。
+    /// </summary>
     public bool Equals(PlaneCoordinateSystem other) => Origin == other.Origin && BasisU == other.BasisU && BasisV == other.BasisV;
+    /// <inheritdoc/>
     public override bool Equals(object obj) => obj is PlaneCoordinateSystem other && Equals(other);
+    /// <inheritdoc/>
     public override int GetHashCode() => HashCode.Combine(Origin, BasisU, BasisV);
+    /// <summary>
+    /// 按 Equals 比较 Origin、BasisU、BasisV，相等时返回 true。
+    /// </summary>
     public static bool operator ==(PlaneCoordinateSystem left, PlaneCoordinateSystem right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(PlaneCoordinateSystem left, PlaneCoordinateSystem right) => !(left == right);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回当前平面坐标系的字符串表示形式。
-    /// </summary>
+    /// </remarks>
     /// <returns>
     /// 格式为 <c>"PlaneCoordinateSystem { Origin: {X:0 Y:0}, BasisU: {X:0 Y:0}, BasisV: {X:0 Y:0} }"</c> 的字符串。
     /// </returns>

@@ -1,6 +1,6 @@
 namespace Anomalies.Common;
 
-public sealed partial class AnomalySynchronization : IAnomalyLoader
+public sealed partial class AnomalySynchronization : ILoadable
 {
     public static class ID
     {
@@ -122,8 +122,10 @@ public sealed partial class AnomalySynchronization : IAnomalyLoader
         }
     }
 
-    void IAnomalyLoader.Load()
-    {
-        TONetworkEnvironment.SyncEnabled = true;
-    }
+    /// <summary>在内容自动加载时无条件登记同步消费方；不依赖尚未进入 Mod.Load 的主实例。</summary>
+    /// <param name="mod">由 tML 提供的所属异象模组。</param>
+    void ILoadable.Load(Mod mod) => TONetworkEnvironment.EnableSync(mod);
+
+    // 同步启用登记由框架在卸载时统一重置。
+    void ILoadable.Unload() { }
 }

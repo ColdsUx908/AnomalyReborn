@@ -15,6 +15,8 @@ public sealed class BehaviorGenerator : IIncrementalGenerator
         .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers |
             SymbolDisplayMiscellaneousOptions.UseSpecialTypes | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
 
+    /// <summary>注册增量生成管线；从当前编译中的目标类型生成源码。</summary>
+    /// <param name="context">Roslyn 提供的增量生成器初始化上下文。</param>
     public void Initialize(IncrementalGeneratorInitializationContext context) =>
         context.RegisterSourceOutput(context.CompilationProvider, Generate);
 
@@ -47,6 +49,8 @@ public sealed class BehaviorGenerator : IIncrementalGenerator
                     context.CancellationToken.ThrowIfCancellationRequested();
                     if (method.MethodKind != MethodKind.Ordinary || method.IsStatic || !method.IsVirtual || method.IsSealed ||
                         method.IsAbstract || method.DeclaredAccessibility != Accessibility.Public ||
+                        IsContentLifecycle(method.Name) ||
+                        (entityName == "Item" && method.Name is "NetSend" or "NetReceive") ||
                         method.Name.StartsWith("Can", StringComparison.Ordinal) ||
                         method.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == "System.ObsoleteAttribute") ||
                         method.Parameters.Length == 0 ||
@@ -68,7 +72,7 @@ public sealed class BehaviorGenerator : IIncrementalGenerator
                             .NormalizeWhitespace().ToFullString();
                     }
                     string arguments = string.Join(", ", method.Parameters.Select((p, i) =>
-                        single && i == 0 ? "this._Entity" : Argument(p)));
+                        single && i == 0 ? "this.Entity" : Argument(p)));
                     string typeArguments = method.TypeParameters.Length == 0 ? "" :
                         "<" + string.Join(", ", method.TypeParameters.Select(p => Escape(p.Name))) + ">";
                     code.Append("    /// <inheritdoc cref=\"").Append(source.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
@@ -104,7 +108,9 @@ public sealed class BehaviorGenerator : IIncrementalGenerator
     }
 
     // The same symbol model drives both sides of the contract. Special aggregations and
-    // network hooks stay handwritten; an explicit override always takes precedence.
+    // network hooks are never dispatched here. PlayerBehavior deliberately exposes no
+    // CopyClientState/SyncPlayer/SendClientChanges API; data owners implement ModPlayer hooks.
+    // An explicit override always takes precedence for supported hooks.
     private static void GenerateHandlers(SourceProductionContext context, Compilation compilation)
     {
         foreach (string entityName in new[] { "NPC", "Projectile", "Item", "Player" })
@@ -123,7 +129,8 @@ public sealed class BehaviorGenerator : IIncrementalGenerator
                 continue;
 
             StringBuilder code = new(SourceGeneratorHelper.FileHeader);
-            code.Append("\n#nullable enable\nnamespace Transoceanic.Behaviors.Dispatching;\n\npublic ")
+            code.Append("\n#nullable enable\nnamespace Transoceanic.Behaviors.Dispatching;\n\n")
+                .Append(handler.DeclaredAccessibility == Accessibility.Internal ? "internal " : "public ")
                 .Append(single ? "abstract" : "sealed").Append(" partial class ").Append(handlerName);
             if (single)
                 code.Append('<').Append(Escape(handler.TypeParameters[0].Name)).Append('>');
@@ -138,6 +145,7 @@ public sealed class BehaviorGenerator : IIncrementalGenerator
                 context.CancellationToken.ThrowIfCancellationRequested();
                 if (method.MethodKind != MethodKind.Ordinary || method.IsStatic || method.IsSealed || method.IsAbstract ||
                     (!method.IsVirtual && !method.IsOverride) || method.DeclaredAccessibility != Accessibility.Public ||
+                    IsContentLifecycle(method.Name) ||
                     method.ReturnsByRef || method.ReturnsByRefReadonly ||
                     method.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == "System.ObsoleteAttribute") ||
                     method.Name is "SendExtraAI" or "ReceiveExtraAI" or "NetSend" or "NetReceive" or
@@ -174,15 +182,15 @@ public sealed class BehaviorGenerator : IIncrementalGenerator
                     .Append(method.ToDisplayString(SignatureFormat)).Append("\n    {\n");
                 if (single)
                 {
-                    code.Append("        if (TryGetBehavior(").Append(Escape(method.Parameters[0].Name)).Append(", out var __behavior))\n");
+                    code.Append("        if (TryGetBehavior(").Append(Escape(method.Parameters[0].Name)).Append(", out var __behavior))\n        {\n            using var __entityLock = __behavior.LockEntity();\n");
                     if (method.ReturnsVoid)
-                        code.Append("            ").Append(call).Append(";\n        else\n            ").Append(fallback).Append(";\n");
+                        code.Append("            ").Append(call).Append(";\n        }\n        else\n            ").Append(fallback).Append(";\n");
                     else
-                        code.Append("            return ").Append(call).Append(";\n        return ").Append(fallback).Append(";\n");
+                        code.Append("            return ").Append(call).Append(";\n        }\n        return ").Append(fallback).Append(";\n");
                 }
                 else
                 {
-                    string enumeration = player ? "BehaviorSet.Enumerate(Player)" : "BehaviorSet.Enumerate()";
+                    string enumeration = player ? "_BehaviorSet.Enumerate(Player)" : "_BehaviorSet.Enumerate()";
                     if (method.ReturnsVoid)
                         code.Append("        foreach (var __behavior in ").Append(enumeration).Append(")\n            ").Append(call).Append(";\n");
                     else if (method.ReturnType.SpecialType == SpecialType.System_Boolean)
@@ -215,6 +223,10 @@ public sealed class BehaviorGenerator : IIncrementalGenerator
         return comparable.Parameters.Select((p, i) => (p.RefKind == RefKind.None) == (method.Parameters[i + offset].RefKind == RefKind.None) &&
             SymbolEqualityComparer.Default.Equals(p.Type, method.Parameters[i + offset].Type)).All(equal => equal);
     }
+
+    private static bool IsContentLifecycle(string name) => name is
+        "Load" or "Unload" or "Register" or "SetupContent" or "SetStaticDefaults" or
+        "IsLoadingEnabled" or "ValidateType" or "InitTemplateInstance";
 
     private static bool HasImplementation(INamedTypeSymbol target, IMethodSymbol method, bool single)
     {

@@ -4,7 +4,7 @@ namespace Transoceanic.Graphics.Assets.Loading;
 /// <summary>
 /// 资产加载器，负责处理标记了 <see cref="LoadTextureAttribute"/> 特性的静态 <see cref="Asset{T}"/> 字段的自动加载与卸载。
 /// </summary>
-public sealed class AssetLoader : IContentLoader
+internal sealed class AssetLoader : IContentLoader
 {
     /// <summary>
     /// 内容设置后阶段：扫描所有带有 <see cref="LoadTextureAttribute"/> 的静态 <see cref="Asset{Texture2D}"/> 字段，

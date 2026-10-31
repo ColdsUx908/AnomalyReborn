@@ -5,6 +5,8 @@ namespace Anomalies.Bosses.EyeofCthulhu;
 
 public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 {
+    protected override int AI32Capacity => 8;
+
     #region 数据
     public enum Phase : byte
     {
@@ -488,7 +490,7 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) =>
-        TONPCUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
+        AnomalyUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
 
     public override void FindFrame(int frameHeight)
     {

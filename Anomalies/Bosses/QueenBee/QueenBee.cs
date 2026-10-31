@@ -353,7 +353,7 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) =>
-        TONPCUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
+        AnomalyUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
 
     public override void FindFrame(int frameHeight)
     {

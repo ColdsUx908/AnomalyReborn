@@ -128,7 +128,7 @@ public sealed class EmeraldJewel : JewelNPC
                     break;
 
                 case 1: //冲刺
-                    KingSlime kingSlimeBehavior = new() { _Entity = master };
+                    KingSlime kingSlimeBehavior = new() { Entity = master };
                     bool validSapphire = !HasEnteredPhase2 && kingSlimeBehavior.HasSapphireBuff;
                     NPC sapphire = validSapphire ? kingSlimeBehavior.JewelSapphire : null;
 

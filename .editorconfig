@@ -258,6 +258,9 @@ csharp_style_prefer_unbound_generic_type_in_nameof = true:suggestion
 csharp_style_prefer_implicitly_typed_lambda_expression = true:suggestion
 dotnet_diagnostic.CA1805.severity = silent
 
+# IDE1006: 命名样式
+dotnet_diagnostic.IDE1006.severity = silent
+
 [*.{cs,vb}]
 end_of_line = crlf
 dotnet_style_qualification_for_field = false:silent

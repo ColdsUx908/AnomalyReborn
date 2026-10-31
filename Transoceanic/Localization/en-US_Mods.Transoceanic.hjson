@@ -20,12 +20,7 @@ Commands: {
 			Command not found.
 			Use help keyword to see all available commands.
 			'''
-		InvalidArguments:
-			'''
-			Invalid arguments.
-			Exception Message:
-			{0}
-			'''
+		InvalidArguments: Invalid arguments.
 	}
 
 	DebugMode: {

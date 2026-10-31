@@ -2,7 +2,7 @@ using Anomalies.GameContents.Base;
 
 namespace Anomalies.Bosses.QueenBee;
 
-public sealed class BeeShockwave : BaseShockwaveProjectile, IContentLoader
+public sealed class BeeShockwave : BaseShockwaveProjectile
 {
     public override int LifeTime => 150;
     public override float FinalScale => 2.5f;

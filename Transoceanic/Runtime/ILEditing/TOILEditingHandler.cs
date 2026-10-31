@@ -41,7 +41,7 @@ public sealed partial class TOILEditingHandler : IContentLoader
         {
             Type sourceType = attribute.SourceType;
             if (EvaluateManipulatorName(manipulator, out string sourceName))
-                Modify(sourceType, sourceName, manipulator);
+                Modify(sourceType, GetMarkedSourceName(manipulator, sourceName), manipulator);
         }
     }
 
@@ -51,16 +51,16 @@ public sealed partial class TOILEditingHandler : IContentLoader
     /// </summary>
     void IContentLoader.OnModUnload() => Manipulators.Clear();
 
-    [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern = """^{0}(?<methodName>[\S]*?)(?:__[\S]*)?$""";
+    [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern = """^{0}(?<methodName>[\S]+?)(?:__[\S]+)?$""";
 
     /// <summary>
     /// 默认 IL 编辑方法名正则表达式。
     /// </summary>
     /// <remarks>
-    /// 匹配模式：<c>IL_{methodName}[__{paramName}]</c>。
+    /// 匹配模式：<c>IL_{methodName}[__{parameterType}...]</c>，例如 IL_Update__Player。
     /// </remarks>
     private static readonly Regex _DefaultManipulatorNameRegex = GetDefaultManipulatorNameRegex();
-    [GeneratedRegex("""^IL_(?<methodName>[\S]*)$""")]
+    [GeneratedRegex("""^IL_(?<methodName>[\S]+?)(?:__[\S]+)?$""")]
     private static partial Regex GetDefaultManipulatorNameRegex();
 
     /// <summary>
@@ -73,14 +73,14 @@ public sealed partial class TOILEditingHandler : IContentLoader
     /// <para>解析逻辑：</para>
     /// <list type="number">
     /// <item><description>尝试获取 <paramref name="manipMethod"/> 的 <see cref="CustomManipulatorPrefixAttribute"/> 特性，若存在则使用其指定的前缀，否则使用默认前缀 "IL_"。</description></item>
-    /// <item><description>尝试将方法名与模式 <c>{prefix}{methodName}[__{paramName}]</c> 进行匹配。</description></item>
+    /// <item><description>尝试将方法名与模式 <c>{prefix}{methodName}[__{parameterType}...]</c> 进行匹配。</description></item>
     /// <item><description>如果匹配成功，输出 <c>methodName</c> 捕获组的值。</description></item>
     /// </list>
     /// </remarks>
-    public static bool EvaluateManipulatorName(MethodInfo manipMethod, [NotNullWhen(true)] out string sourceName)
+    internal static bool EvaluateManipulatorName(MethodInfo manipMethod, [NotNullWhen(true)] out string sourceName)
     {
         string prefix = manipMethod.Attribute<CustomManipulatorPrefixAttribute>()?.Prefix;
-        Match match = string.IsNullOrEmpty(prefix) ? _DefaultManipulatorNameRegex.Match(manipMethod.Name) : Regex.Match(manipMethod.Name, string.Format(Pattern, prefix));
+        Match match = string.IsNullOrEmpty(prefix) ? _DefaultManipulatorNameRegex.Match(manipMethod.Name) : Regex.Match(manipMethod.Name, string.Format(Pattern, Regex.Escape(prefix)));
         if (match.Success)
         {
             sourceName = match.Groups["methodName"].Value;
@@ -89,6 +89,61 @@ public sealed partial class TOILEditingHandler : IContentLoader
         sourceName = null;
         return false;
     }
+
+    private static string GetMarkedSourceName(MethodInfo manipulator, string sourceName)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(sourceName);
+        if (sourceName.Contains("__", StringComparison.Ordinal))
+            return sourceName;
+        string prefix = manipulator.Attribute<CustomManipulatorPrefixAttribute>()?.Prefix;
+        int marker = manipulator.Name.IndexOf("__", string.IsNullOrEmpty(prefix) ? 0 : prefix.Length, StringComparison.Ordinal);
+        return marker < 0 ? sourceName : sourceName + manipulator.Name[marker..];
+    }
+
+    /// <summary>
+    /// 按方法名及可选的 __ 参数类型标记定位唯一目标，如 Update__Player 或 Foo__Int32__String。
+    /// 标记按参数顺序匹配类型短名或全名；可省略末尾参数，前提是剩余候选唯一。
+    /// 自动扫描标记可用 Int32Array 表示一维数组、Int32ByRef 表示引用参数；显式名称也可使用反射类型名。
+    /// </summary>
+    /// <exception cref="ArgumentNullException">源类型或名称为空引用。</exception>
+    /// <exception cref="MissingMethodException">未找到匹配方法。</exception>
+    /// <exception cref="AmbiguousMatchException">标记不足以唯一定位重载。</exception>
+    internal static MethodInfo ResolveSourceMethod(Type sourceType, string sourceName)
+    {
+        ArgumentNullException.ThrowIfNull(sourceType);
+        ArgumentException.ThrowIfNullOrEmpty(sourceName);
+        string[] parts = sourceName.Split("__", StringSplitOptions.None);
+        if (parts.Any(string.IsNullOrEmpty))
+            throw new ArgumentException("Method and parameter markers cannot be empty.", nameof(sourceName));
+        MethodInfo[] matches = sourceType.GetMethods(TOReflectionUtils.UniversalBindingFlags)
+            .Where(method => method.Name == parts[0] && MatchesParameters(method.GetParameters()))
+            .ToArray();
+        return matches.Length switch
+        {
+            0 => throw new MissingMethodException(sourceType.FullName, sourceName),
+            1 => matches[0],
+            _ => throw new AmbiguousMatchException($"'{sourceType.FullName}.{sourceName}' matches multiple methods; append __ parameter type markers.")
+        };
+
+        bool MatchesParameters(ParameterInfo[] parameters)
+        {
+            if (parts.Length - 1 > parameters.Length)
+                return false;
+            for (int i = 1; i < parts.Length; i++)
+            {
+                Type type = parameters[i - 1].ParameterType;
+                if (parts[i] != type.Name && parts[i] != type.FullName && parts[i] != GetTypeMarker(type))
+                    return false;
+            }
+            return true;
+        }
+    }
+
+    private static string GetTypeMarker(Type type) => type.IsByRef
+        ? GetTypeMarker(type.GetElementType()) + "ByRef"
+        : type.IsArray
+            ? GetTypeMarker(type.GetElementType()) + (type.GetArrayRank() == 1 ? "Array" : $"Array{type.GetArrayRank()}")
+            : type.Name;
 
     /// <summary>
     /// 创建并应用一个 IL 钩子到指定源方法上。
@@ -131,7 +186,7 @@ public sealed partial class TOILEditingHandler : IContentLoader
     }
 
     /// <summary>
-    /// 在指定类型中按名称查找方法，并应用 IL 钩子。
+    /// 在指定类型中按名称和可选的 __ 参数类型标记查找唯一方法，并应用 IL 钩子。
     /// </summary>
     /// <param name="sourceType">源方法所在类型。</param>
     /// <param name="sourceName">源方法名称。</param>
@@ -139,23 +194,31 @@ public sealed partial class TOILEditingHandler : IContentLoader
     /// <returns>创建的 <see cref="ILHook"/> 对象。</returns>
     /// <exception cref="ArgumentNullException">任一参数为 <see langword="null"/>。</exception>
     /// <exception cref="AmbiguousMatchException">找到多个同名方法且无法确定唯一匹配。</exception>
-    public static ILHook Modify(Type sourceType, string sourceName, ILContext.Manipulator manip) => Modify(sourceType.GetMethod(sourceName, TOReflectionUtils.UniversalBindingFlags), manip);
+    public static ILHook Modify(Type sourceType, string sourceName, ILContext.Manipulator manip)
+    {
+        ArgumentNullException.ThrowIfNull(manip);
+        return Modify(ResolveSourceMethod(sourceType, GetMarkedSourceName(manip.Method, sourceName)), manip);
+    }
 
     /// <summary>
-    /// 在指定类型中按名称查找方法，并应用 IL 钩子。
+    /// 在指定类型中按名称和可选的 __ 参数类型标记查找唯一方法，并应用 IL 钩子。
     /// </summary>
     /// <param name="sourceType">源方法所在类型。</param>
     /// <param name="sourceName">源方法名称。</param>
     /// <param name="manipMethod">IL 编辑方法。</param>
     /// <returns>创建的 <see cref="ILHook"/> 对象。</returns>
-    /// <inheritdoc cref="Modify(Type, string, ILContext.Manipulator)"/>    
+    /// <inheritdoc cref="Modify(Type, string, ILContext.Manipulator)"/>
     /// <exception cref="ArgumentException">
     /// <paramref name="manipMethod"/> 的签名与 <see cref="ILContext.Manipulator"/> 委托不兼容。
     /// </exception>
-    public static ILHook Modify(Type sourceType, string sourceName, MethodInfo manipMethod) => Modify(sourceType.GetMethod(sourceName, TOReflectionUtils.UniversalBindingFlags), manipMethod);
+    public static ILHook Modify(Type sourceType, string sourceName, MethodInfo manipMethod)
+    {
+        ArgumentNullException.ThrowIfNull(manipMethod);
+        return Modify(ResolveSourceMethod(sourceType, GetMarkedSourceName(manipMethod, sourceName)), manipMethod);
+    }
 
     /// <summary>
-    /// 在指定类型中按名称查找方法，并应用 IL 钩子。
+    /// 在指定类型中按名称和可选的 __ 参数类型标记查找唯一方法，并应用 IL 钩子。
     /// </summary>
     /// <typeparam name="T">源方法所在类型。</typeparam>
     /// <param name="sourceName">源方法名称。</param>
@@ -165,7 +228,7 @@ public sealed partial class TOILEditingHandler : IContentLoader
     public static ILHook Modify<T>(string sourceName, ILContext.Manipulator manip) => Modify(typeof(T), sourceName, manip);
 
     /// <summary>
-    /// 在指定类型中按名称查找方法，并应用 IL 钩子。
+    /// 在指定类型中按名称和可选的 __ 参数类型标记查找唯一方法，并应用 IL 钩子。
     /// </summary>
     /// <typeparam name="T">源方法所在类型。</typeparam>
     /// <param name="sourceName">源方法名称。</param>

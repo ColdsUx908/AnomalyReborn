@@ -9,10 +9,14 @@ namespace Transoceanic.Runtime.Detours;
 /// <para/>
 /// 生成的包装类将包含以下内容：
 /// <list type="bullet">
-/// <item/><description/>针对每个拦截方法的委托类型 <c>Orig_{MethodName}</c>，用于保存原始方法的引用。
-/// <item/><description/>针对每个拦截方法的虚方法 <c>Detour_{MethodName}</c>，其默认实现为直接调用原始方法；可在派生类中重写以自定义拦截逻辑。
-/// <item/><description/>重写的 <c>ApplyDetour</c> 方法，在其中自动注册所有 <c>Detour_*</c> 方法，并调用 <c>ApplyExtraDetour</c> 分部方法以支持扩展。
-/// <item/><description/>一个分部方法 <c>partial void ApplyExtraDetour()</c>，供派生类选择性实现，用于添加额外的拦截处理。
+/// <item><description>针对每个拦截方法的委托类型 <c>Orig_{MethodName}</c>，用于保存原始方法的引用。
+/// </description></item>
+/// <item><description>针对每个拦截方法的虚方法 <c>Detour_{MethodName}</c>，其默认实现为直接调用原始方法；可在派生类中重写以自定义拦截逻辑。
+/// </description></item>
+/// <item><description>重写的 <c>ApplyDetour</c> 方法，在其中自动注册所有 <c>Detour_*</c> 方法，并调用 <c>ApplyExtraDetour</c> 分部方法以支持扩展。
+/// </description></item>
+/// <item><description>一个分部方法 <c>partial void ApplyExtraDetour()</c>，供派生类选择性实现，用于添加额外的拦截处理。
+/// </description></item>
 /// </list>
 /// 源生成器仅处理满足以下条件的方法：非静态、非 <see langword="sealed"/>、非 <see langword="extern"/>、非泛型为虚方法或抽象方法、且具有有效的 C# 标识符名称。
 /// <br/>不支持重载方法。如目标类型中有重载方法，必须手动实现 <c>Detour</c> 逻辑。属性的 <c>get</c>/<c>set</c> 访问器会被视为两个独立方法分别进行拦截。
@@ -21,7 +25,7 @@ namespace Transoceanic.Runtime.Detours;
 /// <code>
 /// //目标类型：一个简单的泛型类
 /// public class TestSource&lt;T&gt; { public virtual void M() { } }
-/// 
+///
 /// //应用特性，生成 Detour 类
 /// [TypeDetourClass(typeof(TestSource&lt;&gt;))]
 /// public partial class TestSourceDetour&lt;T&gt; : TypeDetour&lt;T&gt;;

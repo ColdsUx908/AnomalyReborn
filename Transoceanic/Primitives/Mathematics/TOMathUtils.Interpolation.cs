@@ -1,5 +1,8 @@
 namespace Transoceanic.Primitives.Mathematics;
 
+/// <summary>
+/// 提供几何、碰撞、插值、位运算与单位换算工具。
+/// </summary>
 public static partial class TOMathUtils
 {
     /// <summary>
@@ -11,7 +14,9 @@ public static partial class TOMathUtils
     /// </remarks>
     public static class Interpolation
     {
-        /// <summary>以 2 为底、曲线跨度为 10 的指数缓入；零点保持精确为零。</summary>
+        /// <summary>
+        /// 以 2 为底、曲线跨度为 10 的指数缓入；零点保持精确为零。
+        /// </summary>
         public static float BinaryExponentialEaseIn(float ratio, bool clamped = true)
         {
             if (clamped)
@@ -19,7 +24,9 @@ public static partial class TOMathUtils
             return ratio == 0f ? 0f : (float)Math.Pow(2, 10f * ratio - 10f);
         }
 
-        /// <summary>圆形曲线缓入。</summary>
+        /// <summary>
+        /// 圆形曲线缓入。
+        /// </summary>
         public static float CircularEaseIn(float ratio, bool clamped = true)
         {
             if (clamped)
@@ -27,7 +34,9 @@ public static partial class TOMathUtils
             return 1f - (float)Math.Sqrt(1 - Math.Pow(ratio, 2f));
         }
 
-        /// <summary>圆形曲线缓出。</summary>
+        /// <summary>
+        /// 圆形曲线缓出。
+        /// </summary>
         public static float CircularEaseOut(float ratio, bool clamped = true)
         {
             if (clamped)

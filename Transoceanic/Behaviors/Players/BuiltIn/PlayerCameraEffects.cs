@@ -1,8 +1,15 @@
 using Transoceanic.GlobalInstances;
 namespace Transoceanic.Behaviors.Players.BuiltIn;
 
-public class PlayerCameraEffects : TOPlayerBehavior
+/// <summary>
+/// 按玩家镜头状态应用本地聚焦与震屏。
+/// </summary>
+internal class PlayerCameraEffects : PlayerBehavior
 {
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 递减镜头保持时间；保持结束后衰减聚焦插值和震屏强度。
+    /// </remarks>
     public override void ResetEffects()
     {
         TOPlayer oceanPlayer = OceanPlayer;
@@ -23,6 +30,10 @@ public class PlayerCameraEffects : TOPlayerBehavior
         }
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 玩家存活时按聚焦插值调整屏幕中心，并叠加当前强度的随机圆周震屏偏移。
+    /// </remarks>
     public override void ModifyScreenPosition()
     {
         if (Player.dead)

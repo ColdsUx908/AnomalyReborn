@@ -9,20 +9,22 @@ namespace Transoceanic.Runtime.Publicizing;
 /// <para/>
 /// 生成的包装类将包含：
 /// <list type="bullet">
-/// <item/><description/>目标类型的静态字段 <c>c_TargetType</c>（保存 <c>typeof(TargetType)</c>）。
-/// <item/><description/>针对实例/静态字段、属性、方法的反射信息字段和公共访问器。
+/// <item><description>目标类型的静态字段 <c>c_TargetType</c>（保存 <c>typeof(TargetType)</c>）。
+/// </description></item>
+/// <item><description>针对实例/静态字段、属性、方法的反射信息字段和公共访问器。
+/// </description></item>
 /// </list>
 /// 对于方法，会生成一个强类型委托并缓存，以提供接近直接调用的性能。
 /// <para/>
 /// 使用此特性前，请确保目标类型在当前编译上下文中可见（可通过 <c>MetadataImportOptions.All</c> 解析）。
 /// 生成的代码仅依赖 <c>System.Reflection</c>，不改变原始类型的访问性。
-/// 
+///
 /// <example>
 /// <para/>下面的示例演示如何公开类 <c>ExampleHelper</c>（定义有私有字段 <c>private int _Counter</c>）的私有成员。
 /// <code>
 /// [Publicize(typeof(ExampleHelper))]
 /// public partial class ExampleHelper_Publicizer(ExampleHelper Source) : InstancedPublicizer(Source); //应用特性，指定目标类型
-/// 
+///
 /// //使用生成的公共包装器
 /// ExampleHelper instance = new();
 /// ExampleHelper_Publicizer publicizer = new(instance);

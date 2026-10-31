@@ -1,6 +1,5 @@
 using Transoceanic.Core.Diagnostics;
 using Transoceanic.Localization;
-using Transoceanic.Runtime.Reflection;
 namespace Transoceanic.Commands;
 
 /// <summary>
@@ -10,16 +9,18 @@ namespace Transoceanic.Commands;
 /// <remarks>
 /// 本地化键使用 <c>TOLocalizationKeys.ModLocalizationPrefix + "Commands.GeneralCommand"</c> 作为前缀。
 /// </remarks>
-public sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
+internal sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
 {
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 命令类型为聊天（Chat），表示该命令仅在游戏聊天窗口中被识别。
-    /// </summary>
+    /// </remarks>
     public override CommandType Type => CommandType.Chat;
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 该命令在游戏中的调用文本。客户端必须输入 "//chat"（两个斜杠）才能触发。
-    /// </summary>
+    /// </remarks>
     public override string Command => "/chat";
 
     /// <summary>
@@ -27,7 +28,8 @@ public sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
     /// </summary>
     public string LocalizationPrefix => TOLocalizationKeys.ModLocalizationPrefix + "Commands.GeneralCommand";
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 执行 "/chat" 命令的具体逻辑。
     /// <list type="bullet">
     /// <item>参数为空时输出帮助信息。</item>
@@ -35,7 +37,7 @@ public sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
     /// <item>第一个参数为 "redo" 时重做上一次聊天命令。</item>
     /// <item>其他情况则将第一个参数视为子命令名称，剩余参数作为子命令参数进行尝试执行。</item>
     /// </list>
-    /// </summary>
+    /// </remarks>
     /// <param name="caller">调用此命令的玩家或控制台。</param>
     /// <param name="input">原始的完整输入文本。</param>
     /// <param name="args">以空格分割的参数数组。</param>
@@ -71,7 +73,7 @@ public sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
 /// 并依据命令类型和名称将实际执行分派给对应的命令对象。
 /// 实现了 <see cref="IContentLoader"/> 以便自动注册和卸载。
 /// </summary>
-public sealed class TOCommandHelper : IContentLoader, ILocalizationPrefix
+internal sealed class TOCommandHelper : IContentLoader, ILocalizationPrefix
 {
     /// <summary>
     /// <see cref="TOCommandHelper"/> 的单例实例。。
@@ -97,7 +99,7 @@ public sealed class TOCommandHelper : IContentLoader, ILocalizationPrefix
     {
         Instance = this;
 
-        foreach (TOCommand commandContainer in TOReflectionUtils.GetTypeInstancesDerivedFrom<TOCommand>())
+        foreach (TOCommand commandContainer in TOLoaderHandler.GetLoaderInstances<TOCommand>())
         {
             if (!commandContainer.Command.Equals("help", StringComparison.CurrentCultureIgnoreCase))
                 CommandSet[commandContainer.Command.ToLower()] = commandContainer;
@@ -107,7 +109,11 @@ public sealed class TOCommandHelper : IContentLoader, ILocalizationPrefix
     /// <summary>
     /// 在模组卸载时清空命令字典，避免残留引用。
     /// </summary>
-    void IContentLoader.OnModUnload() => CommandSet.Clear();
+    void IContentLoader.OnModUnload()
+    {
+        CommandSet.Clear();
+        Instance = null;
+    }
 
     /// <summary>
     /// 尝试查找并执行指定名称的命令。
@@ -116,8 +122,8 @@ public sealed class TOCommandHelper : IContentLoader, ILocalizationPrefix
     /// <item>在 <see cref="CommandSet"/> 中查找命令名（忽略大小写）。</item>
     /// <item>检查命令实例的 <see cref="TOCommand.Type"/> 是否与 <paramref name="commandType"/> 匹配。</item>
     /// <item>设置玩家的最后命令调用记录（<c>caller.Player.Ocean.CommandCallInfo</c>）。</item>
-    /// <item>执行 <see cref="TOCommand.Action"/>。若抛出 <see cref="CommandArgumentException"/>，
-    /// 则回复本地化错误消息并显示该命令的帮助信息。</item>
+    /// <item>执行 <see cref="TOCommand.Action"/>。若抛出 <see cref="UsageException"/>，
+    /// 则显示该命令的帮助信息，并交由 tModLoader 回复错误消息。</item>
     /// <item>若未找到命令或类型不匹配，回复通用帮助文本。</item>
     /// </list>
     /// </summary>
@@ -134,10 +140,10 @@ public sealed class TOCommandHelper : IContentLoader, ILocalizationPrefix
                 caller.Player.Ocean.CommandCallInfo = new(commandType, command, caller, args);
                 value.Action(caller, args);
             }
-            catch (CommandArgumentException e)
+            catch (UsageException)
             {
-                caller.ReplyLocalizedTextFormat(this, "InvalidArguments", Color.Red, e);
                 value.Help(caller, args);
+                throw;
             }
         }
         else
@@ -148,14 +154,29 @@ public sealed class TOCommandHelper : IContentLoader, ILocalizationPrefix
 /// <summary>
 /// 开启或关闭调试模式的命令。
 /// </summary>
-public sealed class DebugModeCommand : TOCommand, ILocalizationPrefix
+internal sealed class DebugModeCommand : TOCommand, ILocalizationPrefix
 {
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 该命令适用的调用环境，固定为聊天命令。
+    /// </remarks>
     public override CommandType Type => CommandType.Chat;
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 聊天命令名称 debug，不包含前导斜杠。
+    /// </remarks>
     public override string Command => "debug";
 
+    /// <summary>
+    /// 调试模式命令的本地化键前缀。
+    /// </summary>
     public string LocalizationPrefix => TOLocalizationKeys.ModLocalizationPrefix + "Commands.DebugMode";
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 无参数时回复调试开关状态；on/true/1 启用，off/false/0 禁用，其他参数抛出 UsageException。
+    /// </remarks>
     public override void Action(CommandCaller caller, string[] args)
     {
         if (args.Length == 0)
@@ -179,7 +200,7 @@ public sealed class DebugModeCommand : TOCommand, ILocalizationPrefix
                 caller.ReplyLocalizedText(this, "Off");
                 break;
             default:
-                throw new CommandArgumentException(this, caller, args);
+                throw new UsageException(Language.GetTextValue(TOLocalizationKeys.ModLocalizationPrefix + "Commands.GeneralCommand.InvalidArguments"));
         }
     }
 }

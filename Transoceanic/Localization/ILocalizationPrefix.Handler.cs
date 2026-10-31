@@ -1,5 +1,8 @@
 namespace Transoceanic.Localization;
 
+/// <summary>
+/// 提供基于 ILocalizationPrefix 的本地化文本查询扩展。
+/// </summary>
 public static class LocalizationExtensions
 {
     extension(ILocalizationPrefix localizationPrefixProvider)

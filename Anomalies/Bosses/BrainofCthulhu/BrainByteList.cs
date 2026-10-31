@@ -8,18 +8,23 @@ internal static class BrainPackedData
     public static byte Read(NPC npc, int offset)
     {
         AnomalyGlobalNPC data = npc.GetGlobalNPC<AnomalyGlobalNPC>();
+        data.EnsureAICapacity(64, 17);
         return offset < 176 ? (byte)((uint)data.AnomalyAI32[20 + offset / 4].I >> (offset % 4 * 8)) : (byte)((ulong)data.AnomalyAI64[1 + (offset - 176) / 8].L >> ((offset - 176) % 8 * 8));
     }
 
     public static void Write(NPC npc, int offset, byte value)
     {
         AnomalyGlobalNPC data = npc.GetGlobalNPC<AnomalyGlobalNPC>();
+        data.EnsureAICapacity(64, 17);
         if (offset < 176)
         {
             int slot = 20 + offset / 4, shift = offset % 4 * 8;
             uint old = (uint)data.AnomalyAI32[slot].I;
             data.AnomalyAI32[slot].I = (int)((old & ~(255u << shift)) | ((uint)value << shift));
-            data.AIChanged32[slot] = true;
+            if (slot < 32)
+                data.AIChanged32[slot] = true;
+            else
+                data.AIChanged32_2[slot - 32] = true;
         }
         else
         {
@@ -33,11 +38,20 @@ internal static class BrainPackedData
 
 public readonly struct BrainByteList<T>(NPC npc, int offset, int capacity, int countSlot) : IEnumerable<T> where T : struct, IConvertible
 {
-    public int Count => npc.GetGlobalNPC<AnomalyGlobalNPC>().AnomalyAI32[countSlot].I;
+    public int Count
+    {
+        get
+        {
+            AnomalyGlobalNPC data = npc.GetGlobalNPC<AnomalyGlobalNPC>();
+            data.EnsureAICapacity(64, 17);
+            return data.AnomalyAI32[countSlot].I;
+        }
+    }
 
     private void SetCount(int value)
     {
         AnomalyGlobalNPC data = npc.GetGlobalNPC<AnomalyGlobalNPC>();
+        data.EnsureAICapacity(64, 17);
         data.AnomalyAI32[countSlot].I = value;
         data.AIChanged32[countSlot] = true;
     }

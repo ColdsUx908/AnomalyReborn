@@ -81,6 +81,16 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
         }
 
         SkeletronLegendHead head = SkeletronLegendHead.GetInstance(master);
+        NPC.hide = head.HandsHidden;
+        if (head.HandsHidden)
+        {
+            NPC.damage = 0;
+            NPC.dontTakeDamage = true;
+            NPC.velocity = master.Center - NPC.Center;
+            AnomalyNPC.Skeletron_HandBloodDust = null;
+            return false;
+        }
+        NPC.damage = NPC.defDamage;
         NPC.spriteDirection = -(int)NPC.ai[0];
         NPC.target = master.target;
         NPC.dontTakeDamage = !head.Phase2;
@@ -227,6 +237,14 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
             destination = Vector2.Lerp(destination, Vector2.Lerp(raised, impact, slam), attackProgress);
             z = MathHelper.Lerp(head.AnomalyNPC.Z, 0f, slam * attackProgress);
         }
+        // 最后一拍的手掌随本体穿过观察者平面，再在完全不可见时隐藏。
+        // 其他拍击仍保持手掌落在前景的原有表现。
+        if (selected && strike == SkeletronLegendHead.Mechanic2Data.StrikeCount - 1 && relativeAge > 0)
+        {
+            float exit = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(relativeAge
+                / (float)SkeletronLegendHead.Mechanic2Data.BodyFollowThroughDuration, 0f, 1f));
+            z = MathHelper.Lerp(z, SkeletronLegendHead.Mechanic2Data.BodyExitZ, exit);
+        }
         NPC.velocity = Vector2.Zero;
         NPC.Center = destination;
         AnomalyNPC.Z = z;
@@ -247,6 +265,7 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
+        if (NPC.hide) return false;
         // 原版骨节与血尘生成先执行；血尘由独立列表在本体的 Z 投影作用域内绘制。
         AnomalyNPC.Skeletron_HandBloodDust?.UpdateAndDraw(spriteBatch, NPC.netOffset - screenPos, NPC.Opacity);
         if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master))
@@ -334,6 +353,7 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
 
     public override void PostDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
+        if (NPC.hide) return;
         float flash = AttackFlashIntensity;
         if (flash <= 0f)
             return;

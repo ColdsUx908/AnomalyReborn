@@ -1,5 +1,9 @@
 namespace Transoceanic.Behaviors;
 
+/// <summary>
+/// 面向全部物品的行为基类，由全局物品调度器筛选并调用。
+/// 不支持 NetSend 和 NetReceive；物品网络数据由所属 ModItem 或 GlobalItem 实现。
+/// </summary>
 public abstract partial class GlobalItemBehavior : GlobalEntityBehavior<Item>
 {
     /// <inheritdoc cref="GlobalItem.CanUseItem"/>

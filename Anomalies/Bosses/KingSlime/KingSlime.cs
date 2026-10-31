@@ -5,6 +5,8 @@ namespace Anomalies.Bosses.KingSlime;
 
 public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocalizationPrefix
 {
+    protected override int AI32Capacity => 10;
+
     #region 数据
     public enum Phase : byte
     {
@@ -447,7 +449,7 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) =>
-        TONPCUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
+        AnomalyUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
 
     public override bool CheckActive() => false;
 

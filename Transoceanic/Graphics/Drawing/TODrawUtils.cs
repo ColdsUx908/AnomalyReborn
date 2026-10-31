@@ -3,6 +3,7 @@ namespace Transoceanic.Graphics.Drawing;
 /// <summary>
 /// 提供与绘图相关的工具字段和方法，例如屏幕坐标计算、自定义尺寸物品绘制以及描边效果。
 /// </summary>
+/// <remarks>绘制方法由调用方在图形主线程准备适当的 SpriteBatch 状态，并按各方法约定传入坐标。</remarks>
 public static class TODrawUtils
 {
     /// <summary>

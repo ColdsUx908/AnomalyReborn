@@ -19,6 +19,8 @@ EyeofCthulhu: {
 	BloodOrbProjectile.DisplayName: 血珠
 }
 
+EaterofWorlds.EaterCursedFlame.DisplayName: 吞噬咒焰
+
 BrainofCthulhu: {
 	BrainBloodShot.DisplayName: 血弹
 	BrainIllusion.DisplayName: 大脑幻象
@@ -88,6 +90,7 @@ Skeletron: {
 
 		LegendaryNightPhase2Arena.DisplayName: 星神法阵
 		// Mechanic3Star.DisplayName: Mechanic3 Star
+		// LegendSlimeRain.DisplayName: Legend Slime Rain
 	}
 }
 

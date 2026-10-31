@@ -9,9 +9,9 @@ using static global::Terraria.ModLoader.ModContent;
 namespace Anomalies.Visuals.BossBar;
 
 /// <summary>
-/// Boss血条类。
+/// 绑定到单个 NPC 的 Boss 血条；共享数据由独立的无参加载器初始化和清理。
 /// </summary>
-public partial class BossHealthBar : IContentLoader, ILocalizationPrefix
+public partial class BossHealthBar : ILocalizationPrefix
 {
     /// <summary>
     /// 用于描述 Boss 附属实体扩展信息的结构。
@@ -302,7 +302,7 @@ public partial class BossHealthBar : IContentLoader, ILocalizationPrefix
     public float AnimationCompletionRatio2 => Math.Clamp((AnimationCompletionRatio - 0.4f) * (5f / 3f), 0f, 1f);
 
     /// <summary>
-    /// 构造 BetterBossHPUI 实例，绑定到指定的 NPC。
+    /// 构造血条实例并绑定到指定的 NPC；不参与自动加载器实例化。
     /// </summary>
     /// <param name="npc">要显示血条的 NPC。</param>
     public BossHealthBar(NPC npc)
@@ -468,10 +468,11 @@ public partial class BossHealthBar : IContentLoader, ILocalizationPrefix
         }
         if (NPC.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.PreUpdateBossBar)))
         {
+            using EntityBehavior<NPC>.EntityLock entityLock = npcBehavior.LockEntity();
             result &= npcBehavior.PreUpdateBossBar(this);
             hasSingle = true;
         }
-        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.Enumerate<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PreUpdateCalBossBar)))
+        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in global::Transoceanic.Behaviors.BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PreUpdateCalBossBar)))
             result &= anomalyGNPCBehavior.PreUpdateCalBossBar(NPC, this, hasSingle);
         return result;
     }
@@ -489,10 +490,11 @@ public partial class BossHealthBar : IContentLoader, ILocalizationPrefix
         }
         if (NPC.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.PostUpdateBossBar)))
         {
+            using EntityBehavior<NPC>.EntityLock entityLock = npcBehavior.LockEntity();
             npcBehavior.PostUpdateBossBar(this);
             hasSingle = true;
         }
-        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.Enumerate<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PostUpdateCalBossBar)))
+        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in global::Transoceanic.Behaviors.BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PostUpdateCalBossBar)))
             anomalyGNPCBehavior.PostUpdateCalBossBar(NPC, this, hasSingle);
     }
 
@@ -597,10 +599,11 @@ public partial class BossHealthBar : IContentLoader, ILocalizationPrefix
         }
         if (NPC.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.PreDrawBossBar)))
         {
+            using EntityBehavior<NPC>.EntityLock entityLock = npcBehavior.LockEntity();
             result &= npcBehavior.PreDrawBossBar(this, spriteBatch, ref x, ref y);
             hasSingle = true;
         }
-        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.Enumerate<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PreDrawCalBossBar)))
+        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in global::Transoceanic.Behaviors.BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PreDrawCalBossBar)))
             result &= anomalyGNPCBehavior.PreDrawCalBossBar(NPC, this, spriteBatch, ref x, ref y, hasSingle);
         return result;
     }
@@ -618,10 +621,11 @@ public partial class BossHealthBar : IContentLoader, ILocalizationPrefix
         }
         if (NPC.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.PostDrawBossBar)))
         {
+            using EntityBehavior<NPC>.EntityLock entityLock = npcBehavior.LockEntity();
             npcBehavior.PostDrawBossBar(this, spriteBatch, x, y);
             hasSingle = true;
         }
-        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.Enumerate<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PostDrawCalBossBar)))
+        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in global::Transoceanic.Behaviors.BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PostDrawCalBossBar)))
             anomalyGNPCBehavior.PostDrawCalBossBar(NPC, this, spriteBatch, x, y, hasSingle);
     }
 
@@ -673,6 +677,7 @@ public partial class BossHealthBar : IContentLoader, ILocalizationPrefix
             }
             else if (NPC.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.ApplyCustomMainBossBarShader)))
             {
+                using EntityBehavior<NPC>.EntityLock entityLock = npcBehavior.LockEntity();
                 using (spriteBatch.Scope(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp))
                 {
                     npcBehavior.ApplyCustomMainBossBarShader(this, spriteBatch, mainBarDestinationRectangle);
@@ -778,6 +783,7 @@ public partial class BossHealthBar : IContentLoader, ILocalizationPrefix
                 }
                 else if (NPC.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(AnomalyNPCBehavior.ApplyCustomMainBossBarShader)))
                 {
+                    using EntityBehavior<NPC>.EntityLock entityLock = npcBehavior.LockEntity();
                     using (spriteBatch.Scope(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp))
                     {
                         npcBehavior.ApplyCustomMainBossBarShader(this, spriteBatch, destinationRectangle);
@@ -927,140 +933,155 @@ public partial class BossHealthBar : IContentLoader, ILocalizationPrefix
     }
     #endregion
 
-    void IContentLoader.PostSetupContent()
+    /// <summary>
+    /// 自动加载共享血条映射和扩展回调，不创建依赖 NPC 的血条实例。
+    /// </summary>
+    public sealed class ContentLoader : IContentLoader, ILocalizationPrefix
     {
-        AssetRepository assets = AnomalyMain.Instance.Assets;
+        /// <summary>
+        /// 共享血条文本的本地化前缀，与血条实例保持一致。
+        /// </summary>
+        public string LocalizationPrefix => AnomalySharedData.ModLocalizationPrefix + "Visuals.BossHealthBar";
 
-        OneToMany = new Dictionary<int, int[]>()
+        /// <summary>
+        /// 初始化共享映射和回调；在优先级为 -1 的灾厄扩展注册前执行。
+        /// </summary>
+        void IContentLoader.PostSetupContent()
         {
-            [NPCID.EaterofWorldsHead] = [NPCID.EaterofWorldsHead, NPCID.EaterofWorldsBody, NPCID.EaterofWorldsTail],
-            [NPCID.MoonLordCore] = [NPCID.MoonLordHead, NPCID.MoonLordHand],
-            [NPCID.SkeletronHead] = [NPCID.SkeletronHand],
-            [NPCID.SkeletronPrime] = [NPCID.PrimeSaw, NPCID.PrimeVice, NPCID.PrimeCannon, NPCID.PrimeLaser],
-            [NPCID.Golem] = [NPCID.GolemFistLeft, NPCID.GolemFistRight, NPCID.GolemHead, NPCID.GolemHeadFree],
-            [NPCID.BrainofCthulhu] = [NPCID.Creeper],
-            [NPCID.MartianSaucerCore] = [NPCID.MartianSaucerTurret, NPCID.MartianSaucerCannon],
-            [NPCID.PirateShip] = [NPCID.PirateShipCannon],
-        };
-
-        EntityExtensionHandler = new Dictionary<int, BossEntityExtension>()
-        {
-            [NPCID.EaterofWorldsHead] = new BossEntityExtension(this.GetText("ExtensionName.Segments"), NPCID.EaterofWorldsHead, NPCID.EaterofWorldsBody, NPCID.EaterofWorldsTail),
-            [NPCID.BrainofCthulhu] = new BossEntityExtension(this.GetText("ExtensionName.Creepers"), NPCID.Creeper),
-            [NPCID.SkeletronHead] = new BossEntityExtension(this.GetText("ExtensionName.Hands"), NPCID.SkeletronHand),
-            [NPCID.SkeletronPrime] = new BossEntityExtension(this.GetText("ExtensionName.Arms"), NPCID.PrimeCannon, NPCID.PrimeSaw, NPCID.PrimeVice, NPCID.PrimeLaser),
-            [NPCID.MartianSaucerCore] = new BossEntityExtension(this.GetText("ExtensionName.Guns"), NPCID.MartianSaucerTurret, NPCID.MartianSaucerCannon),
-            [NPCID.PirateShip] = new BossEntityExtension(this.GetText("ExtensionName.Cannons"), NPCID.PirateShipCannon),
-        };
-
-        // 传说之夜骷髅王仅统计头部，无法摧毁的双手不计入血量。
-        LifeFunctions.Add(b =>
-        {
-            NPC npc = b.NPC;
-            if (npc.type == NPCID.SkeletronHead && npc.Anomaly.CustomAIType == 1)
+            OneToMany = new Dictionary<int, int[]>()
             {
-                b.CombinedNPCMaxLife = b.InitialMaxLife = npc.lifeMax;
-                b.CombinedNPCLife = npc.life;
-                return true;
-            }
+                [NPCID.EaterofWorldsHead] = [NPCID.EaterofWorldsHead, NPCID.EaterofWorldsBody, NPCID.EaterofWorldsTail],
+                [NPCID.MoonLordCore] = [NPCID.MoonLordHead, NPCID.MoonLordHand],
+                [NPCID.SkeletronHead] = [NPCID.SkeletronHand],
+                [NPCID.SkeletronPrime] = [NPCID.PrimeSaw, NPCID.PrimeVice, NPCID.PrimeCannon, NPCID.PrimeLaser],
+                [NPCID.Golem] = [NPCID.GolemFistLeft, NPCID.GolemFistRight, NPCID.GolemHead, NPCID.GolemHeadFree],
+                [NPCID.BrainofCthulhu] = [NPCID.Creeper],
+                [NPCID.MartianSaucerCore] = [NPCID.MartianSaucerTurret, NPCID.MartianSaucerCannon],
+                [NPCID.PirateShip] = [NPCID.PirateShipCannon],
+            };
 
-            return false;
-        });
-
-        // 保留原始生命值文本，仅拦截传说之夜骷髅王的剩余手部数量。
-        SmallTextFunctions.Add((b, out text, out disableOrig) =>
-        {
-            text = "";
-            disableOrig = false;
-            return b.NPC.type == NPCID.SkeletronHead && b.NPC.Anomaly.CustomAIType == 1;
-        });
-
-        RegisterBrainLifeFunctions();
-
-        // 月球领主血量合并
-        LifeFunctions.Add(b =>
-        {
-            NPC npc = b.NPC;
-            if (npc.type == NPCID.MoonLordCore)
+            EntityExtensionHandler = new Dictionary<int, BossEntityExtension>()
             {
-                long lifeMax = npc.lifeMax;
-                long life = npc.life;
-                if (npc.ai[0] == 2f)
-                    life = 0L;
+                [NPCID.EaterofWorldsHead] = new BossEntityExtension(this.GetText("ExtensionName.Segments"), NPCID.EaterofWorldsHead, NPCID.EaterofWorldsBody, NPCID.EaterofWorldsTail),
+                [NPCID.BrainofCthulhu] = new BossEntityExtension(this.GetText("ExtensionName.Creepers"), NPCID.Creeper),
+                [NPCID.SkeletronHead] = new BossEntityExtension(this.GetText("ExtensionName.Hands"), NPCID.SkeletronHand),
+                [NPCID.SkeletronPrime] = new BossEntityExtension(this.GetText("ExtensionName.Arms"), NPCID.PrimeCannon, NPCID.PrimeSaw, NPCID.PrimeVice, NPCID.PrimeLaser),
+                [NPCID.MartianSaucerCore] = new BossEntityExtension(this.GetText("ExtensionName.Guns"), NPCID.MartianSaucerTurret, NPCID.MartianSaucerCannon),
+                [NPCID.PirateShip] = new BossEntityExtension(this.GetText("ExtensionName.Cannons"), NPCID.PirateShipCannon),
+            };
 
-                foreach (NPC n in NPC.ActiveNPCs)
+            // 传说之夜骷髅王仅统计头部，无法摧毁的双手不计入血量。
+            LifeFunctions.Add(b =>
+            {
+                NPC npc = b.NPC;
+                if (npc.type == NPCID.SkeletronHead && npc.Anomaly.CustomAIType == 1)
                 {
-                    bool isMoonLordPiece = n.type is NPCID.MoonLordHand or NPCID.MoonLordHead;
-                    if (!isMoonLordPiece || n.ai[3] != npc.whoAmI)
-                        continue;
-
-                    lifeMax = n.lifeMax;
-                    life += n.life;
+                    b.CombinedNPCMaxLife = b.InitialMaxLife = npc.lifeMax;
+                    b.CombinedNPCLife = npc.life;
+                    return true;
                 }
 
-                b.CombinedNPCMaxLife = lifeMax;
-                b.CombinedNPCLife = life;
-                if (b.CombinedNPCMaxLife != 0L && (b.InitialMaxLife == 0L || b.InitialMaxLife < b.CombinedNPCMaxLife))
-                    b.InitialMaxLife = b.CombinedNPCMaxLife;
+                return false;
+            });
 
-                return true;
-            }
-
-            return false;
-        });
-
-        // 荷兰飞盗船血量合并
-        LifeFunctions.Add(b =>
-        {
-            NPC npc = b.NPC;
-            if (npc.type == NPCID.PirateShip)
+            // 保留原始生命值文本，仅拦截传说之夜骷髅王的剩余手部数量。
+            SmallTextFunctions.Add((b, out text, out disableOrig) =>
             {
-                long lifeMax = 0L;
-                long life = 0L;
-                foreach ((long identifier, NPC n) in b.CustomOneToMany)
+                text = "";
+                disableOrig = false;
+                return b.NPC.type == NPCID.SkeletronHead && b.NPC.Anomaly.CustomAIType == 1;
+            });
+
+            RegisterBrainLifeFunctions();
+
+            // 月球领主血量合并
+            LifeFunctions.Add(b =>
+            {
+                NPC npc = b.NPC;
+                if (npc.type == NPCID.MoonLordCore)
                 {
-                    if (n.Identifier == identifier && n.active && n.lifeMax > 0)
+                    long lifeMax = npc.lifeMax;
+                    long life = npc.life;
+                    if (npc.ai[0] == 2f)
+                        life = 0L;
+
+                    foreach (NPC n in NPC.ActiveNPCs)
                     {
-                        lifeMax += n.lifeMax;
+                        bool isMoonLordPiece = n.type is NPCID.MoonLordHand or NPCID.MoonLordHead;
+                        if (!isMoonLordPiece || n.ai[3] != npc.whoAmI)
+                            continue;
+
+                        lifeMax = n.lifeMax;
                         life += n.life;
                     }
+
+                    b.CombinedNPCMaxLife = lifeMax;
+                    b.CombinedNPCLife = life;
+                    if (b.CombinedNPCMaxLife != 0L && (b.InitialMaxLife == 0L || b.InitialMaxLife < b.CombinedNPCMaxLife))
+                        b.InitialMaxLife = b.CombinedNPCMaxLife;
+
+                    return true;
                 }
 
-                b.CombinedNPCMaxLife = lifeMax;
-                b.CombinedNPCLife = life;
-                if (b.CombinedNPCMaxLife != 0L && (b.InitialMaxLife == 0L || b.InitialMaxLife < b.CombinedNPCMaxLife))
-                    b.InitialMaxLife = b.CombinedNPCMaxLife;
+                return false;
+            });
 
-                return true;
-            }
-
-            return false;
-        });
-
-        //异象模式世界吞噬者血量合并
-        LifeFunctions.Add(b =>
-        {
-            NPC npc = b.NPC;
-            if (npc.type == NPCID.EaterofWorldsHead && AnomalySharedData.Anomaly && npc.Anomaly.ShouldRunAnomalyAI)
+            // 荷兰飞盗船血量合并
+            LifeFunctions.Add(b =>
             {
-                b.CombinedNPCMaxLife = b.InitialMaxLife = npc.lifeMax;
-                b.CombinedNPCLife = npc.life;
-                return true;
-            }
+                NPC npc = b.NPC;
+                if (npc.type == NPCID.PirateShip)
+                {
+                    long lifeMax = 0L;
+                    long life = 0L;
+                    foreach ((long identifier, NPC n) in b.CustomOneToMany)
+                    {
+                        if (n.Identifier == identifier && n.active && n.lifeMax > 0)
+                        {
+                            lifeMax += n.lifeMax;
+                            life += n.life;
+                        }
+                    }
 
-            return false;
-        });
-    }
+                    b.CombinedNPCMaxLife = lifeMax;
+                    b.CombinedNPCLife = life;
+                    if (b.CombinedNPCMaxLife != 0L && (b.InitialMaxLife == 0L || b.InitialMaxLife < b.CombinedNPCMaxLife))
+                        b.InitialMaxLife = b.CombinedNPCMaxLife;
 
-    void IContentLoader.OnModUnload()
-    {
-        // BaseBarFiller 已迁移到 BossBarTextures.Fancy，由其自行管理生命周期。
+                    return true;
+                }
 
-        OneToMany = null;
-        EntityExtensionHandler = null;
-        OverridingNameFunctions = null;
-        LifeFunctions = null;
-        SmallTextFunctions = null;
+                return false;
+            });
+
+            //异象模式世界吞噬者血量合并
+            LifeFunctions.Add(b =>
+            {
+                NPC npc = b.NPC;
+                if (npc.type == NPCID.EaterofWorldsHead && AnomalySharedData.Anomaly && npc.Anomaly.ShouldRunAnomalyAI)
+                {
+                    b.CombinedNPCMaxLife = b.InitialMaxLife = npc.lifeMax;
+                    b.CombinedNPCLife = npc.life;
+                    return true;
+                }
+
+                return false;
+            });
+        }
+
+        /// <summary>
+        /// 模组卸载时释放共享映射和扩展回调引用。
+        /// </summary>
+        void IContentLoader.OnModUnload()
+        {
+            // BaseBarFiller 已迁移到 BossBarTextures.Fancy，由其自行管理生命周期。
+
+            OneToMany = null;
+            EntityExtensionHandler = null;
+            OverridingNameFunctions = null;
+            LifeFunctions = null;
+            SmallTextFunctions = null;
+        }
     }
 
     [ExtendsFromMod(CalamityModName)]

@@ -39,14 +39,15 @@ public sealed class QueenBeeHandler
 
     public static List<int> HoneyWetCombCells = [];
 
-    public sealed class HoneyWetCombCellManager : ModSystem, IContentLoader
+    public sealed class HoneyWetCombCellManager : ModSystem
     {
         public override void PreUpdateProjectiles()
         {
             HoneyWetCombCells.Clear();
         }
 
-        void IContentLoader.PostSetupContent()
+        /// <summary>在 tML 内容加载时安装蜂蜜碰撞钩子，不提前访问弹幕内容。</summary>
+        public override void Load()
         {
             On_Collision.WetCollision += On_Collision_WetCollision;
         }

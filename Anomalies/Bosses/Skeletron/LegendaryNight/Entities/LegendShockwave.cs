@@ -2,7 +2,7 @@ using Anomalies.GameContents.Base;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
-public sealed class LegendShockwave : BaseShockwaveProjectile, IContentLoader
+public sealed class LegendShockwave : BaseShockwaveProjectile
 {
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
 

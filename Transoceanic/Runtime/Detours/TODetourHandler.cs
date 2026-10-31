@@ -1,4 +1,3 @@
-using System.Collections;
 using MonoMod.RuntimeDetour;
 using Transoceanic.Runtime.Reflection;
 
@@ -17,162 +16,6 @@ namespace Transoceanic.Runtime.Detours;
 /// </remarks>
 public sealed partial class TODetourHandler : IContentLoader
 {
-    /// <summary>
-    /// 管理一组 <see cref="Hook"/> 的集合，支持按目标类型和方法检索。
-    /// </summary>
-    /// <remarks>
-    /// <para>该集合采用两层字典结构进行索引：外层字典的键为目标方法所属的类型 <see cref="Type"/>，
-    /// 内层字典的键为目标方法 <see cref="MethodBase"/>，值为该目标方法上所有已应用的 <see cref="Hook"/> 列表。</para>
-    /// <para>所有添加、移除操作都会同步执行钩子的 <see cref="Hook.Undo"/> 操作，确保钩子状态的正确性。</para>
-    /// <para>该类实现了 <see cref="IEnumerable{Hook}"/>，可遍历集合中所有的钩子。</para>
-    /// </remarks>
-    public sealed class DetourSet : IEnumerable<Hook>
-    {
-        private readonly Dictionary<Type, Dictionary<MethodBase, List<Hook>>> _Data = [];
-
-        /// <summary>
-        /// 向集合中添加一个钩子。
-        /// </summary>
-        /// <param name="hook">要添加的 <see cref="Hook"/> 实例，不能为 <see langword="null"/>。</param>
-        /// <exception cref="ArgumentNullException"><paramref name="hook"/> 为 <see langword="null"/>。</exception>
-        public void Add(Hook hook)
-        {
-            ArgumentNullException.ThrowIfNull(hook);
-            Type targetType = hook.Source.DeclaringType;
-            if (!_Data.ContainsKey(targetType))
-                _Data[targetType] = [];
-            if (_Data[targetType].TryGetValue(hook.Source, out List<Hook> value))
-                value.Add(hook);
-            else
-                _Data[targetType][hook.Source] = [hook];
-        }
-
-        /// <summary>
-        /// 从集合中移除指定的钩子并执行 <see cref="Hook.Undo"/>。
-        /// </summary>
-        /// <param name="hook">要移除的 <see cref="Hook"/> 实例。</param>
-        /// <returns>
-        /// 如果成功找到并移除钩子，则返回 <see langword="true"/>；
-        /// 如果钩子不在集合中，则返回 <see langword="false"/>。
-        /// </returns>
-        /// <exception cref="ArgumentNullException"><paramref name="hook"/> 为 <see langword="null"/>。</exception>
-        public bool Remove(Hook hook)
-        {
-            ArgumentNullException.ThrowIfNull(hook);
-            Type targetType = hook.Source.DeclaringType;
-            if (!_Data.TryGetValue(targetType, out Dictionary<MethodBase, List<Hook>> methodHooks))
-                return false;
-            foreach ((MethodBase source, List<Hook> hooks) in methodHooks)
-            {
-                int index = hooks.IndexOf(hook);
-                if (index >= 0)
-                {
-                    hooks[index].Undo();
-                    hooks.RemoveAt(index);
-                    if (hooks.Count == 0)
-                        methodHooks.Remove(source);
-                    if (methodHooks.Count == 0)
-                        _Data.Remove(targetType);
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 移除所有匹配条件的钩子并执行撤销。
-        /// </summary>
-        /// <param name="match">用于筛选钩子的条件委托，不能为 <see langword="null"/>。</param>
-        /// <exception cref="ArgumentNullException"><paramref name="match"/> 为 <see langword="null"/>。</exception>
-        public void RemoveAll(Func<Hook, bool> match)
-        {
-            ArgumentNullException.ThrowIfNull(match);
-            foreach ((Type sourceType, Dictionary<MethodBase, List<Hook>> methodHooks) in _Data)
-            {
-                foreach ((MethodBase source, List<Hook> hooks) in methodHooks)
-                {
-                    foreach (Hook hook in hooks)
-                    {
-                        if (match(hook))
-                        {
-                            hook.Undo();
-                            hooks.Remove(hook);
-                        }
-                    }
-                    if (hooks.Count == 0)
-                        methodHooks.Remove(source);
-                    if (methodHooks.Count == 0)
-                        _Data.Remove(sourceType);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 清除所有钩子并执行撤销。
-        /// </summary>
-        /// <remarks>
-        /// 该方法会遍历集合中所有钩子，依次调用 <see cref="Hook.Undo"/>，然后清空内部字典。
-        /// </remarks>
-        public void Clear()
-        {
-            foreach (Dictionary<MethodBase, List<Hook>> methodHooks in _Data.Values)
-            {
-                foreach (List<Hook> hooks in methodHooks.Values)
-                {
-                    foreach (Hook hook in hooks)
-                        hook.Undo();
-                    hooks.Clear();
-                }
-                methodHooks.Clear();
-            }
-            _Data.Clear();
-        }
-
-        /// <summary>
-        /// 尝试获取针对特定方法的所有钩子。
-        /// </summary>
-        /// <param name="targetMethod">要查询的目标方法。</param>
-        /// <param name="hooks">
-        /// 当此方法返回时，如果找到了钩子，则包含对应的 <see cref="List{Hook}"/>；
-        /// 否则为 <see langword="null"/>。此参数以未经初始化的形式传递。
-        /// </param>
-        /// <returns>如果找到至少一个钩子，则返回 <see langword="true"/>；否则返回 <see langword="false"/>。</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="targetMethod"/> 为 <see langword="null"/>。</exception>
-        public bool TryGetHooks(MethodBase targetMethod, out List<Hook> hooks)
-        {
-            ArgumentNullException.ThrowIfNull(targetMethod);
-            foreach (Dictionary<MethodBase, List<Hook>> methodHooks in _Data.Values)
-            {
-                if (methodHooks.TryGetValue(targetMethod, out hooks) && hooks.Count > 0)
-                    return true;
-            }
-            hooks = null;
-            return false;
-        }
-
-        /// <summary>
-        /// 返回一个循环访问集合中所有钩子的枚举器。
-        /// </summary>
-        /// <returns>可用于循环访问集合的 <see cref="IEnumerator{Hook}"/>。</returns>
-        public IEnumerator<Hook> GetEnumerator()
-        {
-            foreach (Dictionary<MethodBase, List<Hook>> methodHooks in _Data.Values)
-            {
-                foreach (List<Hook> hooks in methodHooks.Values)
-                {
-                    foreach (Hook hook in hooks)
-                        yield return hook;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 返回一个循环访问集合的非泛型枚举器。
-        /// </summary>
-        /// <returns>可用于循环访问集合的 <see cref="IEnumerator"/>。</returns>
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    }
-
     /// <summary>
     /// 内部维护的全局 Detour 钩子集合。
     /// </summary>
@@ -212,7 +55,7 @@ public sealed partial class TODetourHandler : IContentLoader
         foreach ((MethodInfo detour, DetourMethodToAttribute attribute) in TOReflectionUtils.GetMethodsWithAttribute<DetourMethodToAttribute>())
             ApplyStaticMethodDetour(detour, attribute.SourceType, attribute.ParamOffset < 0 ? null : attribute.ParamOffset);
 
-        foreach (ITODetourProvider detourProvider in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITODetourProvider>().OrderByDescending(d => d.LoadPriority))
+        foreach (ITODetourProvider detourProvider in TOLoaderHandler.GetLoaderInstances<ITODetourProvider>().OrderByDescending(d => d.LoadPriority))
             detourProvider.ApplyDetour();
     }
 
@@ -260,7 +103,7 @@ public sealed partial class TODetourHandler : IContentLoader
     /// <item><description>如果匹配成功，输出 <c>methodName</c> 捕获组的值。</description></item>
     /// </list>
     /// </remarks>
-    public static bool EvaluateDetourName(MethodInfo detour, [NotNullWhen(true)] out string sourceName)
+    internal static bool EvaluateDetourName(MethodInfo detour, [NotNullWhen(true)] out string sourceName)
     {
         string prefix = detour.Attribute<CustomDetourPrefixAttribute>()?.Prefix;
         Match match = string.IsNullOrEmpty(prefix) ? _DefaultDetourNameRegex.Match(detour.Name) : Regex.Match(detour.Name, string.Format(Pattern, prefix));
@@ -288,7 +131,7 @@ public sealed partial class TODetourHandler : IContentLoader
     /// <item><description>如果匹配成功，输出 <c>typeName</c> 和 <c>methodName</c> 捕获组的值。</description></item>
     /// </list>
     /// </remarks>
-    public static bool EvaluateTypedDetourName(MethodInfo detour, [NotNullWhen(true)] out string sourceTypeName, [NotNullWhen(true)] out string sourceMethodName)
+    internal static bool EvaluateTypedDetourName(MethodInfo detour, [NotNullWhen(true)] out string sourceTypeName, [NotNullWhen(true)] out string sourceMethodName)
     {
         string prefix = detour.Attribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
         Match match = string.IsNullOrEmpty(prefix) ? _DefaultDetourNameRegex2.Match(detour.Name) : Regex.Match(detour.Name, string.Format(Pattern2, prefix));

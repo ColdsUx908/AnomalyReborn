@@ -73,6 +73,7 @@ public sealed partial class SkeletronHead
                     hand.ai[1] = NPC.whoAmI;
                     hand.ai[3] = timer;
                     hand.target = NPC.target;
+                    hand.Anomaly.EnsureAICapacity(9, 1);
                     hand.Anomaly.AnomalyAI32[0].F = verticalSide;
                     hand.Anomaly.AnomalyAI32[2].F = timer;
                     hand.netUpdate = true;

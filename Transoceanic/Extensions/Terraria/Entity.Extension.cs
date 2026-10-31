@@ -5,14 +5,23 @@ namespace Transoceanic.Extensions.Terraria;
 /// </summary>
 public enum HomingAlgorithm
 {
-    /// <summary>平滑插值（使用 <see cref="Vector2.SmoothStep(Vector2, Vector2, float)"/>）。</summary>
+    /// <summary>
+    /// 平滑插值（使用 <see cref="Vector2.SmoothStep(Vector2, Vector2, float)"/>）。
+    /// </summary>
     SmoothStep,
-    /// <summary>线性插值（使用 <see cref="Vector2.Lerp(Vector2, Vector2, float)"/>）。</summary>
+    /// <summary>
+    /// 线性插值（使用 <see cref="Vector2.Lerp(Vector2, Vector2, float)"/>）。
+    /// </summary>
     Linear,
-    /// <summary>相比 <see cref="SmoothStep"/> 更加平滑的插值（使用 <see cref="TOXnaExtensions.SmootherStep(Vector2, Vector2, float, bool)"/>）。</summary>
+    /// <summary>
+    /// 相比 <see cref="SmoothStep"/> 更加平滑的插值（使用 <see cref="TOXnaExtensions.SmootherStep(Vector2, Vector2, float, bool)"/>）。
+    /// </summary>
     SmootherStep,
 }
 
+/// <summary>
+/// 提供 Terraria 实体、生成、世界与着色器的便捷扩展。
+/// </summary>
 public static partial class TOTerrariaExtensions
 {
     extension(Entity entity)

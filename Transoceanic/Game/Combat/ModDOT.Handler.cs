@@ -7,6 +7,9 @@ namespace Transoceanic.Game.Combat;
 /// </summary>
 public sealed class ModDOTHandler : IContentLoader
 {
+    /// <summary>
+    /// 当前加载的持续伤害内容实例列表，按内容加载顺序登记。
+    /// </summary>
     internal static readonly List<ModDOT> ModDOTSet = [];
     internal static readonly Dictionary<int, (Func<Player, bool> hasBuffPlayer, Func<NPC, bool> hasBuffNPC, Func<Player, float> damagePlayer, Func<NPC, float>, Func<NPC, int> damageValue)> ExternalDOTSet = [];
 
@@ -40,9 +43,9 @@ public sealed class ModDOTHandler : IContentLoader
         RegisterDOT(ModContent.BuffType<T>(), hasBuffPlayer, hasBuffNPC, damagePlayer, damageNPC, damageValue, cover);
 
     /// <summary>
-    /// 内容设置后阶段：收集所有继承自 <see cref="ModDOT"/> 的类型实例。
+    /// 内容设置后阶段：复用受支持模组已注册的 ModDOT 内容实例，保留 Type、Mod 和初始化状态。
     /// </summary>
-    void IContentLoader.PostSetupContent() => ModDOTSet.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<ModDOT>());
+    void IContentLoader.PostSetupContent() => ModDOTSet.AddRange(TOReflectionUtils.GetAllSupportedMods().SelectMany(mod => mod.GetContent<ModDOT>()));
 
     /// <summary>
     /// 模组卸载时清理所有缓存的 DOT 数据。
@@ -57,11 +60,12 @@ public sealed class ModDOTHandler : IContentLoader
 /// <summary>
 /// 玩家行为扩展：在玩家生命回复更新时，计算并应用所有注册的 DOT 伤害。
 /// </summary>
-public sealed class ModDOT_Player : TOPlayerBehavior
+internal sealed class ModDOT_Player : PlayerBehavior
 {
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 更新玩家的不良生命回复值，将 DOT 伤害累加并减少生命回复。
-    /// </summary>
+    /// </remarks>
     public override void UpdateBadLifeRegen()
     {
         float totalDOT = 0f;
@@ -83,11 +87,12 @@ public sealed class ModDOT_Player : TOPlayerBehavior
 /// <summary>
 /// 全局 NPC 行为扩展：在 NPC 生命回复更新时，计算并应用所有注册的 DOT 伤害。
 /// </summary>
-public sealed class ModDOT_GlobalNPC : TOGlobalNPCBehavior
+internal sealed class ModDOT_GlobalNPC : GlobalNPCBehavior
 {
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 更新 NPC 的生命回复，叠加 DOT 伤害。
-    /// </summary>
+    /// </remarks>
     /// <param name="npc">受影响的 NPC。</param>
     /// <param name="damage">引用的伤害值，用于传递最终伤害。</param>
     public override void UpdateLifeRegen(NPC npc, ref int damage)

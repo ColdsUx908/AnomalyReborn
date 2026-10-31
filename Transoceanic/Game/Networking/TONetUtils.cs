@@ -3,10 +3,22 @@ namespace Transoceanic.Game.Networking;
 /// <summary>
 /// 提供与网络通信相关的便捷工具方法，主要针对 AI 数据的变化收集、传输与重放。
 /// </summary>
+/// <remarks>完整快照与增量是不同协议；发送和读取须使用配对方法及相同数组布局，不能混用。</remarks>
 public static class TONetUtils
 {
+    private const int StackSnapshotByteLimit = 1024;
+
     // ExtraAI 也会为后加入玩家、单独接收者和弹幕转发分别序列化。
     // 这些包不能依赖“上一个接收者已收到”的增量状态；每包携带完整的稀疏快照。
+    /// <summary>
+    /// 按索引升序写出所有原始位型非零的 32 位 AI 数据槽，不依赖也不清除尾部变化标记。
+    /// </summary>
+    /// <param name="writer">目标流；先写 Int32 条目数，再写各条目的 Int32 索引与 Int32 原始位型。</param>
+    /// <param name="array">数据槽与尾部标记槽组成的数组，读写两端布局须一致。</param>
+    /// <param name="tailCount">正的尾部标记槽数，须小于数组长度；数据槽总数不得超过 tailCount × 32。</param>
+    /// <remarks>这是完整快照而非增量，可用于后加入或分别向多个接收者序列化；不判定网络执行端，由调用方控制发送权限。写入失败时流可能已有部分数据。</remarks>
+    /// <exception cref="ArgumentOutOfRangeException">尾部标记数量无效或不足以覆盖所有数据槽。</exception>
+    /// <exception cref="IOException">底层流读写失败。</exception>
     public static void WriteAI32Snapshot(BinaryWriter writer, Union32[] array, int tailCount)
     {
         int length = GetDataLength(array.Length, tailCount, 32);
@@ -24,13 +36,27 @@ public static class TONetUtils
         }
     }
 
+    /// <summary>
+    /// 读取完整 32 位稀疏 AI 快照；成功后一次性替换整个数组，未发送数据槽和尾部变化标记均归零。
+    /// </summary>
+    /// <param name="reader">来源流，当前位置须为匹配的写入方法输出的快照开头。</param>
+    /// <param name="array">数据槽与尾部标记槽组成的数组，读写两端布局须一致。</param>
+    /// <param name="tailCount">正的尾部标记槽数，须小于数组长度；每个槽须足以覆盖至多 32 个数据槽。</param>
+    /// <remarks>使用临时数组验证后提交；失败不修改目标数组，但流位置不会回滚。</remarks>
+    /// <exception cref="ArgumentOutOfRangeException">尾部标记数量无效或不足以覆盖所有数据槽。</exception>
+    /// <exception cref="InvalidDataException">条目数越界、索引越界或索引未严格递增。</exception>
+    /// <exception cref="EndOfStreamException">流在快照读取完成前结束。</exception>
+    /// <exception cref="IOException">底层流读写失败。</exception>
     public static void ReadAI32Snapshot(BinaryReader reader, Union32[] array, int tailCount)
     {
         int length = GetDataLength(array.Length, tailCount, 32);
         int count = reader.ReadInt32();
         if ((uint)count > (uint)length)
             throw new InvalidDataException("Invalid AI32 snapshot count.");
-        Union32[] snapshot = new Union32[array.Length];
+        Span<Union32> snapshot = array.Length <= StackSnapshotByteLimit / sizeof(int)
+            ? stackalloc Union32[array.Length]
+            : new Union32[array.Length];
+        snapshot.Clear();
         int previousIndex = -1;
         for (int i = 0; i < count; i++)
         {
@@ -40,9 +66,18 @@ public static class TONetUtils
             snapshot[index].I = reader.ReadInt32();
             previousIndex = index;
         }
-        Array.Copy(snapshot, array, array.Length);
+        snapshot.CopyTo(array);
     }
 
+    /// <summary>
+    /// 按索引升序写出所有原始位型非零的 64 位 AI 数据槽，不依赖也不清除尾部变化标记。
+    /// </summary>
+    /// <param name="writer">目标流；先写 Int32 条目数，再写各条目的 Int32 索引与 Int64 原始位型。</param>
+    /// <param name="array">数据槽与尾部标记槽组成的数组，读写两端布局须一致。</param>
+    /// <param name="tailCount">正的尾部标记槽数，须小于数组长度；数据槽总数不得超过 tailCount × 64。</param>
+    /// <remarks>这是完整快照而非增量，可用于后加入或分别向多个接收者序列化；不判定网络执行端，由调用方控制发送权限。写入失败时流可能已有部分数据。</remarks>
+    /// <exception cref="ArgumentOutOfRangeException">尾部标记数量无效或不足以覆盖所有数据槽。</exception>
+    /// <exception cref="IOException">底层流读写失败。</exception>
     public static void WriteAI64Snapshot(BinaryWriter writer, Union64[] array, int tailCount)
     {
         int length = GetDataLength(array.Length, tailCount, 64);
@@ -61,13 +96,27 @@ public static class TONetUtils
         }
     }
 
+    /// <summary>
+    /// 读取完整 64 位稀疏 AI 快照；成功后一次性替换整个数组，未发送数据槽和尾部变化标记均归零。
+    /// </summary>
+    /// <param name="reader">来源流，当前位置须为匹配的写入方法输出的快照开头。</param>
+    /// <param name="array">数据槽与尾部标记槽组成的数组，读写两端布局须一致。</param>
+    /// <param name="tailCount">正的尾部标记槽数，须小于数组长度；每个槽须足以覆盖至多 64 个数据槽。</param>
+    /// <remarks>使用临时数组验证后提交；失败不修改目标数组，但流位置不会回滚。</remarks>
+    /// <exception cref="ArgumentOutOfRangeException">尾部标记数量无效或不足以覆盖所有数据槽。</exception>
+    /// <exception cref="InvalidDataException">条目数越界、索引越界或索引未严格递增。</exception>
+    /// <exception cref="EndOfStreamException">流在快照读取完成前结束。</exception>
+    /// <exception cref="IOException">底层流读写失败。</exception>
     public static void ReadAI64Snapshot(BinaryReader reader, Union64[] array, int tailCount)
     {
         int length = GetDataLength(array.Length, tailCount, 64);
         int count = reader.ReadInt32();
         if ((uint)count > (uint)length)
             throw new InvalidDataException("Invalid AI64 snapshot count.");
-        Union64[] snapshot = new Union64[array.Length];
+        Span<Union64> snapshot = array.Length <= StackSnapshotByteLimit / sizeof(long)
+            ? stackalloc Union64[array.Length]
+            : new Union64[array.Length];
+        snapshot.Clear();
         int previousIndex = -1;
         for (int i = 0; i < count; i++)
         {
@@ -77,7 +126,7 @@ public static class TONetUtils
             snapshot[index].L = reader.ReadInt64();
             previousIndex = index;
         }
-        Array.Copy(snapshot, array, array.Length);
+        snapshot.CopyTo(array);
     }
 
     private static int GetDataLength(int arrayLength, int tailCount, int groupSize)
@@ -114,7 +163,7 @@ public static class TONetUtils
     /// 末尾的改动位数量。必须大于 0。每一个 <see cref="BitArray32"/> 固定管理 32 个数据槽。
     /// </param>
     /// <exception cref="ArgumentOutOfRangeException">
-    /// <paramref name="tailCount"/> 小于等于 0 时抛出。
+    /// <paramref name="tailCount"/> 非正、不小于数组长度，或不足以覆盖所有数据槽时抛出。
     /// </exception>
     /// <exception cref="ObjectDisposedException">写入器已关闭。</exception>
     /// <exception cref="IOException">发生 I/O 错误。</exception>
@@ -182,7 +231,7 @@ public static class TONetUtils
     /// 末尾的改动位数量。必须大于 0。每个 <see cref="BitArray64"/> 固定管理 64 个数据槽。
     /// </param>
     /// <exception cref="ArgumentOutOfRangeException">
-    /// <paramref name="tailCount"/> 小于等于 0 时抛出。
+    /// <paramref name="tailCount"/> 非正、不小于数组长度，或不足以覆盖所有数据槽时抛出。
     /// </exception>
     /// <exception cref="ObjectDisposedException">写入器已关闭。</exception>
     /// <exception cref="IOException">发生 I/O 错误。</exception>
@@ -225,13 +274,13 @@ public static class TONetUtils
 
     /// <summary>
     /// 从 <see cref="BinaryReader"/> 读取一组 <see cref="Union32"/> 的 AI 数据变化，
-    /// 并直接覆写目标数组中对应的数据槽。
+    /// 全部条目验证成功后，一次性提交到目标数组对应的数据槽。
     /// </summary>
     /// <remarks>
     /// <para>
     /// 读取格式与 <see cref="WriteChangedAI32"/> 写入格式对应：首先读取一个 <see cref="int"/> 表示变化的条目数量，
     /// 然后依次读取每一对索引（<see cref="int"/>）和原始 32 位整数位型（<see cref="int"/>）。
-    /// 接收到的每个索引只要在数组有效范围内，就会覆盖对应数据槽位的原始位型。
+    /// 接收到的每个索引必须属于数据区且不能重复；全部条目验证成功后才覆盖对应槽位的原始位型。
     /// 该方法不会重置任何改动位，适用于接收端直接应用同步数据。
     /// </para>
     /// <para>
@@ -244,6 +293,8 @@ public static class TONetUtils
     /// <exception cref="EndOfStreamException">读取器在期望的位置意外到达流末尾。</exception>
     /// <exception cref="ObjectDisposedException">读取器已关闭。</exception>
     /// <exception cref="IOException">发生 I/O 错误。</exception>
+    /// <exception cref="ArgumentOutOfRangeException">尾部标记数量无效或不足以覆盖所有数据槽。</exception>
+    /// <exception cref="InvalidDataException">条目数无效，或索引越界、重复、指向尾部标记区。</exception>
     public static void ReadChangedAI32(BinaryReader reader, Union32[] array, int tailCount = 1)
     {
         int length = GetDataLength(array.Length, tailCount, 32);
@@ -271,7 +322,7 @@ public static class TONetUtils
     /// <para>
     /// 读取格式与 <see cref="WriteChangedAI64"/> 写入格式对应：首先读取条目数量（<see cref="int"/>），
     /// 然后读取每一条目的索引（<see cref="int"/>）和原始 64 位整数位型（<see cref="long"/>）。
-    /// 有效数据槽会被覆盖；越界、重复索引及标记槽索引会被拒绝。
+    /// 全部条目读取成功后才覆盖目标槽位，未列出的槽位与尾部标记保持不变；越界、重复索引及标记槽索引会被拒绝。
     /// </para>
     /// </remarks>
     /// <param name="reader">数据源读取器，其当前位置必须位于由 <see cref="WriteChangedAI64"/> 写入的序列开头。</param>
@@ -280,6 +331,8 @@ public static class TONetUtils
     /// <exception cref="EndOfStreamException">读取器在期望的位置意外到达流末尾。</exception>
     /// <exception cref="ObjectDisposedException">读取器已关闭。</exception>
     /// <exception cref="IOException">发生 I/O 错误。</exception>
+    /// <exception cref="ArgumentOutOfRangeException">尾部标记数量无效或不足以覆盖所有数据槽。</exception>
+    /// <exception cref="InvalidDataException">条目数无效，或索引越界、重复、指向尾部标记区。</exception>
     public static void ReadChangedAI64(BinaryReader reader, Union64[] array, int tailCount = 1)
     {
         int length = GetDataLength(array.Length, tailCount, 64);

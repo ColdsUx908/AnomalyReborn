@@ -220,15 +220,27 @@ public struct PolarVector2 : IEquatable<PolarVector2>
         };
     }
 
+    /// <summary>
+    /// 比较 Radius、Angle（不转换成笛卡尔坐标），使用成员本身的相等语义。
+    /// </summary>
     public readonly bool Equals(PolarVector2 other) => Radius == other.Radius && Angle == other.Angle;
+    /// <inheritdoc/>
     public override readonly bool Equals(object obj) => obj is PolarVector2 other && Equals(other);
+    /// <inheritdoc/>
     public override readonly int GetHashCode() => HashCode.Combine(Radius, Angle);
+    /// <summary>
+    /// 按 Equals 比较 Radius、Angle（不转换成笛卡尔坐标），相等时返回 true。
+    /// </summary>
     public static bool operator ==(PolarVector2 left, PolarVector2 right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(PolarVector2 left, PolarVector2 right) => !(left == right);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回向量的字符串表示形式。
-    /// </summary>
+    /// </remarks>
     /// <returns>形如 "PolarVector2 { Radius: x, Angle: y }" 的字符串。</returns>
     public override readonly string ToString() => $"PolarVector2 {{ Radius: {Radius}, Angle: {Angle} }}";
 
@@ -263,7 +275,7 @@ public struct PolarVector2 : IEquatable<PolarVector2>
     /// <para/>示例：
     /// <code>
     /// PolarVector2 ClockOne = PolarVector2.UnitClocks[1] * 5f; //一点钟方向，长度为5
-    /// 
+    ///
     /// //遍历十二个方向（注意第一个元素是0点钟方向，索引为0）
     /// foreach (PolarVector2 vector in PolarVector.UnitClocks)
     /// {

@@ -23,7 +23,9 @@ public struct Sector : IEquatable<Sector>, ICollidableWithRectangle
     /// </summary>
     public float HalfAngle;
 
-    /// <summary>使用圆心、半径、中轴旋转角和半张角构造扇形。</summary>
+    /// <summary>
+    /// 使用圆心、半径、中轴旋转角和半张角构造扇形。
+    /// </summary>
     public Sector(Vector2 center, float radius, float rotation, float halfAngle)
     {
         if (!float.IsFinite(radius) || radius < 0f)
@@ -38,21 +40,42 @@ public struct Sector : IEquatable<Sector>, ICollidableWithRectangle
         HalfAngle = halfAngle;
     }
 
-    /// <summary>使用圆心坐标分量、半径、中轴旋转角和半张角构造扇形。</summary>
+    /// <summary>
+    /// 使用圆心坐标分量、半径、中轴旋转角和半张角构造扇形。
+    /// </summary>
     public Sector(float x, float y, float radius, float rotation, float halfAngle)
         : this(new Vector2(x, y), radius, rotation, halfAngle) { }
 
-    /// <summary>扇形中轴的单位方向。</summary>
+    /// <summary>
+    /// 扇形中轴的单位方向。
+    /// </summary>
     public readonly Vector2 Direction => new(MathF.Cos(Rotation), MathF.Sin(Rotation));
 
+    /// <summary>
+    /// 比较 Center、Radius、Rotation、HalfAngle，使用成员本身的相等语义。
+    /// </summary>
     public readonly bool Equals(Sector other) => Center == other.Center && Radius == other.Radius && Rotation == other.Rotation && HalfAngle == other.HalfAngle;
+    /// <inheritdoc/>
     public override readonly bool Equals(object obj) => obj is Sector other && Equals(other);
+    /// <inheritdoc/>
     public override readonly int GetHashCode() => HashCode.Combine(Center, Radius, Rotation, HalfAngle);
+    /// <summary>
+    /// 按 Equals 比较 Center、Radius、Rotation、HalfAngle，相等时返回 true。
+    /// </summary>
     public static bool operator ==(Sector left, Sector right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(Sector left, Sector right) => !(left == right);
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 返回包含几何类型名和各构造数据的文本表示。
+    /// </remarks>
     public override readonly string ToString() => $"Sector {{ Center: {Center}, Radius: {Radius}, Rotation: {Rotation}, HalfAngle: {HalfAngle} }}";
 
-    /// <summary>判断点是否位于扇形内，包含边界。</summary>
+    /// <summary>
+    /// 判断点是否位于扇形内，包含边界。
+    /// </summary>
     public readonly bool Contains(Vector2 point) => ContainsOffset(point - Center, Radius);
 
     private readonly bool ContainsOffset(Vector2 offset, float radius)
@@ -64,6 +87,9 @@ public struct Sector : IEquatable<Sector>, ICollidableWithRectangle
         return Vector2.Dot(Vector2.Normalize(offset), Direction) >= MathF.Cos(HalfAngle);
     }
 
+    /// <summary>
+    /// 判断当前形状与指定形状是否相交；双方坐标和尺寸须使用同一坐标系和单位。
+    /// </summary>
     public readonly bool Collides(Rectangle hitbox)
     {
         Vector2 center = Center;

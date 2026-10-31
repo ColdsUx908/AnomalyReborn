@@ -12,7 +12,7 @@ public sealed partial class AnomalySharedData : ModSystem
         /// <summary>
         /// 灾厄模组是否已加载。
         /// </summary>
-        public static bool CalamityEnabled => ModReference.Calamity.IsLoaded;
+        public static bool CalamityEnabled => AnomalyModReferences.Calamity.IsLoaded;
 
         /// <inheritdoc cref="AnomalyUltramundane"/>
         public static bool Ultra => AnomalyUltramundane;

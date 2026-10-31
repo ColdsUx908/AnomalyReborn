@@ -5,16 +5,25 @@ namespace Transoceanic.Runtime.Hooks;
 /// <summary>
 /// 提供对 <see cref="TOTerrariaExtensions"/> 的动态扩展支持。
 /// </summary>
-public sealed class On_TOExtensions : IContentLoader
+public sealed class On_TOExtensions : ILoadable
 {
-    [LoadPriority(5)]
-    void IContentLoader.PostSetupContent() => TOHookHelper.ResetHandlerFields(typeof(On_TOExtensions));
-    void IContentLoader.OnModUnload() => TOHookHelper.ResetHandlerFields(typeof(On_TOExtensions));
+    /// <summary>
+    /// 在框架自动加载时清空自身事件，早于消费方订阅，不再需要后置优先级。
+    /// </summary>
+    /// <param name="mod">由 tML 提供的所属框架模组。</param>
+    void ILoadable.Load(Mod mod)
+    {
+        TOCleanup.Register(() => TOHookHelper.ResetHandlerFields(typeof(On_TOExtensions)));
+        TOHookHelper.ResetHandlerFields(typeof(On_TOExtensions));
+    }
+
+    // 自有事件由 TOCleanup 清理，此入口只满足 tML 生命周期契约。
+    void ILoadable.Unload() { }
 
     #region Handler
     /// <summary>
     /// 内部存储 <see cref="get_IsBossEnemy"/> 事件的所有处理程序委托的列表。
-    /// 该字段在内容加载完成和模组卸载时会被自动重置为空列表。
+    /// 该字段在框架自动加载时重置，随后保留消费方订阅，卸载时由 TOCleanup 清空。
     /// </summary>
     private static List<Func<NPC, bool>> _HandlerGetIsBossEnemy = [];
     #endregion Handler

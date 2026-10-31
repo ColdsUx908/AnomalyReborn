@@ -9,6 +9,7 @@ namespace Transoceanic.Game.Entities;
 /// 使代码更加清晰易读。</para>
 /// <para>所有返回的迭代器均为 <see langword="ref struct"/> 类型，需直接在方法作用域内使用，
 /// 无法作为类成员存储。</para>
+/// <para>迭代器直接引用游戏当前实体数组，不是实体列表或实体状态的独立快照；在游戏相应主线程阶段遍历。</para>
 /// </remarks>
 public static class TOIteratorFactory
 {

@@ -24,6 +24,17 @@ public enum PriorityType : byte
 /// </summary>
 public static class TOKinematicUtils
 {
+    private static bool CanHitWithImmunity(Projectile projectile, NPC npc, int[] localImmunity)
+    {
+        bool usesLocal = projectile.usesLocalNPCImmunity;
+        bool usesStatic = projectile.usesIDStaticNPCImmunity;
+        bool modeAllowsHit = (!usesLocal && !usesStatic)
+            || (usesLocal && localImmunity[npc.whoAmI] == 0)
+            || (usesStatic && Projectile.IsNPCIndexImmuneToProjectileType(projectile.type, npc.whoAmI));
+        bool singleHit = projectile.maxPenetrate == 1 && !usesLocal && !usesStatic;
+        return modeAllowsHit && (projectile.owner < 0 || singleHit || npc.immune[projectile.owner] == 0);
+    }
+
     /// <summary>
     /// 根据指定条件检索有效的 NPC 目标。
     /// </summary>
@@ -138,17 +149,31 @@ public static class TOKinematicUtils
     /// <param name="maxDistanceToCheck">最大检索距离（像素）。</param>
     /// <param name="ignoreTiles">是否忽略实体物块阻挡。若为 <see langword="true"/>，则只进行距离判断；若为 <see langword="false"/>，则需要视线通畅（<see cref="Collision.CanHit(Vector2, int, int, Vector2, int, int)"/>）。</param>
     /// <param name="priorityType">目标排序优先级类型，可选最近距离、最高最大生命值、最低当前生命值。</param>
-    /// <param name="respectImmuneFrames">是否尊重弹幕无敌帧。若为 <see langword="true"/>，且 <paramref name="projectile"/> 不为 <see langword="null"/>，则不会返回当前对该弹幕处于无敌状态的 NPC（即 <see cref="Projectile.localNPCImmunity"/> 或 <see cref="NPC.immune"/> 计数尚未结束）。</param>
+    /// <param name="respectImmuneFrames">是否尊重弹幕无敌帧。若为 <see langword="true"/>，且 <paramref name="projectile"/> 不为 <see langword="null"/>，则不会返回当前对该弹幕处于无敌状态的 NPC（检查局部、ID 静态及所有者免疫，包含单次穿透豁免；不执行命中钩子）。</param>
     /// <param name="projectile">进行索敌的弹幕实例，用于检查 NPC 对该弹幕的免疫状态。</param>
     /// <param name="ignoreChaseable">是否忽略可追逐性判断。若为 <see langword="true"/>，则可追踪 <see cref="NPC.chaseable"/> 为 <see langword="false"/> 的 NPC（仍以 <see cref="NPC.chaseable"/> 为 <see langword="true"/> 的为优先）；若为 <see langword="false"/>，则需要满足可追逐条件。</param>
     /// <param name="bossPriority">是否优先锁定Boss单位。若为 <see langword="true"/>，则当范围内存在Boss时，只返回符合条件的Boss，否则再考虑普通敌怪。</param>
     /// <returns>符合条件的 NPC 实例；若未检索到则返回 <see langword="null"/>。</returns>
     /// <remarks>
     /// <strong>警告：</strong>遍历 NPC 集合对性能有较大影响，应仅在必要的时候（例如弹幕索敌、召唤物 AI 更新）调用此方法，避免在每帧绘制中调用。
+    /// <para>免疫过滤不执行 CanHit 等命中钩子，也不保证随后攻击一定命中。
+    /// ID 静态免疫按游戏更新计数判断到期；框架调用的 Projectile.IsNPCIndexImmuneToProjectileType 返回 true 表示已到可命中时刻，而非仍在免疫。</para>
     /// </remarks>
     public static NPC GetNPCTarget_Advanced(Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, PriorityType priorityType = PriorityType.Closest, bool respectImmuneFrames = false, Projectile projectile = null, bool ignoreChaseable = false, bool bossPriority = false)
     {
         bool hasProjectile = projectile is not null;
+        int[] localImmunity = projectile?.localNPCImmunity;
+        if (respectImmuneFrames && hasProjectile && projectile.type is ProjectileID.StardustDragon2 or ProjectileID.StardustDragon3 or ProjectileID.StardustDragon4)
+        {
+            foreach (Projectile candidate in Projectile.ActiveProjectiles)
+            {
+                if (candidate.owner == projectile.owner && candidate.type == ProjectileID.StardustDragon1)
+                {
+                    localImmunity = candidate.localNPCImmunity;
+                    break;
+                }
+            }
+        }
         float maxDistanceSquared = maxDistanceToCheck * maxDistanceToCheck;
         NPC target = null;
         float bestValue = 0f;
@@ -169,7 +194,7 @@ public static class TOKinematicUtils
                         continue;
                     if (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
                         continue;
-                    if (respectImmuneFrames && hasProjectile && (projectile.localNPCImmunity[npc.whoAmI] is -1 or > 0 || npc.immune[projectile.owner] > 0))
+                    if (respectImmuneFrames && hasProjectile && !CanHitWithImmunity(projectile, npc, localImmunity))
                         continue;
 
                     if (target is null)
@@ -241,7 +266,7 @@ public static class TOKinematicUtils
                         continue;
                     if (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
                         continue;
-                    if (respectImmuneFrames && hasProjectile && (projectile.localNPCImmunity[npc.whoAmI] is -1 or > 0 || npc.immune[projectile.owner] > 0))
+                    if (respectImmuneFrames && hasProjectile && !CanHitWithImmunity(projectile, npc, localImmunity))
                         continue;
 
                     // 首次命中：直接记录目标与对应属性
@@ -299,7 +324,7 @@ public static class TOKinematicUtils
                         continue;
                     if (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
                         continue;
-                    if (respectImmuneFrames && hasProjectile && (projectile.localNPCImmunity[npc.whoAmI] is -1 or > 0 || npc.immune[projectile.owner] > 0))
+                    if (respectImmuneFrames && hasProjectile && !CanHitWithImmunity(projectile, npc, localImmunity))
                         continue;
 
                     // 首次命中：直接记录目标与对应属性
@@ -352,7 +377,7 @@ public static class TOKinematicUtils
                         continue;
                     if (!ignoreTiles && !Collision.CanHit(origin, 1, 1, npc.Center, 1, 1))
                         continue;
-                    if (respectImmuneFrames && hasProjectile && (projectile.localNPCImmunity[npc.whoAmI] is -1 or > 0 || npc.immune[projectile.owner] > 0))
+                    if (respectImmuneFrames && hasProjectile && !CanHitWithImmunity(projectile, npc, localImmunity))
                         continue;
                     if (target is null)
                     {
@@ -484,9 +509,17 @@ public static class TOKinematicUtils
     /// <returns>符合条件的 PvP 玩家实例；若未检索到或当前不处于多人模式/PvP 状态，则返回 <see langword="null"/>。</returns>
     /// <remarks>
     /// <strong>警告：</strong>遍历玩家集合对性能有较大影响，应仅在必要的时候调用此方法。此方法仅应由玩家主动发起的逻辑调用（例如武器使用、弹幕更新）。
+    /// <para>始终排除 owner，仅从存活且启用 PvP 的玩家中选择目标。
+    /// team 为 -1 时使用 owner.team；0 不排除队伍，1 至 5 排除对应队伍。这一筛选适用于所有排序方式。</para>
     /// </remarks>
-    public static Player GetPvPPlayerTarget(Player owner, Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, PriorityType priorityType = PriorityType.Closest)
+    /// <param name="team">发起方团队：-1 使用 owner.team；0 无队伍，1 至 5 排除对应队伍的玩家。</param>
+    /// <exception cref="ArgumentOutOfRangeException">team 小于 -1 或大于 5。</exception>
+    public static Player GetPvPPlayerTarget(Player owner, Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, PriorityType priorityType = PriorityType.Closest, int team = -1)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(team, -1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(team, 5);
+        if (team == -1)
+            team = owner.team;
         if (Main.netMode == NetmodeID.SinglePlayer || !owner.active || !owner.hostile)
             return null;
 
@@ -498,7 +531,7 @@ public static class TOKinematicUtils
             case PriorityType.LifeMax:
                 foreach (Player player in Player.PVPPlayers)
                 {
-                    if (player == owner || Vector2.DistanceSquared(origin, player.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, player.Center, 1, 1)))
+                    if (player == owner || (team != 0 && player.team == team) || Vector2.DistanceSquared(origin, player.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, player.Center, 1, 1)))
                         continue;
 
                     if (target is null || player.statLifeMax2 > target.statLifeMax2)
@@ -508,7 +541,7 @@ public static class TOKinematicUtils
             case PriorityType.Life:
                 foreach (Player player in Player.PVPPlayers)
                 {
-                    if (player == owner || Vector2.DistanceSquared(origin, player.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, player.Center, 1, 1)))
+                    if (player == owner || (team != 0 && player.team == team) || Vector2.DistanceSquared(origin, player.Center) > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, player.Center, 1, 1)))
                         continue;
 
                     if (target is null || player.statLife > target.statLife)
@@ -521,7 +554,7 @@ public static class TOKinematicUtils
                 foreach (Player player in Player.PVPPlayers)
                 {
                     float distanceSquared = Vector2.DistanceSquared(origin, player.Center);
-                    if (player == owner || distanceSquared > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, player.Center, 1, 1)))
+                    if (player == owner || (team != 0 && player.team == team) || distanceSquared > maxDistanceToCheckSquared || (!ignoreTiles && !Collision.CanHit(origin, 1, 1, player.Center, 1, 1)))
                         continue;
 
                     if (target is null || distanceSquared < distanceTemp)

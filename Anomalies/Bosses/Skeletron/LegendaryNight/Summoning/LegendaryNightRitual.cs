@@ -63,8 +63,37 @@ public sealed class LegendaryNightRitual : AnomalyModProjectile
                 Projectile.Center = RitualCenter - new Vector2(0f, 180f * interpolation);
                 break;
             case >= 180 and <= 270: //粒子效果
-                Vector2 dustVelocity = Main.rand.NextPolarVector2(3f, 5.5f);
-                ParticleHandler.SpawnParticle(new SquashParticle(Projectile.Center - dustVelocity * Main.rand.NextFloat(25, 30), dustVelocity, 20, Main.rand.NextFloat(1.2f, 1.8f), Color.Lerp(LegendaryNightHandler.StarColor, Color.White, Main.rand.NextFloat(0.3f)), baseSize: null, noGravity: true) { FadeIn = 0.66f });
+                if (!Main.dedServ)
+                {
+                    const int ChargeStartTime = 180;
+                    const int ChargeEndTime = 270;
+                    const int SummonTime = 300;
+                    const int SpiralArmCount = 4;
+                    const int MinParticleLifetime = 60;
+                    const int MaxParticleLifetime = 72;
+                    float charge = MathHelper.SmoothStep(0f, 1f, (Timer1 - ChargeStartTime) / (float)(Math.Min(ChargeEndTime, SummonTime - MinParticleLifetime) - ChargeStartTime));
+                    int remaining = SummonTime - Timer1;
+                    // 等距旋臂缓缓转动，星芒逐渐增密、变亮，最后一批在召唤前汇入中心。
+                    int layers = remaining < MinParticleLifetime ? 0 : Timer1 % 3 == 0 && charge > 0.5f ? 2 : 1;
+                    for (int layer = 0; layer < layers; layer++)
+                    {
+                        // 同批四颗共享径向与寿命参数，使旋臂保持旋转对称。
+                        float emissionAngle = -(Timer1 - ChargeStartTime) * 0.008f
+                            + layer * 0.12f + Main.rand.NextFloat(-0.04f, 0.04f);
+                        float radius = Main.rand.NextFloat(155f, 190f) * (1f + charge * 0.5f);
+                        int lifetime = Main.rand.Next(MinParticleLifetime, Math.Min(MaxParticleLifetime, remaining) + 1);
+                        Color color = Color.Lerp(LegendaryNightHandler.StarColor, Color.White, Main.rand.NextFloat(0.35f, 0.75f));
+                        float scale = Main.rand.NextFloat(0.3f, 0.5f) * (1f + charge * 0.6f);
+                        for (int arm = 0; arm < SpiralArmCount; arm++)
+                        {
+                            float angle = arm * MathHelper.TwoPi / SpiralArmCount + emissionAngle;
+                            Vector2 offset = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * radius;
+                            // 卷入约三分之二圈；发射方向与卷入方向相反，避免轨迹叠成近似直线。
+                            ParticleHandler.SpawnParticle(new LegendaryNightChargeSparkle(Projectile.Center, offset, color,
+                                scale, lifetime, spiralAngle: 4f));
+                        }
+                    }
+                }
 
                 if (Timer1 == 220)
                 {

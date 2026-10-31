@@ -14,49 +14,107 @@ public sealed partial class AnomalyGlobalNPC
     {
         if (!AnomalyDepthDrawSystem.IsVisible(Z))
             return false;
-        return npc.TryGetBehavior(out AnomalyNPCBehavior behavior) ? behavior.CanBeHitByItem(player, item) : null;
+        if (!npc.TryGetBehavior(out AnomalyNPCBehavior behavior))
+            return null;
+        using EntityBehavior<NPC>.EntityLock entityLock = behavior.LockEntity();
+        return behavior.CanBeHitByItem(player, item);
     }
 
     public override bool? CanBeHitByProjectile(NPC npc, Projectile projectile)
     {
         if (!AnomalyDepthDrawSystem.IsVisible(Z))
             return false;
-        return npc.TryGetBehavior(out AnomalyNPCBehavior behavior) ? behavior.CanBeHitByProjectile(projectile) : null;
+        if (!npc.TryGetBehavior(out AnomalyNPCBehavior behavior))
+            return null;
+        using EntityBehavior<NPC>.EntityLock entityLock = behavior.LockEntity();
+        return behavior.CanBeHitByProjectile(projectile);
     }
 
-    public override bool CanBeHitByNPC(NPC npc, NPC attacker) =>
-        Z == 0f && (!npc.TryGetBehavior(out AnomalyNPCBehavior behavior) || behavior.CanBeHitByNPC(attacker));
+    public override bool CanBeHitByNPC(NPC npc, NPC attacker)
+    {
+        if (Z != 0f)
+            return false;
+        if (!npc.TryGetBehavior(out AnomalyNPCBehavior behavior))
+            return true;
+        using EntityBehavior<NPC>.EntityLock entityLock = behavior.LockEntity();
+        return behavior.CanBeHitByNPC(attacker);
+    }
 
-    public override bool? CanCollideWithPlayerMeleeAttack(NPC npc, Player player, Item item, Rectangle meleeAttackHitbox) =>
-        npc.TryGetBehavior(out AnomalyNPCBehavior behavior) ? behavior.CanCollideWithPlayerMeleeAttack(player, item, meleeAttackHitbox) : null;
+    public override bool? CanCollideWithPlayerMeleeAttack(NPC npc, Player player, Item item, Rectangle meleeAttackHitbox)
+    {
+        if (!npc.TryGetBehavior(out AnomalyNPCBehavior behavior))
+            return null;
+        using EntityBehavior<NPC>.EntityLock entityLock = behavior.LockEntity();
+        return behavior.CanCollideWithPlayerMeleeAttack(player, item, meleeAttackHitbox);
+    }
 
-    public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot) =>
-        !npc.TryGetBehavior(out AnomalyNPCBehavior behavior) || behavior.CanHitPlayer(target, ref cooldownSlot);
+    public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
+    {
+        if (!npc.TryGetBehavior(out AnomalyNPCBehavior behavior))
+            return true;
+        using EntityBehavior<NPC>.EntityLock entityLock = behavior.LockEntity();
+        return behavior.CanHitPlayer(target, ref cooldownSlot);
+    }
 
-    public override bool CanHitNPC(NPC npc, NPC target) =>
-        !npc.TryGetBehavior(out AnomalyNPCBehavior behavior) || behavior.CanHitNPC(target);
+    public override bool CanHitNPC(NPC npc, NPC target)
+    {
+        if (!npc.TryGetBehavior(out AnomalyNPCBehavior behavior))
+            return true;
+        using EntityBehavior<NPC>.EntityLock entityLock = behavior.LockEntity();
+        return behavior.CanHitNPC(target);
+    }
 }
 
 public sealed partial class AnomalyGlobalProjectile
 {
-    public override bool? CanHitNPC(Projectile projectile, NPC target) =>
-        projectile.TryGetBehavior(out AnomalyProjectileBehavior behavior) ? behavior.CanHitNPC(target) : null;
+    public override bool? CanHitNPC(Projectile projectile, NPC target)
+    {
+        if (!projectile.TryGetBehavior(out AnomalyProjectileBehavior behavior))
+            return null;
+        using EntityBehavior<Projectile>.EntityLock entityLock = behavior.LockEntity();
+        return behavior.CanHitNPC(target);
+    }
 
-    public override bool CanHitPvp(Projectile projectile, Player target) =>
-        !projectile.TryGetBehavior(out AnomalyProjectileBehavior behavior) || behavior.CanHitPvp(target);
+    public override bool CanHitPvp(Projectile projectile, Player target)
+    {
+        if (!projectile.TryGetBehavior(out AnomalyProjectileBehavior behavior))
+            return true;
+        using EntityBehavior<Projectile>.EntityLock entityLock = behavior.LockEntity();
+        return behavior.CanHitPvp(target);
+    }
 
-    public override bool CanHitPlayer(Projectile projectile, Player target) =>
-        !projectile.TryGetBehavior(out AnomalyProjectileBehavior behavior) || behavior.CanHitPlayer(target);
+    public override bool CanHitPlayer(Projectile projectile, Player target)
+    {
+        if (!projectile.TryGetBehavior(out AnomalyProjectileBehavior behavior))
+            return true;
+        using EntityBehavior<Projectile>.EntityLock entityLock = behavior.LockEntity();
+        return behavior.CanHitPlayer(target);
+    }
 }
 
 public sealed partial class AnomalyGlobalItem
 {
-    public override bool? CanHitNPC(Item item, Player player, NPC target) =>
-        item.TryGetBehavior(out AnomalyItemBehavior behavior) ? behavior.CanHitNPC(player, target) : null;
+    public override bool? CanHitNPC(Item item, Player player, NPC target)
+    {
+        if (!item.TryGetBehavior(out AnomalyItemBehavior behavior))
+            return null;
+        using EntityBehavior<Item>.EntityLock entityLock = behavior.LockEntity();
+        return behavior.CanHitNPC(player, target);
+    }
 
-    public override bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, Player player, NPC target) =>
-        item.TryGetBehavior(out AnomalyItemBehavior behavior) ? behavior.CanMeleeAttackCollideWithNPC(meleeAttackHitbox, player, target) : null;
+    public override bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, Player player, NPC target)
+    {
+        if (!item.TryGetBehavior(out AnomalyItemBehavior behavior))
+            return null;
+        using EntityBehavior<Item>.EntityLock entityLock = behavior.LockEntity();
+        return behavior.CanMeleeAttackCollideWithNPC(meleeAttackHitbox, player, target);
+    }
 
-    public override bool CanHitPvp(Item item, Player player, Player target) =>
-        !item.TryGetBehavior(out AnomalyItemBehavior behavior) || behavior.CanHitPvp(player, target);
+    public override bool CanHitPvp(Item item, Player player, Player target)
+    {
+        if (!item.TryGetBehavior(out AnomalyItemBehavior behavior))
+            return true;
+        using EntityBehavior<Item>.EntityLock entityLock = behavior.LockEntity();
+        return behavior.CanHitPvp(player, target);
+    }
 }

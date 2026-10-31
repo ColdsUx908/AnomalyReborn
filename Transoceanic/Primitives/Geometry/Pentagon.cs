@@ -38,15 +38,27 @@ public struct Pentagon : IEquatable<Pentagon>, ICollidableWithRectangle
         Rotation = rotation;
     }
 
+    /// <summary>
+    /// 比较 Center、CircumRadius、Rotation，使用成员本身的相等语义。
+    /// </summary>
     public readonly bool Equals(Pentagon other) => Center == other.Center && CircumRadius == other.CircumRadius && Rotation == other.Rotation;
+    /// <inheritdoc/>
     public override readonly bool Equals(object obj) => obj is Pentagon other && Equals(other);
+    /// <inheritdoc/>
     public override readonly int GetHashCode() => HashCode.Combine(Center, CircumRadius, Rotation);
+    /// <summary>
+    /// 按 Equals 比较 Center、CircumRadius、Rotation，相等时返回 true。
+    /// </summary>
     public static bool operator ==(Pentagon left, Pentagon right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(Pentagon left, Pentagon right) => !(left == right);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回当前五边形的字符串表示形式。
-    /// </summary>
+    /// </remarks>
     /// <returns>
     /// 一个格式为 <c>"Pentagon { Center: {X:0 Y:0}, Radius:5, Rotation:0 }"</c> 的字符串。
     /// </returns>
@@ -69,6 +81,9 @@ public struct Pentagon : IEquatable<Pentagon>, ICollidableWithRectangle
         }
     }
 
+    /// <summary>
+    /// 判断当前形状与指定形状是否相交；双方坐标和尺寸须使用同一坐标系和单位。
+    /// </summary>
     public readonly bool Collides(Rectangle other)
     {
         const int count = 5;
@@ -103,6 +118,9 @@ public struct Pentagon : IEquatable<Pentagon>, ICollidableWithRectangle
         return true;
     }
 
+    /// <summary>
+    /// 判断当前形状与指定形状是否相交；双方坐标和尺寸须使用同一坐标系和单位。
+    /// </summary>
     public readonly bool Collides(Pentagon other)
     {
         const int count = 5;
@@ -141,6 +159,9 @@ public struct Pentagon : IEquatable<Pentagon>, ICollidableWithRectangle
         return true;
     }
 
+    /// <summary>
+    /// 判断指定矩形的所有角点是否在当前凸多边形内部或边界上。
+    /// </summary>
     public readonly bool Contains(Rectangle other)
     {
         float apothem = CircumRadius * MathF.Cos(TOMathUtils.PiOver5);

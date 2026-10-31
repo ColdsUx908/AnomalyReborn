@@ -2,110 +2,157 @@ using Transoceanic.Runtime.Reflection;
 namespace Transoceanic.Core.Loading;
 
 /// <summary>
-/// 调度所有实现了 <see cref="IContentLoader"/> 接口的类型，在对应的生命周期阶段按优先级执行加载与卸载逻辑。
+/// 在一次模组加载期间复用加载器实例，并按优先级调度生命周期回调。
 /// </summary>
-public sealed class TOLoaderHandler : ModSystem
+internal sealed class TOLoaderHandler : ModSystem
 {
-    /// <summary>
-    /// 在所有配方添加后调用，按 <see cref="LoadPriorityAttribute"/> 排序执行加载器的 <see cref="IContentLoader.PostAddRecipes"/>。
-    /// </summary>
+    private static readonly Dictionary<Type, object> _Instances = [];
+    private static readonly List<ITOLoader> _InternalLoaders = [];
+    private static readonly List<IContentLoader> _ContentLoaders = [];
+    private static readonly List<IContentLoader> _WorldLoaders = [];
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 按配方回调的加载优先级依次通知已登记的内容加载器。
+    /// </remarks>
     public override void PostAddRecipes()
     {
-        foreach (IContentLoader loader in
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>()
-            orderby pair.type.GetMethod(nameof(IContentLoader.PostAddRecipes), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0
-            select pair.instance)
-        {
+        foreach (IContentLoader loader in OrderLoaders(_ContentLoaders, nameof(IContentLoader.PostAddRecipes)))
             loader.PostAddRecipes();
-        }
     }
 
-    /// <summary>
-    /// 模组卸载时调用，按优先级逆序执行加载器的 <see cref="IContentLoader.OnModUnload"/>。
-    /// </summary>
-    public override void OnModUnload()
-    {
-        foreach (IContentLoader loader in (
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>()
-            orderby pair.type.GetMethod(nameof(IContentLoader.PostSetupContent), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
-            select pair.instance).Reverse())
-        {
-            loader.OnModUnload();
-        }
-    }
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 逆序清理世界和内容加载器；单个清理失败不阻止其余清理，最终聚合抛出异常。
+    /// </remarks>
+    public override void OnModUnload() => TOCleanup.Execute([
+        () => UnloadReverse(_WorldLoaders, loader => loader.OnWorldUnload()),
+        () => UnloadReverse(_ContentLoaders, loader => loader.OnModUnload()),
+        TOCleanup.Run
+    ]);
 
-    /// <summary>
-    /// 世界加载时调用，按优先级顺序执行加载器的 <see cref="IContentLoader.OnWorldLoad"/>。
-    /// </summary>
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 按优先级执行世界加载，调用前登记清理资格，包含初始化失败的加载器。
+    /// </remarks>
     public override void OnWorldLoad()
     {
-        foreach (IContentLoader loader in
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>()
-            orderby pair.type.GetMethod(nameof(IContentLoader.OnWorldLoad), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
-            select pair.instance)
+        foreach (IContentLoader loader in OrderLoaders(_ContentLoaders, nameof(IContentLoader.OnWorldLoad)))
         {
+            // 失败的回调也可能已经分配了资源，保留它以供清理。
+            _WorldLoaders.Add(loader);
             loader.OnWorldLoad();
         }
     }
 
-    /// <summary>
-    /// 世界卸载时调用，按优先级逆序执行加载器的 <see cref="IContentLoader.OnWorldUnload"/>。
-    /// </summary>
-    public override void OnWorldUnload()
-    {
-        if (TOMain.Loaded)
-        {
-            foreach (IContentLoader loader in (
-                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>()
-                orderby pair.type.GetMethod(nameof(IContentLoader.OnWorldLoad), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
-                select pair.instance).Reverse())
-            {
-                loader.OnWorldUnload();
-            }
-        }
-    }
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 按实际世界初始化的逆序清理加载器，并聚合清理异常。
+    /// </remarks>
+    public override void OnWorldUnload() => UnloadReverse(_WorldLoaders, loader => loader.OnWorldUnload());
 
     /// <summary>
-    /// 通过反射发现所有实现 <see cref="ITOLoader"/> 的类型，
-    /// 并按 <see cref="LoadPriorityAttribute"/> 指定的优先级降序调用其 <c>Load()</c> 方法。
+    /// 发现并复用框架程序集中的 ITOLoader 实例，按优先级初始化并登记卸载资格。
     /// </summary>
     internal static void Loader_Load()
     {
-        foreach (ITOLoader loader in
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOReflectionUtils.Assembly)
-            orderby pair.Type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
-            select pair.Instance)
+        foreach (ITOLoader loader in OrderLoaders(GetLoaderInstances<ITOLoader>(TOReflectionUtils.Assembly), nameof(ITOLoader.Load)))
         {
+            _InternalLoaders.Add(loader);
             loader.Load();
         }
     }
 
     /// <summary>
-    /// 通过反射发现所有实现 <see cref="IContentLoader"/> 的类型，
-    /// 并按 <see cref="LoadPriorityAttribute"/> 指定的优先级降序调用其 <c>PostSetupContent()</c> 方法。
+    /// 发现并复用各模组的内容加载器，按优先级初始化并登记卸载资格。
     /// </summary>
     internal static void Loader_PostSetupContent()
     {
-        foreach (IContentLoader loader in
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>()
-            orderby pair.type.GetMethod(nameof(IContentLoader.PostSetupContent), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
-            select pair.instance)
+        foreach (IContentLoader loader in OrderLoaders(GetLoaderInstances<IContentLoader>(), nameof(IContentLoader.PostSetupContent)))
         {
+            _ContentLoaders.Add(loader);
             loader.PostSetupContent();
         }
     }
 
     /// <summary>
-    /// 按加载时优先级的相反顺序调用所有 <see cref="ITOLoader"/> 的 <c>Unload()</c> 方法。
+    /// 逆序卸载框架加载器，并在 finally 中清空按类型保存的实例。
     /// </summary>
     internal static void Loader_Unload()
     {
-        foreach (ITOLoader loader in (
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>()
-            orderby pair.type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
-            select pair.instance).Reverse())
+        try
         {
-            loader.Unload();
+            UnloadReverse(_InternalLoaders, loader => loader.Unload());
         }
+        finally
+        {
+            _Instances.Clear();
+        }
+    }
+
+    /// <summary>
+    /// 行为分发与生命周期使用同一实例；显式跳过构造的粒子模板不走此入口。
+    /// </summary>
+    internal static IEnumerable<T> GetLoaderInstances<T>(Assembly assembly = null) where T : class
+    {
+        // 从实际内容取得所有权，支持手动添加的闭合泛型或由其他程序集提供的内容。
+        Dictionary<Type, T> registered = TOReflectionUtils.GetAllSupportedMods()
+            .SelectMany(mod => mod.GetContent()).OfType<T>()
+            .Where(content => assembly is null || content.GetType().Assembly == assembly)
+            .GroupBy(content => content.GetType())
+            .ToDictionary(group => group.Key, group => group.Single());
+        IEnumerable<Type> discovered = assembly is null
+            ? TOReflectionUtils.GetTypesDerivedFrom<T>()
+            : TOReflectionUtils.GetTypesDerivedFrom<T>(assembly);
+        // 保留已有反射类型顺序，只将反射列表没有的手动内容追加到末尾。
+        foreach (Type type in discovered.Concat(registered.Keys).Distinct())
+        {
+            if (registered.TryGetValue(type, out T content))
+            {
+                _Instances[type] = content;
+                yield return content;
+            }
+            else if (!typeof(ILoadable).IsAssignableFrom(type))
+            {
+                if (!_Instances.TryGetValue(type, out object instance))
+                {
+                    instance = Activator.CreateInstance(type, true);
+                    _Instances.Add(type, instance);
+                }
+                yield return (T)instance;
+            }
+        }
+    }
+
+    private static IEnumerable<T> OrderLoaders<T>(IEnumerable<T> loaders, string methodName) where T : class =>
+        loaders.OrderByDescending(loader => GetPriority(loader.GetType(), typeof(T), methodName))
+            .ThenBy(loader => loader.GetType().Assembly.GetName().Name, StringComparer.Ordinal)
+            .ThenBy(loader => loader.GetType().FullName, StringComparer.Ordinal)
+            .ToArray();
+
+    private static double GetPriority(Type type, Type interfaceType, string methodName)
+    {
+        InterfaceMapping mapping = type.GetInterfaceMap(interfaceType);
+        int index = Array.FindIndex(mapping.InterfaceMethods, method => method.Name == methodName);
+        return index < 0 ? 0 : mapping.TargetMethods[index].GetCustomAttribute<LoadPriorityAttribute>(true)?.Priority ?? 0;
+    }
+
+    private static void UnloadReverse<T>(List<T> loaders, Action<T> unload)
+    {
+        List<Exception> exceptions = [];
+        for (int i = loaders.Count - 1; i >= 0; i--)
+        {
+            try
+            {
+                unload(loaders[i]);
+            }
+            catch (Exception exception)
+            {
+                exceptions.Add(exception);
+            }
+        }
+        loaders.Clear();
+        if (exceptions.Count > 0)
+            throw new AggregateException("Loader cleanup failed.", exceptions);
     }
 }

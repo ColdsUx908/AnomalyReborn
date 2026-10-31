@@ -4,7 +4,8 @@ namespace Transoceanic.Runtime.ILEditing;
 /// 标记一个不在 IL 编辑类中的方法，指明其要编辑 IL 的目标源类型。
 /// </summary>
 /// <remarks>
-/// 注意：在已由类似 <c>ILEditingClassToAttribute</c> 特性标记的类中使用此特性可能导致 IL 编辑方法重复应用。
+/// 自动扫描使用 IL_方法名__参数类型 标记选择重载；例如 IL_Update__Player。
+/// 可连续追加 __ 类型标记以消除歧义；无法唯一定位时会明确报错。
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class ILEditingMethodToAttribute : Attribute

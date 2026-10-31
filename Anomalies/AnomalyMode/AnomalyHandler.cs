@@ -2,7 +2,7 @@ using Terraria.GameContent.UI.Elements;
 
 namespace Anomalies.AnomalyMode;
 
-public sealed class AnomalyHandler : ModSystem, IContentLoader
+public sealed class AnomalyHandler : ModSystem
 {
     public const string LocalizationPrefix = AnomalySharedData.ModLocalizationPrefix + "AnomalyMode.";
 
@@ -135,7 +135,8 @@ public sealed class AnomalyHandler : ModSystem, IContentLoader
     }
     #endregion 世界内难度管理
 
-    void IContentLoader.PostSetupContent()
+    /// <summary>在内容加载时安装世界难度文本钩子，数据在实际绘制时读取。</summary>
+    public override void Load()
     {
         //世界难度显示（渐变色）
         On_AWorldListItem.GetDifficulty += On_AWorldListItem_GetDifficulty;

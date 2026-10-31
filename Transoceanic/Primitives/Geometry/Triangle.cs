@@ -44,12 +44,27 @@ public struct Triangle : IEquatable<Triangle>, ICollidableWithRectangle
         return new Triangle(a, b, c);
     }
 
+    /// <summary>
+    /// 比较 PointA、PointB、PointC，使用成员本身的相等语义。
+    /// </summary>
     public readonly bool Equals(Triangle other) => PointA == other.PointA && PointB == other.PointB && PointC == other.PointC;
+    /// <inheritdoc/>
     public override readonly bool Equals(object obj) => obj is Triangle other && Equals(other);
+    /// <inheritdoc/>
     public override readonly int GetHashCode() => HashCode.Combine(PointA, PointB, PointC);
+    /// <summary>
+    /// 按 Equals 比较 PointA、PointB、PointC，相等时返回 true。
+    /// </summary>
     public static bool operator ==(Triangle left, Triangle right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(Triangle left, Triangle right) => !(left == right);
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 返回包含几何类型名和各构造数据的文本表示。
+    /// </remarks>
     public override readonly string ToString() => $"Triangle {{ A: {PointA}, B: {PointB}, C: {PointC} }}";
 
     /// <summary>

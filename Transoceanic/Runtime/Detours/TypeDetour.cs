@@ -1,4 +1,5 @@
 using MonoMod.RuntimeDetour;
+using Transoceanic.Core.ModIntegration;
 
 namespace Transoceanic.Runtime.Detours;
 
@@ -15,7 +16,7 @@ namespace Transoceanic.Runtime.Detours;
 /// 该方法内部将检查 <see cref="ShouldApplyDetour"/>，若为 <see langword="true"/> 则执行 <see cref="ApplyDetour"/>。
 /// </para>
 /// </remarks>
-public abstract class TypeDetour<T> : ITODetourProvider
+public abstract class TypeDetour<T> : RegisteredContent<TypeDetour<T>>, ITODetourProvider
 {
     /// <summary>
     /// 获取当前 Detour 提供者所针对的源类型。
@@ -23,7 +24,12 @@ public abstract class TypeDetour<T> : ITODetourProvider
     /// </summary>
     public static readonly Type SourceType = typeof(T);
 
-    /// <inheritdoc />
+    /// <summary>
+    /// 提供者应用优先级，数值越大越先应用。
+    /// </summary>
+    public virtual decimal LoadPriority => 0m;
+
+    /// <inheritdoc/>
     /// <remarks>
     /// 该方法是 <see cref="ITODetourProvider.ApplyDetour"/> 的显式接口实现，
     /// 用于统一触发 Detour 应用流程。它会先评估 <see cref="ShouldApplyDetour"/> 属性，
@@ -81,9 +87,9 @@ public abstract class TypeDetour<T> : ITODetourProvider
     /// </returns>
     /// <remarks>
     /// 此方法的默认实现首先检查 <paramref name="detour"/> 是否确在当前类型声明，
-    /// 然后尝试通过 <see cref="TODetourHandler.EvaluateDetourName(MethodInfo, out string)"/> 
-    /// 从委托方法名中解析出目标源方法的名称（<paramref name="sourceName"/>）。
-    /// 如果两者均满足，则调用 <see cref="TODetourHandler.Modify"/> 执行实际的 Detour 应用，并返回生成的 <see cref="Hook"/>；
+    /// 然后尝试通过 <see cref="TODetourHandler.EvaluateDetourName(MethodInfo, out string)"/>
+    /// 从委托方法名中解析出目标源方法的名称（<c>sourceName</c>）。
+    /// 如果两者均满足，则调用 <see cref="TODetourHandler.Modify(Type, string, bool, MethodInfo)"/> 执行实际的 Detour 应用，并返回生成的 <see cref="Hook"/>；
     /// 否则返回 <see langword="null"/>，表示未执行任何操作。
     /// <para>
     /// 使用此方法的派生类通常应在 <see cref="ApplyDetour"/> 重写中进行调用。

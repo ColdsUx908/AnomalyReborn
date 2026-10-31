@@ -1,6 +1,9 @@
 namespace Transoceanic.Game.World;
 
-public sealed class TOWorldState : ModSystem, ITOLoader
+/// <summary>
+/// 提供现实节日、世界难度及旅途模式大师难度状态。
+/// </summary>
+public sealed class TOWorldState : ModSystem
 {
     /// <summary>
     /// 当前日期是否为愚人节（4 月 1 日）。
@@ -27,6 +30,10 @@ public sealed class TOWorldState : ModSystem, ITOLoader
     /// </summary>
     public static bool LegendaryMode => Main.getGoodWorld && MasterMode;
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 每次实体更新前根据旅途模式难度滑块刷新 JourneyMasterMode；非旅途模式时设为 false。
+    /// </remarks>
     public override void PreUpdateEntities()
     {
         if (Main.GameMode == GameModeID.Creative)
@@ -42,5 +49,9 @@ public sealed class TOWorldState : ModSystem, ITOLoader
             JourneyMasterMode = false;
     }
 
-    void ITOLoader.Unload() => JourneyMasterMode = false;
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 在原生内容加载时登记世界难度缓存清理，不参与自定义加载排序。
+    /// </remarks>
+    public override void Load() => TOCleanup.Register(() => JourneyMasterMode = false);
 }

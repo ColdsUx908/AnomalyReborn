@@ -1,9 +1,12 @@
 namespace Transoceanic.Game.Timing;
 
-public sealed class TOGameTime : ModSystem, ITOLoader
+/// <summary>
+/// 缓存宿主游戏时间并维护按世界重置的全局帧计时。
+/// </summary>
+public sealed class TOGameTime : ModSystem
 {
     /// <summary>
-    /// 获取当前帧的游戏时间对象 <see cref="GameTime"/>，由主循环更新。
+    /// 获取当前帧的游戏时间对象 <see cref="GameTime"/>，由主循环更新，卸载时释放引用。
     /// </summary>
     public static GameTime Time { get; private set; }
 
@@ -38,20 +41,41 @@ public sealed class TOGameTime : ModSystem, ITOLoader
     /// </summary>
     public static TerrariaTime TerrariaNow => new(Time24Hour, Main.GetMoonPhase());
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 每次实体更新前将全局游戏计时器增加一，单位为更新帧。
+    /// </remarks>
     public override void PreUpdateEntities() => GameTimer++;
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 进入世界时将全局游戏帧计时归零。
+    /// </remarks>
     public override void OnWorldLoad()
     {
         GameTimer = 0;
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 退出世界时将全局游戏帧计时归零。
+    /// </remarks>
     public override void OnWorldUnload()
     {
         GameTimer = 0;
     }
 
-    void ITOLoader.Load()
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 在 tML 内容加载时安装宿主时间钩子；不依赖其他内容注册完成。
+    /// </remarks>
+    public override void Load()
     {
+        TOCleanup.Register(() =>
+        {
+            GameTimer = 0;
+            Time = null;
+        });
         GameTimer = 0;
 
         On_Main.Update += On_Main_Update;
@@ -69,6 +93,4 @@ public sealed class TOGameTime : ModSystem, ITOLoader
             }
         }
     }
-
-    void ITOLoader.Unload() => GameTimer = 0;
 }

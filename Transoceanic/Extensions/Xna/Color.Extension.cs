@@ -1,5 +1,8 @@
 namespace Transoceanic.Extensions.Xna;
 
+/// <summary>
+/// 提供向量、颜色、矩形、绘制和 Effect 参数扩展。
+/// </summary>
 public static partial class TOXnaExtensions
 {
     private static class Color_Extension

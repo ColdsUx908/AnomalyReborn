@@ -5,10 +5,22 @@ namespace Transoceanic.Primitives.Physics;
 /// </summary>
 public class VerletSimulatedSegment
 {
+    /// <summary>
+    /// Verlet 节点当前位置，单位与模拟系统一致。
+    /// </summary>
     public Vector2 Position;
+    /// <summary>
+    /// 上一模拟步的位置，用于由位置差推算 Verlet 速度。
+    /// </summary>
     public Vector2 OldPosition;
+    /// <summary>
+    /// 节点是否固定；模拟时应跳过固定节点位移。
+    /// </summary>
     public bool Locked;
 
+    /// <summary>
+    /// 创建 Verlet 节点，当前位置和历史位置均初始化为 position；locked 控制节点是否固定。
+    /// </summary>
     public VerletSimulatedSegment(Vector2 position, bool locked = false)
     {
         Position = position;

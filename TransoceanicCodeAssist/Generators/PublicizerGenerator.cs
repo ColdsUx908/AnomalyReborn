@@ -1,5 +1,6 @@
 namespace TransoceanicCodeAssist.Generators;
 
+/// <summary>为带 Publicize 特性的类型生成强类型反射访问包装。</summary>
 [Generator]
 public class PublicizerGenerator : IIncrementalGenerator
 {
@@ -17,8 +18,11 @@ public class PublicizerGenerator : IIncrementalGenerator
 
         public PublicizerTargetSymbolInfo(INamedTypeSymbol symbol, Compilation compilation) : base(symbol)
         {
-            if (!Valid)
+            if (!Valid || !GeneratorValidation.IsValidDeclaration(symbol, false))
+            {
+                Valid = false;
                 return;
+            }
 
             if (!TryGetAttribute(AttributeFullName, out AttributeData attributeData) || attributeData.ConstructorArguments.Length != 1)
             {
@@ -101,7 +105,7 @@ public class PublicizerGenerator : IIncrementalGenerator
                             }
                         }
                         break;
-                    case IMethodSymbol methodSymbol when methodSymbol.MethodKind == MethodKind.Ordinary && methodSymbol.DeclaredAccessibility != Accessibility.Public:
+                    case IMethodSymbol methodSymbol when methodSymbol.MethodKind == MethodKind.Ordinary && methodSymbol.DeclaredAccessibility != Accessibility.Public && GeneratorValidation.IsSupported(methodSymbol):
                         if (methodSymbol.IsStatic)
                         {
                             StaticMethodSymbols.Add(methodSymbol);
@@ -118,6 +122,7 @@ public class PublicizerGenerator : IIncrementalGenerator
         }
     }
 
+    /// <summary>获取写入生成源码的 GeneratedCode 特性标记。</summary>
     public static string GeneratedCodeMarker => SourceGeneratorHelper.GetGeneratedCodeMarker("PublicizerGenerator");
 
     private const string HelperMethodClass = "global::Transoceanic.Runtime.Publicizing.PublicizerHandler.";
@@ -125,8 +130,11 @@ public class PublicizerGenerator : IIncrementalGenerator
 
     private const string TargetTypeFieldName = "c_TargetType";
 
+    /// <summary>注册增量生成管线；从当前编译中的目标类型生成源码。</summary>
+    /// <param name="context">Roslyn 提供的增量生成器初始化上下文。</param>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
+        GeneratorValidation.Register(context, "Transoceanic.Runtime.Publicizing.PublicizeAttribute", false);
         IncrementalValueProvider<ImmutableArray<PublicizerTargetSymbolInfo>> c = SourceGeneratorHelper.GetCollectedTypeInfos(context, (s, complition) => new PublicizerTargetSymbolInfo(s, complition));
         context.RegisterSourceOutput(c, RegisterAction);
     }
@@ -194,7 +202,7 @@ public class PublicizerGenerator : IIncrementalGenerator
                 {{GeneratedCodeMarker}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
                 public unsafe static readonly {{ReflectionNamespace}}FieldInfo {{fieldInfoName}} = {{HelperMethodClass}}GetInstanceField({{TargetTypeFieldName}}, "{{name}}");
-                public unsafe {{typeName}} {{name}}
+                public unsafe {{typeName}} @{{name}}
                 {
                     get => ({{typeName}}){{fieldInfoName}}.GetValue(base.Source);
                     {{setter}}
@@ -256,7 +264,7 @@ public class PublicizerGenerator : IIncrementalGenerator
                 {{GeneratedCodeMarker}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
                 public unsafe static readonly {{ReflectionNamespace}}PropertyInfo {{propertyInfoName}} = {{HelperMethodClass}}GetInstanceProperty({{TargetTypeFieldName}}, {{"\"" + name + "\""}});
-                public unsafe {{typeName}} {{name}}
+                public unsafe {{typeName}} @{{name}}
                 {
                     {{getter}}
                     {{setter}}
@@ -312,17 +320,7 @@ public class PublicizerGenerator : IIncrementalGenerator
             }
             else
             {
-                List<string> paramTypeNames = [..
-                    from IParameterSymbol param in methodSymbol.Parameters
-                    let typeName = param.Type.Name
-                        .Replace(".", "_")
-                        .Replace("<", "_")
-                        .Replace(">", "_")
-                        .Replace(",", "_")
-                        .Replace(" ", "")
-                        + (param.RefKind != RefKind.None ? "ByRef" : "")
-                    select typeName];
-                string suffix = name + (paramTypeNames.Count > 0 ? "_" + string.Join("_", paramTypeNames) : "");
+                string suffix = SourceGeneratorHelper.GetPublicizerMethodSuffix(methodSymbol);
 
                 string methodInfoFieldName = $"i_m_{suffix}";
                 string paramTypesArray = string.Join(", ", methodSymbol.Parameters.Select(p =>
@@ -349,7 +347,7 @@ public class PublicizerGenerator : IIncrementalGenerator
                     {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
                     public unsafe static readonly {{delegateTypeName}} {{delegateFieldName}} = {{methodInfoFieldName}}.CreateDelegate<{{delegateTypeName}}>();
                     {{GeneratedCodeMarker}}
-                    public unsafe {{methodSymbolInfo.ReturnTypeString}} {{name}}({{string.Join(", ", methodSymbolInfo.ParameterDeclarationsWithObjectForNonPublic)}}) => {{delegateFieldName}}.Invoke({{string.Join(", ", parameterNames)}});
+                    public unsafe {{methodSymbolInfo.ReturnTypeString}} @{{name}}({{string.Join(", ", methodSymbolInfo.ParameterDeclarationsWithObjectForNonPublic)}}) => {{delegateFieldName}}.Invoke({{string.Join(", ", parameterNames)}});
                     """);
             }
 
@@ -397,7 +395,7 @@ public class PublicizerGenerator : IIncrementalGenerator
                 {{GeneratedCodeMarker}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
                 public unsafe static readonly {{ReflectionNamespace}}FieldInfo {{fieldInfoName}} = {{HelperMethodClass}}GetStaticField({{TargetTypeFieldName}}, {{"\"" + name + "\""}});
-                public unsafe static {{typeName}} {{name}}
+                public unsafe static {{typeName}} @{{name}}
                 {
                     get => ({{typeName}}){{fieldInfoName}}.GetValue(null);
                     {{setter}}
@@ -459,7 +457,7 @@ public class PublicizerGenerator : IIncrementalGenerator
                 {{GeneratedCodeMarker}}
                 {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
                 public unsafe static readonly {{ReflectionNamespace}}PropertyInfo {{propertyInfoName}} = {{HelperMethodClass}}GetStaticProperty({{TargetTypeFieldName}}, {{"\"" + name + "\""}});
-                public unsafe static {{typeName}} {{name}}
+                public unsafe static {{typeName}} @{{name}}
                 {
                     {{getter}}
                     {{setter}}
@@ -515,17 +513,7 @@ public class PublicizerGenerator : IIncrementalGenerator
             }
             else
             {
-                List<string> paramTypeNames = [..
-                    from IParameterSymbol param in methodSymbol.Parameters
-                    let typeName = param.Type.Name
-                        .Replace(".", "_")
-                        .Replace("<", "_")
-                        .Replace(">", "_")
-                        .Replace(",", "_")
-                        .Replace(" ", "")
-                        + (param.RefKind != RefKind.None ? "ByRef" : "")
-                    select typeName];
-                string suffix = name + (paramTypeNames.Count > 0 ? "_" + string.Join("_", paramTypeNames) : "");
+                string suffix = SourceGeneratorHelper.GetPublicizerMethodSuffix(methodSymbol);
 
                 string methodInfoFieldName = $"s_m_{suffix}";
                 string paramTypesArray = string.Join(", ", methodSymbol.Parameters.Select(p =>
@@ -551,7 +539,7 @@ public class PublicizerGenerator : IIncrementalGenerator
                     {{SourceGeneratorHelper.NeverBrowsableIdentifier}}
                     public unsafe static readonly {{delegateTypeName}} {{delegateFieldName}} = {{methodInfoFieldName}}.CreateDelegate<{{delegateTypeName}}>();
                     {{GeneratedCodeMarker}}
-                    public unsafe static {{methodSymbolInfo.ReturnTypeString}} {{name}}({{string.Join(", ", methodSymbolInfo.ParameterDeclarationsWithObjectForNonPublic)}}) => {{delegateFieldName}}.Invoke({{string.Join(", ", methodSymbolInfo.ParameterNamesForCall)}});
+                    public unsafe static {{methodSymbolInfo.ReturnTypeString}} @{{name}}({{string.Join(", ", methodSymbolInfo.ParameterDeclarationsWithObjectForNonPublic)}}) => {{delegateFieldName}}.Invoke({{string.Join(", ", methodSymbolInfo.ParameterNamesForCall)}});
                     """);
             }
 

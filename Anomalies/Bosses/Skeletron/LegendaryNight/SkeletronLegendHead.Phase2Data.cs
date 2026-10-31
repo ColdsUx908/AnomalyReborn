@@ -1,4 +1,4 @@
-﻿namespace Anomalies.Bosses.Skeletron.LegendaryNight;
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed partial class SkeletronLegendHead
 {
@@ -12,9 +12,9 @@ public sealed partial class SkeletronLegendHead
         public const int StarShockwave = 28 * 60 + 20;
         public const int PlatinumCoinShockwave = 34 * 60 + 40;
         public const int SlimeEnd = 41 * 60;
-        public const int DemonShadowEnd = 42 * 60 + 30;
-        public const int PlatinumCoinEnd = 44 * 60;
-        public const int StarRainEnd = 45 * 60 + 30;
+        public const int DemonShadowEnd = 42 * 60 + 33;
+        public const int PlatinumCoinEnd = 44 * 60 + 6;
+        public const int StarRainEnd = 45 * 60 + 39;
         public const int Phase2ArenaSound = 46 * 60 + 45;
         public const int End = 47 * 60 + 10;
         public const int AttackBeatDuration = StarShockwave - SlimeShockwave;
@@ -42,22 +42,23 @@ public sealed partial class SkeletronLegendHead
     public static class Mechanic2Data
     {
         public const int StartMusicTime = Mechanic1Data.End;
+        public const int ArenaBrakeStartMusicTime = Mechanic1Data.PlatinumCoinEnd;
+        public const int ArenaBrakeEndMusicTime = Mechanic1Data.StarRainEnd;
+        public const int ArenaBrakeDuration = ArenaBrakeEndMusicTime - ArenaBrakeStartMusicTime;
+        public const int ArenaRepositionDelay = 15;
+        public const int ArenaRepositionBrakeDuration = 30;
+        public const float ArenaRepositionHeight = 320f;
+        public const float ArenaRepositionSpeed = 40f;
+        public const int ChargeParticleMinLifetime = 60;
+        public const int ChargeParticleMaxLifetime = 72;
+        public const float ChargeParticleMinRadius = 310f;
+        public const float ChargeParticleMaxRadius = 380f;
+        public const float ChargeParticleRangeGrowth = 0.5f;
+        public const float ChargeParticleScaleGrowth = 0.9f;
+        public const int ArenaDepartureDuration = 60;
         public const int FirstStrikeMusicTime = 52 * 60;
         public const int SecondStrikeMusicTime = 55 * 60 + 8;
         public const int ThirdStrikeMusicTime = 58 * 60 + 16;
-        public const int Star1MusicTime = 56 * 60 + 45;
-        public const int Star2MusicTime = 57 * 60 + 20;
-        public const int Star3MusicTime = 63 * 60;
-        public const int Star4MusicTime = 63 * 60 + 12;
-        public const int Star5MusicTime = 63 * 60 + 24;
-        public const int Star6MusicTime = 63 * 60 + 36;
-        public const int Star7MusicTime = 67 * 60 + 48;
-        public const int Star8MusicTime = 68 * 60;
-        public const int Star9MusicTime = 68 * 60 + 12;
-        public const int Star10MusicTime = 68 * 60 + 24;
-        public const int Star11MusicTime = 68 * 60 + 48;
-        public const int Star12MusicTime = 69 * 60 + 12;
-        public const int Star13MusicTime = 69 * 60 + 24;
         public const int EndMusic = 72 * 60 + 30;
         public const int FirstStrike = FirstStrikeMusicTime - StartMusicTime;
         public const int LastStrike = ThirdStrikeMusicTime - StartMusicTime;
@@ -84,8 +85,9 @@ public sealed partial class SkeletronLegendHead
         public const int LaserFadeInDuration = 12;
         public const int LaserFadeOutDuration = 18;
         public const int RainDuration = 80;
-        public const int ReturnStart = LastStrike + RainDuration;
-        public const int ReturnDuration = 60;
+        public const int ReturnMusicTime = 59 * 60 + 50;
+        public const int ReturnStart = LastStrike + BodyFollowThroughDuration;
+        public const int ReturnDuration = ReturnMusicTime - StartMusicTime - ReturnStart;
         public const int End = EndMusic - StartMusicTime;
         public const int StarCount = 300;
         public const int StarTrailLength = 12;

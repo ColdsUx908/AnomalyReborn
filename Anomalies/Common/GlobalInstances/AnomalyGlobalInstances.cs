@@ -29,7 +29,7 @@ public sealed partial class AnomalyPlayer : ModPlayer
     partial void SyncExtraData(int toWho, int fromWho, bool newPlayer);
 }
 
-public sealed partial class AnomalyGlobalNPC : GlobalNPC, IContentLoader
+public sealed partial class AnomalyGlobalNPC : GlobalNPC
 {
     public override bool InstancePerEntity => true;
 
@@ -41,13 +41,26 @@ public sealed partial class AnomalyGlobalNPC : GlobalNPC, IContentLoader
     public readonly Union64[] DebugData = new Union64[4];
 #endif
 
-    private const int AISlot = 66;
-    private const int AISlot2 = 33;
-    private const int AISlot3 = 33;
-    private const int AISlot4 = 17;
+    private const int AISlot = 6;
+    private const int AISlot2 = 2;
+    private const int AISlot3 = 7;
+    private const int AISlot4 = 2;
 
     public Union32[] AnomalyAI32 { get; private set; } = new Union32[AISlot];
     public Union64[] AnomalyAI64 { get; private set; } = new Union64[AISlot2];
+
+    /// <summary>显式申请内容 AI 数据槽；只扩容，保留数据与尾部标记。不得持有旧数组的 ref 跨越此调用。</summary>
+    public void EnsureAICapacity(int ai32Count, int ai64Count)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(ai32Count);
+        ArgumentOutOfRangeException.ThrowIfNegative(ai64Count);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(ai32Count, 64);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(ai64Count, 32);
+        AnomalyAI32 = AnomalyAICapacity.Grow(AnomalyAI32, ai32Count, 2);
+        AnomalyAI64 = AnomalyAICapacity.Grow(AnomalyAI64, ai64Count, 1);
+        if (_Network_ProjectileReferenceCache.Length < AnomalyAI64.Length - 1)
+            Array.Resize(ref _Network_ProjectileReferenceCache, AnomalyAI64.Length - 1);
+    }
 
     public ref BitArray32 AIChanged32 => ref AnomalyAI32[^2].Bits;
     public ref BitArray32 AIChanged32_2 => ref AnomalyAI32[^1].Bits;
@@ -56,7 +69,8 @@ public sealed partial class AnomalyGlobalNPC : GlobalNPC, IContentLoader
     public Projectile GetProjectileReference(int slot)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _Network_ProjectileReferenceCache.Length);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, 32);
+        EnsureAICapacity(0, slot + 1);
         ref ProjectileNetReference reference = ref _Network_ProjectileReferenceCache[slot];
         reference.SetPackedValue(AnomalyAI64[slot].L);
         return reference.Resolve();
@@ -65,7 +79,8 @@ public sealed partial class AnomalyGlobalNPC : GlobalNPC, IContentLoader
     public void SetProjectileReference(NPC npc, int slot, Projectile projectile)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(slot);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _Network_ProjectileReferenceCache.Length);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, 32);
+        EnsureAICapacity(0, slot + 1);
         ref ProjectileNetReference reference = ref _Network_ProjectileReferenceCache[slot];
         reference.Set(projectile);
         long packed = reference.PackedValue;
@@ -111,8 +126,8 @@ public sealed partial class AnomalyGlobalNPC : GlobalNPC, IContentLoader
 
     public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
     {
-        TONetUtils.ReadAI32Snapshot(binaryReader, AnomalyAI32, 2);
-        TONetUtils.ReadAI64Snapshot(binaryReader, AnomalyAI64, 1);
+        AnomalyAI32 = AnomalyAICapacity.Read32(binaryReader, AnomalyAI32, 2, 64);
+        AnomalyAI64 = AnomalyAICapacity.Read64(binaryReader, AnomalyAI64, 32);
         TONetUtils.ReadAI32Snapshot(binaryReader, InternalAnomalyAI32, 1);
         TONetUtils.ReadAI64Snapshot(binaryReader, InternalAnomalyAI64, 1);
     }
@@ -130,16 +145,27 @@ public sealed partial class AnomalyGlobalProjectile : GlobalProjectile
     public readonly Union64[] DebugData = new Union64[4];
 #endif
 
-    private const int AISlot = 33;
-    private const int AISlot2 = 17;
+    private const int AISlot = 5;
+    private const int AISlot2 = 2;
 
     public Union32[] AnomalyAI32 { get; private set; } = new Union32[AISlot];
     public Union64[] AnomalyAI64 { get; private set; } = new Union64[AISlot2];
 
+    /// <summary>显式申请内容 AI 数据槽；只扩容，保留数据与尾部标记。不得持有旧数组的 ref 跨越此调用。</summary>
+    public void EnsureAICapacity(int ai32Count, int ai64Count)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(ai32Count);
+        ArgumentOutOfRangeException.ThrowIfNegative(ai64Count);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(ai32Count, 32);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(ai64Count, 16);
+        AnomalyAI32 = AnomalyAICapacity.Grow(AnomalyAI32, ai32Count, 1);
+        AnomalyAI64 = AnomalyAICapacity.Grow(AnomalyAI64, ai64Count, 1);
+    }
+
     public ref BitArray32 AIChanged32 => ref AnomalyAI32[^1].Bits;
     public ref BitArray64 AIChanged64 => ref AnomalyAI64[^1].Bits;
 
-    private Union32[] InternalAnomalyAI32 { get; set; } = new Union32[AISlot];
+    private Union32[] InternalAnomalyAI32 { get; set; } = new Union32[4];
     private Union64[] InternalAnomalyAI64 { get; set; } = new Union64[AISlot2];
 
     private ref BitArray32 InternalAIChanged32 => ref InternalAnomalyAI32[^1].Bits;
@@ -179,8 +205,8 @@ public sealed partial class AnomalyGlobalProjectile : GlobalProjectile
         projectile.timeLeft = binaryReader.ReadInt32();
         projectile.extraUpdates = binaryReader.ReadInt32();
         projectile.tileCollide = bitReader.ReadBit();
-        TONetUtils.ReadAI32Snapshot(binaryReader, AnomalyAI32, 1);
-        TONetUtils.ReadAI64Snapshot(binaryReader, AnomalyAI64, 1);
+        AnomalyAI32 = AnomalyAICapacity.Read32(binaryReader, AnomalyAI32, 1, 32);
+        AnomalyAI64 = AnomalyAICapacity.Read64(binaryReader, AnomalyAI64, 16);
         TONetUtils.ReadAI32Snapshot(binaryReader, InternalAnomalyAI32, 1);
         TONetUtils.ReadAI64Snapshot(binaryReader, InternalAnomalyAI64, 1);
     }

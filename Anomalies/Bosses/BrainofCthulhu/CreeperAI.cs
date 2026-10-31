@@ -5,6 +5,8 @@ namespace Anomalies.Bosses.BrainofCthulhu;
 
 public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
 {
+    protected override int AI32Capacity => 8;
+
     public override int ApplyingType => NPCID.Creeper;
 
     public override void SetDefaultsFinal()
@@ -14,7 +16,7 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) =>
-        TONPCUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
+        AnomalyUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
 
     public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => type != CalamityLogicType_NPCBehavior.VanillaOverrideAI;
     public float FlowAmount => MathHelper.Lerp(0.1f, 0.15f, NPC.localAI[3]);

@@ -1,5 +1,8 @@
 namespace Transoceanic.Behaviors;
 
+/// <summary>
+/// 面向全部 NPC 的行为基类，由全局 NPC 调度器筛选并调用。
+/// </summary>
 public abstract partial class GlobalNPCBehavior : GlobalEntityBehavior<NPC>
 {
     /// <inheritdoc cref="GlobalNPC.CanFallThroughPlatforms"/>

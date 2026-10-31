@@ -5,6 +5,10 @@ namespace Anomalies.Bosses.BrainofCthulhu;
 
 public sealed partial class BrainofCthulhu : AnomalyNPCBehavior<BrainofCthulhu>
 {
+    protected override int AI32Capacity => 64;
+
+    protected override int AI64Capacity => 17;
+
     public override int ApplyingType => NPCID.BrainofCthulhu;
 
     public override bool CheckDead()
@@ -22,7 +26,7 @@ public sealed partial class BrainofCthulhu : AnomalyNPCBehavior<BrainofCthulhu>
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) =>
-        TONPCUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
+        AnomalyUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
 
     public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => type != CalamityLogicType_NPCBehavior.VanillaOverrideAI;
     private static SoundStyle _StunHitSound = new("Anomalies/Bosses/BrainofCthulhu/Sounds/StunHit", 3);

@@ -2,11 +2,21 @@ using Transoceanic.GlobalInstances;
 
 namespace Transoceanic.Behaviors;
 
+/// <summary>
+/// 按物品类型匹配的行为基类，回调前绑定当前物品。
+/// 不支持 NetSend 和 NetReceive；物品网络数据由所属 ModItem 或 GlobalItem 实现。
+/// </summary>
 public abstract partial class SingleItemBehavior : SingleEntityBehavior<Item>
 {
-    public Item Item { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity; }
+    /// <summary>
+    /// 获取当前绑定实体的 Item 引用；行为共享此绑定，不应跨回调缓存。
+    /// </summary>
+    public Item Item { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Entity; }
 
-    public TOGlobalItem OceanItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _Entity.Ocean; }
+    /// <summary>
+    /// 获取当前绑定实体的 OceanItem 引用；行为共享此绑定，不应跨回调缓存。
+    /// </summary>
+    public TOGlobalItem OceanItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Entity.Ocean; }
 
     /// <inheritdoc cref="GlobalItem.AddRecipes"/>
     public virtual void AddRecipes() { }

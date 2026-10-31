@@ -8,11 +8,14 @@ namespace Transoceanic.Primitives;
 /// </summary>
 /// <remarks>
 /// <list type="bullet">
-/// <item/><description/>设置 <see langword="true"/> 时：内部计数器增加 2（上限 2），<see cref="Value"/> 立即变为 <see langword="true"/>。
-/// <item/><description/>设置 <see langword="false"/> 时：内部计数器减少 1（下限 0），<see cref="Value"/> 仅在计数器归零后变为 <see langword="false"/>。
-/// <item/><description/>因此，从 <see langword="false"/> 切换到 <see langword="true"/> 只需一次 <see langword="true"/> 设置，而从 <see langword="true"/> 切换回 <see langword="false"/> 需要两次连续的 <see langword="false"/> 设置。
+/// <item><description>设置 <see langword="true"/> 时：内部计数器增加 2（上限 2），<see cref="Value"/> 立即变为 <see langword="true"/>。
+/// </description></item>
+/// <item><description>设置 <see langword="false"/> 时：内部计数器减少 1（下限 0），<see cref="Value"/> 仅在计数器归零后变为 <see langword="false"/>。
+/// </description></item>
+/// <item><description>因此，从 <see langword="false"/> 切换到 <see langword="true"/> 只需一次 <see langword="true"/> 设置，而从 <see langword="true"/> 切换回 <see langword="false"/> 需要两次连续的 <see langword="false"/> 设置。
+/// </description></item>
 /// </list>
-/// <para>该类型实现了 <see cref="IEquatable{GuaranteedBoolean}"/>，相等比较基于内部计数器的值。</para>
+/// <para>该类型实现了 <see cref="IEquatable{HysteresisBoolean}"/>，相等比较基于内部计数器的值。</para>
 /// <para>支持到 <see cref="bool"/> 的隐式转换，可直接用于条件判断。</para>
 /// </remarks>
 public struct HysteresisBoolean : IEquatable<HysteresisBoolean>
@@ -45,12 +48,26 @@ public struct HysteresisBoolean : IEquatable<HysteresisBoolean>
         set => _Value = Math.Clamp(_Value + (value ? 2 : -1), 0, 2);
     }
 
+    /// <summary>
+    /// 读取当前布尔状态；不改变内部防抖计数器。
+    /// </summary>
     public static implicit operator bool(HysteresisBoolean guaranteedBoolean) => guaranteedBoolean.Value;
 
+    /// <summary>
+    /// 比较 内部计数器值（即使转换后的布尔值相同，计数不同也不相等），使用成员本身的相等语义。
+    /// </summary>
     public readonly bool Equals(HysteresisBoolean other) => _Value == other._Value;
+    /// <inheritdoc/>
     public override readonly bool Equals(object obj) => obj is HysteresisBoolean other && Equals(other);
+    /// <summary>
+    /// 按 Equals 比较 内部计数器值（即使转换后的布尔值相同，计数不同也不相等），相等时返回 true。
+    /// </summary>
     public static bool operator ==(HysteresisBoolean left, HysteresisBoolean right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(HysteresisBoolean left, HysteresisBoolean right) => !(left == right);
+    /// <inheritdoc/>
     public override readonly int GetHashCode() => _Value.GetHashCode();
 }
 

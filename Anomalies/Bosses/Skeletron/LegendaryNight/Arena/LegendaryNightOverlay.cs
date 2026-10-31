@@ -15,8 +15,8 @@ public sealed class LegendaryNightOverlay : CustomOverlay
     private static Asset<Texture2D> _BoneStick;
     [LoadTexture(TexturePath + "BoneBall")]
     private static Asset<Texture2D> _BoneBall;
-    [LoadTexture(TexturePath + "Pentagon")]
-    private static Asset<Texture2D> _Pentagon;
+    [LoadTexture(TexturePath + "MaterializedStar")]
+    private static Asset<Texture2D> _MaterializedStar;
 
     public LegendaryNightArena Arena;
     public LegendaryNightPhase2Arena Phase2Arena;
@@ -134,6 +134,7 @@ public sealed class LegendaryNightOverlay : CustomOverlay
 
     private void DrawMagicCircle(SpriteBatch spriteBatch)
     {
+        DrawStarburst(spriteBatch);
         DrawMechanic2HalfField(spriteBatch);
         float intensity = Phase2Arena.MaterializationIntensity;
         float materializedOpacity = MathHelper.Lerp(Phase2Arena.MaterializationWarning * 0.22f, 0.65f, intensity);
@@ -141,7 +142,6 @@ public sealed class LegendaryNightOverlay : CustomOverlay
         {
             using RenderTargetLease lease = RenderTargetPool.Shared.Rent(
                 Main.instance.GraphicsDevice, Main.screenWidth, Main.screenHeight, RenderTargetDescriptor.Default);
-            Pentagon pentagon = Phase2Arena.CentralPentagon;
             Annulus ring = Phase2Arena.MaterializedRing;
             Texture2D circle = AnomalyTextures.Extra.BasicCircleLarge;
             using (lease.Scope(clearColor: Color.Transparent))
@@ -160,8 +160,8 @@ public sealed class LegendaryNightOverlay : CustomOverlay
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
                     DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
                 // 512 方形透明图，几何中心 (256,256)，外接圆半径 250，顶点朝右。
-                spriteBatch.DrawFromCenter(_Pentagon.Value, pentagon.Center - Main.screenPosition, null,
-                    Color.White, pentagon.Rotation, pentagon.CircumRadius / 250f);
+                spriteBatch.DrawFromCenter(_MaterializedStar.Value, Phase2Arena.Projectile.Center - Main.screenPosition, null,
+                    Color.White, Phase2Arena.MagicCircleRotation, Phase2Arena.MainCircleRadius / 250f);
                 spriteBatch.End();
             }
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
@@ -173,7 +173,7 @@ public sealed class LegendaryNightOverlay : CustomOverlay
         for (int i = 0; i < 3; i++)
         {
             (Vector2 center, float radius, float rotation) = Phase2Arena.GetMagicCircle(i);
-            DrawMagicCirclePart(spriteBatch, center, radius, rotation, true);
+            DrawMagicCirclePart(spriteBatch, center, radius, rotation, true, i);
         }
         DrawMagicCirclePart(spriteBatch, Phase2Arena.Projectile.Center, Phase2Arena.Radius, 0f, false);
         DrawMechanic3Connections(spriteBatch);
@@ -203,11 +203,16 @@ public sealed class LegendaryNightOverlay : CustomOverlay
         }
     }
 
-    private void DrawMagicCirclePart(SpriteBatch spriteBatch, Vector2 worldCenter, float radius, float rotation, bool drawStar)
+    private void DrawMagicCirclePart(SpriteBatch spriteBatch, Vector2 worldCenter, float radius, float rotation, bool drawStar, int circleIndex = 0)
     {
         float intensity = Phase2Arena.MaterializationIntensity;
         float warning = Phase2Arena.MaterializationWarning;
+        float starburstGlow = circleIndex > 0 ? Phase2Arena.StarburstGlow : 0f;
+        intensity = Math.Max(intensity, starburstGlow);
         Color color = Color.Lerp(Color.Lerp(LegendaryNightHandler.StarColor, Color.OrangeRed, warning), Color.White, intensity);
+        if (circleIndex > 0)
+            color = Color.Lerp(color, circleIndex == 2 ? LegendaryNightPhase2Arena.FastStarburstColor
+                : LegendaryNightPhase2Arena.SlowStarburstColor, starburstGlow);
         float opacity = Phase2Arena.Intensity * MathHelper.Lerp(0.65f + warning * 0.3f, 1f, intensity);
         float width = MathHelper.Lerp(3f + warning * 5f, LegendaryNightPhase2Arena.LaserWidth, intensity);
         float glowWidth = MathHelper.Lerp(14f, 22f, intensity);
@@ -220,6 +225,43 @@ public sealed class LegendaryNightOverlay : CustomOverlay
             edges[i] = (worldCenter + (rotation + MathHelper.TwoPi * i / 5f).ToRotationVector2() * radius,
                 worldCenter + (rotation + MathHelper.TwoPi * (i + 2) / 5f).ToRotationVector2() * radius);
         AnomalyDrawUtils.DrawGlowingLines(spriteBatch, edges, color, opacity, width, glowWidth);
+    }
+
+    private void DrawStarburst(SpriteBatch spriteBatch)
+    {
+        if (Phase2Arena.StarburstIndex < 0 || Phase2Arena.StarburstOpacity <= 0f)
+            return;
+        Vector2 center = Phase2Arena.PredictStarburstPosition(Phase2Arena.StarburstIndex);
+        float opacity = Phase2Arena.StarburstOpacity;
+        Texture2D circle = AnomalyTextures.Extra.BasicCircleLarge;
+        using RenderTargetLease lease = RenderTargetPool.Shared.Rent(Main.instance.GraphicsDevice,
+            Main.screenWidth, Main.screenHeight, RenderTargetDescriptor.Default);
+        using (lease.Scope(clearColor: Color.Transparent))
+        {
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            spriteBatch.DrawFromCenter(circle, center - Main.screenPosition, null, Color.White,
+                scale: Phase2Arena.StarburstRadius * 2f / circle.Width);
+            spriteBatch.End();
+            if (Phase2Arena.StarburstIsRing)
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred, TODrawUtils.EraseBlend, SamplerState.LinearClamp,
+                    DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+                spriteBatch.DrawFromCenter(circle, center - Main.screenPosition, null, Color.White,
+                    scale: Phase2Arena.StarburstSafeRadius * 2f / circle.Width);
+                spriteBatch.End();
+            }
+        }
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
+            DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
+        spriteBatch.Draw(lease.Target, Vector2.Zero, (Phase2Arena.StarburstAge < 0 ? Color.Red : Color.White) * opacity);
+        spriteBatch.End();
+        Color color = Phase2Arena.StarburstAge < 0 ? Color.Red : Color.White;
+        AnomalyDrawUtils.DrawGlowingCircle(spriteBatch, center, Phase2Arena.StarburstRadius, color, opacity,
+            Phase2Arena.StarburstAge < 0 ? 3f : LegendaryNightPhase2Arena.LaserWidth);
+        if (Phase2Arena.StarburstIsRing)
+            AnomalyDrawUtils.DrawGlowingCircle(spriteBatch, center, Phase2Arena.StarburstSafeRadius, color, opacity,
+                Phase2Arena.StarburstAge < 0 ? 3f : LegendaryNightPhase2Arena.LaserWidth);
     }
 
     private void DrawMechanic2HalfField(SpriteBatch spriteBatch)

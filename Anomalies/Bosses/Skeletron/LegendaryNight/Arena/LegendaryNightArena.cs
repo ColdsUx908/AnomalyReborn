@@ -1,4 +1,4 @@
-using Anomalies.GameContents.Base;
+﻿using Anomalies.GameContents.Base;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
@@ -85,7 +85,7 @@ public sealed class LegendaryNightArena : BaseRingArenaProjectile
             if (TONetworkEnvironment.NotClient)
             {
                 bool created = false;
-                Projectile.NewProjectileAction<LegendaryNightPhase2Arena>(SourceAI, Target?.Center ?? Master.Center,
+                Projectile.NewProjectileAction<LegendaryNightPhase2Arena>(SourceAI, Master.Center,
                     Vector2.Zero, SkeletronLegendHead.ArenaDamage * 4, 0f, action: p =>
                     {
                         LegendaryNightPhase2Arena arena = p.GetModProjectile<LegendaryNightPhase2Arena>();

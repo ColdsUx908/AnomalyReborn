@@ -3,11 +3,16 @@ using MonoMod.Cil;
 
 namespace Anomalies.Bosses.Skeletron;
 
-public sealed class SkeletronHandler : IContentLoader
+public sealed class SkeletronHandler : ILoadable
 {
-    void IContentLoader.PostSetupContent() => IL_NPC.checkDead += RestrictHandDeathCasters;
+    /// <summary>在 tML 内容加载时安装手部死亡 IL 修改，失败日志使用加载入口的所属模组。</summary>
+    /// <param name="mod">由 tML 提供的所属模组。</param>
+    void ILoadable.Load(Mod mod) => IL_NPC.checkDead += il => RestrictHandDeathCasters(il, mod);
 
-    private static void RestrictHandDeathCasters(ILContext il)
+    // IL 钩子交由 tML 卸载，此入口不重复退订。
+    void ILoadable.Unload() { }
+
+    private static void RestrictHandDeathCasters(ILContext il, Mod mod)
     {
         // TODO(tModLoader 升级，尤其 1.4.5)：重新核对 checkDead 的手部死亡生成分支和生成源。
         // 当前安装的 1.4.4.9 在 type == SkeletronHand 分支内以 NaturalSpawn 生成三个暗黑法师；
@@ -20,7 +25,7 @@ public sealed class SkeletronHandler : IContentLoader
                 i => i.MatchLdcI4(NPCID.SkeletronHand),
                 i => i.MatchBneUn(out end)))
         {
-            AnomalyUtils.ILFailure(nameof(SkeletronHandler), "Could not locate Skeletron hand death caster branch.");
+            AnomalyUtils.ILFailure(mod, nameof(SkeletronHandler), "Could not locate Skeletron hand death caster branch.");
             return;
         }
 

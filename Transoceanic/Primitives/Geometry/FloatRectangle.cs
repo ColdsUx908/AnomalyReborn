@@ -111,15 +111,27 @@ public struct FloatRectangle : IEquatable<FloatRectangle>, ICollidableWithRectan
     /// <returns>根据内部点生成的 <see cref="FloatRectangle"/>。</returns>
     public static FloatRectangle FromInnerPoint(Vector2 point, float left, float right, float top, float bottom) => new(new Vector2(point.X - left, point.Y - top), left + right, top + bottom);
 
+    /// <summary>
+    /// 比较 Position、Width、Height，使用成员本身的相等语义。
+    /// </summary>
     public readonly bool Equals(FloatRectangle other) => Position == other.Position && Width == other.Width && Height == other.Height;
+    /// <inheritdoc/>
     public override readonly bool Equals(object obj) => obj is FloatRectangle other && Equals(other);
+    /// <inheritdoc/>
     public override readonly int GetHashCode() => HashCode.Combine(Position, Width, Height);
+    /// <summary>
+    /// 按 Equals 比较 Position、Width、Height，相等时返回 true。
+    /// </summary>
     public static bool operator ==(FloatRectangle left, FloatRectangle right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(FloatRectangle left, FloatRectangle right) => !(left == right);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回当前矩形的字符串表示形式。
-    /// </summary>
+    /// </remarks>
     /// <returns>
     /// 一个格式为 <c>"FloatRectangle { Position: {X:0 Y:0}, Width:100, Height:50 }"</c> 的字符串，
     /// 其中 <c>Position</c> 使用 <see cref="Vector2"/> 的默认格式输出，
@@ -152,6 +164,12 @@ public struct FloatRectangle : IEquatable<FloatRectangle>, ICollidableWithRectan
     /// <returns>如果点在矩形内（含边界），则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
     public readonly bool Contains(Vector2 point) => point.X >= Left && point.X <= Right && point.Y >= Top && point.Y <= Bottom;
 
+    /// <summary>
+    /// 判断当前形状与指定形状是否相交；双方坐标和尺寸须使用同一坐标系和单位。
+    /// </summary>
     public readonly bool Collides(Rectangle other) => Left < other.Right && Right > other.Left && Top < other.Bottom && Bottom > other.Top;
+    /// <summary>
+    /// 判断当前形状与指定形状是否相交；双方坐标和尺寸须使用同一坐标系和单位。
+    /// </summary>
     public readonly bool Collides(FloatRectangle other) => Left < other.Right && Right > other.Left && Top < other.Bottom && Bottom > other.Top;
 }

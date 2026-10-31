@@ -40,15 +40,27 @@ public struct Ellipse : IEquatable<Ellipse>, ICollidableWithRectangle
         Rotation = TOMathUtils.NormalizeWithPeriod(rotation);
     }
 
+    /// <summary>
+    /// 比较 Center、A、B、Rotation，使用成员本身的相等语义。
+    /// </summary>
     public readonly bool Equals(Ellipse other) => Center == other.Center && A == other.A && B == other.B && Rotation == other.Rotation;
+    /// <inheritdoc/>
     public override readonly bool Equals(object obj) => obj is Ellipse other && Equals(other);
+    /// <inheritdoc/>
     public override readonly int GetHashCode() => HashCode.Combine(Center, A, B, Rotation);
+    /// <summary>
+    /// 按 Equals 比较 Center、A、B、Rotation，相等时返回 true。
+    /// </summary>
     public static bool operator ==(Ellipse left, Ellipse right) => left.Equals(right);
+    /// <summary>
+    /// 返回相等运算符结果的逻辑取反。
+    /// </summary>
     public static bool operator !=(Ellipse left, Ellipse right) => !left.Equals(right);
 
-    /// <summary>
+    /// <inheritdoc/>
+    /// <remarks>
     /// 返回当前椭圆的字符串表示形式。
-    /// </summary>
+    /// </remarks>
     /// <returns>
     /// 一个格式为 <c>"Ellipse { Center: {X:0 Y:0}, A:10, B:5, Rotation:0.785 }"</c> 的字符串，
     /// 其中 <c>Center</c> 使用 <see cref="Vector2"/> 的默认格式输出，
@@ -93,6 +105,9 @@ public struct Ellipse : IEquatable<Ellipse>, ICollidableWithRectangle
         }
     }
 
+    /// <summary>
+    /// 判断当前形状与指定形状是否相交；双方坐标和尺寸须使用同一坐标系和单位。
+    /// </summary>
     public readonly bool Collides(Rectangle other)
     {
         Parallelogram localParallelogram = ((Parallelogram)(FloatRectangle)other).WorldToLocal(LocalCoordinateSystem);

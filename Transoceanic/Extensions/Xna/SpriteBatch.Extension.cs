@@ -3,6 +3,9 @@ using Transoceanic.Runtime.Publicizing.Wrappers;
 
 namespace Transoceanic.Extensions.Xna;
 
+/// <summary>
+/// 提供向量、颜色、矩形、绘制和 Effect 参数扩展。
+/// </summary>
 public static partial class TOXnaExtensions
 {
     extension(SpriteBatch spriteBatch)
@@ -16,6 +19,7 @@ public static partial class TOXnaExtensions
         /// <param name="depthStencilState">要应用的新深度模板状态（null 表示不变）。</param>
         /// <param name="rasterizerState">要应用的新光栅化状态（null 表示不变）。</param>
         /// <param name="customEffect">要应用的新自定义效果（null 表示不变）。</param>
+        /// <param name="effectIsNull">为 true 时显式移除 Effect；否则 null 表示保留当前效果。</param>
         /// <param name="transformMatrix">要应用的新变换矩阵。</param>
         /// <returns>包含原始状态的 SpriteBatchSnapshot 结构体。</returns>
         public SpriteBatchSnapshot ChangeState(
@@ -56,7 +60,7 @@ public static partial class TOXnaExtensions
         /// 创建一个新的 SpriteBatchScope 对象，用于在使用完毕后自动恢复 SpriteBatch 的绘制状态。
         /// </summary>
         /// <param name="beginWhenDisposed">是否在释放时开始新的绘制批次。</param>
-        /// <returns></returns>
+        /// <returns>保存当前绘制参数的作用域；使用 using 释放，以恢复进入前的绘制状态。</returns>
         public SpriteBatchScope Scope(bool beginWhenDisposed) => new(spriteBatch, beginWhenDisposed);
 
         /// <summary>
@@ -68,6 +72,7 @@ public static partial class TOXnaExtensions
         /// <param name="depthStencilState">要应用的新深度模板状态（null 表示不变）。</param>
         /// <param name="rasterizerState">要应用的新光栅化状态（null 表示不变）。</param>
         /// <param name="customEffect">要应用的新自定义效果（null 表示不变）。</param>
+        /// <param name="effectIsNull">为 true 时显式移除 Effect；否则 null 表示保留当前效果。</param>
         /// <param name="transformMatrix">要应用的新变换矩阵（null 表示不变）。</param>
         /// <param name="beginWhenDisposed">是否在释放时开始新的绘制批次。</param>
         /// <returns>一个新的 SpriteBatchScope 对象。</returns>

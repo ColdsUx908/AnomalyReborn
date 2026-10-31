@@ -2,6 +2,8 @@ namespace Anomalies.Bosses.BrainofCthulhu;
 
 public class BloodScythe : AnomalyModProjectile
 {
+    protected override int AI64Capacity => 2;
+
     public override string LocalizationCategory => "Bosses.BrainofCthulhu";
     public override string Texture => "Anomalies/Bosses/BrainofCthulhu/Assets/VerticalSmearRagged";
 

@@ -2,6 +2,9 @@ using Transoceanic.Commands;
 
 namespace Transoceanic.Core.Diagnostics;
 
+/// <summary>
+/// 提供框架调试开关、日志和调试输出工具。
+/// </summary>
 public static class TODebug
 {
     /// <summary>

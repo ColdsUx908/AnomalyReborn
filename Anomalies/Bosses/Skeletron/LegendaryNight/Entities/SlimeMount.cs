@@ -56,6 +56,15 @@ public sealed class SlimeMount : AnomalyModProjectile
             }
         }
 
+        // 2/3：化身直线喷射；3仅让贴图自转，不改变轨迹。
+        if (Projectile.ai[1] >= 2f)
+        {
+            Projectile.frame = 1;
+            if (Projectile.ai[1] == 3f)
+                Projectile.rotation += SkeletronLegendHead.SlimeAvatarData.MountSpinSpeed;
+            return;
+        }
+
         Timer1++;
         if (Projectile.ai[1] == 0f)
         {
@@ -94,7 +103,7 @@ public sealed class SlimeMount : AnomalyModProjectile
 
     public override bool PreDraw(ref Color lightColor)
     {
-        if (Projectile.ai[1] > 0f && Timer2 > 0)
+        if (Projectile.ai[1] == 1f && Timer2 > 0)
             DrawWarning();
         // 原地等待期间不显示坐骑；飞向落点的常态坐骑仍可见。
         if (Projectile.ai[1] == 0f && Projectile.velocity == Vector2.Zero)

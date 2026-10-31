@@ -1,5 +1,8 @@
 namespace Transoceanic.Localization;
 
+/// <summary>
+/// 提供框架本地化键的公共前缀和分类常量。
+/// </summary>
 public static class TOLocalizationKeys
 {
     /// <summary>

@@ -1,13 +1,13 @@
 namespace Transoceanic.Graphics.Rendering;
 
 /// <summary>
-///     Describes the creation parameters of a render target.
+/// 描述渲染目标的创建参数。
 /// </summary>
-/// <param name="Format"><see cref="RenderTarget2D.Format"/></param>
-/// <param name="Depth"><see cref="RenderTarget2D.DepthStencilFormat"/></param>
-/// <param name="MultiSampleCount"><see cref="RenderTarget2D.MultiSampleCount"/></param>
-/// <param name="Usage"><see cref="RenderTarget2D.RenderTargetUsage"/></param>
-/// <param name="GenerateMipmaps"><see cref="RenderTarget2D.LevelCount"/></param>
+/// <param name="Format">目标颜色缓冲区格式。</param>
+/// <param name="Depth">深度/模板缓冲区格式，None 表示不创建。</param>
+/// <param name="MultiSampleCount">多重采样数，负值按零保存；实际支持范围由图形设备决定。</param>
+/// <param name="Usage">目标切换时的内容保留策略；复用的池目标不会自动清屏。</param>
+/// <param name="GenerateMipmaps">是否创建 mipmap 层级。</param>
 public readonly record struct RenderTargetDescriptor(
     SurfaceFormat Format,
     DepthFormat Depth,
@@ -17,7 +17,7 @@ public readonly record struct RenderTargetDescriptor(
 )
 {
     /// <summary>
-    ///     Default creation parameters.
+    /// 默认创建参数。
     /// </summary>
     public static RenderTargetDescriptor Default { get; } = new(
         SurfaceFormat.Color,
@@ -28,8 +28,7 @@ public readonly record struct RenderTargetDescriptor(
     );
 
     /// <summary>
-    ///     <see cref="Default"/> with usage set to
-    ///     <see cref="RenderTargetUsage.PreserveContents"/>.
+    /// 与 <see cref="Default"/> 相同，但使用 <see cref="RenderTargetUsage.PreserveContents"/> 保留目标内容。
     /// </summary>
     public static RenderTargetDescriptor DefaultPreserveContents { get; } = new(
         SurfaceFormat.Color,
@@ -40,23 +39,23 @@ public readonly record struct RenderTargetDescriptor(
     );
 
     /// <summary>
-    ///     <see cref="RenderTarget2D.MultiSampleCount"/>
+    /// 非负的请求多重采样数；负的构造参数被限制为零。
     /// </summary>
     public int MultiSampleCount { get; } = Math.Max(0, MultiSampleCount);
 
     /// <summary>
-    ///     Creates a new 2D render target from the descriptor.
+    /// 根据当前描述符创建二维渲染目标。
     /// </summary>
-    /// <param name="device">The device to create the target from.</param>
-    /// <param name="width">The width of the target.</param>
-    /// <param name="height">The height of the target.</param>
+    /// <param name="device">用于创建目标的图形设备。</param>
+    /// <param name="width">目标宽度，单位为像素，必须大于零。</param>
+    /// <param name="height">目标高度，单位为像素，必须大于零。</param>
     public RenderTarget2D Create(GraphicsDevice device, int width, int height)
     {
         return new RenderTarget2D(device, width, height, GenerateMipmaps, Format, Depth, MultiSampleCount, Usage);
     }
 
     /// <summary>
-    ///     Constructs a descriptor from an existing target.
+    /// 从已有渲染目标提取创建参数。
     /// </summary>
     public static RenderTargetDescriptor From(RenderTarget2D target)
     {
@@ -64,29 +63,44 @@ public readonly record struct RenderTargetDescriptor(
             target.Format,
             target.DepthStencilFormat,
             target.MultiSampleCount,
-            RenderTargetUsage.DiscardContents,
+            target.RenderTargetUsage,
             target.LevelCount > 1
         );
     }
 }
 
 /// <summary>
-///     A leased target from a pool, to be returned back.
+/// 池中渲染目标的租约，使用完毕后须归还。
 /// </summary>
-/// <param name="pool">The pool leasing the target.</param>
-/// <param name="target">The target being leased.</param>
+/// <param name="pool">出租目标的池。</param>
+/// <param name="target">租用的渲染目标。</param>
 public sealed class RenderTargetLease(
     RenderTarget2D target,
     RenderTargetPool pool
 ) : IDisposable
 {
     /// <summary>
-    ///     The target being leased.
+    ///     当前租用的目标；归还或释放池后不得再读取或绘制此目标。
     /// </summary>
-    public RenderTarget2D Target { get; set; } = target;
+    public RenderTarget2D Target { get; } = target;
+
+    private bool _Returned;
 
     /// <summary>
-    ///     Returns the target back to the pool.
+    /// 校验租约所属池并标记首次归还；重复归还返回 false，池不匹配抛出 ArgumentException。
+    /// </summary>
+    internal bool TryReturn(RenderTargetPool owner)
+    {
+        if (!ReferenceEquals(pool, owner))
+            throw new ArgumentException("The lease belongs to another render target pool.", nameof(owner));
+        if (_Returned)
+            return false;
+        _Returned = true;
+        return true;
+    }
+
+    /// <summary>
+    /// 将租用的目标归还所属池；重复调用无效。
     /// </summary>
     public void Dispose()
     {
@@ -95,62 +109,38 @@ public sealed class RenderTargetLease(
 }
 
 /// <summary>
-///     Provides a resource pool that enables reusing instances of render
-///     targets.
+/// 提供可复用渲染目标实例的资源池。
 /// </summary>
-/// <remarks>
-///     Renting and returning buffers with a <see cref="RenderTargetPool"/> can
-///     increase performance in situations where targets are created and
-///     destroyed frequently, resulting in excessive use of VRAM.
-///     <br />
-///     This class is not thread-safe, and all methods and their implementations
-///     are expected to be invoked solely on the Main Thread unless explicitly
-///     specified otherwise.
-/// </remarks>
+/// <remarks>通过租用和归还复用目标，减少频繁创建和销毁图形资源的开销。<br /> 本类不保证线程安全，除非另有说明，所有方法及其实现均须在图形主线程调用。</remarks>
 public abstract class RenderTargetPool : IDisposable
 {
     // Store as field of derived shared type so the JIT can de-virtualize calls
     // to it when the Shared property gets inlined.
-    private static readonly SharedRenderTargetPool _Shared = new();
+    private static SharedRenderTargetPool _Shared = new();
 
     /// <summary>
-    ///     Retrieves a shared <see cref="RenderTargetPool"/> instance.
+    /// 获取共享的 <see cref="RenderTargetPool"/> 实例。
     /// </summary>
     /// <remarks>
-    ///     The shared pool provides a default implementation of
-    ///     <see cref="RenderTargetPool"/> that's intended for general
-    ///     applicability.  It assumes targets should not be manually cleared
-    ///     and always returns a target of the exact request descriptor and
-    ///     dimensions.
-    ///     <br />
-    ///     Disposed on unload.
+    /// 按设备、像素尺寸和描述符精确匹配，可能复用包含旧图像的目标；使用前按需清屏。
+    /// 缓存最多保留每键 4 个、总计 128 个目标，估算缓存显存不超过 128 MiB。
+    /// 租用和每帧绘制开始时检查空闲过期项；卸载时释放并替换共享池。
+    /// 预算不限制正在租用的目标，不包含驱动分配对齐等额外开销。
     /// </remarks>
     public static RenderTargetPool Shared => _Shared;
 
     /// <summary>
-    ///     Retrieves a buffer that is of the exact specified dimensions
-    ///     <paramref name="width"/> and <paramref name="height"/> with the
-    ///     given render target <paramref name="descriptor"/>.
+    /// 按指定设备、像素宽度 <paramref name="width"/>、高度 <paramref name="height"/> 和创建参数 <paramref name="descriptor"/> 租用渲染目标。
     /// </summary>
-    /// <param name="device">The device to initialize with.</param>
-    /// <param name="width">The width of the target.</param>
-    /// <param name="height">The height of the target.</param>
-    /// <param name="descriptor">The initialization parameters.</param>
-    /// <returns>
-    ///     A leased target which should be disposed upon use, automatically
-    ///     returning the target to the pool.
-    /// </returns>
+    /// <param name="device">用于创建或匹配目标的图形设备。</param>
+    /// <param name="width">目标宽度，单位为像素，必须大于零。</param>
+    /// <param name="height">目标高度，单位为像素，必须大于零。</param>
+    /// <param name="descriptor">渲染目标的创建参数。</param>
+    /// <returns>渲染目标租约；使用结束并解除目标绑定后释放租约，将目标归还池。</returns>
     /// <remarks>
-    ///     This buffer is loaned to the caller and should be returned to the
-    ///     same pool via, <see cref="Return"/> so that it may be reused in
-    ///     subsequent usage of <see cref="Rent"/>.  It is not a fatal error to
-    ///     not return a rented buffer, but failure to do so may lead to
-    ///     decreased application performance, as the pool may need to create a
-    ///     new buffer to replace the one lost.  The default
-    ///     <see cref="RenderTargetPool"/> implementation returns a leased
-    ///     target that will automatically return the pool on disposal, but
-    ///     different implementations or configurations are not required to do
-    ///     so.
+    /// 调用方用 using 管理返回的租约，结束绘制并解除目标绑定后 Dispose，将目标归还同一个池。
+    /// 不要直接 Dispose 租约的 Target；池负责底层资源释放。复用目标不保证内容已清空。
+    /// 本方法在图形主线程调用；专用服务器应跳过图形资源操作。
     /// </remarks>
     public abstract RenderTargetLease Rent(
         GraphicsDevice device,
@@ -160,88 +150,113 @@ public abstract class RenderTargetPool : IDisposable
     );
 
     /// <summary>
-    ///     Returns to the pool a render target that was previously obtained via
-    ///     <see cref="Rent"/> on the same <see name="RenderTargetPool"/>.
+    /// 归还此前通过本池 <see cref="Rent"/> 获取的渲染目标租约。
     /// </summary>
-    /// <param name="lease">
-    ///     The lease previously obtained from <see cref="Rent"/> to return to
-    ///     the pool.
-    /// </param>
+    /// <param name="lease">此前通过本池 <see cref="Rent"/> 获取的租约。</param>
     /// <remarks>
-    ///     This is automatically called by
-    ///     <see cref="RenderTargetLease.Dispose"/> and generally should not be
-    ///     called manually without being explicitly told to do so.
-    ///     <br />
-    ///     Once a buffer has been returned to the pool, the caller gives up all
-    ///     ownership of the buffer and must not use it.  The reference returned
-    ///     from a given call to <see cref="Rent"/> must only be returned via
-    ///     <see cref="Return"/> once.  The default
-    ///     <see cref="RenderTargetPool"/> may hold onto the returned buffer in
-    ///     order to rent it again, or it my release the returned buffer if it's
-    ///     determined that the pool already has enough buffers stored.
+    /// RenderTargetLease.Dispose 自动调用本方法。同一租约重复归还无效，错误池归还会抛出 ArgumentException。
+    /// 归还后不得再使用 Target。共享池会缓存可复用目标，池已释放、目标已释放或容量已满时释放或丢弃目标。
     /// </remarks>
-    public abstract void Return(RenderTargetLease lease);
+    /// <exception cref="ArgumentNullException">租约为 null。</exception>
+    /// <exception cref="ArgumentException">租约属于其他池。</exception>
+    public void Return(RenderTargetLease lease)
+    {
+        ArgumentNullException.ThrowIfNull(lease);
+        if (lease.TryReturn(this))
+            ReturnCore(lease.Target);
+    }
 
     /// <summary>
-    ///     Disposes of the pool and releases any owned render targets,
-    ///     including ones still potentially leased.
-    ///     <remarks />
-    ///     Generally, disposal should only be performed when either the
-    ///     consumer has ownership over the pool and knows when all buffers have
-    ///     been returned, or at the very end of execution and disposal must
-    ///     occur (such as during mod unloading).
+    /// 处理已通过租约归还校验的渲染目标，由派生池缓存或释放目标。
+    /// </summary>
+    protected abstract void ReturnCore(RenderTarget2D target);
+
+    /// <summary>
+    /// 释放池及其拥有的渲染目标，包括仍在出租的目标。<br /> 仅应在拥有该池且确认目标已不再使用时，或在模组卸载等必须释放资源的阶段调用。
     /// </summary>
     public abstract void Dispose();
 
-    private static readonly List<RenderTargetLease> _LeasesToClear = [];
+    private static List<RenderTargetLease> _LeasesToClear = [];
+    private static List<RenderTargetLease> _LeasesBeingCleared = [];
+    private static bool _ClearingLeases;
 
     /// <summary>
-    ///     Queues a lease to be disposed of on the next render frame for cases
-    ///     where ownership of the lease is given up for rendering during a
-    ///     frame.
+    /// 登记待归还租约，在下一次绘制开始时释放；适用于本帧绘制需要移交租约所有权的情况。
     /// </summary>
-    /// <param name="lease">
-    ///     The lease to dispose of at the start of the next frame.
-    /// </param>
-    /// <remarks>
-    ///     This API should generally be avoided when possible.  It's a
-    ///     last-resort option for when you cannot guarantee ownership over a
-    ///     target.
-    /// </remarks>
+    /// <param name="lease">在下一次绘制开始时归还的租约。</param>
+    /// <remarks>优先由调用方明确管理租约生命周期；仅在无法保持本帧目标所有权时使用延迟归还。</remarks>
     public static void ReturnNextFrame(RenderTargetLease lease)
     {
+        ArgumentNullException.ThrowIfNull(lease);
         _LeasesToClear.Add(lease);
     }
 
     /// <summary>
-    ///     Clears any pending leases that were queued via
-    ///     <see cref="ReturnNextFrame"/>.
+    /// 归还通过 <see cref="ReturnNextFrame"/> 登记的全部待处理租约；单项失败不阻止其余归还，最后聚合抛出异常。
     /// </summary>
     internal static void ClearPendingLeases()
     {
-        foreach (RenderTargetLease lease in _LeasesToClear)
+        if (_ClearingLeases)
+            return;
+        _Shared.TrimAged();
+        if (_LeasesToClear.Count == 0)
+            return;
+        (_LeasesToClear, _LeasesBeingCleared) = (_LeasesBeingCleared, _LeasesToClear);
+        _ClearingLeases = true;
+        List<Exception> failures = null;
+        try
         {
-            lease.Dispose();
+            foreach (RenderTargetLease lease in _LeasesBeingCleared)
+            {
+                try
+                {
+                    lease.Dispose();
+                }
+                catch (Exception exception)
+                {
+                    (failures ??= []).Add(exception);
+                }
+            }
         }
+        finally
+        {
+            _LeasesBeingCleared.Clear();
+            _ClearingLeases = false;
+        }
+        if (failures is not null)
+            throw new AggregateException("Deferred render target return failed.", failures);
+    }
 
-        _LeasesToClear.Clear();
+    /// <summary>
+    /// 归还延迟租约，并在 finally 中释放共享池、创建新的空共享池；在图形主线程调用。
+    /// </summary>
+    internal static void UnloadShared()
+    {
+        try
+        {
+            ClearPendingLeases();
+        }
+        finally
+        {
+            _Shared.Dispose();
+            _Shared = new();
+        }
     }
 }
 
 /// <summary>
-///     Extension methods for <see cref="RenderTargetPool"/> that operate
-///     agnostically on any implementation.
+/// 适用于任意 <see cref="RenderTargetPool"/> 实现的租用扩展方法。
 /// </summary>
 internal static class RenderTargetPoolExtensions
 {
     // TODO: Vector2 scale extensions and individual float width/height
     //       extensions.
 
-    /// <param name="pool">The pool to rent from.</param>
+    /// <param name="pool">提供租约的渲染目标池。</param>
     extension(RenderTargetPool pool)
     {
         /// <summary>
-        ///     See <see cref="RenderTargetPool.Rent"/>.
+        /// 使用默认创建参数租用指定像素尺寸的渲染目标。
         /// </summary>
         public RenderTargetLease Rent(
             GraphicsDevice device,
@@ -258,17 +273,12 @@ internal static class RenderTargetPoolExtensions
         }
 
         /// <summary>
-        ///     Retrieves a buffer of size <paramref name="baseSize"/> scaled by
-        ///     <paramref name="scale"/> rounded up to the nearest integer
-        ///     value.
+        /// 使用默认创建参数，按 <paramref name="scale"/> 缩放 <paramref name="baseSize"/>，各维向上取整且至少为一像素后租用目标。
         /// </summary>
-        /// <param name="device">The device to initialize with.</param>
-        /// <param name="baseSize">The base (unscaled) size of the target.</param>
-        /// <param name="scale">The scale factor of the target.</param>
-        /// <returns>
-        ///     A leased target which should be disposed upon use, automatically
-        ///     returning the target to the pool.
-        /// </returns>
+        /// <param name="device">用于创建或匹配目标的图形设备。</param>
+        /// <param name="baseSize">未缩放的目标像素尺寸。</param>
+        /// <param name="scale">目标缩放因子，必须大于零。</param>
+        /// <returns>渲染目标租约；使用结束并解除目标绑定后释放租约，将目标归还池。</returns>
         public RenderTargetLease RentScaled(
             GraphicsDevice device,
             Point baseSize,
@@ -284,18 +294,13 @@ internal static class RenderTargetPoolExtensions
         }
 
         /// <summary>
-        ///     Retrieves a buffer of size <paramref name="baseSize"/> scaled by
-        ///     <paramref name="scale"/> rounded up to the nearest integer value and
-        ///     with the given render target <paramref name="descriptor"/>.
+        /// 按 <paramref name="scale"/> 缩放 <paramref name="baseSize"/>，各维向上取整且至少为一像素，使用 <paramref name="descriptor"/> 租用目标。
         /// </summary>
-        /// <param name="device">The device to initialize with.</param>
-        /// <param name="baseSize">The base (unscaled) size of the target.</param>
-        /// <param name="scale">The scale factor of the target.</param>
-        /// <param name="descriptor">The initialization parameters.</param>
-        /// <returns>
-        ///     A leased target which should be disposed upon use, automatically
-        ///     returning the target to the pool.
-        /// </returns>
+        /// <param name="device">用于创建或匹配目标的图形设备。</param>
+        /// <param name="baseSize">未缩放的目标像素尺寸。</param>
+        /// <param name="scale">目标缩放因子，必须大于零。</param>
+        /// <param name="descriptor">渲染目标的创建参数。</param>
+        /// <returns>渲染目标租约；使用结束并解除目标绑定后释放租约，将目标归还池。</returns>
         public RenderTargetLease RentScaled(
             GraphicsDevice device,
             Point baseSize,
@@ -312,39 +317,55 @@ internal static class RenderTargetPoolExtensions
     }
 }
 
-// TODO: Account for different graphics devices?
+/// <summary>
+/// 按设备、尺寸和描述符缓存渲染目标的共享池，限制缓存容量并淘汰过期目标。
+/// </summary>
 internal sealed class SharedRenderTargetPool : RenderTargetPool
 {
     private readonly record struct Key(
+        GraphicsDevice Device,
         int Width,
         int Height,
         RenderTargetDescriptor Descriptor
     )
     {
+        /// <summary>
+        /// 从渲染目标提取设备、像素尺寸和创建描述符，生成缓存键。
+        /// </summary>
         public static Key From(RenderTarget2D target)
         {
-            return new Key(target.Width, target.Height, RenderTargetDescriptor.From(target));
+            return new Key(target.GraphicsDevice, target.Width, target.Height, RenderTargetDescriptor.From(target));
         }
     }
 
     private sealed class Entry
     {
+        /// <summary>
+        /// 此缓存键下可再次租出的渲染目标栈。
+        /// </summary>
         public Stack<RenderTarget2D> Targets { get; } = [];
 
+        /// <summary>
+        /// 该缓存键最近租出或归还目标时的 UTC 时间，用于过期清理。
+        /// </summary>
         public DateTime LastUsed { get; set; } = DateTime.UtcNow;
     }
 
     // TODO: We can tweak these later for performance?
     private const int MaxPerKey = 4;         // Max identical targets.
     private const int MaxTotalTargets = 128; // Max targets stored.
+    internal const long MaxCachedBytes = 128L * 1024 * 1024;
     private static readonly TimeSpan _MaxIdleTime = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan _MinimumTrimTime = TimeSpan.FromSeconds(1);
 
     private readonly Dictionary<Key, Entry> _Cache = [];
+    private readonly HashSet<RenderTarget2D> _LeasedTargets = [];
     private DateTime _LastTrimmed = DateTime.UtcNow;
     private int _TotalCached;
+    internal long CachedBytes { get; private set; }
     private bool _Disposed;
 
+    /// <inheritdoc/>
     public override RenderTargetLease Rent(GraphicsDevice device, int width, int height, RenderTargetDescriptor descriptor)
     {
         ArgumentNullException.ThrowIfNull(device);
@@ -354,7 +375,7 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
 
         try
         {
-            Key key = new Key(width, height, descriptor);
+            Key key = new(device, width, height, descriptor);
             if (!_Cache.TryGetValue(key, out Entry entry))
             {
                 _Cache[key] = entry = new Entry();
@@ -365,16 +386,24 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
             }
 
             RenderTarget2D target;
+            while (entry.Targets.Count > 0 && entry.Targets.Peek().IsDisposed)
+            {
+                entry.Targets.Pop();
+                _TotalCached--;
+                CachedBytes -= EstimateBytes(width, height, descriptor);
+            }
             if (entry.Targets.Count > 0)
             {
                 target = entry.Targets.Pop();
                 _TotalCached--;
+                CachedBytes -= EstimateBytes(width, height, descriptor);
             }
             else
             {
                 target = descriptor.Create(device, width, height);
             }
 
+            _LeasedTargets.Add(target);
             return new RenderTargetLease(target, this);
         }
         finally
@@ -383,12 +412,19 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
         }
     }
 
-    public override void Return(RenderTargetLease lease)
+    /// <inheritdoc/>
+    protected override void ReturnCore(RenderTarget2D target)
     {
-        ArgumentNullException.ThrowIfNull(lease);
-        ObjectDisposedException.ThrowIf(_Disposed, this);
+        if (!_LeasedTargets.Remove(target))
+            throw new InvalidOperationException("This target was not rented from this pool.");
+        if (_Disposed || target.IsDisposed)
+        {
+            if (!target.IsDisposed)
+                target.Dispose();
+            return;
+        }
 
-        Key key = Key.From(lease.Target);
+        Key key = Key.From(target);
         if (!_Cache.TryGetValue(key, out Entry entry))
         {
             _Cache[key] = entry = new Entry();
@@ -402,21 +438,27 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
 
         if (entry.Targets.Count < MaxPerKey)
         {
-            if (_TotalCached >= MaxTotalTargets)
+            long bytes = EstimateBytes(target.Width, target.Height, key.Descriptor);
+            if (_TotalCached >= MaxTotalTargets || bytes > MaxCachedBytes - CachedBytes)
             {
-                lease.Target.Dispose();
+                target.Dispose();
                 return;
             }
 
-            entry.Targets.Push(lease.Target);
+            entry.Targets.Push(target);
             _TotalCached++;
+            CachedBytes += bytes;
         }
         else
         {
-            lease.Target.Dispose();
+            target.Dispose();
         }
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// 释放全部缓存和仍出租的目标；重复调用无效，尚存租约随后仍可归还。
+    /// </remarks>
     public override void Dispose()
     {
         if (_Disposed)
@@ -425,6 +467,8 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
         }
 
         Trim();
+        foreach (RenderTarget2D target in _LeasedTargets)
+            target.Dispose();
         _Disposed = true;
     }
 
@@ -434,7 +478,9 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
         {
             while (entry.Targets.Count > 0)
             {
-                entry.Targets.Pop().Dispose();
+                RenderTarget2D target = entry.Targets.Pop();
+                CachedBytes -= EstimateBytes(target.Width, target.Height, RenderTargetDescriptor.From(target));
+                target.Dispose();
                 _TotalCached--;
             }
         }
@@ -442,7 +488,7 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
         _Cache.Clear();
     }
 
-    private void TrimAged()
+    internal void TrimAged()
     {
         DateTime now = DateTime.UtcNow;
 
@@ -462,12 +508,36 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
 
             while (entry.Targets.Count > 0)
             {
-                entry.Targets.Pop().Dispose();
+                RenderTarget2D target = entry.Targets.Pop();
+                CachedBytes -= EstimateBytes(target.Width, target.Height, key.Descriptor);
+                target.Dispose();
                 _TotalCached--;
             }
 
             _Cache.Remove(key);
         }
+    }
+
+    // Conservative payload estimate: unknown color formats use 16 bytes per pixel.
+    // Includes mip levels, multisample color/depth and the resolved color surface.
+    internal static long EstimateBytes(int width, int height, RenderTargetDescriptor descriptor)
+    {
+        int colorBytes = descriptor.Format == SurfaceFormat.Color ? 4 : 16;
+        int depthBytes = descriptor.Depth == DepthFormat.None ? 0 : 4;
+        long pixels = 0;
+        int mipWidth = width;
+        int mipHeight = height;
+        do
+        {
+            pixels += (long)mipWidth * mipHeight;
+            if (!descriptor.GenerateMipmaps || (mipWidth == 1 && mipHeight == 1))
+                break;
+            mipWidth = Math.Max(1, mipWidth / 2);
+            mipHeight = Math.Max(1, mipHeight / 2);
+        } while (true);
+        int samples = Math.Max(1, descriptor.MultiSampleCount);
+        return pixels * colorBytes + (long)width * height *
+            (depthBytes * (long)samples + (samples > 1 ? colorBytes * (long)samples : 0));
     }
 }
 

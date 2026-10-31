@@ -5,6 +5,9 @@ using Transoceanic.Graphics.Particles.BuiltIn;
 
 namespace Transoceanic.Extensions.Terraria;
 
+/// <summary>
+/// 提供 Terraria 实体、生成、世界与着色器的便捷扩展。
+/// </summary>
 public static partial class TOTerrariaExtensions
 {
     extension(Projectile projectile)
@@ -209,14 +212,14 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         public int Timer1
         {
-            get => projectile.Ocean.OceanAI32[^6].I;
+            get => projectile.Ocean.OceanAI32[TOGlobalProjectile.Timer1Slot].I;
             set
             {
                 TOGlobalProjectile ocean = projectile.Ocean;
-                if (ocean.OceanAI32[^6].I != value)
+                if (ocean.OceanAI32[TOGlobalProjectile.Timer1Slot].I != value)
                 {
-                    ocean.OceanAI32[^6].I = value;
-                    ocean.AIChanged32[^6] = true;
+                    ocean.OceanAI32[TOGlobalProjectile.Timer1Slot].I = value;
+                    ocean.AIChanged32[TOGlobalProjectile.Timer1Slot] = true;
                 }
             }
         }
@@ -226,14 +229,14 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         public int Timer2
         {
-            get => projectile.Ocean.OceanAI32[^5].I;
+            get => projectile.Ocean.OceanAI32[TOGlobalProjectile.Timer2Slot].I;
             set
             {
                 TOGlobalProjectile ocean = projectile.Ocean;
-                if (ocean.OceanAI32[^5].I != value)
+                if (ocean.OceanAI32[TOGlobalProjectile.Timer2Slot].I != value)
                 {
-                    ocean.OceanAI32[^5].I = value;
-                    ocean.AIChanged32[^5] = true;
+                    ocean.OceanAI32[TOGlobalProjectile.Timer2Slot].I = value;
+                    ocean.AIChanged32[TOGlobalProjectile.Timer2Slot] = true;
                 }
             }
         }
@@ -243,14 +246,14 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         public int Timer3
         {
-            get => projectile.Ocean.OceanAI32[^4].I;
+            get => projectile.Ocean.OceanAI32[TOGlobalProjectile.Timer3Slot].I;
             set
             {
                 TOGlobalProjectile ocean = projectile.Ocean;
-                if (ocean.OceanAI32[^4].I != value)
+                if (ocean.OceanAI32[TOGlobalProjectile.Timer3Slot].I != value)
                 {
-                    ocean.OceanAI32[^4].I = value;
-                    ocean.AIChanged32[^4] = true;
+                    ocean.OceanAI32[TOGlobalProjectile.Timer3Slot].I = value;
+                    ocean.AIChanged32[TOGlobalProjectile.Timer3Slot] = true;
                 }
             }
         }
@@ -260,14 +263,14 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         public float Timer4
         {
-            get => projectile.Ocean.OceanAI32[^3].F;
+            get => projectile.Ocean.OceanAI32[TOGlobalProjectile.Timer4Slot].F;
             set
             {
                 TOGlobalProjectile ocean = projectile.Ocean;
-                if (ocean.OceanAI32[^3].F != value)
+                if (ocean.OceanAI32[TOGlobalProjectile.Timer4Slot].F != value)
                 {
-                    ocean.OceanAI32[^3].F = value;
-                    ocean.AIChanged32[^3] = true;
+                    ocean.OceanAI32[TOGlobalProjectile.Timer4Slot].F = value;
+                    ocean.AIChanged32[TOGlobalProjectile.Timer4Slot] = true;
                 }
             }
         }
@@ -277,14 +280,14 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         public float Timer5
         {
-            get => projectile.Ocean.OceanAI32[^2].F;
+            get => projectile.Ocean.OceanAI32[TOGlobalProjectile.Timer5Slot].F;
             set
             {
                 TOGlobalProjectile ocean = projectile.Ocean;
-                if (ocean.OceanAI32[^2].F != value)
+                if (ocean.OceanAI32[TOGlobalProjectile.Timer5Slot].F != value)
                 {
-                    ocean.OceanAI32[^2].F = value;
-                    ocean.AIChanged32[^2] = true;
+                    ocean.OceanAI32[TOGlobalProjectile.Timer5Slot].F = value;
+                    ocean.AIChanged32[TOGlobalProjectile.Timer5Slot] = true;
                 }
             }
         }
@@ -297,14 +300,22 @@ public static partial class TOTerrariaExtensions
         /// <param name="frame">可选的源矩形区域。</param>
         /// <param name="drawOffset">绘制偏移量（可选）。</param>
         /// <param name="useDefaultDraw">是否使用默认绘制方法（可选），默认为 <see langword="true"/>。</param>
-        public void SpawnAfterimage(int lifetime, Color color, Rectangle? frame = null, Vector2? drawOffset = null, bool useDefaultDraw = true) =>
+        public void SpawnAfterimage(int lifetime, Color color, Rectangle? frame = null, Vector2? drawOffset = null, bool useDefaultDraw = true)
+        {
+            if (Main.dedServ)
+                return;
             projectile.Ocean.Afterimages.Add(new AfterimageParticle(projectile.Texture, frame, projectile.Center, lifetime, projectile.rotation, projectile.scale, color, projectile.Opacity, drawOffset) { UseDefaultDraw = useDefaultDraw });
+        }
 
         /// <summary>
         /// 添加一个自定义的残影粒子到弹幕的全局数据中。
         /// </summary>
         /// <param name="afterimage">残影粒子实例。</param>
-        public void SpawnAfterimage(AfterimageParticle afterimage) => projectile.Ocean.Afterimages.Add(afterimage);
+        public void SpawnAfterimage(AfterimageParticle afterimage)
+        {
+            if (!Main.dedServ)
+                projectile.Ocean.Afterimages.Add(afterimage);
+        }
         #endregion GlobalProjectile
     }
 
@@ -400,13 +411,14 @@ public static partial class TOTerrariaExtensions
         /// 生成一个新的弹幕到世界中，并在生成后执行一个 <see cref="Action{Projectile}"/>。
         /// </summary>
         /// <param name="source">生成源。</param>
-        /// <param name="position">生成位置。</param>
-        /// <param name="velocity">初始速度。</param>
+        /// <param name="position">弹幕中心的世界像素坐标。</param>
+        /// <param name="velocity">每次弹幕更新的初始像素位移；原版生成后再次赋回此值，再执行初始化回调。</param>
         /// <param name="type">弹幕类型 ID。</param>
         /// <param name="damage">伤害值。</param>
         /// <param name="knockback">击退力。</param>
         /// <param name="owner">所有者玩家索引，默认为 -1。</param>
-        /// <param name="action">生成成功后对弹幕执行的行为。</param>
+        /// <param name="action">成功分配弹幕后、设置 netUpdate 前的初始化回调，可为 null；异常原样传播。</param>
+        /// <remarks>多人客户端会拒绝父来源为 NPC 或敌对弹幕的生成；其他来源的生成权限仍由调用方负责，不能替代所属客户端/服务器判定。槽位不足时不执行回调。</remarks>
         public static void NewProjectileAction(IEntitySource source, Vector2 position, Vector2 velocity, int type, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
         {
             if (Main.netMode == NetmodeID.MultiplayerClient && source is EntitySource_Parent parent
@@ -427,12 +439,13 @@ public static partial class TOTerrariaExtensions
         /// </summary>
         /// <typeparam name="T">继承自 <see cref="ModProjectile"/> 的类型。</typeparam>
         /// <param name="source">生成源。</param>
-        /// <param name="position">生成位置。</param>
-        /// <param name="velocity">初始速度。</param>
+        /// <param name="position">弹幕中心的世界像素坐标。</param>
+        /// <param name="velocity">每次弹幕更新的初始像素位移；原版生成后再次赋回此值，再执行初始化回调。</param>
         /// <param name="damage">伤害值。</param>
         /// <param name="knockback">击退力。</param>
         /// <param name="owner">所有者玩家索引，默认为 -1。</param>
-        /// <param name="action">生成成功后对弹幕执行的行为。</param>
+        /// <param name="action">成功分配弹幕后、设置 netUpdate 前的初始化回调，可为 null；异常原样传播。</param>
+        /// <remarks>多人客户端会拒绝父来源为 NPC 或敌对弹幕的生成；其他来源的生成权限仍由调用方负责，不能替代所属客户端/服务器判定。槽位不足时不执行回调。</remarks>
         public static void NewProjectileAction<T>(IEntitySource source, Vector2 position, Vector2 velocity, int damage, float knockback, int owner = -1, Action<Projectile> action = null) where T : ModProjectile =>
             NewProjectileAction(source, position, velocity, ModContent.ProjectileType<T>(), damage, knockback, owner, action);
 
@@ -442,7 +455,7 @@ public static partial class TOTerrariaExtensions
         /// <param name="amount">弹幕总数。</param>
         /// <param name="radian">每次递增的旋转角度（顺时针，弧度）。</param>
         /// <param name="source">生成源。</param>
-        /// <param name="position">生成位置。</param>
+        /// <param name="position">弹幕中心的世界像素坐标。</param>
         /// <param name="centerVelocity">
         /// 中心速度向量，所有弹幕的速度大小与此向量相同。
         /// 弹幕方向以此向量为中心对称分布：
@@ -469,7 +482,7 @@ public static partial class TOTerrariaExtensions
         /// <param name="amount">弹幕总数。</param>
         /// <param name="radian">每次递增的旋转角度（顺时针，弧度）。</param>
         /// <param name="source">生成源。</param>
-        /// <param name="position">生成位置。</param>
+        /// <param name="position">弹幕中心的世界像素坐标。</param>
         /// <param name="centerVelocity">
         /// 中心速度向量，所有弹幕的速度大小与此向量相同。
         /// <br/>弹幕方向以此向量为中心对称分布：

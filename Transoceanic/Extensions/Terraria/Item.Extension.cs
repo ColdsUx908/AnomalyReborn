@@ -5,6 +5,9 @@ using Transoceanic.Graphics.Assets;
 using Transoceanic.Graphics.Drawing;
 namespace Transoceanic.Extensions.Terraria;
 
+/// <summary>
+/// 提供 Terraria 实体、生成、世界与着色器的便捷扩展。
+/// </summary>
 public static partial class TOTerrariaExtensions
 {
     extension(Item item)

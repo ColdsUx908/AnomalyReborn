@@ -2,6 +2,9 @@ using System.ComponentModel;
 
 namespace Transoceanic.Primitives.Mathematics;
 
+/// <summary>
+/// 提供几何、碰撞、插值、位运算与单位换算工具。
+/// </summary>
 public static partial class TOMathUtils
 {
     /// <summary>

@@ -3,6 +3,7 @@ namespace Anomalies.Bosses.EaterofWorlds;
 // ai[0]: encounter owner + 1. Visuals mirror vanilla projectile 96, without optional-mod AI overrides.
 public sealed class EaterCursedFlame : ModProjectile
 {
+    public override string LocalizationCategory => "Bosses.EaterofWorlds";
     public override string Texture => TOAssetUtils.FormatVanillaProjectileTexturePath(ProjectileID.CursedFlameHostile);
 
     public override void SetDefaults()

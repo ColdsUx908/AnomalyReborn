@@ -1,6 +1,6 @@
 namespace Anomalies.Common.SingleBehaviors;
 
-public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior, IContentLoader
+public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior
 {
     public override decimal Priority => 100m;
 
@@ -14,10 +14,13 @@ public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior, IContentLoader
         StatModifier standardDRModifier = new();
         StatModifier timedDRModifier = new();
 
-        foreach (AnomalyGlobalItemBehavior behavior in GlobalItemBehaviorHandler.BehaviorSet.Enumerate<AnomalyGlobalItemBehavior>(nameof(AnomalyGlobalItemBehavior.ModifyHitNPC_DR)))
+        foreach (AnomalyGlobalItemBehavior behavior in global::Transoceanic.Behaviors.BehaviorQueries.EnumerateItem<AnomalyGlobalItemBehavior>(nameof(AnomalyGlobalItemBehavior.ModifyHitNPC_DR)))
             behavior.ModifyHitNPC_DR(item, npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (item.TryGetBehavior(out AnomalyItemBehavior itemBehavior, nameof(AnomalyItemBehavior.ModifyHitNPC_DR)))
+        {
+            using EntityBehavior<Item>.EntityLock entityLock = itemBehavior.LockEntity();
             itemBehavior.ModifyHitNPC_DR(npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
+        }
         if (item.ModItem is IAnomalyModItem caItem)
             caItem.ModifyHitNPC_DR(npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
 
@@ -36,10 +39,13 @@ public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior, IContentLoader
         StatModifier standardDRModifier = new();
         StatModifier timedDRModifier = new();
 
-        foreach (AnomalyGlobalProjectileBehavior behavior in GlobalProjectileBehaviorHandler.BehaviorSet.Enumerate<AnomalyGlobalProjectileBehavior>(nameof(AnomalyGlobalProjectileBehavior.ModifyHitNPC_DR)))
+        foreach (AnomalyGlobalProjectileBehavior behavior in global::Transoceanic.Behaviors.BehaviorQueries.EnumerateProjectile<AnomalyGlobalProjectileBehavior>(nameof(AnomalyGlobalProjectileBehavior.ModifyHitNPC_DR)))
             behavior.ModifyHitNPC_DR(projectile, npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (projectile.TryGetBehavior(out AnomalyProjectileBehavior projectileBehavior, nameof(AnomalyProjectileBehavior.ModifyHitNPC_DR)))
+        {
+            using EntityBehavior<Projectile>.EntityLock entityLock = projectileBehavior.LockEntity();
             projectileBehavior.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
+        }
         if (projectile.ModProjectile is IAnomalyModProjectile anomalyProjectile)
             anomalyProjectile.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
 

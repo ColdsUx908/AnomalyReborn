@@ -9,8 +9,8 @@ public sealed class AnomaliesMusicHandler : IContentLoader
 
     void IContentLoader.PostSetupContent()
     {
-        bool isAnomaliesMusicLoaded = ModReference.AnomaliesMusic.IsLoaded;
-        Mod anomaliesMusicMod = ModReference.AnomaliesMusic.Mod;
+        bool isAnomaliesMusicLoaded = AnomalyModReferences.AnomaliesMusic.IsLoaded;
+        Mod anomaliesMusicMod = AnomalyModReferences.AnomaliesMusic.Mod;
 
         foreach (PropertyInfo field in typeof(AnomaliesMusicHandler).GetProperties(TOReflectionUtils.StaticBindingFlags))
         {

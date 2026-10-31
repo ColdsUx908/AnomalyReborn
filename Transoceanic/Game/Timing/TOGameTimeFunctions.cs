@@ -1,5 +1,8 @@
 namespace Transoceanic.Game.Timing;
 
+/// <summary>
+/// 将插值函数与游戏计时组合，生成随时间变化的数值或颜色。
+/// </summary>
 public static class TOGameTimeFunctions
 {
     /// <summary>
