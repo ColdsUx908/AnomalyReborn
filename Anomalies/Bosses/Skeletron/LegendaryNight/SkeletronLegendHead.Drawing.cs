@@ -59,7 +59,7 @@ public sealed partial class SkeletronLegendHead
 
     public bool StarAvatarActive => CurrentAvatar == Avatar.Star;
 
-    private Avatar RequestedAvatar => Phase2SlimeAvatarActive ? Avatar.FlyingSlime : CurrentPhase == Phase.Phase1 && CurrentBaseBehavior == BaseBehavior.Rotate && CurrentLocalPhase == 1
+    private Avatar RequestedAvatar => Phase2SlimeAvatarActive ? Avatar.FlyingSlime : Phase2CoinAvatarActive ? Avatar.PlatinumCoin : CurrentPhase == Phase.Phase1 && CurrentBaseBehavior == BaseBehavior.Rotate && CurrentLocalPhase == 1
         ? CurrentSpell switch
         {
             Spell.Slime => Avatar.FlyingSlime,
@@ -155,7 +155,7 @@ public sealed partial class SkeletronLegendHead
                 DrawPlatinumCoinAvatar(spriteBatch, screenPos);
                 break;
         }
-        return !Phase2SlimeAvatarActive;
+        return !Phase2SlimeAvatarActive && !Phase2CoinAvatarActive;
     }
 
     private float Phase2GlowOpacity => Phase2 ? 1f : CurrentPhase == Phase.PhaseChange_1To2

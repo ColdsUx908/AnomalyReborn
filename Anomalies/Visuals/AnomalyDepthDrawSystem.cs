@@ -87,11 +87,13 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
             return;
         if (GetPerspectiveScale(z) == 1f && Main.npc[index].Anomaly.Depth_DrawAnchor is null)
         {
+            Main.npc[index].Anomaly.Visual_Particles?.DrawSet(Main.npc[index].netOffset);
             orig(self, index, behindTiles);
             return;
         }
 
         using SpriteBatchScope scope = BeginPerspective(z, Main.npc[index]);
+        Main.npc[index].Anomaly.Visual_Particles?.DrawSet(Main.npc[index].netOffset);
         orig(self, index, behindTiles);
     }
 

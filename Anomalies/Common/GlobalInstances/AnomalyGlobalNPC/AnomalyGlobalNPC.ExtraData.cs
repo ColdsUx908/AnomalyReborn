@@ -61,6 +61,10 @@ public sealed partial class AnomalyGlobalNPC
     private ProjectileNetReference[] _Network_ProjectileReferenceCache = new ProjectileNetReference[AISlot2 - 1];
     #endregion
 
+    #region NPC专属粒子
+    /// <summary>仅客户端、按需创建的专属粒子集合；使用世界坐标，在本NPC所有绘制之前提交，不参与同步。</summary>
+    public AnomalyNPCParticleSet Visual_Particles { get; private set; }
+    #endregion
 
     #endregion
 }

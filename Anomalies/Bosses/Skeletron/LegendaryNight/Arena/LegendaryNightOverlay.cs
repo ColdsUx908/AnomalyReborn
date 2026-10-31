@@ -160,8 +160,9 @@ public sealed class LegendaryNightOverlay : CustomOverlay
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
                     DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
                 // 512 方形透明图，几何中心 (256,256)，外接圆半径 250，顶点朝右。
-                spriteBatch.DrawFromCenter(_MaterializedStar.Value, Phase2Arena.Projectile.Center - Main.screenPosition, null,
-                    Color.White, Phase2Arena.MagicCircleRotation, Phase2Arena.MainCircleRadius / 250f);
+                if (!Phase2Arena.ChargeMaterialization)
+                    spriteBatch.DrawFromCenter(_MaterializedStar.Value, Phase2Arena.Projectile.Center - Main.screenPosition, null,
+                        Color.White, Phase2Arena.MagicCircleRotation, Phase2Arena.MainCircleRadius / 250f);
                 spriteBatch.End();
             }
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
@@ -176,31 +177,6 @@ public sealed class LegendaryNightOverlay : CustomOverlay
             DrawMagicCirclePart(spriteBatch, center, radius, rotation, true, i);
         }
         DrawMagicCirclePart(spriteBatch, Phase2Arena.Projectile.Center, Phase2Arena.Radius, 0f, false);
-        DrawMechanic3Connections(spriteBatch);
-    }
-
-    private void DrawMechanic3Connections(SpriteBatch spriteBatch)
-    {
-        SkeletronLegendHead head = Phase2Arena.MasterBehavior;
-        if (head is null || head.CurrentPhase != SkeletronLegendHead.Phase.Phase2_3)
-            return;
-
-        // 与法阵共用发光线绘制及其 Begin/End 管理；每组只画五条完整边，避免采样点接缝。
-        Span<(Vector2 Start, Vector2 End)> edges = stackalloc (Vector2, Vector2)[5];
-        for (int circleIndex = 1; circleIndex <= SkeletronLegendHead.Mechanic3Data.CircleCount; circleIndex++)
-        {
-            int age = head.Phase2MusicElapsedTime - SkeletronLegendHead.Mechanic3Data.GetStartMusicTime(circleIndex);
-            if (age < 0 || head.CurrentLocalPhase < circleIndex)
-                continue;
-            int samplesPerEdge = SkeletronLegendHead.Mechanic3Data.StarCount / edges.Length;
-            for (int i = 0; i < edges.Length; i++)
-                edges[i] = (
-                    SkeletronLegendHead.Mechanic3Data.GetStarPosition(Phase2Arena, i * samplesPerEdge, age, circleIndex),
-                    SkeletronLegendHead.Mechanic3Data.GetStarPosition(Phase2Arena, (i + 1) % edges.Length * samplesPerEdge, age, circleIndex));
-            AnomalyDrawUtils.DrawGlowingLines(spriteBatch, edges,
-                SkeletronLegendHead.Mechanic3Data.ConnectionColor, Phase2Arena.Intensity * 0.65f,
-                SkeletronLegendHead.Mechanic3Data.ConnectionWidth, SkeletronLegendHead.Mechanic3Data.ConnectionGlowWidth);
-        }
     }
 
     private void DrawMagicCirclePart(SpriteBatch spriteBatch, Vector2 worldCenter, float radius, float rotation, bool drawStar, int circleIndex = 0)

@@ -89,7 +89,6 @@ Skeletron: {
 		}
 
 		LegendaryNightPhase2Arena.DisplayName: 星神法阵
-		// Mechanic3Star.DisplayName: Mechanic3 Star
 		// LegendSlimeRain.DisplayName: Legend Slime Rain
 	}
 }

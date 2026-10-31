@@ -61,7 +61,7 @@ public sealed class SlimeMount : AnomalyModProjectile
         {
             Projectile.frame = 1;
             if (Projectile.ai[1] == 3f)
-                Projectile.rotation += SkeletronLegendHead.SlimeAvatarData.MountSpinSpeed;
+                Projectile.rotation += SkeletronLegendHead.Mechanic3Data.MountSpinSpeed;
             return;
         }
 

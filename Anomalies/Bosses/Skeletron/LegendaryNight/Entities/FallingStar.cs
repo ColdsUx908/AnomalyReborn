@@ -2,6 +2,19 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class FallingStar : AnomalyModProjectile
 {
+    // ai[0]：运动模式；扇形模式的 ai[1] 为发射时场地半径，ai[2] 为主体索引（1-based）。
+    public enum MotionMode
+    {
+        Accelerating,
+        StrikeFan
+    }
+
+    public MotionMode CurrentMotionMode
+    {
+        get => (MotionMode)(int)Projectile.ai[0];
+        set => Projectile.ai[0] = (int)value;
+    }
+
     public override string Texture => LegendaryNightHandler.LegendaryNightPath + "Entities/FallingStar";
 
     /// <summary>拖尾类型：0 无拖尾，1 蓝白光尾，2 金色轨迹拖尾。</summary>
@@ -62,7 +75,12 @@ public sealed class FallingStar : AnomalyModProjectile
         Projectile.rotation += 0.1f * Projectile.direction;
 
         Timer1++;
-        if (Timer1 > AccelerationStartTime)
+        if (CurrentMotionMode == MotionMode.StrikeFan)
+        {
+            float speed = SkeletronLegendHead.Mechanic2Data.GetFanStarSpeed(Projectile.ai[1], (int)Timer1 - 1);
+            Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY) * speed;
+        }
+        else if (Timer1 > AccelerationStartTime)
             Projectile.velocity *= 1.02f;
     }
 

@@ -22,5 +22,6 @@ public sealed partial class AnomalyGlobalNPC
         CloneEaterofWorldsData(clone);
         CloneSkeletronData(clone);
         clone.Depth_DrawAnchor = null;
+        clone.Visual_Particles = null;
     }
 }

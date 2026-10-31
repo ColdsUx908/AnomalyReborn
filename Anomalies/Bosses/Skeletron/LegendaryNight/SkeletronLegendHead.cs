@@ -5,7 +5,8 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLegendHead>
 {
-    protected override int AI32Capacity => 15;
+    // 使用索引0至15；容量不包含GlobalNPC数组末尾的同步变化标记槽。
+    protected override int AI32Capacity => 16;
 
     // 手的 SetDefaults 执行时，Master 和 CustomAIType 尚未由召唤方赋值。
     // AnomalyAI32[5].bits[0]：正在召唤手。
@@ -41,7 +42,8 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         Phase2_2,
         Phase2_3,
         Phase2_4,
-        Phase2_Finale,
+        Phase2_5 = 8,
+        Phase2_Finale = 7, // 保留已有同步值。
     }
 
     public enum BaseBehavior : byte
@@ -277,17 +279,33 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
     {
         using BossNetUpdateScope netUpdate = new(NPC);
 
-        // 默认关闭，由需要竞技场的符卡在本帧显式激活。
-        if (ArenaProjectileAlive)
-            ArenaModProjectile.IsActivated = false;
+        int previousTarget = NPC.target;
+        bool validTarget;
+        if (Phase2ArenaProjectileAlive)
+            validTarget = NPC.TargetIfInvalid(true, p => new Circle(ArenaProjectile.Center, Phase2Arena.TargetingRadius).Collides(p.Hitbox));
+        else if (ArenaProjectileAlive && ArenaModProjectile.IsActivated)
+            validTarget = NPC.TargetIfInvalid(true, p => new Circle(ArenaProjectile.Center, ArenaModProjectile.Radius * 2f).Collides(p.Hitbox));
+        else
+        {
+            // 无竞技场时保持有效目标；重新选取后重新读取目标，避免用旧玩家距离判定退场。
+            if (!NPC.HasValidTarget || !NPC.WithinRange(NPC.PlayerTarget.Center, DespawnDistance - NPC.PlayerTarget.aggro))
+                NPC.TargetClosest(true);
+            validTarget = NPC.HasValidTarget && NPC.WithinRange(NPC.PlayerTarget.Center, DespawnDistance - NPC.PlayerTarget.aggro);
+        }
+        if (NPC.target != previousTarget && TONetworkEnvironment.NotClient)
+            NPC.netUpdate = true;
 
-        if (CurrentBaseBehavior == BaseBehavior.Despawn || !NPC.TargetClosestIfInvalid(true, DespawnDistance))
+        if (CurrentBaseBehavior == BaseBehavior.Despawn || !validTarget)
         {
             UpdateAvatar(Avatar.None);
             NPC.active = false;
             NPC.netUpdate = true;
             return false;
         }
+
+        // 目标判定读取上帧激活状态，再由本帧符卡重新激活。
+        if (ArenaProjectileAlive)
+            ArenaModProjectile.IsActivated = false;
 
         if (InvalidPhase1)
             BeginPhaseChange_1To2();

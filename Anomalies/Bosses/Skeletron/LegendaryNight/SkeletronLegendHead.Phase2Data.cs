@@ -20,7 +20,7 @@ public sealed partial class SkeletronLegendHead
         public const int AttackBeatDuration = StarShockwave - SlimeShockwave;
         public const int AttackIntervalsPerBeat = 8;
         public const int AttackAnimationDuration = (AttackBeatDuration + AttackIntervalsPerBeat - 1) / AttackIntervalsPerBeat;
-        public const int PlatinumCoinInterval = 8;
+        public const int PlatinumCoinInterval = 16;
         public const int StarRainInterval = 36;
         public const int ProjectileLifetime = 300;
         public const float PlatinumCoinSpeed = 16f;
@@ -56,10 +56,13 @@ public sealed partial class SkeletronLegendHead
         public const float ChargeParticleRangeGrowth = 0.5f;
         public const float ChargeParticleScaleGrowth = 0.9f;
         public const int ArenaDepartureDuration = 60;
+        public const int HandEntryDuration = 45;
+        public static float HandEntryProgress(int age) => MathHelper.SmoothStep(0f, 1f,
+            MathHelper.Clamp(age / (float)HandEntryDuration, 0f, 1f));
         public const int FirstStrikeMusicTime = 52 * 60;
         public const int SecondStrikeMusicTime = 55 * 60 + 8;
         public const int ThirdStrikeMusicTime = 58 * 60 + 16;
-        public const int EndMusic = 72 * 60 + 30;
+        public const int EndMusic = Mechanic3Data.StartMusicTime;
         public const int FirstStrike = FirstStrikeMusicTime - StartMusicTime;
         public const int LastStrike = ThirdStrikeMusicTime - StartMusicTime;
         public const int StrikeCount = 3;
@@ -89,6 +92,23 @@ public sealed partial class SkeletronLegendHead
         public const int ReturnStart = LastStrike + BodyFollowThroughDuration;
         public const int ReturnDuration = ReturnMusicTime - StartMusicTime - ReturnStart;
         public const int End = EndMusic - StartMusicTime;
+        public const int FanStarCount = 15;
+        public const float FanStarSpread = TOMathUtils.PiOver3;
+        public const int FanStarFastDuration = 20;
+        public const int FanStarDecelerationDuration = 12;
+        public const float FanStarFastRadiusRatio = 0.35f;
+
+        /// <summary>先快速走完35%半径，再减速至匀速；一个拍击间隔累计走完完整半径。</summary>
+        public static float GetFanStarSpeed(float radius, int age)
+        {
+            float fastSpeed = radius * FanStarFastRadiusRatio / FanStarFastDuration;
+            float slowSpeed = (radius * (1f - FanStarFastRadiusRatio) - fastSpeed * FanStarDecelerationDuration * 0.5f)
+                / (StrikeInterval - FanStarFastDuration - FanStarDecelerationDuration * 0.5f);
+            // 减速段按每帧中点采样，使离散速度总和等于目标距离。
+            float progress = MathHelper.Clamp((age - FanStarFastDuration + 0.5f) / FanStarDecelerationDuration, 0f, 1f);
+            return MathHelper.Lerp(fastSpeed, slowSpeed, progress);
+        }
+
         public const int StarCount = 300;
         public const int StarTrailLength = 12;
         public const float StarSpeed = 32f;
@@ -232,37 +252,126 @@ public sealed partial class SkeletronLegendHead
         }
     }
 
-    /// <summary>
-    /// 机制3配置；时间节点为音乐绝对帧数，60帧/秒。
-    /// </summary>
+    /// <summary>机制3史莱姆化身配置；时间节点为音乐绝对帧数，60帧/秒。</summary>
     public static class Mechanic3Data
     {
-        public const int StartMusicTime = 72 * 60 + 30;
-        public const int SecondCircleMusicTime = 75 * 60 + 40;
-        public const int CircleCount = 2;
-        public const int StarCount = 30;
-        public const int ExpansionDelay = 30;
-        public const int ExpansionDuration = 150;
-        public const float MaximumRadius = 1500f;
-        public const float SecondCircleMaximumRadius = 160f;
-        public const int SpawnParticleCount = 150;
-        public const float ConnectionWidth = 2f;
-        public const float ConnectionGlowWidth = 10f;
-        public static readonly Color ConnectionColor = new(255, 80, 20);
+        public const int StartMusicTime = LegendaryNightPhase2Arena.FirstStarburstMusicTime;
+        public const int FanTime = 66 * 60 + 10;
+        public const int Ring1Time = 69 * 60 + 20;
+        public const int Ring2Time = 70 * 60 + 55;
+        public const int JumpTime = 72 * 60 + 30;
+        public const int JumpDuration = 90;
+        public const int LandingTime = JumpTime + JumpDuration;
+        public const int ReturnDuration = 90;
+        public const int RainDuration = 20;
+        public const int RainLifetime = 600;
+        public const int RainLayers = 3;
+        public const int FinalRainLayers = 9;
+        public const float RainSpawnHeight = 800f;
+        public const float RainLayerSpacing = 125f;
+        public const float RainHalfWidth = 40f;
+        public const float RainSpeed = 20f;
+        public const int FanCount = 11;
+        public const int RingCount = 24;
+        public const int ChargeDuration = 90;
+        public const float MountSpeed = 16f;
+        public const float MountSpinSpeed = 0.12f;
+        public const float JumpGravity = 1.6f;
+    }
 
-        public static int GetStartMusicTime(int circleIndex) => circleIndex == 1 ? StartMusicTime : SecondCircleMusicTime;
+    /// <summary>机制4铂金币直冲；音乐绝对帧数。</summary>
+    public static class Mechanic4Data
+    {
+        public const int StartMusicTime = LegendaryNightPhase2Arena.SecondStarburstMusicTime;
+        public const int FirstChargeTime = 78 * 60 + 47;
+        public const int ChargeInterval = 95;
+        public const int ChargeCount = 4;
+        public const int ChargeDuration = (ChargeInterval + 1) / 2;
+        public const int DecelerationDuration = 8;
+        public const int RetreatDuration = ChargeInterval - ChargeDuration;
+        public const int FirstRetreatStart = FirstChargeTime - RetreatDuration;
+        public const int ReturnStart = FirstChargeTime + (ChargeCount - 1) * ChargeInterval + ChargeDuration;
+        public const int EndMusicTime = LegendaryNightPhase2Arena.ThirdStarburstMusicTime;
+        public const float RetreatSpeed = 12f;
+        public const float ChargeSpeed = 32f;
+        public static int GetChargeTime(int index) => FirstChargeTime + index * ChargeInterval;
+        public static float ChargeSpeedFactor(int age) => MathHelper.Clamp(
+            (ChargeDuration - age - 1f) / DecelerationDuration, 0f, 1f);
 
-        public static Vector2 GetStarPosition(LegendaryNightPhase2Arena arena, int index, int age, int circleIndex = 1)
+        public static bool LasersActive(int time) => LaserAge(time) is >= 0 and < Mechanic2Data.LaserDuration;
+
+        public static float LaserWarning(int time)
         {
-            (Vector2 center, float initialRadius, float rotation) = arena.GetMagicCircle(circleIndex);
-            float progress = MathHelper.Clamp((age - ExpansionDelay) / (float)ExpansionDuration, 0f, 1f);
-            float radius = MathHelper.Lerp(initialRadius, circleIndex == 2 ? SecondCircleMaximumRadius : MaximumRadius, progress);
-            // 与陨石爆炸相同，按隔一个顶点的顺序连接，五条线各取6个点且不重复端点。
-            float edgePosition = index * 5f / StarCount;
-            int edge = (int)edgePosition;
-            Vector2 start = (rotation + MathHelper.TwoPi * (edge * 2) / 5f).ToRotationVector2();
-            Vector2 end = (rotation + MathHelper.TwoPi * (edge * 2 + 2) / 5f).ToRotationVector2();
-            return center + Vector2.Lerp(start, end, edgePosition - edge) * radius;
+            int age = LaserAge(time);
+            return age is < 0 and >= -ChargeDuration ? 1f + age / (float)ChargeDuration : 0f;
+        }
+
+        public static float LaserIntensity(int time)
+        {
+            int age = LaserAge(time);
+            if (age < -Mechanic2Data.LaserFadeInDuration)
+                return 0f;
+            float fadeIn = MathHelper.Clamp((age + Mechanic2Data.LaserFadeInDuration) / (float)Mechanic2Data.LaserFadeInDuration, 0f, 1f);
+            float fadeOut = MathHelper.Clamp((Mechanic2Data.LaserDuration + Mechanic2Data.LaserFadeOutDuration - age)
+                / (float)Mechanic2Data.LaserFadeOutDuration, 0f, 1f);
+            return MathHelper.SmoothStep(0f, 1f, Math.Min(fadeIn, fadeOut));
+        }
+
+        public static int LaserAge(int time)
+        {
+            for (int i = 0; i < ChargeCount; i++)
+            {
+                int age = time - GetChargeTime(i) - ChargeDuration;
+                if (age is >= -ChargeDuration and < Mechanic2Data.LaserDuration + Mechanic2Data.LaserFadeOutDuration)
+                    return age;
+            }
+            return int.MinValue;
+        }
+    }
+
+    /// <summary>机制5常态星星雨及连续星爆。</summary>
+    public static class Mechanic5Data
+    {
+        public const int StartMusicTime = LegendaryNightPhase2Arena.ThirdStarburstMusicTime;
+        public const int RainEnd = LegendaryNightPhase2Arena.FourthStarburstMusicTime - 30;
+        public const int RainInterval = 20;
+        public const int RainLifetime = Mechanic1Data.ProjectileLifetime;
+        public const int StarburstInitialStarCount = 10;
+        public const int StarburstStarCountIncrement = 2;
+        public static int GetStarburstStarCount(int starburstIndex) => StarburstInitialStarCount + (starburstIndex - 4) * StarburstStarCountIncrement;
+
+        public const int HandReappearanceDuration = 45;
+        public const int HandAttackCount = 8;
+        public const int HandStrikeDelay = 47;
+        public const int HandWindupDuration = 24;
+        public const int HandStrikeDuration = 32;
+        public const int HandReturnDuration = 36;
+        public const int EndMusicTime = LegendaryNightPhase2Arena.StarburstEndMusicTime + HandStrikeDelay + HandStrikeDuration + HandReturnDuration;
+        public const float HandWindupDistance = 80f;
+        public const float HandOvershoot = 48f;
+
+        // 星爆采用0-based索引；第5至12次星爆各延后47帧开始前挥。
+        public static int GetHandStrikeTime(int attack) => LegendaryNightPhase2Arena.GetStarburstTime(4 + attack) + HandStrikeDelay;
+
+        public static int GetHandAttackIndex(int musicTime)
+        {
+            for (int attack = 0; attack < HandAttackCount; attack++)
+            {
+                int age = musicTime - GetHandStrikeTime(attack);
+                if (age is >= -HandWindupDuration and < HandStrikeDuration + HandReturnDuration)
+                    return attack;
+            }
+            return -1;
+        }
+
+        /// <summary>沿锁定玩家的方向挥到法阵外沿，并留出越过边缘的余量。</summary>
+        public static Vector2 GetHandStrikeDestination(Vector2 origin, Vector2 target, Vector2 center, float radius)
+        {
+            Vector2 direction = (target - origin).SafeNormalize(Vector2.UnitY);
+            Vector2 offset = origin - center;
+            float projection = Vector2.Dot(offset, direction);
+            float distance = -projection + MathF.Sqrt(Math.Max(0f, projection * projection + radius * radius - offset.LengthSquared()));
+            return origin + direction * (Math.Max(0f, distance) + HandOvershoot);
         }
     }
 }

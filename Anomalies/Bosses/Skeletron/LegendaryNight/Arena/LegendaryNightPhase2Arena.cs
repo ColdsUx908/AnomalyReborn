@@ -11,8 +11,7 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
     public const float OuterCircleRadiusRatio = 1f + 2f * SmallCircleRadiusRatio;
     public const float RotationSpeed = 0.007f;
     public static float FirstSmallCircleOrbitSpeed => SlowOrbitSpeed;
-    public static float GetFastOrbitSpeed(int musicTime) => SlowOrbitSpeed + MathHelper.TwoPi
-        / (musicTime < ThirdStarburstMusicTime ? StarburstInterval : RapidStarburstInterval);
+    public static float GetFastOrbitSpeed(int musicTime) => GetOrbitSpeed(2, musicTime);
     public const float FirstSmallCircleSpinSpeed = RotationSpeed * 2f;
     public const float SecondSmallCircleSpinSpeed = -RotationSpeed * 3f;
 
@@ -39,17 +38,25 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
     public float MagicCircleRotation => MusicAge * RotationSpeed;
     public float MainCircleRadius => Radius / OuterCircleRadiusRatio;
     public float SmallCircleRadius => MainCircleRadius * SmallCircleRadiusRatio;
+    // 目标有效范围以完整法阵为准，不随入场缩放收缩，避免展开时误判脱战。
+    public float TargetingRadius => MainCircleFullRadius * OuterCircleRadiusRatio * 2f;
     public const float LaserWidth = 24f;
-    public bool Materialized => MasterBehavior is { Mechanic2Active: true } head && SkeletronLegendHead.Mechanic2Data.LasersActive(head.Mechanic2Age);
-    public float MaterializationWarning => MasterBehavior is { Mechanic2Active: true } head ? SkeletronLegendHead.Mechanic2Data.LaserWarning(head.Mechanic2Age) : 0f;
-    public float MaterializationIntensity => MasterBehavior is { Mechanic2Active: true } head ? SkeletronLegendHead.Mechanic2Data.LaserIntensity(head.Mechanic2Age) : 0f;
+    public bool ChargeMaterialization => MasterBehavior is { Mechanic4Active: true };
+    public bool Materialized => MasterBehavior is { } head && (ChargeMaterialization
+        ? SkeletronLegendHead.Mechanic4Data.LasersActive(head.Phase2MusicElapsedTime)
+        : head.Mechanic2Active && SkeletronLegendHead.Mechanic2Data.LasersActive(head.Mechanic2Age));
+    public float MaterializationWarning => MasterBehavior is not { } head ? 0f : ChargeMaterialization
+        ? SkeletronLegendHead.Mechanic4Data.LaserWarning(head.Phase2MusicElapsedTime)
+        : head.Mechanic2Active ? SkeletronLegendHead.Mechanic2Data.LaserWarning(head.Mechanic2Age) : 0f;
+    public float MaterializationIntensity => MasterBehavior is not { } head ? 0f : ChargeMaterialization
+        ? SkeletronLegendHead.Mechanic4Data.LaserIntensity(head.Phase2MusicElapsedTime)
+        : head.Mechanic2Active ? SkeletronLegendHead.Mechanic2Data.LaserIntensity(head.Mechanic2Age) : 0f;
     public Annulus MaterializedRing => new(Projectile.Center, MainCircleRadius, Radius);
 
     // 中央五边形与五个星角三角形的并集；凹口保持安全。
     public bool CentralStarCollides(Rectangle hitbox)
     {
-        Pentagon core = new(Projectile.Center,
-            MainCircleRadius * MathF.Cos(MathHelper.TwoPi / 5f) / MathF.Cos(MathHelper.Pi / 5f), MagicCircleRotation + MathHelper.Pi / 5f);
+        Pentagon core = GetCentralPentagon(Projectile.Center, MainCircleRadius, MagicCircleRotation);
         if (core.Collides(hitbox))
             return true;
         for (int i = 0; i < 5; i++)
@@ -147,9 +154,13 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
         Materialized && MaterializedGeometryCollides(targetHitbox)
         || EnableMovementRestriction && Vector2.DistanceSquared(targetHitbox.Center.ToVector2(), Projectile.Center) > Radius * Radius;
 
+    public static Pentagon GetCentralPentagon(Vector2 center, float radius, float rotation) => new(center,
+        radius * MathF.Cos(MathHelper.TwoPi / 5f) / MathF.Cos(MathHelper.Pi / 5f), rotation + MathHelper.Pi / 5f);
+
     public bool MaterializedGeometryCollides(Rectangle hitbox)
     {
-        if (CentralStarCollides(hitbox)
+        // 金币冲刺同样实体化圆周与外围圆环，但不填充中央实心星形。
+        if (!ChargeMaterialization && CentralStarCollides(hitbox)
             || MaterializedRing.Collides(hitbox)
             || new Annulus(Projectile.Center, Radius - LaserWidth * 0.5f, Radius + LaserWidth * 0.5f).Collides(hitbox))
             return true;
@@ -162,16 +173,15 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
         return false;
     }
 
-    public static bool MagicCircleCollides(Vector2 center, float radius, float rotation, Rectangle hitbox)
+    public static bool MagicCircleCollides(Vector2 center, float radius, float rotation, Rectangle hitbox, bool includeCircle = true)
     {
-        if (new Annulus(center, radius - LaserWidth * 0.5f, radius + LaserWidth * 0.5f).Collides(hitbox))
+        if (includeCircle && new Annulus(center, radius - LaserWidth * 0.5f, radius + LaserWidth * 0.5f).Collides(hitbox))
             return true;
         for (int i = 0; i < 5; i++)
         {
             Vector2 start = center + (rotation + MathHelper.TwoPi * i / 5f).ToRotationVector2() * radius;
             Vector2 end = center + (rotation + MathHelper.TwoPi * (i + 2) / 5f).ToRotationVector2() * radius;
-            Vector2 edge = end - start;
-            RotatedRectangle laser = new((start + end) * 0.5f, edge.Length(), LaserWidth, edge.ToRotation());
+            RotatedRectangle laser = RotatedRectangle.FromLineSegment(start, end, LaserWidth);
             if (laser.Collides(hitbox))
                 return true;
         }

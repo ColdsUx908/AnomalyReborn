@@ -20,6 +20,30 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
     }
 
     // 保留原版手的 ai 布局：ai[0] 左右侧，ai[1] 头部索引，ai[2] 动作，ai[3] 待机计时。
+    // 机制5复用原版ai[3]为已锁定攻击序号+1；ai[2]为0待机、1蓄势、2前挥、3收手。
+    // AnomalyAI32[0/1]为本次挥击起点，[2/3]为锁定的终点；完整快照支持中途加入。
+    private Vector2 Mechanic5StrikeOrigin
+    {
+        get => new(AnomalyNPC.AnomalyAI32[0].F, AnomalyNPC.AnomalyAI32[1].F);
+        set
+        {
+            AnomalyNPC.AnomalyAI32[0].F = value.X;
+            AnomalyNPC.AnomalyAI32[1].F = value.Y;
+            AnomalyNPC.AIChanged32[0] = AnomalyNPC.AIChanged32[1] = true;
+        }
+    }
+
+    private Vector2 Mechanic5StrikeDestination
+    {
+        get => new(AnomalyNPC.AnomalyAI32[2].F, AnomalyNPC.AnomalyAI32[3].F);
+        set
+        {
+            AnomalyNPC.AnomalyAI32[2].F = value.X;
+            AnomalyNPC.AnomalyAI32[3].F = value.Y;
+            AnomalyNPC.AIChanged32[2] = AnomalyNPC.AIChanged32[3] = true;
+        }
+    }
+
     public NPC Master => NPC.Master;
     public override int ApplyingType => NPCID.SkeletronHand;
 
@@ -105,7 +129,9 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
             NPC.velocity *= 0.8f;
             return false;
         }
-        if (head.Mechanic2InBackground)
+        if (head.Mechanic5Active)
+            Mechanic5HandAI(head);
+        else if (head.Mechanic2InBackground)
             Mechanic2HandAI(head);
         else
         {
@@ -114,6 +140,77 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
             NPC.rotation = GetPositionRotation(NPC.Center, Master.Center, -Math.Sign(NPC.ai[0]));
         }
         return false;
+
+        void Mechanic5HandAI(SkeletronLegendHead head)
+        {
+            int time = head.Phase2MusicElapsedTime;
+            int summonAge = time - SkeletronLegendHead.Mechanic5Data.StartMusicTime;
+            int side = -Math.Sign(NPC.ai[0]);
+            Vector2 idle = master.Center + GetIdleOffset(side);
+            AnomalyNPC.Z = 0f;
+            if (summonAge < SkeletronLegendHead.Mechanic5Data.HandReappearanceDuration)
+            {
+                if (TONetworkEnvironment.NotClient)
+                    ChangeAction(0);
+                NPC.damage = 0;
+                float progress = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp((summonAge + 1f)
+                    / SkeletronLegendHead.Mechanic5Data.HandReappearanceDuration, 0f, 1f));
+                NPC.velocity = Vector2.Lerp(master.Center, idle, progress) - NPC.Center;
+            }
+            else
+            {
+                int attack = SkeletronLegendHead.Mechanic5Data.GetHandAttackIndex(time);
+                int age = attack < 0 ? int.MinValue : time - SkeletronLegendHead.Mechanic5Data.GetHandStrikeTime(attack);
+                if (attack < 0)
+                {
+                    if (TONetworkEnvironment.NotClient)
+                        ChangeAction(0);
+                    NPC.velocity = idle - NPC.Center;
+                }
+                else if (age < 0)
+                {
+                    if (TONetworkEnvironment.NotClient)
+                        ChangeAction(1);
+                    Vector2 direction = (head.Target.Center - idle).SafeNormalize(Vector2.UnitY);
+                    float progress = MathHelper.SmoothStep(0f, 1f, (age + SkeletronLegendHead.Mechanic5Data.HandWindupDuration)
+                        / (float)SkeletronLegendHead.Mechanic5Data.HandWindupDuration);
+                    NPC.velocity = idle - direction * (SkeletronLegendHead.Mechanic5Data.HandWindupDistance * progress) - NPC.Center;
+                }
+                else
+                {
+                    if (TONetworkEnvironment.NotClient && (int)NPC.ai[3] != attack + 1)
+                    {
+                        LegendaryNightPhase2Arena arena = head.Phase2Arena;
+                        Vector2 center = arena?.Projectile.Center ?? master.Center;
+                        float radius = arena?.Radius ?? LegendaryNightPhase2Arena.MainCircleFullRadius * LegendaryNightPhase2Arena.OuterCircleRadiusRatio;
+                        Mechanic5StrikeOrigin = NPC.Center;
+                        Mechanic5StrikeDestination = SkeletronLegendHead.Mechanic5Data.GetHandStrikeDestination(
+                            NPC.Center, head.Target.Center, center, radius);
+                        NPC.ai[3] = attack + 1;
+                        NPC.netUpdate = true;
+                    }
+                    if ((int)NPC.ai[3] != attack + 1)
+                        NPC.velocity = Vector2.Zero; // 客户端等待本次锁定起终点，不能读取上一轮数据。
+                    else if (age < SkeletronLegendHead.Mechanic5Data.HandStrikeDuration)
+                    {
+                        if (TONetworkEnvironment.NotClient)
+                            ChangeAction(2);
+                        float progress = (age + 1f) / SkeletronLegendHead.Mechanic5Data.HandStrikeDuration;
+                        NPC.velocity = Vector2.Lerp(Mechanic5StrikeOrigin, Mechanic5StrikeDestination, progress) - NPC.Center;
+                    }
+                    else
+                    {
+                        if (TONetworkEnvironment.NotClient)
+                            ChangeAction(3);
+                        float progress = MathHelper.SmoothStep(0f, 1f,
+                            (age - SkeletronLegendHead.Mechanic5Data.HandStrikeDuration + 1f)
+                                / SkeletronLegendHead.Mechanic5Data.HandReturnDuration);
+                        NPC.velocity = Vector2.Lerp(Mechanic5StrikeDestination, idle, progress) - NPC.Center;
+                    }
+                }
+            }
+            NPC.rotation = GetPositionRotation(NPC.Center + NPC.velocity, master.Center, side);
+        }
 
         // 从原版 NPC.AI 的 aiStyle == 12（type 36）复制，保留 0/3 待机、1/2 下拍、4/5 横扫。
         // 改动：显式 Master、头部共享时序、更近更快的回收，以及更快且距离受限的挥击。
@@ -212,7 +309,10 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
     }
 
     public override bool CanHitPlayer(Player target, ref int cooldownSlot) =>
-        NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master) && SkeletronLegendHead.GetInstance(master) is { Phase2: true, Mechanic2InBackground: false };
+        NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master)
+        && SkeletronLegendHead.GetInstance(master) is { Phase2: true, Mechanic2InBackground: false, HandsHidden: false } head
+        && (!head.Mechanic5Active || head.Phase2MusicElapsedTime >= SkeletronLegendHead.Mechanic5Data.StartMusicTime
+            + SkeletronLegendHead.Mechanic5Data.HandReappearanceDuration);
 
     private void Mechanic2HandAI(SkeletronLegendHead head)
     {
@@ -245,9 +345,11 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
                 / (float)SkeletronLegendHead.Mechanic2Data.BodyFollowThroughDuration, 0f, 1f));
             z = MathHelper.Lerp(z, SkeletronLegendHead.Mechanic2Data.BodyExitZ, exit);
         }
+        // 入场前45帧从当前实际姿态平滑收拢；之后保持拍击轨迹的逐帧精确定位。
+        float entry = SkeletronLegendHead.Mechanic2Data.HandEntryProgress(age);
         NPC.velocity = Vector2.Zero;
-        NPC.Center = destination;
-        AnomalyNPC.Z = z;
+        NPC.Center = Vector2.Lerp(NPC.Center, destination, entry);
+        AnomalyNPC.Z = MathHelper.Lerp(AnomalyNPC.Z, z, entry);
         if (!selected && head.AnomalyNPC.Depth_DrawAnchor is { } anchor)
         {
             // 仅复制 Z 会漏掉头部为贴近玩家头顶而产生的屏幕平移。
@@ -260,7 +362,8 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
         Vector2 wrist = restingCenter + new Vector2(side * 5f, 20f - NPC.height * 0.5f);
         Vector2 forearm = Master.Center + new Vector2(side * 200f, 130f) - wrist;
         float restingRotation = MathHelper.WrapAngle(forearm.ToRotation() + MathHelper.PiOver2);
-        NPC.rotation = SkeletronLegendHead.Mechanic2Data.GetHandRotation(age, selected, restingRotation);
+        float destinationRotation = SkeletronLegendHead.Mechanic2Data.GetHandRotation(age, selected, restingRotation);
+        NPC.rotation += MathHelper.WrapAngle(destinationRotation - NPC.rotation) * entry;
     }
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
@@ -331,6 +434,15 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
             if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master))
                 return 0f;
             SkeletronLegendHead head = SkeletronLegendHead.GetInstance(master);
+            if (head.Mechanic5Active)
+            {
+                int attack = SkeletronLegendHead.Mechanic5Data.GetHandAttackIndex(head.Phase2MusicElapsedTime);
+                if (attack < 0)
+                    return 0f;
+                int remaining = SkeletronLegendHead.Mechanic5Data.GetHandStrikeTime(attack) - head.Phase2MusicElapsedTime;
+                return remaining > 0 ? MathF.Pow(MathF.Sin(remaining * MathHelper.Pi
+                    / SkeletronLegendHead.Mechanic5Data.HandWindupDuration), 2f) : 0f;
+            }
             if (head.Mechanic2Active)
             {
                 int strike = SkeletronLegendHead.Mechanic2Data.GetStrikeIndex(head.Mechanic2Age);
