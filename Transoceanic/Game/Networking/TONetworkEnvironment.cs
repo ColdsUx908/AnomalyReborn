@@ -5,7 +5,7 @@ namespace Transoceanic.Game.Networking;
 /// </summary>
 public static class TONetworkEnvironment
 {
-    private static readonly HashSet<string> _Consumers = new(StringComparer.Ordinal);
+    private static readonly HashSet<string> _Consumers = [with(StringComparer.Ordinal)];
     private static bool _SetupComplete;
 
     /// <summary>

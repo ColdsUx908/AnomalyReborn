@@ -58,7 +58,7 @@ public sealed class EaterofWorldsTail : EaterofWorldsSegment<EaterofWorldsTail>
 
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        spriteBatch.DrawFromCenter(NPC.Texture, NPC.Center - screenPos, NPC.frame, drawColor, NPC.rotation, NPC.scale);
+        spriteBatch.DrawFromCenter(NPC.Texture, NPC.Center - screenPos, NPC.frame, drawColor * PortalOpacity, NPC.rotation, NPC.scale);
         return false;
     }
 

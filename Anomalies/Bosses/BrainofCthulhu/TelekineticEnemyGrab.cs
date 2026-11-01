@@ -5,7 +5,7 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
     protected override int AI64Capacity => 2;
 
     public override string LocalizationCategory => "Bosses.BrainofCthulhu";
-    public override string Texture => "Anomalies/Bosses/BrainofCthulhu/Assets/BloomRing";
+    public override string Texture => AnomalyTextures.Extra.Path + "BloomRing";
 
     private BezierCurve _Curve = null;
     public int throwSign

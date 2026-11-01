@@ -31,7 +31,13 @@ public sealed class AnomalyEffects : ILoadable
 
     public static class Overlays
     {
+        public static MiscShaderContainer EaterDistortionFog;
+        public static MiscShaderContainer EaterDistortionWinds;
+        public static MiscShaderContainer EaterMetaballEdge;
+        public static MiscShaderContainer EaterPortal;
+        public static MiscShaderContainer EaterRealityCrack;
         public static MiscShaderContainer EventideDeathVignette;
+        public static MiscShaderContainer LegendEnergySphere;
         public static MiscShaderContainer LegendaryNightOverlay;
         public static MiscShaderContainer SolidColor;
         public static MiscShaderContainer SolidColorMask;

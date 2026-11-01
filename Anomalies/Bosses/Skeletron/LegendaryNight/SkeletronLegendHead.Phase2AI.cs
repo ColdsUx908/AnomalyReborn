@@ -26,6 +26,10 @@ public sealed partial class SkeletronLegendHead
     public int Mechanic2Age => Phase2MusicElapsedTime - Mechanic2StartMusicTime;
     public bool Mechanic3Active => CurrentPhase == Phase.Phase2_3;
     public bool Mechanic4Active => CurrentPhase == Phase.Phase2_4;
+    public bool Mechanic7Active => CurrentPhase == Phase.Phase2_7;
+    public bool Mechanic7Rotating => Mechanic7Active && Phase2MusicElapsedTime >= Mechanic7Data.RotationStart
+        && Phase2MusicElapsedTime < Mechanic7Data.RecoverTime;
+    public bool Mechanic6Active => CurrentPhase == Phase.Phase2_6;
     public bool Mechanic5Active => CurrentPhase == Phase.Phase2_5;
     public bool Phase2CoinAvatarActive => Mechanic4Active;
     public bool StarburstActive => Mechanic2Active || Mechanic3Active || Mechanic4Active || Mechanic5Active;
@@ -49,8 +53,23 @@ public sealed partial class SkeletronLegendHead
         && Phase2MusicElapsedTime < Mechanic1Data.PlatinumCoinEnd;
     private bool Phase2StarRainActive => CurrentPhase == Phase.Phase2_1 && CurrentLocalPhase >= 1
         && Phase2MusicElapsedTime < Mechanic1Data.StarRainEnd;
-    public bool Phase2ArenaRequested => CurrentPhase >= Phase.Phase2_2;
+    public bool Phase2ArenaRequested => CurrentPhase >= Phase.Phase2_2
+        && Phase2MusicElapsedTime < Mechanic7Data.StartMusicTime + Mechanic7Data.ArenaFadeDuration;
     public int Phase2ArenaStartMusicTime => Mechanic1Data.End;
+
+    // 8/9：机制7投掷起点；10/11：投掷瞬间锁定目标位置；12：旋转方向。
+    public Vector2 Mechanic7ThrowOrigin => new(AnomalyNPC.AnomalyAI32[8].F, AnomalyNPC.AnomalyAI32[9].F);
+    public Vector2 Mechanic7ThrowTarget => new(AnomalyNPC.AnomalyAI32[10].F, AnomalyNPC.AnomalyAI32[11].F);
+    public int Mechanic7RotationDirection => AnomalyNPC.AnomalyAI32[12].I < 0 ? -1 : 1;
+    public float Mechanic7NetRotation => -MathHelper.PiOver2
+        + (Phase2MusicElapsedTime - Mechanic7Data.RotationStart) * Mechanic7Data.NetAngularSpeed * Mechanic7RotationDirection;
+    public Vector2 Mechanic7NetCenter => Phase2MusicElapsedTime < Mechanic7Data.ThrowTime ? NPC.Center
+        : Phase2MusicElapsedTime < Mechanic7Data.ReturnTime
+            ? Vector2.Lerp(Mechanic7ThrowOrigin, Mechanic7ThrowTarget,
+                (Phase2MusicElapsedTime - Mechanic7Data.ThrowTime) / (float)(Mechanic7Data.ReturnTime - Mechanic7Data.ThrowTime))
+            : Vector2.Lerp(Mechanic7ThrowTarget, NPC.Center,
+                MathHelper.Clamp((Phase2MusicElapsedTime - Mechanic7Data.ReturnTime)
+                    / (float)(Mechanic7Data.RecoverTime - Mechanic7Data.ReturnTime), 0f, 1f));
 
     public void Phase2AI()
     {
@@ -70,7 +89,21 @@ public sealed partial class SkeletronLegendHead
             Mechanic2StartMusicTime = Mechanic2Data.StartMusicTime;
             Mechanic2HandPattern = 0;
             NPC.velocity = Vector2.Zero;
-            EndMechanic1Attacks();
+
+            if (TONetworkEnvironment.NotClient)
+            {
+                foreach (Projectile p in Projectile.ActiveProjectiles)
+                {
+                    bool owned = p.ModProjectile switch
+                    {
+                        SlimeMount slime => slime.MasterIndex == NPC.whoAmI + 1,
+                        FallingStar or PlatinumCoin or DemonShadow or SkullWarning or Meteor => (int)p.ai[2] == NPC.whoAmI + 1,
+                        _ => false
+                    };
+                    if (owned)
+                        p.Kill();
+                }
+            }
         }
 
         if (CurrentPhase == Phase.Phase2_2 && Phase2MusicElapsedTime >= Mechanic2Data.EndMusic)
@@ -83,6 +116,12 @@ public sealed partial class SkeletronLegendHead
             ChangeState(Phase.Phase2_4);
         if (TONetworkEnvironment.NotClient && CurrentPhase == Phase.Phase2_4 && Phase2MusicElapsedTime >= Mechanic4Data.EndMusicTime)
             ChangeState(Phase.Phase2_5);
+
+        if (TONetworkEnvironment.NotClient && CurrentPhase == Phase.Phase2_5 && Phase2MusicElapsedTime >= Mechanic6Data.StartMusicTime)
+            ChangeState(Phase.Phase2_6);
+
+        if (TONetworkEnvironment.NotClient && CurrentPhase == Phase.Phase2_6 && Phase2MusicElapsedTime >= Mechanic7Data.StartMusicTime)
+            ChangeState(Phase.Phase2_7);
 
         if (Phase2ArenaRequested && !ArenaProjectileAlive && !Phase2ArenaProjectileAlive)
             EnsureArenaForPhase2();
@@ -104,6 +143,12 @@ public sealed partial class SkeletronLegendHead
                 break;
             case Phase.Phase2_5:
                 Mechanic5();
+                break;
+            case Phase.Phase2_6:
+                Mechanic6();
+                break;
+            case Phase.Phase2_7:
+                Mechanic7();
                 break;
             default:
                 // 后续机制尚未实现时的待机移动。
@@ -781,6 +826,121 @@ public sealed partial class SkeletronLegendHead
             }
         }
 
+        void Mechanic6()
+        {
+            int time = Phase2MusicElapsedTime;
+            AnomalyNPC.Z = 0f;
+            NPC.rotation = 0f;
+            NPC.velocity = Phase2Arena is { } arena ? arena.Projectile.Center - NPC.Center : Vector2.Zero;
+            int cycle = Mechanic6Data.Cycle(time);
+            // 每轮0蓄力、1投掷后等待；8为第四颗爆炸后的待机。
+            int localPhase = time >= Mechanic6Data.EndMusicTime ? 8
+                : cycle * 2 + (time >= Mechanic6Data.ThrowTime(cycle) ? 1 : 0);
+            if (TONetworkEnvironment.NotClient && CurrentLocalPhase != localPhase)
+            {
+                CurrentLocalPhase = localPhase;
+                Timer1 = 0;
+                NPC.netUpdate = true;
+            }
+            if (time == Mechanic6Data.StartMusicTime)
+            {
+                SoundEngine.PlaySound(SoundID.ForceRoar, NPC.Center);
+                ReleaseSpellShockwave(Spell.Star);
+            }
+            if (!TONetworkEnvironment.NotClient)
+                return;
+            if (time == Mechanic6Data.ChargeTime(cycle))
+            {
+                Projectile.NewProjectileAction<LegendEnergySphere>(SourceAI,
+                    NPC.Center + Mechanic6Data.SphereOffset(time, cycle), Vector2.Zero, FallingStarDamage, 0f,
+                    action: p =>
+                    {
+                        p.ai[0] = NPC.whoAmI + 1;
+                        p.ai[1] = cycle;
+                        p.netUpdate = true;
+                    });
+            }
+        }
+
+        void Mechanic7()
+        {
+            int time = Phase2MusicElapsedTime;
+            // LocalPhase：0外展及待机，1旋转生成，2投掷，3回收，4常态归位及流星雨。
+            int localPhase = time >= Mechanic7Data.RecoverTime ? 4 : time >= Mechanic7Data.ReturnTime ? 3
+                : time >= Mechanic7Data.ThrowTime ? 2 : time >= Mechanic7Data.RotationStart ? 1 : 0;
+            if (TONetworkEnvironment.NotClient && CurrentLocalPhase != localPhase)
+                ChangeState(Phase.Phase2_7, localPhase);
+            AnomalyNPC.Z = 0f;
+            if (Mechanic7Rotating)
+            {
+                NPC.direction = Mechanic7RotationDirection;
+                SkeletronHead.RotatingMovement(NPC, Target, 0.3f, 10f);
+            }
+            else if (time >= Mechanic7Data.RecoverTime)
+            {
+                NPC.rotation = 0f;
+                NormalMovement();
+            }
+            else
+            {
+                NPC.rotation = 0f;
+                NPC.velocity = Vector2.Zero;
+            }
+            if (time == Mechanic7Data.RotationStart)
+                SoundEngine.PlaySound(SoundID.ForceRoar, NPC.Center);
+            if (!TONetworkEnvironment.NotClient)
+                return;
+            if (time == Mechanic7Data.StartMusicTime)
+            {
+                AnomalyNPC.AnomalyAI32[12].I = NPC.direction == -1 ? -1 : 1;
+                AnomalyNPC.AIChanged32[12] = true;
+                NPC.netUpdate = true;
+            }
+            if (time == Mechanic7Data.ThrowTime)
+            {
+                AnomalyNPC.AnomalyAI32[8].F = NPC.Center.X;
+                AnomalyNPC.AnomalyAI32[9].F = NPC.Center.Y;
+                AnomalyNPC.AnomalyAI32[10].F = Target.Center.X;
+                AnomalyNPC.AnomalyAI32[11].F = Target.Center.Y;
+                for (int slot = 8; slot <= 11; slot++)
+                    AnomalyNPC.AIChanged32[slot] = true;
+                NPC.netUpdate = true;
+            }
+            if (time == Mechanic7Data.RotationStart)
+            {
+                for (int i = 0; i < Mechanic7Data.StarCount; i++)
+                {
+                    int index = i;
+                    Projectile.NewProjectileAction<FallingStar>(SourceAI, NPC.Center, Vector2.Zero,
+                        FallingStarDamage, 0f, action: p =>
+                        {
+                            p.ai[0] = (float)FallingStar.MotionMode.StarNet;
+                            p.ai[1] = index;
+                            p.ai[2] = NPC.whoAmI + 1;
+                            p.scale = Mechanic7Data.StarScale;
+                            p.netImportant = true;
+                            p.timeLeft = Mechanic7Data.RecoverTime - Mechanic7Data.RotationStart + 60;
+                            p.netUpdate = true;
+                        });
+                }
+            }
+            if (time >= Mechanic7Data.RecoverTime
+                && (time - Mechanic7Data.RecoverTime) % Mechanic1Data.StarRainInterval == 0)
+            {
+                Projectile.NewProjectileAction<FallingStar>(SourceAI,
+                    Target.Center + new Vector2(Main.rand.NextFloat(-1200f, 1200f), -1000f),
+                    new Vector2(Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(10f, 15f)), FallingStarDamage, 0f,
+                    action: p =>
+                    {
+                        p.ai[2] = NPC.whoAmI + 1;
+                        p.scale = 0.2f;
+                        p.timeLeft = Mechanic1Data.ProjectileLifetime;
+                        p.GetModProjectile<FallingStar>().TrailType = 1;
+                        p.netUpdate = true;
+                    });
+            }
+        }
+
         void UpdateMechanic2BodyStrike(int age)
         {
             for (int strike = 0; strike < Mechanic2Data.StrikeCount; strike++)
@@ -869,23 +1029,6 @@ public sealed partial class SkeletronLegendHead
                 continue;
             hand.hide = true;
             hand.Anomaly.Skeletron_HandBloodDust = null;
-        }
-    }
-
-    private void EndMechanic1Attacks()
-    {
-        if (!TONetworkEnvironment.NotClient)
-            return;
-        foreach (Projectile p in Projectile.ActiveProjectiles)
-        {
-            bool owned = p.ModProjectile switch
-            {
-                SlimeMount slime => slime.MasterIndex == NPC.whoAmI + 1,
-                FallingStar or PlatinumCoin or DemonShadow or SkullWarning or Meteor => (int)p.ai[2] == NPC.whoAmI + 1,
-                _ => false
-            };
-            if (owned)
-                p.Kill();
         }
     }
 

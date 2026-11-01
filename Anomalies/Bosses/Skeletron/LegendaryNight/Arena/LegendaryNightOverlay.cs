@@ -57,7 +57,7 @@ public sealed class LegendaryNightOverlay : CustomOverlay
         {
             //绘制竞技场遮罩
 
-            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
 
             bool useShaders = AnomalyClientConfig.Instance.EnableShaders && AnomalyEffects.Overlays.LegendaryNightOverlay is not null;
             if (useShaders)
@@ -68,8 +68,16 @@ public sealed class LegendaryNightOverlay : CustomOverlay
                     .SetCustomParameter("uInverseViewMatrix", Matrix.Invert(Main.GameViewMatrix.TransformationMatrix))
                     .Apply();
 
-            spriteBatch.Draw(TOTextures.FillerTexture, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight),
-                useShaders ? Color.White : new Color(35, 32, 28, 180));
+            Rectangle screen = new(0, 0, Main.screenWidth, Main.screenHeight);
+            if (useShaders)
+                spriteBatch.Draw(TOTextures.FillerTexture, screen, Color.White);
+            else
+            {
+                // 无着色器时同样只叠加流动雾纹，不铺实色底；Alpha为零使噪声暗部保持透明。
+                Rectangle noiseArea = new((int)(Main.screenPosition.X * 0.4f + Main.timeForVisualEffects * 0.4f),
+                    (int)(Main.screenPosition.Y * 0.4f), Math.Max(1, Main.screenWidth / 2), Math.Max(1, Main.screenHeight / 2));
+                spriteBatch.Draw(AnomalyTextures.Noise.Wave, screen, noiseArea, new Color(210, 200, 180, 0) * 0.8f);
+            }
 
             spriteBatch.End();
 
@@ -181,6 +189,8 @@ public sealed class LegendaryNightOverlay : CustomOverlay
 
     private void DrawMagicCirclePart(SpriteBatch spriteBatch, Vector2 worldCenter, float radius, float rotation, bool drawStar, int circleIndex = 0)
     {
+        if (radius <= 0.01f)
+            return;
         float intensity = Phase2Arena.MaterializationIntensity;
         float warning = Phase2Arena.MaterializationWarning;
         float starburstGlow = circleIndex > 0 ? Phase2Arena.StarburstGlow : 0f;

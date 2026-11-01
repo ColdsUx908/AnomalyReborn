@@ -33,7 +33,10 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
         && master.Anomaly.CustomAIType == 1 ? SkeletronLegendHead.GetInstance(master) : null;
     public int MusicAge => Math.Max(0, (MasterBehavior?.Phase2MusicElapsedTime ?? AppearanceStartMusicTime) - AppearanceStartMusicTime);
     public float AppearanceProgress => MathHelper.Clamp(MusicAge / (float)AppearanceDuration, 0f, 1f);
-    public float Intensity => MathHelper.SmoothStep(0f, 1f, AppearanceProgress);
+    public float Intensity => MathHelper.SmoothStep(0f, 1f, AppearanceProgress) * (1f - DisappearanceProgress);
+    public float DisappearanceProgress => MasterBehavior is { Mechanic7Active: true } head
+        ? MathHelper.Clamp((head.Phase2MusicElapsedTime - SkeletronLegendHead.Mechanic7Data.StartMusicTime)
+            / (float)SkeletronLegendHead.Mechanic7Data.ArenaFadeDuration, 0f, 1f) : 0f;
     public float AppearanceScale => MathHelper.Lerp(0.2f, 1f, 1f - MathF.Pow(1f - AppearanceProgress, 3f));
     public float MagicCircleRotation => MusicAge * RotationSpeed;
     public float MainCircleRadius => Radius / OuterCircleRadiusRatio;
@@ -74,13 +77,18 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
     // 统一提供视觉与后续交互使用的几何数据；0 主法阵，1/2 两个附属法阵。
     public (Vector2 Center, float Radius, float Rotation) GetMagicCircle(int index)
     {
+        float absorb = MasterBehavior is { } head && (head.Mechanic6Active || head.Mechanic7Active)
+            ? SkeletronLegendHead.Mechanic6Data.AbsorbProgress(head.Phase2MusicElapsedTime) : 0f;
+        Vector2 destination = MasterBehavior is { } owner
+            ? owner.NPC.Center + SkeletronLegendHead.Mechanic6Data.SphereOffset(owner.Phase2MusicElapsedTime, 0) : Projectile.Center;
+        float originalRadius = MainCircleFullRadius * AppearanceScale;
         if (index == 0)
-            return (Projectile.Center, MainCircleRadius, MagicCircleRotation);
+            return (Vector2.Lerp(Projectile.Center, destination, absorb), originalRadius * (1f - absorb), MagicCircleRotation);
         // 同向公转；交汇位置由音乐时钟和同步初始角确定。
         float spinSpeed = index == 1 ? FirstSmallCircleSpinSpeed : SecondSmallCircleSpinSpeed;
         float angle = GetOrbitAngle(index, MasterBehavior?.Phase2MusicElapsedTime ?? AppearanceStartMusicTime);
-        Vector2 center = Projectile.Center + angle.ToRotationVector2() * (MainCircleRadius + SmallCircleRadius);
-        return (center, SmallCircleRadius, MusicAge * spinSpeed);
+        Vector2 center = Projectile.Center + angle.ToRotationVector2() * (originalRadius * (1f + SmallCircleRadiusRatio));
+        return (Vector2.Lerp(center, destination, absorb), originalRadius * SmallCircleRadiusRatio * (1f - absorb), MusicAge * spinSpeed);
     }
 
     public Vector2 GetStarVertex(int circleIndex, int vertexIndex)
@@ -95,7 +103,7 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
     public override float Radius { get; set; } = MainCircleFullRadius * OuterCircleRadiusRatio * 0.2f;
     public override float Thickness => 0f;
     public override int DustType => DustID.GoldFlame;
-    public override bool EnableMovementRestriction => MasterBehavior is { Phase2ArenaRequested: true } && AppearanceProgress >= 1f;
+    public override bool EnableMovementRestriction => MasterBehavior is { Phase2ArenaRequested: true, Mechanic7Active: false } && AppearanceProgress >= 1f;
 
     public override void SetDefaults()
     {
@@ -127,7 +135,9 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
         Projectile.timeLeft = 100;
         Projectile.velocity = Vector2.Zero;
         // 圆心在生成时固定；半径与所有绘制共用同一份入场缩放。
-        Radius = MainCircleFullRadius * OuterCircleRadiusRatio * AppearanceScale;
+        Radius = MainCircleFullRadius * OuterCircleRadiusRatio * AppearanceScale
+            * ((head.Mechanic6Active || head.Mechanic7Active) ? SkeletronLegendHead.Mechanic6Data.ArenaScale(head.Phase2MusicElapsedTime) : 1f)
+            * MathHelper.Lerp(1f, 1.5f, DisappearanceProgress);
         if (EnableMovementRestriction)
             MovementRestriction();
         else

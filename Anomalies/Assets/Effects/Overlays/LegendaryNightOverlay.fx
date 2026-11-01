@@ -5,18 +5,19 @@ float2 uScreenPosition;
 float4x4 uInverseViewMatrix;
 float uTime;
 
-float3 GetColor(float2 screenCoords)
+float4 GetMist(float2 screenCoords)
 {
     screenCoords.x *= uScreenResolution.x / uScreenResolution.y;
     screenCoords *= 0.7;
-    
-    float3 colorTop = float3(0xe3, 0xda, 0xc9) / 255;
-    
-    float coords = sin(screenCoords.x * 30 + uTime * 2.4) * 0.5 + 0.5;
-    float txt = tex2D(uImage1, screenCoords + float2(uTime * -0.07, uTime * -0.12)).r;
-    float txtVal = txt;
-    float3 gradientColor = colorTop * clamp(0.03 + txtVal, 0, 1);
-    return gradientColor;
+    float wave = tex2D(uImage1, screenCoords + float2(uTime * -0.07, uTime * -0.12)).r;
+    float detail = tex2D(uImage1, screenCoords * 1.6 + float2(uTime * 0.025, uTime * -0.035)).r;
+    // 透明度完全来自波纹密度；无固定底色，最浓处也只遮挡少量背景。
+    // Wave.png 的红通道范围为0..63；先归一化，避免把所有波纹压到近乎透明。
+    float noise = saturate((wave * 0.75 + detail * 0.25) * (255.0 / 63.0));
+    float density = smoothstep(0.08, 0.85, noise);
+    float opacity = density * 0.38;
+    float3 mistColor = float3(0xe3, 0xda, 0xc9) / 255;
+    return float4(mistColor * opacity, opacity);
 }
 
 float4 Main(float4 screenPos : VPOS, float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
@@ -25,8 +26,7 @@ float4 Main(float4 screenPos : VPOS, float2 coords : TEXCOORD0, float4 sampleCol
     float2 worldPosition = mul(float4(screenPos.xy, 0, 1), uInverseViewMatrix).xy + uScreenPosition;
     float2 screenCoords = worldPosition / uScreenResolution;
     float alpha = tex2D(uImage0, coords).a;
-    float3 gradientColor = GetColor(screenCoords);
-    return float4(gradientColor, 1.0) * alpha * sampleColor;
+    return GetMist(screenCoords) * alpha * sampleColor;
 }
 
 technique Technique1

@@ -10,16 +10,7 @@ public sealed partial class EaterofWorldsHead
             if (CurrentBehavior == Behavior.Phase1_Hunt && CycleIndex == 0)
                 return MathHelper.SmoothStep(0f, 1f, Math.Clamp(Timer1 / 18f, 0f, 1f))
                     * MathHelper.SmoothStep(0f, 1f, Math.Clamp((HuntDuration - Timer1) / 30f, 0f, 1f));
-            if (CurrentBehavior is not (Behavior.Phase1_Split or Behavior.Phase1_Combine))
-                return 0f;
-            float progress = CurrentLocalPhase switch
-            {
-                0 => Timer1 / 24f,
-                1 or 2 => 1f,
-                3 => ((CurrentBehavior == Behavior.Phase1_Combine ? 42 : 30 + 2 * SplitLaunchDelay) + 30 - Timer1) / 24f,
-                _ => 0f
-            };
-            return MathHelper.SmoothStep(0f, 1f, Math.Clamp(progress, 0f, 1f));
+            return 0f;
         }
     }
 
@@ -101,28 +92,11 @@ public sealed partial class EaterofWorldsHead
             case Behavior.Phase1_Split:
             case Behavior.Phase1_Combine:
                 bool combine = CurrentBehavior == Behavior.Phase1_Combine;
-                if (CurrentLocalPhase < 3)
+                if (CurrentLocalPhase == 1)
                 {
-                    if (CurrentLocalPhase == 2)
-                    {
-                        for (int i = 0; i < (combine ? 1 : 3); i++)
-                            Warning(CoilingCenter, CoilLaunchDirection(i, combine), Timer1, CoilDuration,
-                                warningColor: color);
-                    }
-                }
-                else if (CurrentLocalPhase == 3)
-                {
-                    List<NPC> heads = GetEncounterHeads();
-                    for (int i = 0; i < heads.Count; i++)
-                    {
-                        if (Timer1 <= (combine ? 42 : 30 + i * SplitLaunchDelay))
-                        {
-                            float emergence = Smooth((heads[i].Distance(CoilingCenter) - 180f) / 100f);
-                            Vector2 origin = Vector2.Lerp(CoilingCenter, heads[i].Center, emergence);
-                            Warning(origin, CoilLaunchDirection(i, combine),
-                                Timer1, combine ? 42 : 30 + i * SplitLaunchDelay, warningColor: color);
-                        }
-                    }
+                    for (int i = 0; i < (combine ? 1 : 3); i++)
+                        Warning(CoilingCenter, CoilLaunchDirection(i, combine), Timer1, PortalChargeDuration,
+                            warningColor: color);
                 }
                 break;
         }

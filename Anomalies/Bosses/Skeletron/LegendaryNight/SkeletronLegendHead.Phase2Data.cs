@@ -374,4 +374,86 @@ public sealed partial class SkeletronLegendHead
             return origin + direction * (Math.Max(0f, distance) + HandOvershoot);
         }
     }
+
+    /// <summary>机制6；全部时间为音乐绝对帧数，半拍按设计向后47帧。</summary>
+    public static class Mechanic6Data
+    {
+        public const int StartMusicTime = 113 * 60 + 35;
+        public const int AbsorbMusicTime = 114 * 60 + 5;
+        public const int ExpandMusicTime = 114 * 60 + 22;
+        public const int ArenaTransitionDuration = 10;
+        public const int EndMusicTime = 131 * 60 + 47;
+        public const int HandThrowDuration = 12;
+        public const int HandReturnDuration = 24;
+        public const float SphereRadius = 240f;
+        public const float ThrowSpeed = 18f;
+        public static int ChargeTime(int index) => index switch
+        {
+            0 => 113 * 60 + 35,
+            1 => 119 * 60 + 55,
+            2 => 126 * 60 + 15,
+            _ => 129 * 60 + 25
+        };
+        public static int ThrowTime(int index) => index switch
+        {
+            0 => 118 * 60 + 20,
+            1 => 124 * 60 + 40,
+            2 => 127 * 60 + 50,
+            _ => 131 * 60
+        };
+        public static int ExplosionTime(int index) => index switch
+        {
+            0 => 119 * 60 + 55,
+            1 => 126 * 60 + 15,
+            2 => 128 * 60 + 37,
+            _ => 131 * 60 + 47
+        };
+        public static int StarCount(int index) => index switch { 0 => 70, 1 => 60, _ => 40 };
+        public static float SizeRatio(int index) => index switch { 0 => 1f, 1 => 0.9f, _ => 0.585f };
+        public static int Cycle(int time) => time < ChargeTime(1) ? 0 : time < ChargeTime(2) ? 1 : time < ChargeTime(3) ? 2 : 3;
+        public static float ChargeProgress(int time, int index) => MathHelper.Clamp(
+            (time - ChargeTime(index)) / (float)(ThrowTime(index) - ChargeTime(index)), 0f, 1f);
+        // Ares 的 LargeTeslaOrbBlast 使用三次方增长，开始时微小、后半程迅速凝聚。
+        public static float Radius(int time, int index) => MathHelper.Lerp(2f, SphereRadius * SizeRatio(index),
+            MathF.Pow(ChargeProgress(time, index), 3f));
+        public static Vector2 SphereOffset(int time, int index) => new(0f, -180f - Radius(time, index));
+        public static float AbsorbProgress(int time) => MathHelper.SmoothStep(0f, 1f,
+            MathHelper.Clamp((time - AbsorbMusicTime) / (float)ArenaTransitionDuration, 0f, 1f));
+        public static float ArenaScale(int time) => MathHelper.Lerp(1f, 1.5f, MathHelper.SmoothStep(0f, 1f,
+            MathHelper.Clamp((time - ExpandMusicTime) / (float)ArenaTransitionDuration, 0f, 1f)));
+    }
+
+    /// <summary>机制7；全部时间为音乐绝对帧数。</summary>
+    public static class Mechanic7Data
+    {
+        public const int StartMusicTime = 132 * 60 + 30;
+        public const int ArenaFadeDuration = 30;
+        public const int HandExtendDuration = 75;
+        public const int RotationStart = 134 * 60 + 5;
+        public const int GrowthDuration = 90;
+        public const int ThrowTime = 135 * 60 + 40;
+        public const int ReturnTime = 137 * 60 + 15;
+        public const int RecoverTime = 138 * 60 + 50;
+        public const int HandRecoverDuration = 30;
+        public const int StarCount = 30;
+        public const float HandRadius = 400f;
+        public const float NetRadius = 200f;
+        public const float HandAngularSpeed = MathHelper.TwoPi / 30f;
+        public const float NetAngularSpeed = MathHelper.TwoPi / 30f;
+        public const float StarScale = 0.2f;
+
+        public static float Radius(int time) => NetRadius
+            * MathHelper.Clamp((time - RotationStart) / (float)GrowthDuration, 0f, 1f)
+            * (1f - MathHelper.Clamp((time - ReturnTime) / (float)(RecoverTime - ReturnTime), 0f, 1f));
+
+        // 与 Meteor 相同，依次连接间隔一个顶点的五个顶点，并在线段上等分。
+        public static Vector2 StarOffset(int index, float radius, float rotation)
+        {
+            float edgePosition = index * 5f / StarCount;
+            int edge = (int)edgePosition;
+            Vector2 start = (rotation + TOMathUtils.PiOver5 * 4f * edge).ToRotationVector2() * radius;
+            Vector2 end = (rotation + TOMathUtils.PiOver5 * 4f * (edge + 1)).ToRotationVector2() * radius;
+            return Vector2.Lerp(start, end, edgePosition - edge);
+        }
+    }
 }

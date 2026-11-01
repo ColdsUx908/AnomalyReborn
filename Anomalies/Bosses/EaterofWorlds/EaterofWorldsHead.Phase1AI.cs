@@ -95,87 +95,75 @@ public sealed partial class EaterofWorldsHead
 
         void TransformAttack(bool combine)
         {
-            // 0: fast entry; 1: orbit until the entire chain follows inside; 2: coil and telegraph;
-            // 3: staggered split launch or combined charge; chain directly into the next attack.
+            // 0: retreat; 1: enter while the exit rift charges; 3: emerge in the new topology.
             switch (CurrentLocalPhase)
             {
                 case 0:
                     if (Timer1 == 1 && TONetworkEnvironment.NotClient)
                     {
-                        CoilingCenter = Target.Center + new Vector2(AttackSide * FormationDistance, combine ? 300f : 120f);
-                        NPC.netUpdate = true;
+                        Vector2 away = (NPC.Center - Target.Center).SafeNormalize(new Vector2(AttackSide, 0f));
+                        AttackCenter = Target.Center + away * PortalRetreatDistance;
                     }
-                    bool ready = true;
-                    for (int i = 0; i < heads.Count; i++)
+                    foreach (NPC head in heads)
+                        MoveTowards(head, AttackCenter, 38f, 6f);
+                    if (Timer1 >= 45 && heads.All(head => head.Distance(Target.Center) >= PortalSafeDistance)
+                        && TONetworkEnvironment.NotClient)
                     {
-                        if (heads[i].Distance(CoilingCenter) < 125f)
-                            Orbit(heads[i]);
-                        else
-                            MoveTowards(heads[i], CoilingCenter, 38f, 6f);
-                        ready &= heads[i].Distance(CoilingCenter) < 125f;
-                    }
-                    if (Timer1 >= 24 && ready)
-                        ChangeStep(1);
-                    break;
-                case 1:
-                    for (int i = 0; i < heads.Count; i++)
-                        Orbit(heads[i]);
-                    if (Timer1 >= 36 && TONetworkEnvironment.NotClient
-                        && AllSegments.All(segment => segment.NPC.Distance(CoilingCenter) < 170f))
-                    {
-                        if (TONetworkEnvironment.NotClient)
+                        // Fix the destination for the entire warning, so a moving player can dodge it.
+                        CoilingCenter = Target.Center + Target.velocity.SafeNormalize(new Vector2(AttackSide, 0f)) * PortalExitDistance;
+                        foreach (NPC head in heads)
                         {
-                            AimPoint = Target.Center;
-                            CoilingStartAngle = (AimPoint - CoilingCenter).ToRotation();
+                            Vector2 direction = (head.Center - Target.Center).SafeNormalize(Vector2.UnitY);
+                            GetInstance(head).LaunchDirection = direction;
+                            SpawnPortal(head.Center + direction * 120f, true);
+                            head.netUpdate = true;
                         }
-                        ChangeStep(2);
+                        SpawnPortal(CoilingCenter, false);
+                        ChangeStep(1);
                     }
-                    else if (Timer1 >= TotalSegmentCount * 12)
+                    else if (Timer1 >= FormationTimeout * 3)
                         ChangeAttack(combine ? Behavior.Phase1_CrossSweep : Behavior.Phase1_Hunt);
                     break;
-                case 2:
-                    for (int i = 0; i < heads.Count; i++)
-                        Orbit(heads[i]);
-                    if (Timer1 >= CoilDuration && TONetworkEnvironment.NotClient)
+                case 1:
+                    foreach (NPC head in heads)
+                        head.velocity = GetInstance(head).LaunchDirection * 28f;
+                    if (Timer1 >= PortalChargeDuration && TONetworkEnvironment.NotClient)
                     {
+                        // Hidden links are changed on the same boundary as the rift explosion and launch.
                         List<NPC> transformed = TransformToWorms(combine ? 1 : 3);
                         if (transformed.Count == 0)
                         {
                             RemoveEncounter();
                             return;
                         }
-                        // Rewire only: every segment keeps the position it reached by following its predecessor.
+                        foreach (NPC head in transformed)
+                        {
+                            int group = (GetInstance(head).SegmentIndex - 1) / (TotalSegmentCount / 3);
+                            Vector2 direction = CoilLaunchDirection(group, combine);
+                            GetInstance(head).LaunchDirection = direction;
+                            head.velocity = direction * OutwardChargeSpeed;
+                        }
+                        foreach (EaterofWorldsSegmentContainer segment in AllSegments)
+                        {
+                            NPC entity = segment.NPC;
+                            entity.Center = CoilingCenter;
+                            entity.Opacity = 0f;
+                            if (entity.type != NPCID.EaterofWorldsHead)
+                                entity.velocity = Vector2.Zero;
+                            Array.Fill(entity.oldPos, entity.position);
+                            Array.Fill(entity.oldRot, entity.rotation);
+                            entity.netUpdate = true;
+                        }
                         ChangeStep(3);
                     }
                     break;
                 case 3:
-                    int launchWarning = combine ? 42 : 30;
-                    for (int i = 0; i < heads.Count; i++)
-                    {
-                        int delay = launchWarning + (combine ? 0 : i * SplitLaunchDelay);
-                        if (Timer1 <= delay)
-                        {
-                            Orbit(heads[i]);
-                            if (Timer1 == delay)
-                            {
-                                // Predict the same launch on clients; the server snapshot corrects latency differences.
-                                Vector2 direction = CoilLaunchDirection(i, combine);
-                                GetInstance(heads[i]).LaunchDirection = direction;
-                                heads[i].Center = CoilingCenter;
-                                heads[i].velocity = direction * OutwardChargeSpeed;
-                                heads[i].rotation = direction.ToRotation() + MathHelper.PiOver2;
-                                Array.Fill(heads[i].oldPos, heads[i].position);
-                                Array.Fill(heads[i].oldRot, heads[i].rotation);
-                                if (TONetworkEnvironment.NotClient)
-                                    heads[i].netUpdate = true;
-                            }
-                        }
-                        else
-                            heads[i].velocity = GetInstance(heads[i]).LaunchDirection * OutwardChargeSpeed;
-                    }
-                    if (Timer1 > launchWarning + (combine ? 0 : 2 * SplitLaunchDelay)
+                    foreach (NPC head in heads)
+                        head.velocity = GetInstance(head).LaunchDirection * OutwardChargeSpeed;
+                    // Wait for the final tail to emerge before scheduling the next attack.
+                    if (TONetworkEnvironment.NotClient && Timer1 >= 12
                         && heads.All(head => head.Distance(CoilingCenter) >= OutwardChargeDistance)
-                        && TONetworkEnvironment.NotClient)
+                        && AllSegments.All(segment => segment.NPC.Distance(CoilingCenter) >= 60f))
                     {
                         if (combine)
                         {
@@ -186,15 +174,6 @@ public sealed partial class EaterofWorldsHead
                             ChangeAttack(CycleIndex % 2 == 0 ? Behavior.Phase1_TripleHunt : Behavior.Phase1_CrossSweep);
                     }
                     break;
-            }
-
-            void Orbit(NPC head)
-            {
-                Vector2 radial = (head.Center - CoilingCenter).SafeNormalize(Vector2.UnitX);
-                Vector2 point = CoilingCenter + (radial * CoilRadius).RotatedBy(0.55f);
-                Vector2 delta = point - head.Center;
-                Vector2 desired = delta.SafeNormalize(Vector2.UnitY) * Math.Min(32f, delta.Length() * 0.9f);
-                head.velocity = Vector2.Lerp(head.velocity, desired, 0.35f);
             }
         }
 

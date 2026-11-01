@@ -22,14 +22,6 @@ public sealed class AnomalyTextures
     {
         public const string Path = TexturePathPrefix + "Extra/";
 
-        [LoadTexture(Path + "Vein2")]
-        internal static Asset<Texture2D> _Vein2;
-        public static Texture2D Vein2 => _Vein2?.Value;
-
-        [LoadTexture(Path + "Voronoi")]
-        internal static Asset<Texture2D> _Voronoi;
-        public static Texture2D Voronoi => _Voronoi?.Value;
-
         [LoadTexture(Path + "BasicCircle")]
         internal static Asset<Texture2D> _BasicCircle;
         public static Texture2D BasicCircle => _BasicCircle?.Value;
@@ -37,6 +29,10 @@ public sealed class AnomalyTextures
         [LoadTexture(Path + "BasicCircleLarge")]
         internal static Asset<Texture2D> _BasicCircleLarge;
         public static Texture2D BasicCircleLarge => _BasicCircleLarge?.Value;
+
+        [LoadTexture(Path + "BloomRing")]
+        internal static Asset<Texture2D> _BloomRing;
+        public static Texture2D BloomRing => _BloomRing?.Value;
 
         [LoadTexture(Path + "CrystalTextGlow")]
         internal static Asset<Texture2D> _CrystalTextGlow;
@@ -49,22 +45,56 @@ public sealed class AnomalyTextures
         [LoadTexture(Path + "LaserTelegraphBeam")]
         internal static Asset<Texture2D> _LaserTelegraphBeam;
         public static Texture2D LaserTelegraphBeam => _LaserTelegraphBeam?.Value;
+
     }
 
     public static class Noise
     {
         public const string Path = TexturePathPrefix + "Noise/";
+
+        [LoadTexture(Path + "Cloud")]
+        internal static Asset<Texture2D> _Cloud;
+        public static Texture2D Cloud => _Cloud?.Value;
+
+        [LoadTexture(Path + "Electric")]
+        internal static Asset<Texture2D> _Electric;
+        public static Texture2D Electric => _Electric?.Value;
+
+        [LoadTexture(Path + "Harsh")]
+        internal static Asset<Texture2D> _Harsh;
+        public static Texture2D Harsh => _Harsh?.Value;
+
         [LoadTexture(Path + "Melt")]
         internal static Asset<Texture2D> _Melt;
         public static Texture2D Melt => _Melt?.Value;
+
+        [LoadTexture(Path + "Melt2")]
+        internal static Asset<Texture2D> _Melt2;
+        public static Texture2D Melt2 => _Melt2?.Value;
 
         [LoadTexture(Path + "Milky")]
         internal static Asset<Texture2D> _Milky;
         public static Texture2D Milky => _Milky?.Value;
 
+        [LoadTexture(Path + "Neuron")]
+        internal static Asset<Texture2D> _Neuron;
+        public static Texture2D Neuron => _Neuron?.Value;
+
+        [LoadTexture(Path + "Pebble")]
+        internal static Asset<Texture2D> _Pebble;
+        public static Texture2D Pebble => _Pebble?.Value;
+
         [LoadTexture(Path + "Perlin")]
         internal static Asset<Texture2D> _Perlin;
         public static Texture2D Perlin => _Perlin?.Value;
+
+        [LoadTexture(Path + "Perlin2")]
+        internal static Asset<Texture2D> _Perlin2;
+        public static Texture2D Perlin2 => _Perlin2?.Value;
+
+        [LoadTexture(Path + "Sharp")]
+        internal static Asset<Texture2D> _Sharp;
+        public static Texture2D Sharp => _Sharp?.Value;
 
         [LoadTexture(Path + "Smear")]
         internal static Asset<Texture2D> _Smear;
@@ -77,6 +107,18 @@ public sealed class AnomalyTextures
         [LoadTexture(Path + "Vein")]
         internal static Asset<Texture2D> _Vein;
         public static Texture2D Vein => _Vein?.Value;
+
+        [LoadTexture(Path + "Vein2")]
+        internal static Asset<Texture2D> _Vein2;
+        public static Texture2D Vein2 => _Vein2?.Value;
+
+        [LoadTexture(Path + "Voronoi")]
+        internal static Asset<Texture2D> _Voronoi;
+        public static Texture2D Voronoi => _Voronoi?.Value;
+
+        [LoadTexture(Path + "Voronoi2")]
+        internal static Asset<Texture2D> _Voronoi2;
+        public static Texture2D Voronoi2 => _Voronoi2?.Value;
 
         [LoadTexture(Path + "Wave")]
         internal static Asset<Texture2D> _Wave;

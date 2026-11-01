@@ -19,7 +19,11 @@ EyeofCthulhu: {
 	BloodOrbProjectile.DisplayName: Blood Orb
 }
 
-EaterofWorlds.EaterCursedFlame.DisplayName: Eater Cursed Flame
+EaterofWorlds: {
+	EaterCursedFlame.DisplayName: Eater Cursed Flame
+	EaterEntryPortal.DisplayName: Eater Entry Portal
+	EaterTeleportRift.DisplayName: Eater Teleport Rift
+}
 
 BrainofCthulhu: {
 	BrainBloodShot.DisplayName: Blood Shot
@@ -90,6 +94,7 @@ Skeletron: {
 
 		LegendaryNightPhase2Arena.DisplayName: Astral Magic Circle
 		LegendSlimeRain.DisplayName: Legend Slime Rain
+		LegendEnergySphere.DisplayName: Legend Energy Sphere
 	}
 }
 

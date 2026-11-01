@@ -126,15 +126,8 @@ public abstract class EaterofWorldsSegment<TBehavior> : AnomalyNPCBehavior<TBeha
             if (owner.CurrentLocalPhase < 2 || group != owner.AttackIndex % 3)
                 return 0;
         }
-        if (owner.CurrentBehavior is EaterofWorldsHead.Behavior.Phase1_Split or EaterofWorldsHead.Behavior.Phase1_Combine
-            && owner.CurrentLocalPhase == 3)
-        {
-            bool combine = owner.CurrentBehavior == EaterofWorldsHead.Behavior.Phase1_Combine;
-            int ordinal = ValidLocalHead ? EaterofWorldsHead.GetInstance(LocalHead).SegmentIndex : 1;
-            int group = (ordinal - 1) / (EaterofWorldsHead.TotalSegmentCount / 3);
-            if (owner.Timer1 <= (combine ? 42 : 30 + group * EaterofWorldsHead.SplitLaunchDelay))
-                return 0;
-        }
+        if (PortalOpacity < 1f)
+            return 0;
         return SegmentType switch
         {
             EaterofWorldsSegmentType.Head => EaterofWorldsHead.HeadContactDamage,
@@ -143,12 +136,37 @@ public abstract class EaterofWorldsSegment<TBehavior> : AnomalyNPCBehavior<TBeha
         };
     }
 
+    protected float PortalOpacity
+    {
+        get
+        {
+            if (!ValidHead)
+                return 1f;
+            EaterofWorldsHead owner = HeadBehavior;
+            if (owner.CurrentBehavior is not (EaterofWorldsHead.Behavior.Phase1_Split or EaterofWorldsHead.Behavior.Phase1_Combine))
+                return 1f;
+            if (owner.CurrentLocalPhase == 1)
+            {
+                int length = EaterofWorldsHead.TotalSegmentCount / (owner.CurrentlySplit ? 3 : 1);
+                int offset = (SegmentIndex - 1) % length;
+                return 1f - Utils.GetLerpValue(offset * 1.5f + 4f, offset * 1.5f + 16f, owner.Timer1, true);
+            }
+            if (owner.CurrentLocalPhase == 3)
+            {
+                // Visibility follows actual emergence, including FTW spacing and scaled segments.
+                return Utils.GetLerpValue(0f, 60f, NPC.Distance(owner.CoilingCenter), true);
+            }
+            return 1f;
+        }
+    }
+
     protected bool IsUnderCoilMask => ValidHead && HeadBehavior.CoilMaskStrength > 0f
         && NPC.Distance(HeadBehavior.CoilingCenter) < 180f;
 
     protected void UpdateCoilDR()
     {
-        AnomalyNPC.DR = IsUnderCoilMask ? 0.95f : 0f;
+        NPC.Opacity = PortalOpacity;
+        AnomalyNPC.DR = PortalOpacity < 1f || IsUnderCoilMask ? 0.95f : 0f;
     }
 
     protected void BodyAndTailMovementAI()

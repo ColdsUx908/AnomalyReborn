@@ -43,6 +43,8 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         Phase2_3,
         Phase2_4,
         Phase2_5 = 8,
+        Phase2_6 = 9,
+        Phase2_7 = 10,
         Phase2_Finale = 7, // 保留已有同步值。
     }
 
@@ -281,7 +283,7 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
 
         int previousTarget = NPC.target;
         bool validTarget;
-        if (Phase2ArenaProjectileAlive)
+        if (Phase2ArenaProjectileAlive && !Mechanic7Active)
             validTarget = NPC.TargetIfInvalid(true, p => new Circle(ArenaProjectile.Center, Phase2Arena.TargetingRadius).Collides(p.Hitbox));
         else if (ArenaProjectileAlive && ArenaModProjectile.IsActivated)
             validTarget = NPC.TargetIfInvalid(true, p => new Circle(ArenaProjectile.Center, ArenaModProjectile.Radius * 2f).Collides(p.Hitbox));

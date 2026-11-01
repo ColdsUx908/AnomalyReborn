@@ -129,7 +129,12 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
             NPC.velocity *= 0.8f;
             return false;
         }
-        if (head.Mechanic5Active)
+        if (head.Mechanic7Active && head.Phase2MusicElapsedTime < SkeletronLegendHead.Mechanic7Data.RecoverTime
+            + SkeletronLegendHead.Mechanic7Data.HandRecoverDuration)
+            Mechanic7HandAI(head);
+        else if (head.Mechanic6Active)
+            Mechanic6HandAI(head);
+        else if (head.Mechanic5Active)
             Mechanic5HandAI(head);
         else if (head.Mechanic2InBackground)
             Mechanic2HandAI(head);
@@ -140,6 +145,78 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
             NPC.rotation = GetPositionRotation(NPC.Center, Master.Center, -Math.Sign(NPC.ai[0]));
         }
         return false;
+
+        void Mechanic7HandAI(SkeletronLegendHead head)
+        {
+            int time = head.Phase2MusicElapsedTime;
+            int side = -Math.Sign(NPC.ai[0]);
+            AnomalyNPC.Z = 0f;
+            if (time == SkeletronLegendHead.Mechanic7Data.StartMusicTime && TONetworkEnvironment.NotClient)
+            {
+                // 复用机制5的起点槽，保存外展前相对头部的手部位置。
+                Mechanic5StrikeOrigin = NPC.Center - master.Center;
+                NPC.ai[2] = NPC.ai[3] = 0f;
+                NPC.netUpdate = true;
+            }
+            Vector2 offset;
+            if (time < SkeletronLegendHead.Mechanic7Data.RotationStart)
+            {
+                float progress = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(
+                    (time - SkeletronLegendHead.Mechanic7Data.StartMusicTime + 1f)
+                        / SkeletronLegendHead.Mechanic7Data.HandExtendDuration, 0f, 1f));
+                offset = Vector2.Lerp(Mechanic5StrikeOrigin, new Vector2(side * SkeletronLegendHead.Mechanic7Data.HandRadius, 0f), progress);
+            }
+            else
+            {
+                int orbitTime = Math.Min(time, SkeletronLegendHead.Mechanic7Data.RecoverTime)
+                    - SkeletronLegendHead.Mechanic7Data.RotationStart;
+                float angle = orbitTime * SkeletronLegendHead.Mechanic7Data.HandAngularSpeed * head.Mechanic7RotationDirection;
+                offset = new Vector2(side * SkeletronLegendHead.Mechanic7Data.HandRadius, 0f).RotatedBy(angle);
+                if (time >= SkeletronLegendHead.Mechanic7Data.RecoverTime)
+                {
+                    float progress = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(
+                        (time - SkeletronLegendHead.Mechanic7Data.RecoverTime + 1f)
+                            / SkeletronLegendHead.Mechanic7Data.HandRecoverDuration, 0f, 1f));
+                    offset = Vector2.Lerp(offset, GetIdleOffset(side), progress);
+                    NPC.ai[2] = NPC.ai[3] = 0f;
+                }
+            }
+            NPC.velocity = master.Center + master.velocity + offset - NPC.Center;
+            NPC.rotation = GetPositionRotation(NPC.Center + NPC.velocity, master.Center + master.velocity, side);
+        }
+
+        void Mechanic6HandAI(SkeletronLegendHead head)
+        {
+            int time = head.Phase2MusicElapsedTime;
+            int cycle = SkeletronLegendHead.Mechanic6Data.Cycle(time);
+            int side = -Math.Sign(NPC.ai[0]);
+            Vector2 idleOffset = GetIdleOffset(side);
+            int throwAge = time - SkeletronLegendHead.Mechanic6Data.ThrowTime(cycle);
+            float radius = SkeletronLegendHead.Mechanic6Data.Radius(time, cycle);
+            Vector2 sphereOffset = SkeletronLegendHead.Mechanic6Data.SphereOffset(time, cycle);
+            Vector2 raisedOffset = sphereOffset + new Vector2(side * (radius + 65f), radius * 0.25f);
+            Vector2 offset;
+            if (throwAge < 0)
+            {
+                float raise = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(
+                    (time - SkeletronLegendHead.Mechanic6Data.ChargeTime(cycle)) / 30f, 0f, 1f));
+                offset = Vector2.Lerp(idleOffset, raisedOffset, raise);
+            }
+            else
+            {
+                Vector2 thrownOffset = new(side * 100f, -30f);
+                float swing = MathHelper.Clamp((throwAge + 1f) / SkeletronLegendHead.Mechanic6Data.HandThrowDuration, 0f, 1f);
+                float recover = MathHelper.Clamp((throwAge - SkeletronLegendHead.Mechanic6Data.HandThrowDuration)
+                    / (float)SkeletronLegendHead.Mechanic6Data.HandReturnDuration, 0f, 1f);
+                offset = Vector2.Lerp(Vector2.Lerp(raisedOffset, thrownOffset, swing), idleOffset,
+                    MathHelper.SmoothStep(0f, 1f, recover));
+            }
+            NPC.damage = 0;
+            NPC.dontTakeDamage = true;
+            AnomalyNPC.Z = 0f;
+            NPC.velocity = master.Center + offset - NPC.Center;
+            NPC.rotation = GetPositionRotation(NPC.Center + NPC.velocity, master.Center, side);
+        }
 
         void Mechanic5HandAI(SkeletronLegendHead head)
         {
@@ -434,6 +511,9 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
             if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master))
                 return 0f;
             SkeletronLegendHead head = SkeletronLegendHead.GetInstance(master);
+            if (head.Mechanic6Active || head.Mechanic7Active && head.Phase2MusicElapsedTime
+                < SkeletronLegendHead.Mechanic7Data.RecoverTime + SkeletronLegendHead.Mechanic7Data.HandRecoverDuration)
+                return 0f;
             if (head.Mechanic5Active)
             {
                 int attack = SkeletronLegendHead.Mechanic5Data.GetHandAttackIndex(head.Phase2MusicElapsedTime);

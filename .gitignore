@@ -370,6 +370,7 @@ FodyWeavers.xsd
 /tModLoader.targets
 /docs/*
 /HumanMiracle/*
+/Tools/*
 
 # Tests and change records are distributed separately from Git.
 /Transoceanic/Transoceanic.xml

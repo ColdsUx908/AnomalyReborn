@@ -4,6 +4,8 @@ public sealed class ImmaculateBolt : AnomalyModProjectile
 {
     public const int LifeTime = 2400;
 
+    public override string Texture => $"Terraria/Images/Extra_{ExtrasID.ThePerfectGlow}";
+
     public NPC Target
     {
         get => NPC.GetNPCFromIndex((int)Projectile.ai[0]);

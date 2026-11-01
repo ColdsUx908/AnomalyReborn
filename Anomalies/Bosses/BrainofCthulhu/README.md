@@ -17,7 +17,7 @@
 
 ## 通用 API 与资源复用
 
-粒子更新、分组绘制、上限与生命周期统一使用 Transoceanic 的 `Particle` / `ParticleHandler`。普通和定向圆环统一复用已有 `PulseRing`；BloomCircle、HollowCircleHardEdge 与透明纹理不再保留重复副本。
+粒子更新、分组绘制、上限与生命周期统一使用 Transoceanic 的 `Particle` / `ParticleHandler`。普通和定向圆环统一复用已有 `PulseRing`；`TelekineticEnemyGrab` 的 BloomRing 纹理位于公共 `Anomalies/Assets/Textures/Extra`，与世界吞噬怪共享且不产生跨 Boss 依赖；BloomCircle、HollowCircleHardEdge 与透明纹理不再保留重复副本。
 
 血液粒子和星芒粒子归入 `Transoceanic/Graphics/Particles/BuiltIn`，纹理统一位于 `Transoceanic/Assets/Textures/Particles`。`TexturePulseParticle` 提供任意纹理的扩散、非等比缩放、混合模式和淡出；克脑只保留纹理和种子特殊表现的薄封装。`PathAfterimageParticle` 复用现有残影基类，提供按路径移动且由调用者决定绘制顺序的残影。
 
@@ -39,7 +39,7 @@ Behavior 不保存实体实例字段。主脑的普通状态使用 NPC.ai 与 An
 
 仍需游戏内复核：普通异象与 Ultra 各完整战斗一次；不同高度及血腥脊椎入场（统一使用地表行为）；飞眼怪死亡后断裂触须及再生；眩晕中压到 70% 转阶段；25% 强制幻象；真假脑命中与超时惩罚；死亡演出；所有玩家死亡或远离后的收场；猩红外召唤与战斗；两类幻象均不显示血条。联机应覆盖两名玩家、战斗中途加入、真假脑同时命中及无灾厄环境。
 
-护盾噪声统一使用 `AnomalyTextures.Extra.Vein2` 与 `AnomalyTextures.Extra.Voronoi`。音效文件不使用灾厄前缀或下划线，对应代码字段统一采用 `Sound` 后缀。幻象惩罚不施加血液沸腾，额外 Buff、玩家状态类、纹理与本地化均已移除。
+护盾噪声统一使用 `AnomalyTextures.Noise.Vein2` 与 `AnomalyTextures.Noise.Voronoi`。音效文件不使用灾厄前缀或下划线，对应代码字段统一采用 `Sound` 后缀。幻象惩罚不施加血液沸腾，额外 Buff、玩家状态类、纹理与本地化均已移除。
 
 战斗和血腥脊椎召唤不要求猩红环境；入场、飞眼怪攻击方向与 CrimsonEyes 追击速度均固定采用地表行为。
 
