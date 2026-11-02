@@ -74,9 +74,15 @@ public sealed class LegendaryNightOverlay : CustomOverlay
             else
             {
                 // 无着色器时同样只叠加流动雾纹，不铺实色底；Alpha为零使噪声暗部保持透明。
-                Rectangle noiseArea = new((int)(Main.screenPosition.X * 0.4f + Main.timeForVisualEffects * 0.4f),
-                    (int)(Main.screenPosition.Y * 0.4f), Math.Max(1, Main.screenWidth / 2), Math.Max(1, Main.screenHeight / 2));
-                spriteBatch.Draw(AnomalyTextures.Noise.Wave, screen, noiseArea, new Color(210, 200, 180, 0) * 0.8f);
+                // Keep the original 1536px texture period and average additive brightness.
+                const float WaveSourceScale = 512f / 1536f;
+                const float WaveFallbackBrightness = 0.293363195f;
+                Rectangle noiseArea = new((int)((Main.screenPosition.X * 0.4f + Main.timeForVisualEffects * 0.4f) * WaveSourceScale),
+                    (int)(Main.screenPosition.Y * 0.4f * WaveSourceScale),
+                    Math.Max(1, (int)(Main.screenWidth * 0.5f * WaveSourceScale)),
+                    Math.Max(1, (int)(Main.screenHeight * 0.5f * WaveSourceScale)));
+                spriteBatch.Draw(AnomalyTextures.Noise.Wave, screen, noiseArea,
+                    new Color(210, 200, 180, 0) * (0.8f * WaveFallbackBrightness));
             }
 
             spriteBatch.End();

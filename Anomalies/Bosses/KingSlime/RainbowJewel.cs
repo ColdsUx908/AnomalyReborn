@@ -357,7 +357,6 @@ public sealed class RainbowJewel : JewelNPC, IAnomalyNPCWithCustomShaderBar
     {
         AnomalyEffects.BossBars.RainbowJewel.Data
             .UseImage1(AnomalyTextures.Noise._Turbulence)
-            .UseImage2(AnomalyTextures.Noise._Perlin)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
             .SetCustomParameter("uPosition", destinationRentangle.BottomLeft())
             .Apply();

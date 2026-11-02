@@ -42,6 +42,15 @@ float uSaturation;
 float4 uSourceRect;
 float2 uZoom;
 
+float RestoreVoronoiSample(float value)
+{
+    return clamp(value * 0.797248351 + 0.103362625, 0.000000000, 1.000000000);
+}
+float RestoreVein2Sample(float value)
+{
+    return clamp(value * 0.990510801 + 0.053845690, 0.011764706, 1.000000000);
+}
+
 float4 Main(float2 coords : TEXCOORD0) : COLOR0
 {       
     float resolutionRatio = uScreenResolution.x / uScreenResolution.y;
@@ -78,7 +87,7 @@ float4 Main(float2 coords : TEXCOORD0) : COLOR0
     float2 polarUV = float2(angle, dist);
     
     float2 voronoiUV = float2(angle / (2 * 3.14159), dist - (uTime / 4));
-    float voronoiValue = tex2D(voronoiSampler, voronoiUV).r;
+    float voronoiValue = RestoreVoronoiSample(tex2D(voronoiSampler, voronoiUV).r);
     
     float sin1 = sin((uTime * 9) + (angle * 8)) / 132 + 0.5;
     float sin2 = sin((-uTime * 3) + (angle * 16)) / 124 + 0.5;
@@ -120,7 +129,7 @@ float4 Main(float2 coords : TEXCOORD0) : COLOR0
             polarUV.x / (2 * 3.14159),
             polarUV.y * (perspectiveScale / uZoom.x) / 5 - (uTime * 0.2)
         );
-        float noiseValue = tex2D(noiseSampler, noiseUV).r;
+        float noiseValue = RestoreVein2Sample(tex2D(noiseSampler, noiseUV).r);
     
         float noiseFade = pow(normalizedDist, 2) * 0.333; //controls overall intensity
         float depthNoise = noiseValue * noiseFade;

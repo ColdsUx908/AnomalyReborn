@@ -5,13 +5,18 @@ float2 uPosition;
 float uTime;
 float uPhase2Fade;
 
+float RestoreVeinSample(float value)
+{
+    return clamp(value * 1.075614217 + 0.008914392, 0.000000000, 0.949019608);
+}
+
 float3 GetColor(float2 screenCoords)
 {
     float3 colorBase = float3(0.95, 0.95, 0.9);
     float3 colorTop = float3(0.95, 0.95, 0.95);
     
     float coords = sin(screenCoords.x * 30 + uTime * 2.4) * 0.5 + 0.5;
-    float txt = tex2D(uImage1, screenCoords * float2(1.5, 3) + float2(uTime * -0.07, uTime * -0.12)).r;
+    float txt = RestoreVeinSample(tex2D(uImage1, screenCoords * float2(1.5, 3) + float2(uTime * -0.07, uTime * -0.12)).r);
     float txtVal = pow(max(txt, 0), 1.2);
     float3 gradientColor = lerp(colorBase, colorTop, coords) * min(1.4, 0.75 + txtVal * 0.7);
     float stripeMask = coords * coords;

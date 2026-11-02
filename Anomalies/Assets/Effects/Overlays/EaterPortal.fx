@@ -29,9 +29,10 @@ float4 Main(float4 position : SV_POSITION, float2 coords : TEXCOORD0) : COLOR0
     // Calculate fade, swirl arm colors, and draw the portal to the screen.
     float swirlColorFade = saturate(distanceFromTargetPosition * 3) / (uOpacity + 0.0001);
     float3 swirlBaseColor = lerp(uColor, uSecondaryColor, pow(swirlColorFade, 0.33));
-    float4 swirlNoiseColor = tex2D(uImage0, swirlCoordinates) * (1 - swirlColorFade);
+    // Generated Voronoi2: restore the original sample mean and contrast.
+    float swirlNoiseColor = saturate(tex2D(uImage0, swirlCoordinates).r * 0.827525745 + 0.070533117) * (1 - swirlColorFade);
     float4 endColor = lerp(float4(swirlBaseColor, 0.1), 0, swirlColorFade);
-    return lerp(0, endColor * (1 + (1 - swirlColorFade) * 2), saturate(swirlNoiseColor.r));
+    return lerp(0, endColor * (1 + (1 - swirlColorFade) * 2), saturate(swirlNoiseColor));
 }
 
 technique Technique1

@@ -4,12 +4,17 @@ float2 uScreenResolution;
 float2 uPosition;
 float uTime;
 
+float RestoreTurbulenceSample(float value)
+{
+    return clamp(value * 2.094097256 + -0.053470215, 0.000000000, 0.996078431);
+}
+
 float3 GetColor(float2 screenCoords)
 {
     float3 colorBase = float3(0.42, 0.7, 0.8);
     float3 colorTop = float3(0.3, 0.85, 0.65);
-    float txt1 = tex2D(uImage1, screenCoords * float2(7.2, 13.8) + float2(uTime * -0.25, uTime * -0.1)).r;
-    float txt2 = tex2D(uImage1, screenCoords * float2(5.2, 10.8) + float2(uTime * -0.25, uTime * -0.1)).r;
+    float txt1 = RestoreTurbulenceSample(tex2D(uImage1, screenCoords * float2(7.2, 13.8) + float2(uTime * -0.25, uTime * -0.1)).r);
+    float txt2 = RestoreTurbulenceSample(tex2D(uImage1, screenCoords * float2(5.2, 10.8) + float2(uTime * -0.25, uTime * -0.1)).r);
     float txt = txt1 * 0.7 + pow(max(txt2, 0), 0.4) * 0.6;
 
     float3 base = lerp(colorBase, colorTop, sin(screenCoords.x * 22.0 + uTime * -2.0) * 0.45);

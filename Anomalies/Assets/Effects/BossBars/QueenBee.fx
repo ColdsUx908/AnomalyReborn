@@ -90,13 +90,18 @@ float3 HexCoordRatioAndID(float2 uv)
     return float3(ratio, bestC.x, bestC.y);
 }
 
+float RestoreMilkySample(float value)
+{
+    return clamp(value * 0.926937566 + 0.023975951, 0.007843137, 1.000000000);
+}
+
 float3 GetColor(float2 screenCoords)
 {
     float3 colorBase = float3(0.9, 0.9, 0);
     float3 colorTop = float3(0.9, 0.6, 0);
     
     float coords = sin(screenCoords.x * 30 + uTime * 2.4) * 0.5 + 0.5;
-    float txt = tex2D(uImage1, screenCoords * float2(1.5, 3) + float2(uTime * -0.07, uTime * -0.12)).r;
+    float txt = RestoreMilkySample(tex2D(uImage1, screenCoords * float2(1.5, 3) + float2(uTime * -0.07, uTime * -0.12)).r);
     float txtVal = pow(max(txt, 0), 0.9);
     float3 gradientColor = lerp(colorBase, colorTop, coords) * min(1.15, 0.8 + txtVal * 0.6);
     

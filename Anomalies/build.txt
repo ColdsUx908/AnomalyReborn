@@ -5,4 +5,4 @@ hideResources = true
 modReferences = Transoceanic
 weakReferences = AnomaliesMusic, CalamityMod
 sortAfter = Transoceanic, Luminance, AnomaliesMusic, CalamityMod
-buildIgnore = .vs\*, Properties\*, obj\*, bin\*, PreBuild\*, *.fx
+buildIgnore = .vs\*, Properties\*, obj\*, bin\*, PreBuild\*, Assets\Effects_Cache\*, *.effectcompiler.cache, *.fx, *.fxh

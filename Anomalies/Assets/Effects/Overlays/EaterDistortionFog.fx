@@ -1,4 +1,4 @@
-﻿sampler cloudsTexture : register(s0);
+sampler cloudsTexture : register(s0);
 sampler distortionTexture : register(s1);
 sampler erosionTexture : register(s2);
 
@@ -18,6 +18,17 @@ float aspectRatioCorrection;
 float3 darkerPixelColor;
 float3 brighterPixelColor;
 
+// Generated Cloud/Harsh: restore the original sample mean and contrast.
+float4 RestoreCloudSample(float4 color)
+{
+    color.rgb = saturate(color.rgb * 0.828835652 + 0.015395342);
+    return color;
+}
+float RestoreHarshSample(float value)
+{
+    return saturate(value * 0.999211742 + 0.116102146);
+}
+
 float4 Main(float4 sampleColor : COLOR0, float2 coords : TEXCOORD0) : COLOR0
 {
     // Pixelation.
@@ -32,12 +43,12 @@ float4 Main(float4 sampleColor : COLOR0, float2 coords : TEXCOORD0) : COLOR0
     
     // Calculate the distortion that'll be applied to our base noise coordinates.
     float2 distortedCoords = coords + float2(time * -0.03, time * -0.01) * distortionTextureScale;
-    float distortion = tex2D(distortionTexture, distortedCoords).r * distortionStrength;
+    float distortion = RestoreCloudSample(tex2D(distortionTexture, distortedCoords)).r * distortionStrength;
     
     // Calculate the base noise colors.
     float2 adjustedCoords = (coords + distortion) * mainNoiseTextureScale;
-    float4 scrollingNoise1 = tex2D(cloudsTexture, adjustedCoords + float2(time * -0.065, 0));
-    float4 scrollingNoise2 = tex2D(cloudsTexture, adjustedCoords + float2(time * -0.015, 0));
+    float4 scrollingNoise1 = RestoreCloudSample(tex2D(cloudsTexture, adjustedCoords + float2(time * -0.065, 0)));
+    float4 scrollingNoise2 = RestoreCloudSample(tex2D(cloudsTexture, adjustedCoords + float2(time * -0.015, 0)));
     
     // Multiply the red values of the noise maps together to get the horizontal brightness of both noise maps.
     float combinedBrightness = scrollingNoise1.r * scrollingNoise2.r;
@@ -46,7 +57,7 @@ float4 Main(float4 sampleColor : COLOR0, float2 coords : TEXCOORD0) : COLOR0
     float3 colorFromBrightness = lerp(darkerPixelColor, brighterPixelColor, combinedBrightness);
     
     // Erode the final output to break up the entire effect slightly.
-    float erosionColor = tex2D(erosionTexture, adjustedCoords + float2(time * -0.07, time * -0.02) * erosionTextureScale);
+    float erosionColor = RestoreHarshSample(tex2D(erosionTexture, adjustedCoords + float2(time * -0.07, time * -0.02) * erosionTextureScale).r);
     float erosionMax = erosionMin + 1;
     float erosion = smoothstep(erosionMin, erosionMax, erosionColor.r);
     

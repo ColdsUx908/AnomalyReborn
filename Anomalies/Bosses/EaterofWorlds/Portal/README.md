@@ -33,3 +33,7 @@
 | VoronoiShapes | Voronoi2.png |
 
 Melt2、Voronoi2 使用已有噪声族的数字后缀，保持原有 Melt、Voronoi 资源及调用。Portal 的局部缓存仅管理裂纹与爆裂精灵，不再重复加载噪声。
+
+Cloud、Harsh、Voronoi2 已替换为本项目生成的 512×512 周期噪声；Cloud/Harsh 使用扭曲分形噪声，Voronoi2 使用胞元距离差。雾与入口旋涡的采样已补偿均值及对比度，原图与原着色器保存在仓库 Backup/NoiseMigration。各噪声参数、复现入口和迁移日志见 Tools/NoiseGenerator/<噪声名>/。上表记录原始导入对应关系，其他资源及改编代码的来源与许可保持不变。
+
+本次补齐Melt2、Neuron、Pebble、Sharp，至此Noise目录全部18张已替换为512×512程序生成图。风的四个采样源已分别恢复原图亮度范围及对比度；原始资源对应表仅为来源历史，当前图不再是导入副本。完整记录及预览见Tools/NoiseGenerator对应噪声目录。

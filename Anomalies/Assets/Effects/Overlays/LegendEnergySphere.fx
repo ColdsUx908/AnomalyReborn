@@ -12,6 +12,14 @@ sampler NebulaSampler : register(s1) = sampler_state
 };
 float globalTime;
 
+// Generated Perlin2: preserve the original LinearWrap sample mean and contrast.
+float SampleNebulaNoise(float2 uv)
+{
+    const float NoiseScale = 1.117127757;
+    const float NoiseOffset = -0.040383510;
+    return saturate(tex2D(NebulaSampler, uv).r * NoiseScale + NoiseOffset);
+}
+
 float Hash(float2 cell)
 {
     return frac(sin(dot(cell, float2(127.1, 311.7))) * 43758.5453);
@@ -41,10 +49,10 @@ float4 Main(float4 sampleColor : COLOR0, float2 coords : TEXCOORD0) : COLOR0
     float orbitalAngle = angle - globalTime * 0.42;
     float spiralAngle = orbitalAngle + log(max(radiusRatio, 0.12)) * 1.8;
     float2 polar = float2(distanceFromCenter, spiralAngle / 6.2831853 + 0.5);
-    float noiseA = tex2D(NebulaSampler, polar * float2(5, 3) + globalTime * float2(-0.22, 0.035)).r;
-    float noiseB = tex2D(NebulaSampler, polar * float2(9, 5) + globalTime * float2(-0.14, -0.025)).r;
+    float noiseA = SampleNebulaNoise(polar * float2(5, 3) + globalTime * float2(-0.22, 0.035));
+    float noiseB = SampleNebulaNoise(polar * float2(9, 5) + globalTime * float2(-0.14, -0.025));
     // 恢复原球的窄亮边和独立白核；噪声仅轻微扰动轮廓，不再铺成均匀发亮的球面。
-    float edgeNoise = tex2D(NebulaSampler, polar * float2(3, 4) + globalTime * float2(-0.45, 0)).r;
+    float edgeNoise = SampleNebulaNoise(polar * float2(3, 4) + globalTime * float2(-0.45, 0));
     float distance = distanceFromCenter + (edgeNoise - 0.5) * 0.012;
     float outerGlow = 0.05 / max(abs(distance - 0.25), 0.004)
         * (1 - smoothstep(0.25, 0.4, distance));

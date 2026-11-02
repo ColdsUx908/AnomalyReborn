@@ -5,6 +5,16 @@ float2 uScreenResolution;
 float2 uPosition;
 float uTime;
 
+float RestoreSmearSample(float value)
+{
+    return clamp(value * 0.713686833 + 0.035362485, 0.000000000, 0.596078431);
+}
+
+float RestoreVeinSample(float value)
+{
+    return clamp(value * 1.075614217 + 0.008914392, 0.000000000, 0.949019608);
+}
+
 float3 GetColor(float2 screenCoords)
 {
     float3 colorBase = float3(0.45, 0.25, 0.8);
@@ -12,9 +22,9 @@ float3 GetColor(float2 screenCoords)
     float3 colorBlood = float3(0.75, 1, 0.3);
     
     float coords = sin(screenCoords.x * 30 + uTime * 2.4) * 0.5 + 0.5;
-    float txt = tex2D(uImage1, screenCoords * float2(1.5, 3) + float2(uTime * -0.07, uTime * -0.12)).r;
+    float txt = RestoreSmearSample(tex2D(uImage1, screenCoords * float2(1.5, 3) + float2(uTime * -0.07, uTime * -0.12)).r);
     float txtVal = pow(max(txt, 0), 1.2);
-    float txt2 = tex2D(uImage2, screenCoords * float2(4, 3) + float2(uTime * -0.07, uTime * -0.12)).r;
+    float txt2 = RestoreVeinSample(tex2D(uImage2, screenCoords * float2(4, 3) + float2(uTime * -0.07, uTime * -0.12)).r);
     float txt2Val = pow(max(txt2 - 0.2, 0) * 1.25, 1.3);
     float3 gradientColor = lerp(colorBase, colorTop, coords) * min(1.4, 0.75 + txtVal * 0.7);
     gradientColor = lerp(gradientColor, colorBlood, txt2Val);

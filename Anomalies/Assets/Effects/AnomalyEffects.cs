@@ -109,7 +109,7 @@ public sealed class AnomalyEffects : ILoadable
 
     private static Filter LoadAndRegisterScreenFilter(Mod mod, string name, string passName)
     {
-        Asset<Effect> asset = mod.Assets.Request<Effect>($"Assets/Effects/ScreenFilters/{name}");
+        Asset<Effect> asset = mod.Assets.Request<Effect>($"Assets/Effects_Compiled/ScreenFilters/{name}");
         Filter filter = new(new ScreenShaderData(asset, passName), EffectPriority.VeryHigh);
         // 必须先于 Load 登记：Load 失败时尚未返回给 ScreenFilters 字段。
         TOCleanup.Register(() => filter.Deactivate());
@@ -120,7 +120,7 @@ public sealed class AnomalyEffects : ILoadable
 
     private static MiscShaderContainer LoadAndRegisterMiscShader(Mod mod, string subDirectory, string registrationName, string passName = "Pass0")
     {
-        string path = "Assets/Effects/";
+        string path = "Assets/Effects_Compiled/";
         if (!string.IsNullOrEmpty(subDirectory))
             path += subDirectory + "/";
         path += registrationName;

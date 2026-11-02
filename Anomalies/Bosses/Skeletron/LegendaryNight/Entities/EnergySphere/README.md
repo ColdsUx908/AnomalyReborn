@@ -6,6 +6,8 @@
 
 三次方蓄力增长和分层光晕参考 FargowiltasCrossmod 的 AresBodyEternity.DoBehavior_LargeTeslaOrbBlast_ManageSphere 与 LargeTeslaSphere。着色器保留 LargeTeslaSphereShader 的光球边缘构思，内部改为本项目的流动星辰，不再使用电噪声；参考 MEAC 羲和 Sun.fx 的径向亮度和角向光芒分层思路，自行实现金白色光带，没有复制其代码或资源。
 
-导入的 Electric.png、Perlin2.png 已集中放入 Assets/Textures/Noise，通过 AnomalyTextures.Noise 访问。Electric 保留为通用资源，本光球不使用它。TeslaSphereLoop.ogg 保留在当前目录。导入资源及改编代码的 MIT 许可位于 Licenses/FargowiltasCrossmod-MIT.txt。
+Electric.png 位于 Assets/Textures/Noise，保留为通用资源，本光球不使用它。Perlin2.png 已替换为本项目周期 Perlin fBm 生成图，通过 AnomalyTextures.Noise 访问；LegendEnergySphere.fx 的三处噪声采样统一补偿均值与对比度，复现参数及迁移记录位于 Tools/NoiseGenerator/Perlin2/Parameters.json 和 Tools/NoiseGenerator/Perlin2/Migration.md。TeslaSphereLoop.ogg 保留在当前目录。导入资源及改编代码的 MIT 许可位于 Licenses/FargowiltasCrossmod-MIT.txt。
 
 着色器使用局部方形精灵 UV，不需要屏幕长宽比修正。
+
+Noise目录现已全部迁移为程序生成图，包括Electric；原导入对应关系仅保留为历史来源说明，原图及许可副本位于Backup/NoiseMigration。光球本身仍使用已迁移的Perlin2及其既有补偿。

@@ -371,6 +371,10 @@ FodyWeavers.xsd
 /docs/*
 /HumanMiracle/*
 /Tools/*
+/Backup/*
 
 # Tests and change records are distributed separately from Git.
 /Transoceanic/Transoceanic.xml
+
+# Local shader compiler cache
+/Anomalies/Assets/Effects_Cache/
