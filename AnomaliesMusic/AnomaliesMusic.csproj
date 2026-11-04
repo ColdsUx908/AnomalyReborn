@@ -7,6 +7,9 @@
         <TargetFramework>net8.0</TargetFramework>
         <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
         <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+		<!-- tModLoader loads the packaged DLL. Always run BuildMod before F5, even
+             when a previous BuildMod=false build has already updated bin/obj. -->
+		<DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <NoWarn>1701;1702;649</NoWarn>

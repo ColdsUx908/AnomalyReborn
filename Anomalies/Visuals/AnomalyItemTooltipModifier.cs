@@ -155,7 +155,7 @@ public sealed class AnomalyItemTooltipModifier : ItemTooltipModifier
     /// 调用前应确保 <see cref="Valid"/> 为 <see langword="true"/>。
     /// </summary>
     /// <param name="text">提示文本内容。</param>
-    /// <param name="color">提示行的覆盖颜色。</param>
+    /// <param name="Color">提示行的覆盖颜色。</param>
     /// <returns>当前 <see cref="AnomalyItemTooltipModifier"/> 实例，支持链式调用。</returns>
     public AnomalyItemTooltipModifier AddAnomalyTooltip(string text, Color color)
     {

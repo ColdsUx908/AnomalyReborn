@@ -6,8 +6,7 @@ public sealed class FallingStar : AnomalyModProjectile
     public enum MotionMode
     {
         Accelerating,
-        StrikeFan,
-        StarNet
+        StrikeFan
     }
 
     public MotionMode CurrentMotionMode
@@ -70,30 +69,8 @@ public sealed class FallingStar : AnomalyModProjectile
         Projectile.penetrate = -1;
     }
 
-    private SkeletronLegendHead StarNetMaster => NPC.GetNPCFromIndex((int)Projectile.ai[2] - 1) is
-        { active: true, type: NPCID.SkeletronHead } master && master.Anomaly.CustomAIType == 1
-            ? SkeletronLegendHead.GetInstance(master) : null;
-
-    public override bool ShouldUpdatePosition() => CurrentMotionMode != MotionMode.StarNet;
-
     public override void AI()
     {
-        if (CurrentMotionMode == MotionMode.StarNet)
-        {
-            SkeletronLegendHead head = StarNetMaster;
-            if (head is null || !head.Mechanic7Active || head.Phase2MusicElapsedTime >= SkeletronLegendHead.Mechanic7Data.RecoverTime)
-            {
-                if (TONetworkEnvironment.NotClient)
-                    Projectile.Kill();
-                return;
-            }
-            int time = head.Phase2MusicElapsedTime;
-            float radius = SkeletronLegendHead.Mechanic7Data.Radius(time);
-            Projectile.Center = head.Mechanic7NetCenter + SkeletronLegendHead.Mechanic7Data.StarOffset(
-                (int)Projectile.ai[1], radius, head.Mechanic7NetRotation);
-            Projectile.velocity = Vector2.Zero;
-            Projectile.rotation = head.Mechanic7NetRotation;
-        }
         Lighting.AddLight(Projectile.Center, LegendaryNightHandler.StarColor.ToVector3());
         Projectile.rotation += 0.1f * Projectile.direction;
 
@@ -103,41 +80,12 @@ public sealed class FallingStar : AnomalyModProjectile
             float speed = SkeletronLegendHead.Mechanic2Data.GetFanStarSpeed(Projectile.ai[1], (int)Timer1 - 1);
             Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY) * speed;
         }
-        else if (CurrentMotionMode != MotionMode.StarNet && Timer1 > AccelerationStartTime)
+        else if (Timer1 > AccelerationStartTime)
             Projectile.velocity *= 1.02f;
     }
 
     public override bool PreDraw(ref Color lightColor)
     {
-        if (CurrentMotionMode == MotionMode.StarNet && StarNetMaster is not { Mechanic7Rotating: true })
-            return false;
-        if (CurrentMotionMode == MotionMode.StarNet && Projectile.ai[1] == 0f && StarNetMaster is { } head
-            && head.Mechanic7Rotating)
-        {
-            float radius = SkeletronLegendHead.Mechanic7Data.Radius(head.Phase2MusicElapsedTime);
-            Span<(Vector2 Start, Vector2 End)> edges = stackalloc (Vector2, Vector2)[5];
-            for (int i = 0; i < edges.Length; i++)
-            {
-                Vector2 start = head.Mechanic7NetCenter + (head.Mechanic7NetRotation + MathHelper.TwoPi * i / 5f).ToRotationVector2() * radius;
-                Vector2 end = head.Mechanic7NetCenter + (head.Mechanic7NetRotation + MathHelper.TwoPi * (i + 2) / 5f).ToRotationVector2() * radius;
-                edges[i] = (start, end);
-            }
-            // 实体 PreDraw 已有活动的 SpriteBatch，直接叠层绘制，不调用自行 Begin/End 的法阵绘制接口。
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
-            foreach ((Vector2 start, Vector2 end) in edges)
-            {
-                Vector2 edge = end - start;
-                Vector2 center = (start + end) * 0.5f - Main.screenPosition;
-                for (int layer = 0; layer < 3; layer++)
-                {
-                    float width = layer == 0 ? 24f : layer == 1 ? 12f : 2f;
-                    float opacity = layer == 0 ? 0.07f : layer == 1 ? 0.15f : 0.8f;
-                    Color color = (layer == 2 ? Color.LightCoral : Color.Red) with { A = 0 };
-                    Main.spriteBatch.DrawFromCenter_VectorScale(pixel, center, null, color * opacity,
-                        edge.ToRotation(), new Vector2(edge.Length() / pixel.Width, width / pixel.Height));
-                }
-            }
-        }
         DrawFallingStar(Projectile.Center, Projectile.rotation, Projectile.scale, Projectile.velocity, trailType: TrailType, useMediumTexture: true, oldPositions: Projectile.oldPos, trailOffset: Projectile.Size * 0.5f, trailColorOverride: TrailColorOverride);
         return false;
     }
@@ -274,9 +222,6 @@ public sealed class FallingStar : AnomalyModProjectile
             Main.spriteBatch.DrawFromCenter_VectorScale(bloom, segmentCenter, null, innerColor, segmentRotation, innerScale);
         }
     }
-
-    public override bool CanHitPlayer(Player target) => CurrentMotionMode != MotionMode.StarNet
-        || StarNetMaster is { Mechanic7Rotating: true };
 
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
     {

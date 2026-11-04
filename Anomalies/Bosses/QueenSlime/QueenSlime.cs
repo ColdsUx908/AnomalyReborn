@@ -6,6 +6,8 @@ namespace Anomalies.Bosses.QueenSlime;
 
 public sealed partial class QueenSlime : AnomalyNPCBehavior<QueenSlime>, ILocalizationPrefix
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.QueenSlime;
+
     protected override int AI32Capacity => 7;
 
     #region 数据

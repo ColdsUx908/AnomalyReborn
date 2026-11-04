@@ -5,15 +5,22 @@ namespace Anomalies.Bosses.BrainofCthulhu;
 
 public sealed partial class BrainofCthulhu : AnomalyNPCBehavior<BrainofCthulhu>
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.BrainofCthulhu;
+
     protected override int AI32Capacity => 64;
 
     protected override int AI64Capacity => 17;
 
     public override int ApplyingType => NPCID.BrainofCthulhu;
 
+    public override void Load() => BossDeathEffectRegistry.Register(NPCID.BrainofCthulhu,
+        npc => GetInstance(npc) is { ShouldProcess: true, DeathLocked: true });
+
+    public bool DeathLocked => CurrentPhase != Phase.Death;
+
     public override bool CheckDead()
     {
-        if (CurrentPhase == Phase.Death)
+        if (!DeathLocked)
             return true;
         TriggerDeathAnimation();
         return false;

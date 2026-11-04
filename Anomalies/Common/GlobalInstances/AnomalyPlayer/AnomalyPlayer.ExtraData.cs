@@ -25,7 +25,10 @@ public sealed partial class AnomalyPlayer
     public int EventideReunion_SunFallProtection;
     #endregion
 
-    #region 传奇之夜
+    #region 传说之夜
+    // 由现存光球的同步计数推导，每帧重置；不单独进入玩家网络快照。
+    public int LegendaryNight_DamageBonusStacks;
+    public int LegendaryNight_RegenerationBonusStacks;
     public bool LegendaryNight_StarGodBlessingActive;
     public float LegendaryNight_StarGodBlessingOpacity;
     public Item LegendaryNight_VirtualBoneWings;

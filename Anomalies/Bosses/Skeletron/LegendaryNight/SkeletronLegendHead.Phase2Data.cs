@@ -375,85 +375,121 @@ public sealed partial class SkeletronLegendHead
         }
     }
 
-    /// <summary>机制6；全部时间为音乐绝对帧数，半拍按设计向后47帧。</summary>
+    /// <summary>机制6：第一颗光球蓄力后持续保持；时间为音乐绝对帧数。</summary>
     public static class Mechanic6Data
     {
         public const int StartMusicTime = 113 * 60 + 35;
+        public const int HandPrepareStartMusicTime = LegendaryNightPhase2Arena.StarburstEndMusicTime;
+        public const int HandPrepareEndMusicTime = StartMusicTime - 1;
+        public const int RepositionDuration = 60;
+        public const int RepositionStartMusicTime = StartMusicTime - RepositionDuration;
+        public const int ChargeCompleteMusicTime = 118 * 60 + 20;
         public const int AbsorbMusicTime = 114 * 60 + 5;
         public const int ExpandMusicTime = 114 * 60 + 22;
-        public const int ArenaTransitionDuration = 10;
-        public const int EndMusicTime = 131 * 60 + 47;
-        public const int HandThrowDuration = 12;
-        public const int HandReturnDuration = 24;
+        public const int ArenaTransitionDuration = 30;
+        public const float ArenaTargetRadius = 800f;
         public const float SphereRadius = 240f;
-        public const float ThrowSpeed = 18f;
-        public static int ChargeTime(int index) => index switch
+        public const int LightOrbInterval = 95;
+        public const int LightOrbFirstMusicTime = 119 * 60 + 55;
+        public const int LightOrbWaveCount = 4;
+        public const int LightOrbWaveSize = 3;
+        public const int LightOrbMinimumLifetime = 15 * 60;
+        public const int LightOrbLifetimeStep = 90;
+        public const int LightOrbAppearanceDuration = 30;
+        public const int LightOrbAbsorptionDuration = 30;
+        public const float LightOrbAbsorptionRadiusRatio = 1.5f;
+        public const int LightOrbCoreFlashDuration = 24;
+        public const int LightOrbEndMusicTime = 161 * 60;
+
+        public static bool ShouldSpawnLightOrb(int time) => time >= LightOrbFirstMusicTime
+            && time <= LightOrbFirstMusicTime + (LightOrbWaveCount - 1) * LightOrbInterval
+            && (time - LightOrbFirstMusicTime) % LightOrbInterval == 0;
+
+        public static int GetLightOrbLifetime(int wave, float sample) => LightOrbMinimumLifetime
+            + wave * LightOrbLifetimeStep + (int)(MathHelper.Clamp(sample, 0f, 1f) * LightOrbLifetimeStep);
+
+        public static int[] CreateLightOrbColors(int wave) => wave % 2 == 0 ? [0, 0, 1] : [0, 1, 1];
+
+        public static float GetLightOrbAngle(int sector, float sample) => -MathHelper.PiOver2
+            + (sector + MathHelper.Clamp(sample, 0f, 1f)) * MathHelper.TwoPi / LightOrbWaveSize;
+
+        public static float LightOrbAppearance(int age) => MathHelper.SmoothStep(0f, 1f,
+            MathHelper.Clamp(age / (float)LightOrbAppearanceDuration, 0f, 1f));
+        public static float LightOrbAbsorption(int age, int lifetime = LightOrbMinimumLifetime) => MathHelper.Clamp(
+            (age - (lifetime - LightOrbAbsorptionDuration)) / (float)LightOrbAbsorptionDuration, 0f, 1f);
+        public static float LightOrbDistance(int age, float spawnRadius, float sphereRadius,
+            int lifetime = LightOrbMinimumLifetime)
         {
-            0 => 113 * 60 + 35,
-            1 => 119 * 60 + 55,
-            2 => 126 * 60 + 15,
-            _ => 129 * 60 + 25
-        };
-        public static int ThrowTime(int index) => index switch
+            float edge = sphereRadius * LightOrbAbsorptionRadiusRatio;
+            int driftDuration = lifetime - LightOrbAbsorptionDuration;
+            if (age <= driftDuration)
+                return MathHelper.Lerp(spawnRadius, edge, MathHelper.Clamp(age / (float)driftDuration, 0f, 1f));
+            float absorb = LightOrbAbsorption(age, lifetime);
+            return edge * (1f - absorb * absorb);
+        }
+
+        public static Vector2 LightOrbDrawScale(int age, int lifetime = LightOrbMinimumLifetime)
         {
-            0 => 118 * 60 + 20,
-            1 => 124 * 60 + 40,
-            2 => 127 * 60 + 50,
-            _ => 131 * 60
-        };
-        public static int ExplosionTime(int index) => index switch
+            float absorb = LightOrbAbsorption(age, lifetime);
+            float remaining = 1f - absorb;
+            float stretch = 1f + 5f * MathF.Sin(absorb * MathHelper.Pi);
+            // 径向拉长、切向压缩；面积始终按remaining²缩小，抵达中心时两轴均为零。
+            return new Vector2(stretch * remaining, remaining / stretch) * LightOrbAppearance(age);
+        }
+
+        public static float LightOrbCoreFlash(float age) => age < 0f ? 0f
+            : MathF.Pow(MathHelper.Clamp(1f - age / LightOrbCoreFlashDuration, 0f, 1f), 2f);
+        public const int LaserWarningDuration = 95;
+        public const int LaserAppearDuration = 15;
+        public const int LaserRotationDuration = 50;
+        public const int LaserHoldDuration = 30;
+        public const int LaserDuration = 20;
+        public const int LaserInterval = 190;
+        public const int LaserFirstMusicTime = 118 * 60 + 20;
+        public const int LaserWaveCount = 8;
+        public const int PunishmentLaserCount = 8;
+        public const int LaserEndMusicTime = 161 * 60;
+        public const float LaserLength = 1800f;
+        public const float LaserWidth = 32f;
+        public const int LaserCount = 3;
+        public const float LaserMaxTurnAngle = MathHelper.Pi;
+
+        public static bool ShouldSpawnLaser(int time) => time >= LaserFirstMusicTime
+            && time <= LaserFirstMusicTime + (LaserWaveCount - 1) * LaserInterval
+            && (time - LaserFirstMusicTime) % LaserInterval == 0;
+
+        // 从正上方开始均分扇区；相邻扇区各留一半最小夹角，连同首尾接缝保证90°/count。
+        public static float GetLaserAngle(int sector, int count, float sample)
         {
-            0 => 119 * 60 + 55,
-            1 => 126 * 60 + 15,
-            2 => 128 * 60 + 37,
-            _ => 131 * 60 + 47
-        };
-        public static int StarCount(int index) => index switch { 0 => 70, 1 => 60, _ => 40 };
-        public static float SizeRatio(int index) => index switch { 0 => 1f, 1 => 0.9f, _ => 0.585f };
-        public static int Cycle(int time) => time < ChargeTime(1) ? 0 : time < ChargeTime(2) ? 1 : time < ChargeTime(3) ? 2 : 3;
-        public static float ChargeProgress(int time, int index) => MathHelper.Clamp(
-            (time - ChargeTime(index)) / (float)(ThrowTime(index) - ChargeTime(index)), 0f, 1f);
-        // Ares 的 LargeTeslaOrbBlast 使用三次方增长，开始时微小、后半程迅速凝聚。
-        public static float Radius(int time, int index) => MathHelper.Lerp(2f, SphereRadius * SizeRatio(index),
-            MathF.Pow(ChargeProgress(time, index), 3f));
-        public static Vector2 SphereOffset(int time, int index) => new(0f, -180f - Radius(time, index));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(count);
+            if ((uint)sector >= (uint)count)
+                throw new ArgumentOutOfRangeException(nameof(sector));
+            float sectorAngle = MathHelper.TwoPi / count;
+            float separation = count == 1 ? 0f : MathHelper.PiOver2 / count;
+            return -MathHelper.PiOver2 + sector * sectorAngle + separation * 0.5f
+                + MathHelper.Clamp(sample, 0f, 1f) * (sectorAngle - separation);
+        }
+
+        public static float GetLaserTurnAngle(float sample) => MathHelper.Lerp(-LaserMaxTurnAngle,
+            LaserMaxTurnAngle, MathHelper.Clamp(sample, 0f, 1f));
+
+        public static float GetLaserRotation(float targetAngle, float turnAngle, int age) =>
+            targetAngle - turnAngle * (1f - LaserRotationProgress(age));
+
+        public static float LaserRotationProgress(int age) => MathHelper.SmoothStep(0f, 1f,
+            MathHelper.Clamp((age - LaserAppearDuration) / (float)LaserRotationDuration, 0f, 1f));
+        // 头部中心距球面64像素，按默认102像素头部高度留出约13像素空隙。
+        public const float HeadCenterToSphereEdge = 64f;
+        public static float ChargeProgress(int time) => MathHelper.Clamp(
+            (time - StartMusicTime) / (float)(ChargeCompleteMusicTime - StartMusicTime), 0f, 1f);
+        // 三次方增长，开始时微小、后半程迅速凝聚，满蓄力后保持半径。
+        public static float Radius(int time) => MathHelper.Lerp(2f, SphereRadius, MathF.Pow(ChargeProgress(time), 3f));
+        public static Vector2 SphereOffset(int time) => new(0f, -HeadCenterToSphereEdge - Radius(time));
         public static float AbsorbProgress(int time) => MathHelper.SmoothStep(0f, 1f,
             MathHelper.Clamp((time - AbsorbMusicTime) / (float)ArenaTransitionDuration, 0f, 1f));
-        public static float ArenaScale(int time) => MathHelper.Lerp(1f, 1.5f, MathHelper.SmoothStep(0f, 1f,
+        public static float ArenaScale(int time) => MathHelper.Lerp(1f,
+            ArenaTargetRadius / (LegendaryNightPhase2Arena.MainCircleFullRadius * LegendaryNightPhase2Arena.OuterCircleRadiusRatio),
+            MathHelper.SmoothStep(0f, 1f,
             MathHelper.Clamp((time - ExpandMusicTime) / (float)ArenaTransitionDuration, 0f, 1f)));
-    }
-
-    /// <summary>机制7；全部时间为音乐绝对帧数。</summary>
-    public static class Mechanic7Data
-    {
-        public const int StartMusicTime = 132 * 60 + 30;
-        public const int ArenaFadeDuration = 30;
-        public const int HandExtendDuration = 75;
-        public const int RotationStart = 134 * 60 + 5;
-        public const int GrowthDuration = 90;
-        public const int ThrowTime = 135 * 60 + 40;
-        public const int ReturnTime = 137 * 60 + 15;
-        public const int RecoverTime = 138 * 60 + 50;
-        public const int HandRecoverDuration = 30;
-        public const int StarCount = 30;
-        public const float HandRadius = 400f;
-        public const float NetRadius = 200f;
-        public const float HandAngularSpeed = MathHelper.TwoPi / 30f;
-        public const float NetAngularSpeed = MathHelper.TwoPi / 30f;
-        public const float StarScale = 0.2f;
-
-        public static float Radius(int time) => NetRadius
-            * MathHelper.Clamp((time - RotationStart) / (float)GrowthDuration, 0f, 1f)
-            * (1f - MathHelper.Clamp((time - ReturnTime) / (float)(RecoverTime - ReturnTime), 0f, 1f));
-
-        // 与 Meteor 相同，依次连接间隔一个顶点的五个顶点，并在线段上等分。
-        public static Vector2 StarOffset(int index, float radius, float rotation)
-        {
-            float edgePosition = index * 5f / StarCount;
-            int edge = (int)edgePosition;
-            Vector2 start = (rotation + TOMathUtils.PiOver5 * 4f * edge).ToRotationVector2() * radius;
-            Vector2 end = (rotation + TOMathUtils.PiOver5 * 4f * (edge + 1)).ToRotationVector2() * radius;
-            return Vector2.Lerp(start, end, edgePosition - edge);
-        }
     }
 }

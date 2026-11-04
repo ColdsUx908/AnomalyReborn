@@ -5,6 +5,8 @@ namespace Anomalies.Bosses.BrainofCthulhu;
 
 public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.BrainofCthulhu;
+
     protected override int AI32Capacity => 8;
 
     public override int ApplyingType => NPCID.Creeper;

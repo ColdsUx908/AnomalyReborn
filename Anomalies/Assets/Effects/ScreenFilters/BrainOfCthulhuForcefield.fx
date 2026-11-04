@@ -2,10 +2,10 @@ sampler uImage0 : register(s0);
 sampler uImage1 : register(s1);
 sampler uImage2 : register(s2);
 sampler uImage3 : register(s3);
-texture voronoi;
-sampler2D voronoiSampler = sampler_state
+texture uVoronoi;
+sampler2D uVoronoiSampler = sampler_state
 {
-    texture = <voronoi>;
+    texture = <uVoronoi>;
     magfilter = LINEAR;
     minfilter = LINEAR;
     mipfilter = LINEAR;
@@ -13,10 +13,10 @@ sampler2D voronoiSampler = sampler_state
     AddressV = wrap;
 };
 
-texture depthNoise;
-sampler2D noiseSampler = sampler_state
+texture uDepthNoise;
+sampler2D uNoiseSampler = sampler_state
 {
-    texture = <depthNoise>;
+    texture = <uDepthNoise>;
     magfilter = LINEAR;
     minfilter = LINEAR;
     mipfilter = LINEAR;
@@ -87,7 +87,7 @@ float4 Main(float2 coords : TEXCOORD0) : COLOR0
     float2 polarUV = float2(angle, dist);
     
     float2 voronoiUV = float2(angle / (2 * 3.14159), dist - (uTime / 4));
-    float voronoiValue = RestoreVoronoiSample(tex2D(voronoiSampler, voronoiUV).r);
+    float voronoiValue = RestoreVoronoiSample(tex2D(uVoronoiSampler, voronoiUV).r);
     
     float sin1 = sin((uTime * 9) + (angle * 8)) / 132 + 0.5;
     float sin2 = sin((-uTime * 3) + (angle * 16)) / 124 + 0.5;
@@ -129,12 +129,14 @@ float4 Main(float2 coords : TEXCOORD0) : COLOR0
             polarUV.x / (2 * 3.14159),
             polarUV.y * (perspectiveScale / uZoom.x) / 5 - (uTime * 0.2)
         );
-        float noiseValue = RestoreVein2Sample(tex2D(noiseSampler, noiseUV).r);
+        // PNG noise textures and the captured screen have one mip level. Explicit LOD
+        // preserves their filtering without implicit derivatives in divergent branches.
+        float noiseValue = RestoreVein2Sample(tex2Dlod(uNoiseSampler, float4(noiseUV, 0.0, 0.0)).r);
     
         float noiseFade = pow(normalizedDist, 2) * 0.333; //controls overall intensity
         float depthNoise = noiseValue * noiseFade;
 
-        float4 baseTexture = tex2D(uImage0, distortedCoords);
+        float4 baseTexture = tex2Dlod(uImage0, float4(distortedCoords, 0.0, 0.0));
         float4 shieldColor = lerp(baseTexture, edgeColor, l);
         float4 depthColor = float4(depthNoise, depthNoise, depthNoise, 0);
         depthColor.rgb = lerp(edgeColor.rgb, float3(1, 1, 1), 0.33);
@@ -150,7 +152,7 @@ float4 Main(float2 coords : TEXCOORD0) : COLOR0
         return brightEdgeColor;
     }
     
-    return tex2D(uImage0, coords);
+    return tex2Dlod(uImage0, float4(coords, 0.0, 0.0));
 }
 
 technique Technique1

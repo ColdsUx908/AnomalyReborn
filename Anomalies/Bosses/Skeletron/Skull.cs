@@ -2,6 +2,8 @@ namespace Anomalies.Bosses.Skeletron;
 
 public sealed class Skull : AnomalyProjectileBehavior<Skull>
 {
+    public override bool ShouldProcess => base.ShouldProcess && (Projectile.ai[0] >= 0f || AnomalyBossChangeToggler.Skeletron);
+
     // ai[0]: 本项目的行为协议；0/1 保留传说之夜的追踪/直线模式。
     public const int LegendaryHoming = 0;
     public const int LegendaryStraight = 1;

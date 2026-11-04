@@ -1,4 +1,4 @@
-﻿using Anomalies.GameContents.Base;
+using Anomalies.GameContents.Base;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
@@ -13,9 +13,9 @@ public sealed class LegendaryNightArena : BaseRingArenaProjectile
         set => Projectile.ai[0] = (value?.whoAmI ?? -1) + 1;
     }
 
-    private bool IsMasterValid => Master is { active: true, type: NPCID.SkeletronHead, life: > 0 } master && master.Anomaly.CustomAIType == 1;
+    private bool IsMasterValid => LegendaryNightHandler.IsLegendaryNightHead((int)Projectile.ai[0], oneBased: true) && Master.life > 0;
 
-    public SkeletronLegendHead MasterBehavior => IsMasterValid ? SkeletronLegendHead.GetInstance(Master) : null;
+    public SkeletronLegendHead MasterBehavior => LegendaryNightHandler.IsLegendaryNightHead((int)Projectile.ai[0], out SkeletronLegendHead head, oneBased: true) && head.NPC.life > 0 ? head : null;
 
     public bool IsActivated;
 

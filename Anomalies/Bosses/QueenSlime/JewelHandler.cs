@@ -119,7 +119,7 @@ public static class JewelHandler
     /// 宝石绘制通用逻辑。
     /// </summary>
     /// <param name="spriteBatch"><c>PreDraw</c> 方法中的 <c>spriteBatch</c> 参数。</param>
-    /// <param name="screenPos"><c>PreDraw</c> 方法中的 <c>screenPos</c> 参数。</param>
+    /// <param name="ScreenPos"><c>PreDraw</c> 方法中的 <c>screenPos</c> 参数。</param>
     /// <param name="jewel">宝石。</param>
     public static void DrawJewel(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel)
     {

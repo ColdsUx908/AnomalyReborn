@@ -46,9 +46,8 @@ public sealed class CoinRoulette : AnomalyModProjectile
 
     public override void AI()
     {
-        NPC master = NPC.GetNPCFromIndex(MasterIndex - 1);
-        if (!master.active || master.type != NPCID.SkeletronHead || master.Anomaly.CustomAIType != 1
-            || SkeletronLegendHead.GetInstance(master).CurrentAvatar != SkeletronLegendHead.Avatar.PlatinumCoin
+        if (!LegendaryNightHandler.IsLegendaryNightHead(MasterIndex, out SkeletronLegendHead head, oneBased: true)
+            || head.CurrentAvatar != SkeletronLegendHead.Avatar.PlatinumCoin
             || !Player.TryGetPlayerFromIndex((int)Projectile.ai[0] - 1, out Player target) || !target.active || target.dead)
         {
             if (TONetworkEnvironment.NotClient)

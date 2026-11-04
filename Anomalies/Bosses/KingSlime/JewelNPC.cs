@@ -70,6 +70,8 @@ public abstract class JewelNPC : AnomalyModNPC
         }
     }
 
+    public bool DeathLocked => Ultra && !MasterDead;
+
     public override bool CheckActive() => false;
 
     public override void HitEffect(NPC.HitInfo hit) => JewelHandler.HitEffect(NPC);

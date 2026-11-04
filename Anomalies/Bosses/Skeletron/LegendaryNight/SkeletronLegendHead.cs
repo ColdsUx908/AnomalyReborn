@@ -24,6 +24,9 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
 
     public float SkyOrangeBlend => Phase2GlowOpacity;
 
+    public bool AnomalyStarActive => Phase2
+        || CurrentPhase == Phase.PhaseChange_1To2 && Timer1 >= PhaseChangeHealStart;
+
     public bool SuppressSkyClouds => Phase2
         || CurrentPhase == Phase.PhaseChange_1To2 && Timer1 >= PhaseChangeHealStart;
 
@@ -44,7 +47,6 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         Phase2_4,
         Phase2_5 = 8,
         Phase2_6 = 9,
-        Phase2_7 = 10,
         Phase2_Finale = 7, // 保留已有同步值。
     }
 
@@ -86,6 +88,8 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
     }
 
     public bool Phase2DeathLocked => Phase2 && Phase2ElapsedTime < Phase2MinimumDuration;
+
+    public bool DeathLocked => !Phase2 || Phase2DeathLocked;
 
     private static readonly ProjectileDamageContainer _SkullDamage = new(60);
     public static int SkullDamage => _SkullDamage.Value;
@@ -277,88 +281,6 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) =>
         AnomalyUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
 
-    public override bool PreAI()
-    {
-        using BossNetUpdateScope netUpdate = new(NPC);
-
-        int previousTarget = NPC.target;
-        bool validTarget;
-        if (Phase2ArenaProjectileAlive && !Mechanic7Active)
-            validTarget = NPC.TargetIfInvalid(true, p => new Circle(ArenaProjectile.Center, Phase2Arena.TargetingRadius).Collides(p.Hitbox));
-        else if (ArenaProjectileAlive && ArenaModProjectile.IsActivated)
-            validTarget = NPC.TargetIfInvalid(true, p => new Circle(ArenaProjectile.Center, ArenaModProjectile.Radius * 2f).Collides(p.Hitbox));
-        else
-        {
-            // 无竞技场时保持有效目标；重新选取后重新读取目标，避免用旧玩家距离判定退场。
-            if (!NPC.HasValidTarget || !NPC.WithinRange(NPC.PlayerTarget.Center, DespawnDistance - NPC.PlayerTarget.aggro))
-                NPC.TargetClosest(true);
-            validTarget = NPC.HasValidTarget && NPC.WithinRange(NPC.PlayerTarget.Center, DespawnDistance - NPC.PlayerTarget.aggro);
-        }
-        if (NPC.target != previousTarget && TONetworkEnvironment.NotClient)
-            NPC.netUpdate = true;
-
-        if (CurrentBaseBehavior == BaseBehavior.Despawn || !validTarget)
-        {
-            UpdateAvatar(Avatar.None);
-            NPC.active = false;
-            NPC.netUpdate = true;
-            return false;
-        }
-
-        // 目标判定读取上帧激活状态，再由本帧符卡重新激活。
-        if (ArenaProjectileAlive)
-            ArenaModProjectile.IsActivated = false;
-
-        if (InvalidPhase1)
-            BeginPhaseChange_1To2();
-
-        if (Phase2MusicActive)
-            Timer5++;
-
-        AnomalyNPC.BossBar_Immune = CurrentPhase == Phase.PhaseChange_1To2;
-
-        switch (CurrentPhase)
-        {
-            case Phase.Initialize:
-                Timer1++;
-
-                if (Timer1 >= 60)
-                {
-                    Timer1 = 0;
-                    CurrentPhase = Phase.Phase1;
-                }
-                break;
-            case Phase.Phase1:
-                Phase1AI();
-                break;
-            case Phase.PhaseChange_1To2:
-                PhaseChange_1To2AI();
-                break;
-            case >= Phase.Phase2_1:
-                Phase2AI();
-                break;
-        }
-
-        if (!Main.dedServ && Phase2GlowOpacity > 0f)
-            Lighting.AddLight(NPC.Center, LegendaryNightHandler.StarColor.ToVector3() * Phase2GlowOpacity);
-
-        UpdateAvatar(CurrentPhase == Phase.PhaseChange_1To2 && Timer1 < PhaseChangeAvatarFadeDuration ? CurrentAvatar : RequestedAvatar);
-        if (CurrentAvatar == Avatar.None)
-            NPC.Opacity = 1f;
-        if (CurrentAvatar != Avatar.None)
-        {
-            Color lightColor = CurrentAvatar switch
-            {
-                Avatar.FlyingSlime => LegendaryNightHandler.SlimeColor,
-                Avatar.Star => LegendaryNightHandler.StarColor,
-                Avatar.PlatinumCoin => LegendaryNightHandler.PlatinumColor,
-                _ => LegendaryNightHandler.BoneColor
-            };
-            Lighting.AddLight(NPC.Center, lightColor.ToVector3());
-        }
-        return false;
-    }
-
     public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
     {
         if (!Phase2)
@@ -367,9 +289,12 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
             modifiers.SetMaxDamage(Math.Max(1, NPC.life - 1));
     }
 
+    public override void Load() => BossDeathEffectRegistry.Register(NPCID.SkeletronHead,
+        npc => GetInstance(npc) is { ShouldProcess: true, DeathLocked: true });
+
     public override bool CheckDead()
     {
-        if (!Phase2 || Phase2DeathLocked)
+        if (DeathLocked)
         {
             NPC.life = 1;
             NPC.active = true;
@@ -385,7 +310,7 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
             .UseImage1(AnomalyTextures.Noise._Vein)
             .SetCustomParameter("uScreenResolution", Main.ScreenSize.ToVector2() * Math.Max(Main.UIScale, 1f) / 2f)
             .SetCustomParameter("uPosition", destinationRentangle.TopLeft())
-            .SetCustomParameter("uPhase2Fade", Phase2GlowOpacity)
+            .SetCustomParameter("uStarIntensity", Phase2GlowOpacity)
             .Apply();
     }
 }

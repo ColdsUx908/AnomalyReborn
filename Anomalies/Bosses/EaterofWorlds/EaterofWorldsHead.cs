@@ -168,6 +168,12 @@ public sealed partial class EaterofWorldsHead : EaterofWorldsSegment<EaterofWorl
         return true;
     }
 
+    public override void BossHeadSlot(ref int index)
+    {
+        if (PortalOpacity <= 0f)
+            index = -1;
+    }
+
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         spriteBatch.DrawFromCenter(NPC.Texture, NPC.Center - screenPos, NPC.frame,

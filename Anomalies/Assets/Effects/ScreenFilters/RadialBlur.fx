@@ -29,6 +29,8 @@ float4 Main(float2 coords : TEXCOORD0) : COLOR0
     float4 baseColor = 0;
     float2 sampleUV = coords;
     
+    // The post-sample break caps this loop at 22 samples; retain implicit-gradient sampling.
+    [unroll(22)]
     for (int i = 0; i < uSaturation; i++)
     {
         baseColor += tex2D(uImage0, sampleUV);

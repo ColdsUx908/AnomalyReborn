@@ -114,9 +114,6 @@ public sealed class HeavenrendCrownHoldout : AnomalyModProjectile
                 Projectile.Kill();
                 break;
         }
-
-        if (!Main.dedServ && Projectile.active && IsActivatingAnomaly)
-            AnomalyStarVisual.Intensity += 1f / 30f;
     }
 
     public override bool PreDraw(ref Color lightColor)

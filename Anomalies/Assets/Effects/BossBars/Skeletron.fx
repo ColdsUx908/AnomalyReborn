@@ -3,7 +3,7 @@ sampler uImage1 : register(s1);
 float2 uScreenResolution;
 float2 uPosition;
 float uTime;
-float uPhase2Fade;
+float uStarIntensity;
 
 float RestoreVeinSample(float value)
 {
@@ -21,7 +21,7 @@ float3 GetColor(float2 screenCoords)
     float3 gradientColor = lerp(colorBase, colorTop, coords) * min(1.4, 0.75 + txtVal * 0.7);
     float stripeMask = coords * coords;
     float3 goldColor = float3(1.0, 0.75, 0.16);
-    gradientColor = lerp(gradientColor, goldColor, stripeMask * uPhase2Fade * 0.9);
+    gradientColor = lerp(gradientColor, goldColor, stripeMask * uStarIntensity * 0.9);
     return gradientColor;
 }
 

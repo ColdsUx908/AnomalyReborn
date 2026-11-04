@@ -26,6 +26,8 @@ public interface IEaterofWorldsSegment
 
 public abstract class EaterofWorldsSegment<TBehavior> : AnomalyNPCBehavior<TBehavior>, IEaterofWorldsSegment where TBehavior : EaterofWorldsSegment<TBehavior>, new()
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.EaterofWorlds;
+
     //此处所有NPC索引均为whoAmI+1，0表示无效索引
     //这样做的目的是使默认值（0）为空NPC，确保真正的头部能在默认状态下正常工作
 

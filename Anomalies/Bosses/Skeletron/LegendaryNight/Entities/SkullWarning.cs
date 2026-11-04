@@ -27,10 +27,9 @@ public sealed class SkullWarning : AnomalyModProjectile
 
     public override void AI()
     {
-        NPC master = NPC.GetNPCFromIndex((int)Projectile.ai[2] - 1);
         bool validTarget = Player.TryGetPlayerFromIndex((int)Projectile.ai[0] - 1, out Player target)
             && target.active && !target.dead;
-        if (!master.active || master.type != NPCID.SkeletronHead || master.Anomaly.CustomAIType != 1 || !validTarget)
+        if (!LegendaryNightHandler.IsLegendaryNightHead((int)Projectile.ai[2], oneBased: true) || !validTarget)
         {
             if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();

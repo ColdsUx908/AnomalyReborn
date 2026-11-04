@@ -28,7 +28,7 @@ public sealed class LegendaryNightSlimeChargeParticle : CustomSpriteParticle
         float progress = MathHelper.Clamp(LifetimeCompletion, 0f, 1f);
         Center = GetPosition(Timer);
         Scale = InitialScale * MathHelper.Lerp(1f, 0.75f, progress);
-        Opacity = _Master.active && _Master.type == NPCID.SkeletronHead
+        Opacity = LegendaryNightHandler.IsLegendaryNightHead(_Master)
             ? Math.Min(MathHelper.Clamp(Timer / (float)FadeDuration, 0f, 1f),
                 MathHelper.Clamp((Lifetime - Timer) / (float)FadeDuration, 0f, 1f))
             : 0f;

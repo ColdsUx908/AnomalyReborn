@@ -39,14 +39,14 @@ internal static class EventideReunionBladeTrail
             device.DepthStencilState = DepthStencilState.None;
             device.RasterizerState = RasterizerState.CullNone;
             device.SamplerStates[0] = SamplerState.LinearClamp;
-            trailEffect.Parameters["TransformMatrix"].SetValue(Matrix.CreateTranslation(-Main.screenPosition.X, -Main.screenPosition.Y, 0f)
+            trailEffect.Parameters["uTransformMatrix"].SetValue(Matrix.CreateTranslation(-Main.screenPosition.X, -Main.screenPosition.Y, 0f)
                 * Main.GameViewMatrix.TransformationMatrix
                 * Matrix.CreateOrthographicOffCenter(0f, Main.screenWidth, Main.screenHeight, 0f, -1f, 1f));
-            trailEffect.Parameters["Shape"].SetValue(EventideReunionAssets.SpearTrail);
-            trailEffect.Parameters["Time"].SetValue(time);
+            trailEffect.Parameters["uShape"].SetValue(EventideReunionAssets.SpearTrail);
+            trailEffect.Parameters["uTime"].SetValue(time);
             // 每次绘制显式设置，避免共享 Effect 的紫色状态影响普通攻击和 Sun。
-            trailEffect.Parameters["DeathPalette"].SetValue(deathPalette ? 1f : 0f);
-            trailEffect.Parameters["SamsaraPalette"].SetValue(samsaraPalette ? 1f : 0f);
+            trailEffect.Parameters["uDeathPalette"].SetValue(deathPalette ? 1f : 0f);
+            trailEffect.Parameters["uSamsaraPalette"].SetValue(samsaraPalette ? 1f : 0f);
             trailEffect.CurrentTechnique.Passes["Pass0"].Apply();
             device.DrawUserPrimitives(PrimitiveType.TriangleStrip, vertices, 0, vertices.Length - 2);
         }

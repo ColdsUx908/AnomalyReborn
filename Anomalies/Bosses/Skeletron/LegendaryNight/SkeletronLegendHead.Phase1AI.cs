@@ -73,10 +73,10 @@ public sealed partial class SkeletronLegendHead
             {
                 SelectNextSpell();
 
-                SoundEngine.PlaySound(SoundID.ForceRoar, NPC.Center);
+                SoundEngine.PlaySound(SoundID.ForceRoar);
                 ReleaseSpellShockwave();
 
-                SkeletronHead.FireSkull(NPC, Target, 16, TOMathUtils.PiOver8, 15f, SkullDamage, ai0: 1);
+                SkeletronHead.FireSkull(NPC, Target, 12, TOMathUtils.PiOver6, 12f, SkullDamage, ai0: 1);
             }
 
             if (Timer1 > 300)
@@ -263,7 +263,7 @@ public sealed partial class SkeletronLegendHead
             switch (CurrentLocalPhase)
             {
                 case 0:
-                    SoundEngine.PlaySound(SoundID.ForceRoar, NPC.Center);
+                    SoundEngine.PlaySound(SoundID.ForceRoar);
                     ReleaseSpellShockwave();
                     NPC.Face(Target);
                     Timer1 = 0;
@@ -306,10 +306,7 @@ public sealed partial class SkeletronLegendHead
                     break;
             }
 
-            void ApplyAvatarOpacity(float targetOpacity)
-            {
-                NPC.Opacity = MathHelper.Lerp(1f, targetOpacity, MathHelper.Clamp(Timer1 / 10f, 0f, 1f));
-            }
+            void ApplyAvatarOpacity(float targetOpacity) => NPC.Opacity = MathHelper.Lerp(1f, targetOpacity, MathHelper.Clamp(Timer1 / 10f, 0f, 1f));
 
             void RotatingSpell_None()
             {
@@ -473,73 +470,5 @@ public sealed partial class SkeletronLegendHead
                 }
             }
         }
-    }
-
-    private void ReleaseSpellShockwave(Spell? spell = null)
-    {
-        if (!TONetworkEnvironment.NotClient)
-            return;
-
-        Projectile.NewProjectileAction<LegendShockwave>(SourceAI, NPC.Center, Vector2.Zero, 0, 0f, action: p =>
-        {
-            p.scale = 0f;
-            p.ai[0] = (spell ?? CurrentSpell) switch
-            {
-                Spell.Slime => 1f,
-                Spell.Star => 2f,
-                Spell.PlatinumCoin => 3f,
-                _ => 0f
-            };
-            p.netUpdate = true;
-        });
-    }
-
-    private void SummonStarMeteors(int timer, bool reducedStarCount = false)
-    {
-        const int AttackInterval = 120;
-        const int MeteorCount = 3;
-        const float MeteorSpeed = 20f;
-        const int SummonSoundLeadTime = 10;
-
-        int summonTimer = timer + SummonSoundLeadTime;
-        if (!Main.dedServ && summonTimer >= AttackInterval && summonTimer <= AttackInterval * MeteorCount && summonTimer % AttackInterval == 0)
-            SoundEngine.PlaySound(Meteor.SummonSound, Target.Center);
-
-        if (timer >= AttackInterval && timer <= AttackInterval * MeteorCount && timer % AttackInterval == 0)
-        {
-            if (TONetworkEnvironment.NotClient)
-            {
-                Vector2 spawnPosition = Target.Center + new Vector2(Main.rand.NextFloat(-500f, 500f), -1000f);
-                Vector2 velocity = Target.GetVelocityTowards(spawnPosition, -MeteorSpeed);
-                Projectile.NewProjectileAction<Meteor>(SourceAI, spawnPosition, velocity, MeteorDamage, 0f, action: p =>
-                {
-                    p.ai[0] = NPC.target + 1;
-                    p.ai[2] = NPC.whoAmI + 1;
-                    p.GetModProjectile<Meteor>().ReducedAttack = reducedStarCount;
-                });
-            }
-        }
-
-    }
-
-    private void SummonRotatingSkullWarnings(int timer)
-    {
-        if (TONetworkEnvironment.NotClient && timer % 75 == 0 && timer <= 300)
-        {
-            const int SkullCount = 4;
-            float offset = Main.rand.NextFloat(MathHelper.TwoPi);
-            for (int i = 0; i < SkullCount; i++)
-            {
-                Vector2 position = Target.Center + new Vector2(Main.rand.NextFloat(800f, 1000f), 0f)
-                    .RotatedBy(offset + MathHelper.TwoPi * i / SkullCount);
-                Projectile.NewProjectileAction<SkullWarning>(SourceAI, position, Vector2.Zero, SkullDamage, 0f, action: p =>
-                {
-                    p.ai[0] = NPC.target + 1;
-                    p.ai[2] = NPC.whoAmI + 1;
-                    p.netUpdate = true;
-                });
-            }
-        }
-
     }
 }

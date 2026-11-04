@@ -83,13 +83,13 @@ public sealed class EventideReunionMarkDrawing : AnomalyGlobalNPCBehavior
             device.BlendState = BlendState.AlphaBlend;
             device.DepthStencilState = DepthStencilState.None;
             device.RasterizerState = RasterizerState.CullNone;
-            effect.Parameters["TransformMatrix"].SetValue(Matrix.CreateTranslation(-screenPosition.X, -screenPosition.Y, 0f)
+            effect.Parameters["uTransformMatrix"].SetValue(Matrix.CreateTranslation(-screenPosition.X, -screenPosition.Y, 0f)
                 * Main.GameViewMatrix.TransformationMatrix
                 * Matrix.CreateOrthographicOffCenter(0f, Main.screenWidth, Main.screenHeight, 0f, -1f, 1f));
-            effect.Parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
-            effect.Parameters["Opacity"]?.SetValue(opacity);
-            effect.Parameters["Remaining"]?.SetValue(remaining);
-            effect.Parameters["CompanionPresence"].SetValue(companion);
+            effect.Parameters["uTime"].SetValue(Main.GlobalTimeWrappedHourly);
+            effect.Parameters["uOpacity"]?.SetValue(opacity);
+            effect.Parameters["uRemaining"]?.SetValue(remaining);
+            effect.Parameters["uCompanionPresence"].SetValue(companion);
             effect.CurrentTechnique.Passes["Pass0"].Apply();
             device.DrawUserPrimitives(PrimitiveType.TriangleStrip, vertices, 0, 2);
         }

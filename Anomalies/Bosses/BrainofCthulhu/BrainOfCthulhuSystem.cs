@@ -287,8 +287,8 @@ public class BrainOfCthulhuSystem : ModSystem
                 targetPos = Vector2.Transform(targetPos - Main.screenPosition, Main.GameViewMatrix.ZoomMatrix) / Main.ScreenSize.ToVector2();
                 Texture2D voronoi = AnomalyTextures.Noise.Voronoi;
                 Texture2D depthNoise = AnomalyTextures.Noise.Vein2;
-                Filters.Scene["Anomalies:BrainOfCthulhuForcefield"].GetShader().Shader.Parameters["voronoi"].SetValue(voronoi);
-                Filters.Scene["Anomalies:BrainOfCthulhuForcefield"].GetShader().Shader.Parameters["depthNoise"].SetValue(depthNoise);
+                Filters.Scene["Anomalies:BrainOfCthulhuForcefield"].GetShader().Shader.Parameters["uVoronoi"].SetValue(voronoi);
+                Filters.Scene["Anomalies:BrainOfCthulhuForcefield"].GetShader().Shader.Parameters["uDepthNoise"].SetValue(depthNoise);
                 Filters.Scene["Anomalies:BrainOfCthulhuForcefield"].GetShader().Shader.Parameters["uScreenResolution"].SetValue(new Vector2(Main.graphics.GraphicsDevice.Viewport.Width, Main.graphics.GraphicsDevice.Viewport.Height));
                 Filters.Scene["Anomalies:BrainOfCthulhuForcefield"].GetShader().UseProgress(0.15f * shieldScale);
                 Filters.Scene["Anomalies:BrainOfCthulhuForcefield"].GetShader().UseOpacity(shieldOpacity);

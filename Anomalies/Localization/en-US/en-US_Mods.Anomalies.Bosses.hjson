@@ -58,6 +58,7 @@ Skeletron: {
 	LegendaryNight: {
 		Summon: The legendary night has begun!
 		AstralBlessing: The mysterious power of the Star God blesses you, granting you unlimited flight.
+		InterceptStarPower: Intercept the Star God's power drifting toward it!
 		SummonFailed: Legendary night has failed to begin. It requires an Ultramundane night.
 		LegendaryNightRitual.DisplayName: Legendary Night Ritual
 		LegendaryNightArena.DisplayName: Legendary Night Arena
@@ -95,6 +96,8 @@ Skeletron: {
 		LegendaryNightPhase2Arena.DisplayName: Astral Magic Circle
 		LegendSlimeRain.DisplayName: Legend Slime Rain
 		LegendEnergySphere.DisplayName: Legend Energy Sphere
+		LegendEnergyLaser.DisplayName: Legend Energy Laser
+		LegendLightOrb.DisplayName: Astral Light Orb
 	}
 }
 

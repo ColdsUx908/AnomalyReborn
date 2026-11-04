@@ -5,9 +5,11 @@ namespace Anomalies.Bosses.EmpressofLight;
 
 public sealed class EmpressOfLight_Aroma : AnomalyNPCBehavior<EmpressOfLight_Aroma>
 {
-    public override bool ShouldProcess => base.ShouldProcess && Aroma;
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.EmpressofLight && Aroma;
 
     public override int ApplyingType => NPCID.HallowBoss;
+
+    public override decimal Priority => 10m;
 
     public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => type switch
     {

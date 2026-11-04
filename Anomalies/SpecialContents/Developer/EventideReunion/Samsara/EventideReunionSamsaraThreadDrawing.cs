@@ -26,15 +26,15 @@ internal static class EventideReunionSamsaraThreadDrawing
         RasterizerState rasterizer = device.RasterizerState;
         try
         {
-            effect.Parameters["SpearMode"].SetValue(0f);
+            effect.Parameters["uSpearMode"].SetValue(0f);
             device.BlendState = BlendState.AlphaBlend;
             device.DepthStencilState = DepthStencilState.None;
             device.RasterizerState = RasterizerState.CullNone;
-            effect.Parameters["TransformMatrix"].SetValue(Matrix.CreateTranslation(-Main.screenPosition.X, -Main.screenPosition.Y, 0f)
+            effect.Parameters["uTransformMatrix"].SetValue(Matrix.CreateTranslation(-Main.screenPosition.X, -Main.screenPosition.Y, 0f)
                 * Main.GameViewMatrix.TransformationMatrix
                 * Matrix.CreateOrthographicOffCenter(0f, Main.screenWidth, Main.screenHeight, 0f, -1f, 1f));
-            effect.Parameters["StartDistance"].SetValue(MathHelper.Lerp(trail.Distances[first], trail.Distances[first + 1], fraction));
-            effect.Parameters["EndDistance"].SetValue(trail.Distances[^1] + extraLength);
+            effect.Parameters["uStartDistance"].SetValue(MathHelper.Lerp(trail.Distances[first], trail.Distances[first + 1], fraction));
+            effect.Parameters["uEndDistance"].SetValue(trail.Distances[^1] + extraLength);
             for (int strand = 0; strand < 6; strand++)
             {
                 centers[0] = Vector2.Lerp(trail.StrandPoint(first, strand, extraLength),

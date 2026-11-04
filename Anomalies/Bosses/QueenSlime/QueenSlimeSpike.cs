@@ -2,6 +2,8 @@ namespace Anomalies.Bosses.QueenSlime;
 
 public sealed class QueenSlimeSpike : AnomalyProjectileBehavior<QueenSlimeSpike>
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.QueenSlime;
+
     public Color LightColor
     {
         get => AnomalyProjectile.AnomalyAI32[0].GetValue<Color>();

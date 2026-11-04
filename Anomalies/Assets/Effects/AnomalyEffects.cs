@@ -4,7 +4,9 @@ using Transoceanic.Runtime.Reflection;
 
 namespace Anomalies.Assets.Effects;
 
-/// <summary>通过原生加载入口注册本模组着色器；配置模板与筛选器引用由 TOCleanup 清理。</summary>
+/// <summary>
+/// 通过原生加载入口注册本模组着色器；配置模板与筛选器引用由 TOCleanup 清理。
+/// </summary>
 public sealed class AnomalyEffects : ILoadable
 {
     //所有嵌套类、字段按字母顺序排列
@@ -38,6 +40,7 @@ public sealed class AnomalyEffects : ILoadable
         public static MiscShaderContainer EaterRealityCrack;
         public static MiscShaderContainer EventideDeathVignette;
         public static MiscShaderContainer LegendEnergySphere;
+        public static MiscShaderContainer LegendaryNightArenaEdge;
         public static MiscShaderContainer LegendaryNightOverlay;
         public static MiscShaderContainer SolidColor;
         public static MiscShaderContainer SolidColorMask;
@@ -53,6 +56,9 @@ public sealed class AnomalyEffects : ILoadable
         public static MiscShaderContainer EventideSweep;
         public static MiscShaderContainer GlowCircle;
         public static MiscShaderContainer GlowLine;
+        public static MiscShaderContainer LegendEnergyLaser;
+        public static MiscShaderContainer LegendEnergyLaserWarning;
+        public static MiscShaderContainer LegendLightOrb;
     }
 
     public static class Texts

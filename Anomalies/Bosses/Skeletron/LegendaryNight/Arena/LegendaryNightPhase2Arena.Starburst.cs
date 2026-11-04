@@ -18,6 +18,8 @@ public sealed partial class LegendaryNightPhase2Arena
     public const int StarburstColorRecoveryDuration = 18;
     public const int OrbitRecoveryStartMusicTime = StarburstEndMusicTime + StarburstDamageDuration + StarburstFadeDuration;
     public const int OrbitRecoveryDuration = 90;
+    public static readonly SoundStyle EvenStarburstSound = new(LegendaryNightHandler.LegendaryNightPath + "Arena/EvenStarburst");
+    public static readonly SoundStyle OddStarburstSound = new(LegendaryNightHandler.LegendaryNightPath + "Arena/OddStarburst");
     public static readonly Color FastStarburstColor = new(255, 40, 40);
     public static readonly Color SlowStarburstColor = new(255, 155, 30);
     // 接口以每帧弧度定义；速度恒定的区段可直接预测交汇位置。
@@ -159,8 +161,8 @@ public sealed partial class LegendaryNightPhase2Arena
     public int StarburstAge => StarburstIndex < 0 ? int.MinValue
         : (MasterBehavior?.Phase2MusicElapsedTime ?? 0) - GetStarburstTime(StarburstIndex);
     // 偶数次星爆外圈略大于竞技场总体直径，场内仅保留爆点附近的内圈安全区。
-    public float StarburstRadius => Radius * (StarburstIsRing ? 2.1f : 1.5f);
-    public float StarburstSafeRadius => Radius * 0.65f;
+    public float StarburstRadius => Radius * (StarburstIsRing ? 2.175f : 1.45f);
+    public float StarburstSafeRadius => Radius * 0.625f;
     public bool StarburstIsRing => StarburstIndex % 2 == 1;
     public float StarburstGlow
     {
@@ -199,7 +201,7 @@ public sealed partial class LegendaryNightPhase2Arena
             return;
         int age = StarburstAge;
         if (age == 0)
-            SoundEngine.PlaySound(CoinJudgment.ExplosionSound, PredictStarburstPosition(StarburstIndex));
+            SoundEngine.PlaySound(StarburstIsRing ? EvenStarburstSound : OddStarburstSound);
         if (age is < 0 or >= StarburstDamageDuration)
             return;
         Player player = Main.LocalPlayer;

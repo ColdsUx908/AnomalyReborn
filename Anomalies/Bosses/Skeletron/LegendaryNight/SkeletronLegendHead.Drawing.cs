@@ -2,6 +2,12 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed partial class SkeletronLegendHead
 {
+    public bool IsRotating => Mechanic1Rotating
+        || CurrentPhase == Phase.Phase1 && CurrentBaseBehavior == BaseBehavior.Rotate && CurrentLocalPhase == 1;
+
+    public override void BossHeadRotation(ref float rotation) =>
+        rotation = IsRotating ? NPC.rotation : 0f;
+
     private const int StarAvatarTrailLength = 50;
 
     [LoadTexture(LegendaryNightHandler.LegendaryNightEntityPath + "SlimeAvatar")]

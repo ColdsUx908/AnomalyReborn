@@ -241,44 +241,47 @@ public sealed class EaterTeleportRift : ModProjectile
 
         SoundEngine.PlaySound(BreakSound, Projectile.Center);
         AnomalyCombatUtils.AddScreenshakeAt(Projectile.Center, 14f);
-    
+
     }
 
     public override bool PreDraw(ref Color lightColor)
     {
         Texture2D crackTexture = EaterPortalAssets.Get(EaterPortalAssets.Path + "CrackedGlass_Glowing").Value;
-        Texture2D starTexture = TextureAssets.Extra[ExtrasID.ThePerfectGlow].Value;
+        Texture2D starTexture = EaterPortalAssets.Get(EaterPortalAssets.Path + "RiftStar").Value;
         Texture2D bloomRingTexture = AnomalyTextures.Extra.BloomRing;
 
         float chargeInterpolant = (1f - MathF.Cos(MathHelper.Pi * Timer / Math.Max(1, RiftLifetime))) * 0.5f;
         const float BrightnessMultiplier = 1f;
 
         Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-        Vector2 verticalStarPartScale = new Vector2(1f, 8f) * chargeInterpolant * Projectile.scale * 3.25f;
-        Vector2 horizontalStarPartScale = new Vector2(1f, 5f) * chargeInterpolant * Projectile.scale * 3.25f;
+        // Normalize the high-resolution texture to the original 64-pixel footprint.
+        Vector2 starPartScale = new Vector2(80f / starTexture.Width, 480f / starTexture.Height) * chargeInterpolant * Projectile.scale * 3.25f;
 
         using SpriteBatchScope additive = new(Main.spriteBatch, blendState: BlendState.Additive);
 
-        // Draw the glowing star.
-        Main.EntitySpriteDraw(starTexture, drawPosition, null, Color.White * 0.7f * BrightnessMultiplier * chargeInterpolant, 0f, starTexture.Size() * 0.5f, verticalStarPartScale, 0);
-        Main.EntitySpriteDraw(starTexture, drawPosition, null, Color.White * 0.7f * BrightnessMultiplier * chargeInterpolant, MathHelper.PiOver2, starTexture.Size() * 0.5f, horizontalStarPartScale, 0);
+        using (SpriteBatchScope starScope = new(Main.spriteBatch, samplerState: SamplerState.LinearClamp))
+        {
+            // Draw the glowing star.
+            Main.EntitySpriteDraw(starTexture, drawPosition, null, Color.White * 0.7f * BrightnessMultiplier * chargeInterpolant, 0f, starTexture.Size() * 0.5f, starPartScale, 0);
+            Main.EntitySpriteDraw(starTexture, drawPosition, null, Color.White * 0.7f * BrightnessMultiplier * chargeInterpolant, MathHelper.PiOver2, starTexture.Size() * 0.5f, starPartScale, 0);
 
-        // Draw the smaller twilight-colored star at the center.
+            // Draw the smaller twilight-colored star at the center.
 
-        Main.EntitySpriteDraw(starTexture, drawPosition, null, EaterPortalAssets.Twilight * 0.9f * BrightnessMultiplier * chargeInterpolant, 0f, starTexture.Size() * 0.5f, verticalStarPartScale * 0.8f, 0);
-        Main.EntitySpriteDraw(starTexture, drawPosition, null, EaterPortalAssets.Twilight * 0.9f * BrightnessMultiplier * chargeInterpolant, MathHelper.PiOver2, starTexture.Size() * 0.5f, horizontalStarPartScale * 0.8f, 0);
+            Main.EntitySpriteDraw(starTexture, drawPosition, null, EaterPortalAssets.Twilight * 0.9f * BrightnessMultiplier * chargeInterpolant, 0f, starTexture.Size() * 0.5f, starPartScale * 0.8f, 0);
+            Main.EntitySpriteDraw(starTexture, drawPosition, null, EaterPortalAssets.Twilight * 0.9f * BrightnessMultiplier * chargeInterpolant, MathHelper.PiOver2, starTexture.Size() * 0.5f, starPartScale * 0.8f, 0);
+        }
 
         // Draw the crack.
         Effect crackShader = AnomalyEffects.Overlays.EaterRealityCrack?.Asset.Value;
         float crackOpacity = (AIState == 1f) ? Projectile.Opacity * 0.1f : 0.1f;
         Color darkerPixelColor = EaterPortalAssets.Twilight;
 
-        crackShader?.Parameters["opacityCutoffValue"]?.SetValue(CrackExposure);
-        crackShader?.Parameters["fadeoutPower"]?.SetValue(1f);
-        crackShader?.Parameters["overallOpacity"]?.SetValue(crackOpacity * BrightnessMultiplier);
-        crackShader?.Parameters["minBrightnessValue"]?.SetValue(0.75f);
-        crackShader?.Parameters["darkerPixelColor"]?.SetValue(darkerPixelColor.ToVector3());
-        crackShader?.Parameters["brighterPixelColor"]?.SetValue(Color.White.ToVector3());
+        crackShader?.Parameters["uOpacityCutoffValue"]?.SetValue(CrackExposure);
+        crackShader?.Parameters["uFadeoutPower"]?.SetValue(1f);
+        crackShader?.Parameters["uOverallOpacity"]?.SetValue(crackOpacity * BrightnessMultiplier);
+        crackShader?.Parameters["uMinBrightnessValue"]?.SetValue(0.75f);
+        crackShader?.Parameters["uDarkerPixelColor"]?.SetValue(darkerPixelColor.ToVector3());
+        crackShader?.Parameters["uBrighterPixelColor"]?.SetValue(Color.White.ToVector3());
         if (crackShader is not null)
         {
             using SpriteBatchScope crackScope = new(Main.spriteBatch, SpriteSortMode.Immediate,

@@ -6,7 +6,7 @@ public sealed partial class SkeletronHead : AnomalyNPCBehavior<SkeletronHead>
 
     public override int ApplyingType => NPCID.SkeletronHead;
 
-    public override bool ShouldProcess => base.ShouldProcess && AnomalyNPC.CustomAIType != 1;
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.Skeletron && AnomalyNPC.CustomAIType != 1;
 
     public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => type switch
     {

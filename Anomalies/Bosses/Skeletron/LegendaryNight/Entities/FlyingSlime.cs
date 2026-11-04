@@ -28,7 +28,7 @@ public sealed class FlyingSlime : AnomalyModNPC
 
     public override void AI()
     {
-        if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master) || master.Anomaly.CustomAIType != 1
+        if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master) || !LegendaryNightHandler.IsLegendaryNightHead(master)
             || SkeletronLegendHead.GetInstance(master).CurrentAvatar != SkeletronLegendHead.Avatar.FlyingSlime
             || !NPC.TargetClosestIfInvalid(true, SkeletronLegendHead.DespawnDistance) || ++NPC.ai[0] >= 180f)
         {

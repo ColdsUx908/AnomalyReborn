@@ -9,6 +9,9 @@
         <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarningsAsErrors>$(WarningsAsErrors);CS0419;CS1570;CS1572;CS1573;CS1574;CS1580;CS1581;CS1584;CS1591;CS1658;CS1734</WarningsAsErrors>
+		<!-- tModLoader loads the packaged DLL. Always run BuildMod before F5, even
+             when a previous BuildMod=false build has already updated bin/obj. -->
+		<DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <DebugType>embedded</DebugType>

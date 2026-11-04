@@ -5,6 +5,8 @@ namespace Anomalies.Bosses.EyeofCthulhu;
 
 public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.EyeofCthulhu;
+
     protected override int AI32Capacity => 8;
 
     #region 数据
@@ -550,9 +552,14 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
             modifiers.SetMaxDamage((int)(NPC.life - NPC.lifeMax * Phase3LifeRatio + 1));
     }
 
+    public override void Load() => BossDeathEffectRegistry.Register(NPCID.EyeofCthulhu,
+        npc => GetInstance(npc) is { ShouldProcess: true, DeathLocked: true });
+
+    public bool DeathLocked => Ultra && !Phase3 && !NPC.downedBoss1;
+
     public override bool CheckDead()
     {
-        if (Ultra && !Phase3 && !NPC.downedBoss1)
+        if (DeathLocked)
         {
             NPC.life = 1;
             NPC.active = true;

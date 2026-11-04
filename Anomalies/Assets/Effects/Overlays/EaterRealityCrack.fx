@@ -1,13 +1,13 @@
-﻿sampler baseTexture : register(s0);
+﻿sampler uBaseTexture : register(s0);
 
-float overallOpacity;
-float opacityCutoffValue;
-float fadeoutPower;
-float minBrightnessValue;
-float gradientPrecision;
+float uOverallOpacity;
+float uOpacityCutoffValue;
+float uFadeoutPower;
+float uMinBrightnessValue;
+float uGradientPrecision;
 
-float3 brighterPixelColor;
-float3 darkerPixelColor;
+float3 uBrighterPixelColor;
+float3 uDarkerPixelColor;
 
 float InverseLerp(float from, float to, float value)
 {
@@ -22,26 +22,27 @@ float4 Main(float4 sampleColor : COLOR0, float2 coords : TEXCOORD0) : COLOR0
     float distanceToCenter = length(centeredCoords);
     
     float2 polarCoords = float2(polarAngle, distanceToCenter);
-    float4 color = tex2D(baseTexture, coords);   
+    float4 color = tex2D(uBaseTexture, coords);
         
     // Get the horizontal brightness of the sampled texture and apply coloration.
     float brightness = (color.r + color.g + color.b) / 3;
-    float brightnessRatio = InverseLerp(minBrightnessValue, 1, brightness);
-    float3 colorFromBrightness = lerp(darkerPixelColor, brighterPixelColor, brightnessRatio);
+    float brightnessRatio = InverseLerp(uMinBrightnessValue, 1, brightness);
+    float3 colorFromBrightness = lerp(uDarkerPixelColor, uBrighterPixelColor, brightnessRatio);
     
     float4 coloredSample = color * float4(colorFromBrightness, 1);  
     
     // Fade out from the edges of the texture to the middle depending on the cutoff value.
     // "fadeoutPower" values which vary from 1 will affect how strong the edges fade while also increasing the brightness of 
     // the non-faded parts of the image to the middle. Use this wisely.
-    if (-polarCoords.y < opacityCutoffValue)
-        coloredSample.rgba *= pow(-polarCoords.y / (polarCoords.y - opacityCutoffValue), -fadeoutPower);
+    if (-polarCoords.y < uOpacityCutoffValue)
+        // Preserve the existing compiled pow magnitude for negative radial ratios.
+        coloredSample.rgba *= pow(abs(-polarCoords.y / (polarCoords.y - uOpacityCutoffValue)), -uFadeoutPower);
 
     // Apply optional posterization.
     /*if (gradientPrecision > 0)
         finalColor = round(finalColor * gradientPrecision) / gradientPrecision;
     */
-    return coloredSample * sampleColor * overallOpacity;
+    return coloredSample * sampleColor * uOverallOpacity;
 }
 
 technique Technique1

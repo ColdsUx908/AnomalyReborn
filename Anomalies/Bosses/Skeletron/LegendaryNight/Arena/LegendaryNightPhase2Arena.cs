@@ -1,5 +1,5 @@
+using Anomalies.Bosses.Skeletron.LegendaryNight.Buffs;
 using Anomalies.GameContents.Base;
-using Anomalies.GameContents.Buffs;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
@@ -7,8 +7,8 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
 {
     public const int AppearanceDuration = 90;
     public const float MainCircleFullRadius = 600f;
-    public const float SmallCircleRadiusRatio = 0.15f;
-    public const float OuterCircleRadiusRatio = 1f + 2f * SmallCircleRadiusRatio;
+    public const float SmallCircleRadiusRatio = 1f / 6f;
+    public const float OuterCircleRadiusRatio = 1f + 2f * SmallCircleRadiusRatio; //800f
     public const float RotationSpeed = 0.007f;
     public static float FirstSmallCircleOrbitSpeed => SlowOrbitSpeed;
     public static float GetFastOrbitSpeed(int musicTime) => GetOrbitSpeed(2, musicTime);
@@ -29,14 +29,10 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
         get => (int)Projectile.ai[1];
         set => Projectile.ai[1] = value;
     }
-    public SkeletronLegendHead MasterBehavior => Master is { active: true, type: NPCID.SkeletronHead, life: > 0 } master
-        && master.Anomaly.CustomAIType == 1 ? SkeletronLegendHead.GetInstance(master) : null;
+    public SkeletronLegendHead MasterBehavior => LegendaryNightHandler.IsLegendaryNightHead((int)Projectile.ai[0], out SkeletronLegendHead head, oneBased: true) && head.NPC.life > 0 ? head : null;
     public int MusicAge => Math.Max(0, (MasterBehavior?.Phase2MusicElapsedTime ?? AppearanceStartMusicTime) - AppearanceStartMusicTime);
     public float AppearanceProgress => MathHelper.Clamp(MusicAge / (float)AppearanceDuration, 0f, 1f);
-    public float Intensity => MathHelper.SmoothStep(0f, 1f, AppearanceProgress) * (1f - DisappearanceProgress);
-    public float DisappearanceProgress => MasterBehavior is { Mechanic7Active: true } head
-        ? MathHelper.Clamp((head.Phase2MusicElapsedTime - SkeletronLegendHead.Mechanic7Data.StartMusicTime)
-            / (float)SkeletronLegendHead.Mechanic7Data.ArenaFadeDuration, 0f, 1f) : 0f;
+    public float Intensity => MathHelper.SmoothStep(0f, 1f, AppearanceProgress);
     public float AppearanceScale => MathHelper.Lerp(0.2f, 1f, 1f - MathF.Pow(1f - AppearanceProgress, 3f));
     public float MagicCircleRotation => MusicAge * RotationSpeed;
     public float MainCircleRadius => Radius / OuterCircleRadiusRatio;
@@ -77,10 +73,10 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
     // 统一提供视觉与后续交互使用的几何数据；0 主法阵，1/2 两个附属法阵。
     public (Vector2 Center, float Radius, float Rotation) GetMagicCircle(int index)
     {
-        float absorb = MasterBehavior is { } head && (head.Mechanic6Active || head.Mechanic7Active)
+        float absorb = MasterBehavior is { } head && head.Mechanic6Active
             ? SkeletronLegendHead.Mechanic6Data.AbsorbProgress(head.Phase2MusicElapsedTime) : 0f;
         Vector2 destination = MasterBehavior is { } owner
-            ? owner.NPC.Center + SkeletronLegendHead.Mechanic6Data.SphereOffset(owner.Phase2MusicElapsedTime, 0) : Projectile.Center;
+            ? owner.NPC.Center + SkeletronLegendHead.Mechanic6Data.SphereOffset(owner.Phase2MusicElapsedTime) : Projectile.Center;
         float originalRadius = MainCircleFullRadius * AppearanceScale;
         if (index == 0)
             return (Vector2.Lerp(Projectile.Center, destination, absorb), originalRadius * (1f - absorb), MagicCircleRotation);
@@ -103,7 +99,7 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
     public override float Radius { get; set; } = MainCircleFullRadius * OuterCircleRadiusRatio * 0.2f;
     public override float Thickness => 0f;
     public override int DustType => DustID.GoldFlame;
-    public override bool EnableMovementRestriction => MasterBehavior is { Phase2ArenaRequested: true, Mechanic7Active: false } && AppearanceProgress >= 1f;
+    public override bool EnableMovementRestriction => MasterBehavior is { Phase2ArenaRequested: true } && AppearanceProgress >= 1f;
 
     public override void SetDefaults()
     {
@@ -136,8 +132,7 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
         Projectile.velocity = Vector2.Zero;
         // 圆心在生成时固定；半径与所有绘制共用同一份入场缩放。
         Radius = MainCircleFullRadius * OuterCircleRadiusRatio * AppearanceScale
-            * ((head.Mechanic6Active || head.Mechanic7Active) ? SkeletronLegendHead.Mechanic6Data.ArenaScale(head.Phase2MusicElapsedTime) : 1f)
-            * MathHelper.Lerp(1f, 1.5f, DisappearanceProgress);
+            * (head.Mechanic6Active ? SkeletronLegendHead.Mechanic6Data.ArenaScale(head.Phase2MusicElapsedTime) : 1f);
         if (EnableMovementRestriction)
             MovementRestriction();
         else
@@ -201,7 +196,31 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
     public override void OnHitPlayer(Player target, Player.HurtInfo info)
     {
         if (Materialized && MaterializedGeometryCollides(target.Hitbox))
-            target.AddBuff(ModContent.BuffType<StarPowerSuppression>(), 15 * 60);
+            target.AddBuff(ModContent.BuffType<AstralSuppression>(), 15 * 60);
     }
     public override bool PreDraw(ref Color lightColor) => false;
+
+    internal void DrawEnergySpheres(SpriteBatch spriteBatch)
+    {
+        if (MasterBehavior is not { Mechanic6Active: true } head
+            || head.CurrentBaseBehavior == SkeletronLegendHead.BaseBehavior.Despawn)
+            return;
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
+            DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+        foreach (Projectile projectile in Projectile.ActiveProjectiles)
+        {
+            // Behavior 每次查询都会重新包装，按所属 NPC 判断是否为同一主人。
+            if (projectile.ModProjectile is not LegendEnergySphere sphere || sphere.Head?.NPC != head.NPC)
+                continue;
+            sphere.DrawBody(spriteBatch);
+            sphere.DrawLightOrbTrails(spriteBatch);
+            foreach (Projectile orbProjectile in Projectile.ActiveProjectiles)
+            {
+                if (orbProjectile.ModProjectile is LegendLightOrb orb && orb.SphereProjectile == projectile)
+                    orb.Draw(spriteBatch);
+            }
+            sphere.DrawCore(spriteBatch);
+        }
+        spriteBatch.End();
+    }
 }

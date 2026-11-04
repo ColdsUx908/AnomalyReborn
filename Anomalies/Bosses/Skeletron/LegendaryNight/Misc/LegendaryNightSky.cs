@@ -93,14 +93,14 @@ public sealed class LegendaryNightSky : CustomSky, IContentLoader
         bool foundSkeletronLegend = false;
         SkeletronLegendHead.Phase currentPhase = SkeletronLegendHead.Phase.Initialize;
 
-        if (NPC.TryGetNPCFromIndex(_SkeletronLegendHeadIndex, out NPC potentialLegendHead) && CheckSingleNPC(potentialLegendHead))
+        if (LegendaryNightHandler.IsLegendaryNightHead(_SkeletronLegendHeadIndex))
             foundSkeletronLegend = true;
 
         if (!foundSkeletronLegend)
         {
             foreach (NPC n in NPC.ActiveNPCs)
             {
-                if (CheckSingleNPC(n))
+                if (LegendaryNightHandler.IsLegendaryNightHead(n))
                 {
                     _SkeletronLegendHeadIndex = n.whoAmI;
                     foundSkeletronLegend = true;
@@ -125,7 +125,7 @@ public sealed class LegendaryNightSky : CustomSky, IContentLoader
         _CloudSuppressionActive = foundSkeletronLegend
             && SkeletronLegendHead.GetInstance(Main.npc[_SkeletronLegendHeadIndex]).SuppressSkyClouds;
         _FullBrightActive = foundSkeletronLegend && _OrangeBlend > 0f;
-        if (foundSkeletronLegend && phase2)
+        if (foundSkeletronLegend && SkeletronLegendHead.GetInstance(Main.npc[_SkeletronLegendHeadIndex]).AnomalyStarActive)
             AnomalyStarVisual.Intensity += 1f / 30f;
 
         if (Intensity <= 0f) //如果强度为0，则清除所有星星
@@ -170,8 +170,6 @@ public sealed class LegendaryNightSky : CustomSky, IContentLoader
                 LifeTime = (int)((Main.screenHeight + 160f) / speed)
             });
         }
-
-        bool CheckSingleNPC(NPC n) => n.active && n.type == NPCID.SkeletronHead && n.Anomaly?.CustomAIType == 1;
     }
 
     public override void Draw(SpriteBatch spriteBatch, float minDepth, float maxDepth)

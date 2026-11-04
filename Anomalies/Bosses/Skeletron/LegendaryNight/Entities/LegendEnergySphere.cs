@@ -1,27 +1,174 @@
 using Anomalies.Assets.Effects;
 using ReLogic.Utilities;
+using static Anomalies.Bosses.Skeletron.LegendaryNight.SkeletronLegendHead.Mechanic6Data;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
-/// <summary>ai[0]：主人索引+1；ai[1]：光球序号0至3；ai[2]：0蓄力、1飞行、2抵住竞技场边缘。</summary>
+/// <summary>ai[0]：主人索引+1；光球蓄力完成后持续保持。</summary>
 public sealed class LegendEnergySphere : AnomalyModProjectile
 {
+    // 光球与其激光共用的基础色，着色器不再另写一份色值。
+    public static Vector3 GoldColor => new(1f, 0.82f, 0.06f);
+    public static Vector3 StarlightColor => new(1f, 0.98f, 0.8f);
+
     private const string AssetPath = LegendaryNightHandler.LegendaryNightEntityPath + "EnergySphere/";
     private static readonly SoundStyle _ChargeSound = new(AssetPath + "TeslaSphereLoop") { IsLooped = true, Volume = 0.45f };
     private SlotId _ChargeSoundSlot;
     private bool _SoundStarted;
+    private double _CoreFlashStart = double.NegativeInfinity;
+    private LightOrbTrailSet _LightOrbTrails;
+
+    private sealed class LightOrbTrailSet : ParticleSet
+    {
+        public override int ParticleLifetime => 0;
+
+        public LightOrbTrailSet() : base(0, 0f) => ParticleLimit = 1024;
+
+        public override Particle SpawnParticle() =>
+            throw new InvalidOperationException("Light orb trails accept explicit submissions only.");
+    }
+    internal struct LightOrbBonuses
+    {
+        public int DamageStacks;
+        public int RegenerationStacks;
+        public bool ExpectsPlatinum;
+
+        public bool ApplyCollision(int color, bool noRequiredColorRemains)
+        {
+            if ((color == 1) != ExpectsPlatinum && !noRequiredColorRemains)
+            {
+                DamageStacks--;
+                RegenerationStacks--;
+                return false;
+            }
+            if (color == 1)
+                RegenerationStacks++;
+            else
+                DamageStacks++;
+            ExpectsPlatinum = !ExpectsPlatinum;
+            return true;
+        }
+    }
+
+    private readonly LightOrbBonuses[] _PlayerBonuses = new LightOrbBonuses[Main.maxPlayers];
+    private int _LightOrbWavesSpawned;
+
+    /// <summary>小球抵达球心时仅由服务器/单人端触发一次；不含拦截或退场取消。</summary>
+    public event Action<LegendLightOrb> LightOrbAbsorbed;
 
     public override string Texture => TOTextures.InvisibleTexturePath;
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
-    private int Cycle => Math.Clamp((int)Projectile.ai[1], 0, 3);
     private NPC Master => NPC.GetNPCFromIndex((int)Projectile.ai[0] - 1);
-    private SkeletronLegendHead Head => Master is { active: true, type: NPCID.SkeletronHead } master
-        && master.Anomaly.CustomAIType == 1 ? SkeletronLegendHead.GetInstance(master) : null;
-    private float SphereRadius => Head is { } head ? SkeletronLegendHead.Mechanic6Data.Radius(head.Phase2MusicElapsedTime, Cycle) : 0f;
-    // 着色器亮边位于 UV 半径0.25，噪声最多偏移0.006；绘制边长为4倍基础半径。
-    private float ContactRadius => SphereRadius * 1.024f;
-    private const float ArenaBoundaryHalfWidth = 1.5f;
+    internal SkeletronLegendHead Head => LegendaryNightHandler.IsLegendaryNightHead((int)Projectile.ai[0], out SkeletronLegendHead head, oneBased: true) ? head : null;
+    internal float SphereRadius => Head is { } head ? SkeletronLegendHead.Mechanic6Data.Radius(head.Phase2MusicElapsedTime) : 0f;
+    private float CoreFlash => LightOrbCoreFlash((float)(Main.timeForVisualEffects - _CoreFlashStart));
 
+    internal void FlashCore()
+    {
+        if (!Main.dedServ)
+            _CoreFlashStart = Main.timeForVisualEffects;
+    }
+
+    internal void OnLightOrbAbsorbed(LegendLightOrb orb)
+    {
+        if (!TONetworkEnvironment.NotClient)
+            return;
+        const int StarCount = 50;
+        for (int i = 0; i < StarCount; i++)
+        {
+            Projectile.NewProjectileAction<FallingStar>(SourceAI, Projectile.Center,
+                Main.rand.NextPolarVector2(4f, 6f), SkeletronLegendHead.FallingStarDamage, 0f,
+                action: p =>
+                {
+                    p.ai[2] = Projectile.ai[0];
+                    p.scale = 0.2f;
+                    p.Resize(16, 16);
+                    p.timeLeft = 600;
+                    FallingStar star = p.GetModProjectile<FallingStar>();
+                    star.TrailType = 1; // 既有的蓝白光尾。
+                    star.AccelerationStartTime = 300;
+                    p.netUpdate = true;
+                });
+        }
+        LightOrbAbsorbed?.Invoke(orb);
+    }
+
+    internal LightOrbBonuses GetBonuses(int playerIndex) => _PlayerBonuses[playerIndex];
+
+    internal void InterceptLightOrb(int playerIndex, int color)
+    {
+        if (!TONetworkEnvironment.NotClient)
+            return;
+        int requiredColor = _PlayerBonuses[playerIndex].ExpectsPlatinum ? 1 : 0;
+        bool noRequiredColorRemains = _LightOrbWavesSpawned >= LightOrbWaveCount;
+        if (noRequiredColorRemains)
+        {
+            foreach (Projectile projectile in Projectile.ActiveProjectiles)
+            {
+                if (projectile.ModProjectile is LegendLightOrb orb && orb.SphereProjectile == Projectile
+                    && orb.AvailableForInterception && (int)projectile.ai[0] == requiredColor)
+                {
+                    noRequiredColorRemains = false;
+                    break;
+                }
+            }
+        }
+        if (!_PlayerBonuses[playerIndex].ApplyCollision(color, noRequiredColorRemains))
+            SpawnLasers(PunishmentLaserCount, punishment: true);
+        Projectile.netUpdate = true;
+    }
+
+    internal void SpawnLasers(int count, bool punishment = false)
+    {
+        if (!TONetworkEnvironment.NotClient || Head is not { } head || head.Phase2Arena is not { } arena)
+            return;
+        int time = head.Phase2MusicElapsedTime;
+        // 全轮共用偏移，保留束间夹角约束，同时消除固定扇区边界上的方向空缺。
+        float angleOffset = Main.rand.NextFloat(MathHelper.TwoPi);
+        for (int sector = 0; sector < count; sector++)
+        {
+            float angle = GetLaserAngle(sector, count, Main.rand.NextFloat()) + angleOffset;
+            float turnAngle = GetLaserTurnAngle(Main.rand.NextFloat());
+            Projectile.NewProjectileAction<LegendEnergyLaser>(SourceAI, arena.Projectile.Center,
+                Vector2.Zero, SkeletronLegendHead.FallingStarDamage, 0f, action: p =>
+                {
+                    p.ai[0] = Projectile.ai[0];
+                    p.ai[1] = angle;
+                    p.ai[2] = time;
+                    LegendEnergyLaser laser = p.GetModProjectile<LegendEnergyLaser>();
+                    laser.TurnAngle = turnAngle;
+                    laser.Punishment = punishment;
+                    p.netUpdate = true;
+                });
+        }
+    }
+
+    protected override void SendAnomalyExtraAI(BinaryWriter writer)
+    {
+        base.SendAnomalyExtraAI(writer);
+        writer.Write(_LightOrbWavesSpawned);
+        for (int i = 0; i < Main.maxPlayers; i++)
+        {
+            writer.Write(_PlayerBonuses[i].DamageStacks);
+            writer.Write(_PlayerBonuses[i].RegenerationStacks);
+            writer.Write(_PlayerBonuses[i].ExpectsPlatinum);
+        }
+    }
+
+    protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
+    {
+        base.ReceiveAnomalyExtraAI(reader);
+        int wavesSpawned = reader.ReadInt32();
+        LightOrbBonuses[] bonuses = new LightOrbBonuses[Main.maxPlayers];
+        for (int i = 0; i < Main.maxPlayers; i++)
+        {
+            bonuses[i].DamageStacks = reader.ReadInt32();
+            bonuses[i].RegenerationStacks = reader.ReadInt32();
+            bonuses[i].ExpectsPlatinum = reader.ReadBoolean();
+        }
+        bonuses.CopyTo(_PlayerBonuses, 0);
+        _LightOrbWavesSpawned = wavesSpawned;
+    }
 
     public override void SetDefaults()
     {
@@ -31,6 +178,7 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
         Projectile.tileCollide = false;
         Projectile.ignoreWater = true;
         Projectile.netImportant = true;
+        Projectile.hide = true;
         Projectile.timeLeft = 1200;
     }
 
@@ -44,70 +192,30 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
             return;
         }
         int time = head.Phase2MusicElapsedTime;
-        if (time >= SkeletronLegendHead.Mechanic6Data.ExplosionTime(Cycle))
+        Projectile.timeLeft = 100;
+        Projectile.Center = head.Phase2Arena is { } arena ? arena.Projectile.Center
+            : Master.Center + SkeletronLegendHead.Mechanic6Data.SphereOffset(time);
+        Projectile.velocity = Vector2.Zero;
+        if (TONetworkEnvironment.NotClient)
         {
-            if (TONetworkEnvironment.NotClient)
-                Projectile.Kill();
-            return;
-        }
-        if (Projectile.ai[2] == 0f)
-        {
-            Projectile.Center = Master.Center + SkeletronLegendHead.Mechanic6Data.SphereOffset(time, Cycle);
-            Projectile.velocity = Vector2.Zero;
-            if (time >= SkeletronLegendHead.Mechanic6Data.ThrowTime(Cycle) && TONetworkEnvironment.NotClient)
+            for (int i = 0; i < Main.maxPlayers; i++)
             {
-                Projectile.ai[2] = 1f;
-                Projectile.velocity = (head.Target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY)
-                    * SkeletronLegendHead.Mechanic6Data.ThrowSpeed;
+                if (Main.player[i].active || (_PlayerBonuses[i].DamageStacks == 0
+                    && _PlayerBonuses[i].RegenerationStacks == 0 && !_PlayerBonuses[i].ExpectsPlatinum))
+                    continue;
+                _PlayerBonuses[i] = default;
                 Projectile.netUpdate = true;
             }
         }
-        bool collidedWithArena = false;
-        Vector2 flightVelocity = Projectile.velocity;
-        if (Projectile.ai[2] == 2f && head.Phase2Arena is { } restingArena)
+        if (TONetworkEnvironment.NotClient && ShouldSpawnLightOrb(time) && head.Phase2Arena is { } orbArena)
         {
-            Vector2 normal = (Projectile.Center - restingArena.Projectile.Center).SafeNormalize(Vector2.UnitY);
-            float radius = Math.Max(0f, restingArena.Radius - ArenaBoundaryHalfWidth - ContactRadius);
-            Projectile.Center = restingArena.Projectile.Center + normal * radius;
-            Projectile.velocity = Vector2.Zero;
+            SpawnLightOrbWave(orbArena);
         }
-        if (Projectile.ai[2] == 1f && Projectile.velocity != Vector2.Zero)
-        {
-            // 预测下一帧的完整球体边界；高速投掷抵达外圈后停留，仍按音乐节点爆炸。
-            if (head.Phase2Arena is { } arena)
-            {
-                float allowedRadius = Math.Max(0f, arena.Radius - ArenaBoundaryHalfWidth - ContactRadius);
-                Vector2 nextOffset = Projectile.Center + Projectile.velocity - arena.Projectile.Center;
-                if (nextOffset.LengthSquared() > allowedRadius * allowedRadius)
-                {
-                    Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
-                    Vector2 offset = Projectile.Center - arena.Projectile.Center;
-                    float projection = Vector2.Dot(offset, direction);
-                    float distance = -projection + MathF.Sqrt(Math.Max(0f,
-                        projection * projection + allowedRadius * allowedRadius - offset.LengthSquared()));
-                    Projectile.Center += direction * MathHelper.Clamp(distance, 0f, Projectile.velocity.Length());
-                    // 将圆心归一到精确内切圆，消除浮点误差、网络修正造成的越界或缝隙。
-                    Vector2 normal = (Projectile.Center - arena.Projectile.Center).SafeNormalize(direction);
-                    Projectile.Center = arena.Projectile.Center + normal * allowedRadius;
-                    Projectile.velocity = Vector2.Zero;
-                    collidedWithArena = true;
-                    if (TONetworkEnvironment.NotClient)
-                    {
-                        Projectile.ai[2] = 2f;
-                        Projectile.netUpdate = true;
-                    }
-                }
-            }
-            else
-            {
-                // 场地引用尚未恢复时暂停移动，避免无边界约束地继续飞行。
-                Projectile.velocity = Vector2.Zero;
-                if (TONetworkEnvironment.NotClient)
-                    Projectile.netUpdate = true;
-            }
-        }
+        if (TONetworkEnvironment.NotClient && ShouldSpawnLaser(time))
+            SpawnLasers(LaserCount);
         if (Main.dedServ)
             return;
+        _LightOrbTrails?.Update();
         Lighting.AddLight(Projectile.Center, LegendaryNightHandler.StarColor.ToVector3() * 1.5f);
         if (!_SoundStarted)
         {
@@ -117,127 +225,97 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
         if (SoundEngine.TryGetActiveSound(_ChargeSoundSlot, out ActiveSound activeSound))
         {
             activeSound.Position = Projectile.Center;
-            activeSound.Volume = 0.15f + 0.5f * SkeletronLegendHead.Mechanic6Data.ChargeProgress(time, Cycle);
+            activeSound.Volume = 0.15f + 0.5f * SkeletronLegendHead.Mechanic6Data.ChargeProgress(time);
         }
-        if (Projectile.ai[2] >= 1f)
+        const int AbsorptionParticleCount = 10;
+        for (int i = 0; i < AbsorptionParticleCount; i++)
         {
-            if (flightVelocity.LengthSquared() > 1f)
-                EmitFlightParticles(flightVelocity);
-            if (head.Phase2Arena is { } contactArena)
-            {
-                Vector2 offset = Projectile.Center - contactArena.Projectile.Center;
-                float contactRadius = Math.Max(0f, contactArena.Radius - ArenaBoundaryHalfWidth - ContactRadius);
-                // 停止后仍按几何位置持续检测接触，不依赖只发生一次的撞击分支。
-                if (offset.LengthSquared() >= Math.Max(0f, contactRadius - 2f) * Math.Max(0f, contactRadius - 2f))
-                    EmitContactParticles(contactArena, offset.SafeNormalize(Vector2.UnitY), collidedWithArena);
-            }
-        }
-        if (Projectile.ai[2] == 0f)
-        {
-            foreach (NPC hand in NPC.ActiveNPCs)
-            {
-                if (hand.type != NPCID.SkeletronHand || (int)hand.ai[1] != (int)Projectile.ai[0] - 1)
-                    continue;
-                for (int i = 0; i < 2; i++)
-                {
-                    Vector2 origin = hand.Center + Main.rand.NextVector2Circular(16f, 16f);
-                    ParticleHandler.SpawnParticle(new LegendaryNightStellarMatterParticle(Projectile, origin,
-                        Main.rand.NextFloat(0.25f, 0.5f), Main.rand.Next(18, 31)));
-                }
-            }
+            // 起点覆盖整圈并位于球面之外，沿直线快速汇聚为星光能量。
+            float angle = MathHelper.TwoPi * (i + Main.rand.NextFloat()) / AbsorptionParticleCount;
+            float distance = SphereRadius + Main.rand.NextFloat(100f, 260f);
+            Vector2 origin = Projectile.Center + angle.ToRotationVector2() * distance;
+            ParticleHandler.SpawnParticle(new LegendaryNightStellarMatterParticle(Projectile, origin,
+                Main.rand.NextFloat(0.3f, 0.6f), Main.rand.Next(12, 21)));
         }
 
-        void EmitFlightParticles(Vector2 velocity)
+        void SpawnLightOrbWave(LegendaryNightPhase2Arena arena)
         {
-            Vector2 backward = -velocity.SafeNormalize(Vector2.UnitY);
-            for (int i = 0; i < 6; i++)
+            int wave = (time - LightOrbFirstMusicTime) / LightOrbInterval;
+            if (wave < _LightOrbWavesSpawned)
+                return;
+            if (wave == 0)
+                TOLocalizationUtils.ChatLocalizedText(AnomalySharedData.ModLocalizationPrefix
+                    + LegendaryNightHandler.LocalizationCategory + ".InterceptStarPower", LegendaryNightHandler.StarColor);
+            int[] colors = CreateLightOrbColors(wave);
+            for (int i = colors.Length - 1; i > 0; i--)
             {
-                // 沿球体后半部喷出，生成点位于表面之外，不被不透明球体遮住。
-                Vector2 direction = backward.RotatedBy(Main.rand.NextFloat(-1.4f, 1.4f));
-                Vector2 position = Projectile.Center + direction * (SphereRadius + Main.rand.NextFloat(8f, 22f));
-                Vector2 particleVelocity = direction * Main.rand.NextFloat(3f, 8f) + velocity * 0.12f;
-                Color color = Color.Lerp(Color.Orange, Color.LightGoldenrodYellow, Main.rand.NextFloat());
-                if (i < 2)
-                    ParticleHandler.SpawnParticle(new GenericSparkle(position, particleVelocity, color,
-                        LegendaryNightHandler.StarColor, Main.rand.NextFloat(0.3f, 0.6f), Main.rand.Next(20, 34), 0.04f, 1.5f));
-                else
-                    ParticleHandler.SpawnParticle(new OrbParticle(position, particleVelocity, Main.rand.Next(18, 30),
-                        Main.rand.NextFloat(0.3f, 0.65f), color, lifeEndRatio: 0.1f));
+                int other = Main.rand.Next(i + 1);
+                (colors[i], colors[other]) = (colors[other], colors[i]);
             }
-        }
-
-        void EmitContactParticles(LegendaryNightPhase2Arena arena, Vector2 normal, bool impact)
-        {
-            Vector2 contact = arena.Projectile.Center + normal * (arena.Radius - ArenaBoundaryHalfWidth);
-            Vector2 tangent = new(-normal.Y, normal.X);
-            Lighting.AddLight(contact, new Vector3(1.4f, 0.55f, 0.08f));
-            int count = impact ? 24 : 6;
-            for (int i = 0; i < count; i++)
+            for (int sector = 0; sector < LightOrbWaveSize; sector++)
             {
-                float side = i % 2 == 0 ? -1f : 1f;
-                Vector2 position = contact + tangent * Main.rand.NextFloat(-10f, 10f);
-                Vector2 velocity = tangent * (side * Main.rand.NextFloat(5f, impact ? 22f : 14f))
-                    + normal * Main.rand.NextFloat(0.5f, 3f);
-                Color color = Color.Lerp(new Color(255, 85, 12), Color.LightGoldenrodYellow, Main.rand.NextFloat());
-                ParticleHandler.SpawnParticle(new PointingParticle(position, velocity, true,
-                    Main.rand.Next(16, 30), Main.rand.NextFloat(0.35f, 0.75f), color));
-                if (i % 3 == 0)
-                    ParticleHandler.SpawnParticle(new OrbParticle(position, velocity * 0.4f, Main.rand.Next(12, 22),
-                        Main.rand.NextFloat(0.35f, 0.7f), Color.OrangeRed, lifeEndRatio: 0.1f));
+                float angle = GetLightOrbAngle(sector, Main.rand.NextFloat());
+                int color = colors[sector];
+                int lifetime = Main.rand.Next(GetLightOrbLifetime(wave, 0f), GetLightOrbLifetime(wave, 1f) + 1);
+                Projectile.NewProjectileAction<LegendLightOrb>(SourceAI,
+                    arena.Projectile.Center + angle.ToRotationVector2() * arena.Radius, Vector2.Zero, 0, 0f,
+                    action: p =>
+                    {
+                        p.ai[0] = color;
+                        p.ai[1] = time;
+                        p.ai[2] = angle;
+                        LegendLightOrb orb = p.GetModProjectile<LegendLightOrb>();
+                        orb.SphereProjectile = Projectile;
+                        orb.SpawnRadius = arena.Radius;
+                        orb.TravelDuration = lifetime;
+                        p.scale = 0f;
+                        p.Opacity = 0f;
+                        p.netUpdate = true;
+                    });
             }
-            if (impact)
-                ParticleHandler.SpawnParticle(new BloomParticle(contact, Vector2.Zero, Color.Orange,
-                    0.2f, 0.8f, 12, lifeEndRatio: 0.1f));
+            _LightOrbWavesSpawned = wave + 1;
+            Projectile.netUpdate = true;
         }
     }
 
-    public override bool CanHitPlayer(Player target) => Projectile.ai[2] >= 1f;
+    public override bool CanHitPlayer(Player target) => false;
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(Projectile.Center, SphereRadius).Collides(targetHitbox);
 
     public override void OnKill(int timeLeft)
     {
+        _LightOrbTrails?.Clear();
+        _LightOrbTrails = null;
         if (!Main.dedServ && _SoundStarted && SoundEngine.TryGetActiveSound(_ChargeSoundSlot, out ActiveSound sound))
             sound.Stop();
-        SkeletronLegendHead head = Head;
-        // 清场或主人退场时不爆出弹幕；仅音乐指定的爆炸节点产生伤害。
-        if (head is not { Mechanic6Active: true } || head.CurrentBaseBehavior == SkeletronLegendHead.BaseBehavior.Despawn
-            || head.Phase2MusicElapsedTime < SkeletronLegendHead.Mechanic6Data.ExplosionTime(Cycle))
-            return;
-        if (!Main.dedServ)
-        {
-            SoundEngine.PlaySound(Meteor.ExplosionSound, Projectile.Center);
-            LegendaryNightHandler.SpawnBlessingBurst(Projectile.Center);
-        }
-        if (!TONetworkEnvironment.NotClient)
-            return;
-        int count = SkeletronLegendHead.Mechanic6Data.StarCount(Cycle);
-        // 与 Meteor 一样按隔点相连的五条边插值速度，扩散后形成五角星。
-        Vector2 aim = (head.Target.Center - Projectile.Center).SafeNormalize(-Vector2.UnitY) * 16f;
-        for (int i = 0; i < count; i++)
-        {
-            float edge = i * 5f / count;
-            int vertex = (int)edge;
-            Vector2 velocity = Vector2.Lerp(aim.RotatedBy(TOMathUtils.PiOver5 * 4f * vertex),
-                aim.RotatedBy(TOMathUtils.PiOver5 * 4f * (vertex + 1)), edge - vertex);
-            Projectile.NewProjectileAction<FallingStar>(Projectile.GetSource_Death(), Projectile.Center, velocity,
-                SkeletronLegendHead.FallingStarDamage, 0f, action: p =>
-                {
-                    p.ai[2] = Projectile.ai[0];
-                    p.scale = 0.2f;
-                    p.Resize(16, 16);
-                    FallingStar star = p.GetModProjectile<FallingStar>();
-                    star.TrailType = 2;
-                    star.AccelerationStartTime = 90;
-                    p.netUpdate = true;
-                });
-        }
     }
 
-    public override bool PreDraw(ref Color lightColor)
+    internal void SpawnLightOrbTrailParticle(GenericSparkle particle)
+    {
+        if (!Main.dedServ)
+            (_LightOrbTrails ??= new LightOrbTrailSet()).TrySpawnParticle(particle);
+    }
+
+    internal void DrawLightOrbTrails(SpriteBatch spriteBatch)
+    {
+        if (Main.dedServ || _LightOrbTrails is null || _LightOrbTrails.Particles.Count == 0)
+            return;
+        // 全局粒子早于竞技场覆盖层绘制；尾迹在球面之后单独加亮，避免被雾幕和球面遮挡。
+        spriteBatch.End();
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp,
+            DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+        _LightOrbTrails.DrawSet(Vector2.Zero);
+        spriteBatch.End();
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
+            DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+    }
+
+    public override bool PreDraw(ref Color lightColor) => false;
+
+    // 由竞技场在同一个绘制入口中按球面、小球、星核的顺序调用。
+    internal void DrawBody(SpriteBatch spriteBatch)
     {
         if (Main.dedServ || SphereRadius <= 0f)
-            return false;
-        SpriteBatch spriteBatch = Main.spriteBatch;
+            return;
         Vector2 center = Projectile.Center - Main.screenPosition;
         Texture2D bloom = ParticleHandler.GetTexture<BloomParticle>();
         spriteBatch.DrawFromCenter(bloom, center, null, new Color(255, 190, 20, 0) * 0.16f,
@@ -257,10 +335,12 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp,
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-            Effect effect = shader.Asset.Value;
-            effect.Parameters["globalTime"].SetValue((float)Main.timeForVisualEffects / 60f);
-            effect.Parameters["nebulaNoiseTexture"].SetValue(AnomalyTextures.Noise.Perlin2);
-            effect.CurrentTechnique.Passes["Pass0"].Apply();
+            shader.Data.SetCustomParameter("uGlobalTime", (float)Main.timeForVisualEffects / 60f)
+                .SetCustomParameter("uNebulaNoiseTexture", AnomalyTextures.Noise.Perlin2)
+                .SetCustomParameter("uGoldColor", GoldColor)
+                .SetCustomParameter("uStarlightColor", StarlightColor)
+                .SetCustomParameter("uCoreFlash", CoreFlash)
+                .Apply();
             Texture2D pixel = TOTextures.FillerTexture;
             spriteBatch.DrawFromCenter(pixel, center, null, Color.White, scale: SphereRadius * 4f / pixel.Width);
             spriteBatch.End();
@@ -283,6 +363,42 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
                     (4f + 4f * twinkle) / sparkle.Width);
             }
         }
-        return false;
+    }
+
+    internal void DrawCore(SpriteBatch spriteBatch)
+    {
+        if (Main.dedServ || SphereRadius <= 0f)
+            return;
+        Vector2 center = Projectile.Center - Main.screenPosition;
+        float flash = CoreFlash;
+        AnomalyEffects.MiscShaderContainer shader = AnomalyClientConfig.Instance.EnableShaders
+            ? AnomalyEffects.Overlays.LegendEnergySphere : null;
+        if (shader is null)
+        {
+            Texture2D bloom = ParticleHandler.GetTexture<BloomParticle>();
+            Texture2D sparkle = ParticleHandler.GetTexture<GenericSparkle>();
+            float pulse = 1f + 0.08f * MathF.Sin((float)Main.timeForVisualEffects * 0.15f);
+            float coreSize = SphereRadius * (1f + flash * 0.65f) * pulse;
+            spriteBatch.DrawFromCenter(bloom, center, null, new Color(255, 235, 160, 0) * (0.8f + flash),
+                scale: coreSize * 0.8f / bloom.Width);
+            spriteBatch.DrawFromCenter(sparkle, center, null, new Color(255, 250, 220, 0) * (1f + flash),
+                (float)Main.timeForVisualEffects * 0.005f, coreSize * 0.65f / sparkle.Width);
+            return;
+        }
+        spriteBatch.End();
+        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp,
+            DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+        shader.Data.SetCustomParameter("uGlobalTime", (float)Main.timeForVisualEffects / 60f)
+            .SetCustomParameter("uNebulaNoiseTexture", AnomalyTextures.Noise.Perlin2)
+            .SetCustomParameter("uGoldColor", GoldColor)
+            .SetCustomParameter("uStarlightColor", StarlightColor)
+            .SetCustomParameter("uCoreFlash", flash)
+            .Apply();
+        shader.Asset.Value.CurrentTechnique.Passes["Core"].Apply();
+        Texture2D pixel = TOTextures.FillerTexture;
+        spriteBatch.DrawFromCenter(pixel, center, null, Color.White, scale: SphereRadius * 4f / pixel.Width);
+        spriteBatch.End();
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
+            DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
     }
 }

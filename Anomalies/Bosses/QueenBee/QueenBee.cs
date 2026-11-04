@@ -5,6 +5,8 @@ namespace Anomalies.Bosses.QueenBee;
 
 public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.QueenBee;
+
     #region 数据
     public enum Phase : byte
     {
@@ -392,9 +394,14 @@ public sealed partial class QueenBee : AnomalyNPCBehavior<QueenBee>
             modifiers.SetMaxDamage((int)(NPC.life - NPC.lifeMax * Phase2LifeRatio + 1));
     }
 
+    public override void Load() => BossDeathEffectRegistry.Register(NPCID.QueenBee,
+        npc => GetInstance(npc) is { ShouldProcess: true, DeathLocked: true });
+
+    public bool DeathLocked => Ultra && !Phase2 && !NPC.downedQueenBee;
+
     public override bool CheckDead()
     {
-        if (Ultra && !Phase2 && !NPC.downedQueenBee)
+        if (DeathLocked)
         {
             NPC.life = 1;
             NPC.active = true;

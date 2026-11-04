@@ -2,6 +2,8 @@ namespace Anomalies.Bosses.EyeofCthulhu;
 
 public sealed class BloodShot : AnomalyProjectileBehavior<BloodShot>
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.EyeofCthulhu;
+
     public override int ApplyingType => ProjectileID.BloodShot;
 
     public override bool AllowCalamityLogic(CalamityLogicType_ProjectileBehavior type) => type switch

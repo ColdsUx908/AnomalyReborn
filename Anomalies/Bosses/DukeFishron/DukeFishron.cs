@@ -2,6 +2,8 @@ namespace Anomalies.Bosses.DukeFishron;
 
 public sealed partial class DukeFishron : AnomalyNPCBehavior<DukeFishron>
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.DukeFishron;
+
     public enum Phase : byte
     {
         Initialize = 0,

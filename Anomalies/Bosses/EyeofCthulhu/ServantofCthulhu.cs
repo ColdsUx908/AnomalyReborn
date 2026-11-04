@@ -4,6 +4,8 @@ namespace Anomalies.Bosses.EyeofCthulhu;
 
 public sealed class ServantofCthulhu : AnomalyNPCBehavior<ServantofCthulhu>
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.EyeofCthulhu;
+
     public override int ApplyingType => NPCID.ServantofCthulhu;
 
     public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => type switch

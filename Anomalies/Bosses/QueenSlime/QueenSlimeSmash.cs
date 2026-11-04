@@ -2,6 +2,8 @@ namespace Anomalies.Bosses.QueenSlime;
 
 public sealed class QueenSlimeSmash : AnomalyProjectileBehavior<QueenSlimeSmash>
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.QueenSlime;
+
     public override int ApplyingType => ProjectileID.QueenSlimeSmash;
 
     public override bool AllowCalamityLogic(CalamityLogicType_ProjectileBehavior type) => type switch

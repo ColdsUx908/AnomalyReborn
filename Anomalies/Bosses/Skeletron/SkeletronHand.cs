@@ -8,7 +8,7 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
 
     public override int ApplyingType => NPCID.SkeletronHand;
 
-    public override bool ShouldProcess => base.ShouldProcess && AnomalyNPC.CustomAIType != 1;
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.Skeletron && AnomalyNPC.CustomAIType != 1;
 
     public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => type switch
     {

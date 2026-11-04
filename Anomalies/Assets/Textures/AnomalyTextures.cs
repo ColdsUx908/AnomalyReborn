@@ -123,6 +123,10 @@ public sealed class AnomalyTextures
         [LoadTexture(Path + "Wave")]
         internal static Asset<Texture2D> _Wave;
         public static Texture2D Wave => _Wave?.Value;
+
+        [LoadTexture(Path + "Wave2")]
+        internal static Asset<Texture2D> _Wave2;
+        public static Texture2D Wave2 => _Wave2?.Value;
     }
 
     public static class Touhou

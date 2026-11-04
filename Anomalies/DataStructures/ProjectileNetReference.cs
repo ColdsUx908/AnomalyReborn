@@ -1,7 +1,8 @@
 namespace Anomalies.DataStructures;
 
 /// <summary>
-/// 弹幕槽位 whoAmI 是本地索引；跨端引用必须使用 owner + identity。
+/// 弹幕引用（可参与网络同步）。
+/// 因为弹幕槽位 whoAmI 是本地索引，所以跨端引用必须使用 owner + identity。
 /// </summary>
 public struct ProjectileNetReference
 {
@@ -10,11 +11,13 @@ public struct ProjectileNetReference
     private int _LocalIndex;
     private bool _HasValue;
 
-    /// <summary>获取可存入 AnomalyAI64 的引用值；高、低 32 位分别保存加一后的所有者和标识，零表示空引用。</summary>
+    /// <summary>
+    /// 获取可存入 AnomalyAI64 的引用值；高、低 32 位分别保存加一后的所有者和标识，零表示空引用。
+    /// </summary>
     public readonly long PackedValue => _HasValue ? (long)(((ulong)(uint)(_Owner + 1) << 32) | ((uint)_Identity + 1u)) : 0L;
 
     /// <summary>从打包值更新引用；值改变时清除旧的本地槽位缓存。</summary>
-    /// <param name="value">由 <see cref="PackedValue"/> 获取的引用值，或表示空引用的零。</param>
+    /// <param name="Value">由 <see cref="PackedValue"/> 获取的引用值，或表示空引用的零。</param>
     /// <exception cref="InvalidDataException">所有者或弹幕标识无效。</exception>
     public void SetPackedValue(long value)
     {

@@ -12,7 +12,7 @@ internal sealed class EaterPortalAssets : ModSystem
         if (Main.dedServ)
             return;
         foreach (string name in new[] { "CrackedGlass_Glowing", "PlasmaExplosion",
-            "ShineExplosion1", "ShineExplosion2" })
+            "RiftStar", "ShineExplosion1", "ShineExplosion2" })
             _Textures.Add(Path + name, Mod.Assets.Request<Texture2D>("Bosses/EaterofWorlds/Portal/" + name));
     }
 

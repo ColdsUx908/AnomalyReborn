@@ -37,7 +37,7 @@ public sealed class LegendaryNightOverlay : CustomOverlay
 
     public override void Draw(SpriteBatch spriteBatch, RenderLayers layer, bool beginSpriteBatch)
     {
-        if (Main.gameMenu || layer != RenderLayers.All)
+        if (Main.gameMenu || Main.dedServ || layer != RenderLayers.All)
             return;
 
         bool phase2 = Phase2Arena is not null && Phase2Arena.Projectile.active;
@@ -111,7 +111,12 @@ public sealed class LegendaryNightOverlay : CustomOverlay
         spriteBatch.End();
 
         if (phase2)
+        {
+            // Composite the gold edge above the original outside mist, below warnings and boundary lines.
+            DrawArenaEdge(spriteBatch);
             DrawMagicCircle(spriteBatch);
+            Phase2Arena.DrawEnergySpheres(spriteBatch);
+        }
         else
             DrawBoundary(spriteBatch);
     }
@@ -148,6 +153,7 @@ public sealed class LegendaryNightOverlay : CustomOverlay
 
     private void DrawMagicCircle(SpriteBatch spriteBatch)
     {
+        DrawMechanic6ContractionWarning(spriteBatch);
         DrawStarburst(spriteBatch);
         DrawMechanic2HalfField(spriteBatch);
         float intensity = Phase2Arena.MaterializationIntensity;
@@ -191,6 +197,79 @@ public sealed class LegendaryNightOverlay : CustomOverlay
             DrawMagicCirclePart(spriteBatch, center, radius, rotation, true, i);
         }
         DrawMagicCirclePart(spriteBatch, Phase2Arena.Projectile.Center, Phase2Arena.Radius, 0f, false);
+    }
+
+    private void DrawArenaEdge(SpriteBatch spriteBatch)
+    {
+        const int FadeInDuration = 60;
+        SkeletronLegendHead head = Phase2Arena.MasterBehavior;
+        if (head is null || !head.Mechanic6Active
+            || !AnomalyClientConfig.Instance.EnableShaders
+            || AnomalyEffects.Overlays.LegendaryNightArenaEdge is not { } shader
+            || AnomalyTextures.Noise._Wave2 is not { IsLoaded: true } noise)
+            return;
+        int age = head.Phase2MusicElapsedTime - SkeletronLegendHead.Mechanic6Data.StartMusicTime;
+        float opacity = Phase2Arena.Intensity * MathHelper.SmoothStep(0f, 1f,
+            MathHelper.Clamp(age / (float)FadeInDuration, 0f, 1f));
+        if (opacity <= 0f)
+            return;
+
+        // World pixels keep the boundary and noise scale independent of zoom and aspect ratio.
+        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearWrap,
+            DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
+        shader.Data
+            .UseImage1(noise)
+            .SetCustomParameter("uScreenPosition", Main.screenPosition)
+            .SetCustomParameter("uInverseViewMatrix", Matrix.Invert(Main.GameViewMatrix.TransformationMatrix))
+            .SetCustomParameter("uCenter", Phase2Arena.Projectile.Center)
+            .SetCustomParameter("uRadius", Phase2Arena.Radius)
+            .SetCustomParameter("uFlowTime", age / 60f)
+            .UseColor(LegendaryNightHandler.StarColor)
+            .UseOpacity(opacity)
+            .Apply();
+        Main.instance.GraphicsDevice.SamplerStates[1] = SamplerState.LinearWrap;
+        spriteBatch.Draw(TOTextures.FillerTexture, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White);
+        spriteBatch.End();
+    }
+
+    private void DrawMechanic6ContractionWarning(SpriteBatch spriteBatch)
+    {
+        SkeletronLegendHead head = Phase2Arena.MasterBehavior;
+        if (head is not { Mechanic6Active: true })
+            return;
+        int time = head.Phase2MusicElapsedTime;
+        int age = time - SkeletronLegendHead.Mechanic6Data.StartMusicTime;
+        if (age < 0 || time >= SkeletronLegendHead.Mechanic6Data.ExpandMusicTime)
+            return;
+        float innerRadius = SkeletronLegendHead.Mechanic6Data.ArenaTargetRadius;
+        float outerRadius = Phase2Arena.Radius;
+        if (outerRadius <= innerRadius)
+            return;
+
+        // 与金币审判共用红色预警的淡入和透明度；遮罩只覆盖收缩将扫过的圆环。
+        float opacity = CoinJudgment.GetWarningOverlayOpacity(
+            CoinJudgment.WarningDuration - CoinJudgment.DangerWarningDuration + age);
+        if (opacity <= 0f)
+            return;
+        Texture2D circle = AnomalyTextures.Extra.BasicCircleLarge;
+        Vector2 center = Phase2Arena.Projectile.Center - Main.screenPosition;
+        using RenderTargetLease lease = RenderTargetPool.Shared.Rent(
+            Main.instance.GraphicsDevice, Main.screenWidth, Main.screenHeight, RenderTargetDescriptor.Default);
+        using (lease.Scope(clearColor: Color.Transparent))
+        {
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            spriteBatch.DrawFromCenter(circle, center, null, Color.White, scale: outerRadius * 2f / circle.Width);
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, TODrawUtils.EraseBlend, SamplerState.LinearClamp,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            spriteBatch.DrawFromCenter(circle, center, null, Color.White, scale: innerRadius * 2f / circle.Width);
+            spriteBatch.End();
+        }
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
+            DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
+        spriteBatch.Draw(lease.Target, Vector2.Zero, new Color(255, 120, 120) * opacity);
+        spriteBatch.End();
     }
 
     private void DrawMagicCirclePart(SpriteBatch spriteBatch, Vector2 worldCenter, float radius, float rotation, bool drawStar, int circleIndex = 0)

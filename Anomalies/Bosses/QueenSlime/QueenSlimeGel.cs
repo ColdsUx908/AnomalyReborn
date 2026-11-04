@@ -3,6 +3,8 @@ namespace Anomalies.Bosses.QueenSlime;
 
 public sealed class QueenSlimeGel : AnomalyProjectileBehavior<QueenSlimeGel>
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.QueenSlime;
+
     public int BehaviorType
     {
         get => (int)Projectile.ai[1];

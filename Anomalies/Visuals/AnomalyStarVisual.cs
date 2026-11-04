@@ -1,11 +1,15 @@
 namespace Anomalies.Visuals;
 
 /// <summary>
-/// 由外部持续递增强度启用的背景星光；无人启用时自行淡出。
+/// 异象模式开启后短暂启用、或由外部持续递增强度启用的背景星光；无人启用时自行淡出。
 /// </summary>
 public sealed class AnomalyStarVisual : ModSystem
 {
     private const float FadeOutStep = 1f / 60f;
+    private const int ActivationDuration = 3 * 60;
+
+    private bool _WasAnomalyActive;
+    private int _ActivationTimer;
 
     public static float Intensity
     {
@@ -24,9 +28,32 @@ public sealed class AnomalyStarVisual : ModSystem
         Intensity = 0f;
     }
 
-    public override void PostUpdateEverything() => Intensity -= FadeOutStep;
-    public override void OnWorldLoad() => Intensity = 0f;
-    public override void OnWorldUnload() => Intensity = 0f;
+    public override void PostUpdateEverything()
+    {
+        bool anomalyActive = AnomalySharedData.Anomaly;
+        if (anomalyActive && !_WasAnomalyActive)
+            _ActivationTimer = ActivationDuration;
+        _WasAnomalyActive = anomalyActive;
+        if (!anomalyActive)
+            _ActivationTimer = 0;
+
+        if (_ActivationTimer > 0)
+        {
+            _ActivationTimer--;
+            if (!Main.dedServ)
+                Intensity += 1f / 30f;
+        }
+        Intensity -= FadeOutStep;
+    }
+    public override void OnWorldLoad() => ResetState();
+    public override void OnWorldUnload() => ResetState();
+
+    private void ResetState()
+    {
+        Intensity = 0f;
+        _WasAnomalyActive = AnomalySharedData.Anomaly;
+        _ActivationTimer = 0;
+    }
 
     private static void DrawBackgroundStar(On_Main.orig_DrawStarsInBackground orig, Main self, Main.SceneArea sceneArea, bool artificial)
     {

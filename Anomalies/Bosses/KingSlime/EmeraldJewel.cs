@@ -205,7 +205,7 @@ public sealed class EmeraldJewel : JewelNPC
 
     public override bool CheckDead()
     {
-        if (Ultra && !MasterDead)
+        if (DeathLocked)
         {
             NPC.life = 1;
             NPC.active = true;

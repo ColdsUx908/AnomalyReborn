@@ -2,6 +2,8 @@ namespace Anomalies.Bosses.QueenSlime;
 
 public sealed class QueenSlimeMinionBlue : AnomalyNPCBehavior<QueenSlimeMinionBlue>
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.QueenSlime;
+
     private static readonly ProjectileDamageContainer _SpikeDamage = new(30, 64, 90, 120, 90, 120);
     public static int SpikeDamage => _SpikeDamage.Value;
 
@@ -199,6 +201,8 @@ public sealed class QueenSlimeMinionBlue : AnomalyNPCBehavior<QueenSlimeMinionBl
 
 public sealed class QueenSlimeMinionPink : AnomalyNPCBehavior<QueenSlimeMinionPink>
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.QueenSlime;
+
     private static readonly ProjectileDamageContainer _SmallGelDamage = new(30, 64, 90, 120, 90, 120);
     public static int SmallGelDamage => _SmallGelDamage.Value;
 
@@ -371,6 +375,8 @@ public sealed class QueenSlimeMinionPink : AnomalyNPCBehavior<QueenSlimeMinionPi
 
 public sealed class QueenSlimeMinionPurple : AnomalyNPCBehavior<QueenSlimeMinionPurple>
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.QueenSlime;
+
     public override int ApplyingType => NPCID.QueenSlimeMinionPurple;
 
     public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior type) => type switch

@@ -123,12 +123,12 @@ public sealed class EaterDistortionSystem : ModSystem
             DrawDistortionForeground();
         Effect shader = edge.Asset.Value;
         Vector2 screenSize = new(Main.screenWidth, Main.screenHeight);
-        shader.Parameters["screenSize"].SetValue(screenSize);
-        shader.Parameters["layerSize"].SetValue(screenSize);
-        shader.Parameters["layerOffset"].SetValue(Vector2.Zero);
-        shader.Parameters["singleFrameScreenOffset"].SetValue(Vector2.Zero);
-        shader.Parameters["layerColor"].SetValue(Vector4.One);
-        shader.Parameters["edgeColor"].SetValue(new Color(136, 26, 186).ToVector4());
+        shader.Parameters["uScreenSize"].SetValue(screenSize);
+        shader.Parameters["uLayerSize"].SetValue(screenSize);
+        shader.Parameters["uLayerOffset"].SetValue(Vector2.Zero);
+        shader.Parameters["uSingleFrameScreenOffset"].SetValue(Vector2.Zero);
+        shader.Parameters["uLayerColor"].SetValue(Vector4.One);
+        shader.Parameters["uEdgeColor"].SetValue(new Color(136, 26, 186).ToVector4());
         device.Textures[1] = contents.Target;
         device.SamplerStates[1] = SamplerState.LinearWrap;
         batch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp,
@@ -214,22 +214,22 @@ public sealed class EaterDistortionSystem : ModSystem
         Texture2D distortionTexture = AnomalyTextures.Noise.Melt2;
         Texture2D erosionTexture = AnomalyTextures.Noise.Pebble;
 
-        windsShader.Parameters["time"].SetValue(Main.GlobalTimeWrappedHourly * 1.075f);
-        windsShader.Parameters["overallOpacity"].SetValue(0.8f);
-        windsShader.Parameters["distortionStrength"].SetValue(0.3f);
-        windsShader.Parameters["mainNoiseTextureScale"].SetValue(1.6f);
-        windsShader.Parameters["distortionTextureScale"].SetValue(1.76f);
-        windsShader.Parameters["erosionTextureScale"].SetValue(2f);
-        windsShader.Parameters["erosionMin"].SetValue(0.5f);
-        windsShader.Parameters["gradientPrecision"].SetValue(20f);
+        windsShader.Parameters["uTime"].SetValue(Main.GlobalTimeWrappedHourly * 1.075f);
+        windsShader.Parameters["uOverallOpacity"].SetValue(0.8f);
+        windsShader.Parameters["uDistortionStrength"].SetValue(0.3f);
+        windsShader.Parameters["uMainNoiseTextureScale"].SetValue(1.6f);
+        windsShader.Parameters["uDistortionTextureScale"].SetValue(1.76f);
+        windsShader.Parameters["uErosionTextureScale"].SetValue(2f);
+        windsShader.Parameters["uErosionMin"].SetValue(0.5f);
+        windsShader.Parameters["uGradientPrecision"].SetValue(20f);
 
-        windsShader.Parameters["aspectRatioCorrection"].SetValue(screenSize.X / screenSize.Y / (16f / 9f));
-        windsShader.Parameters["pixelationFactor"].SetValue(screenSize * 0.5f);
-        windsShader.Parameters["worldOffset"].SetValue(Main.screenPosition / windsTexture.Size() * 0.025f);
+        windsShader.Parameters["uAspectRatioCorrection"].SetValue(screenSize.X / screenSize.Y / (16f / 9f));
+        windsShader.Parameters["uPixelationFactor"].SetValue(screenSize * 0.5f);
+        windsShader.Parameters["uWorldOffset"].SetValue(Main.screenPosition / windsTexture.Size() * 0.025f);
 
-        windsShader.Parameters["darkerPixelColor"].SetValue(Color.Lerp(Color.DarkGray, Color.Black, 0.64f).ToVector3());
-        windsShader.Parameters["brighterPixelColor"].SetValue(Color.Lerp(Color.DarkGray, Color.Black, 0.32f).ToVector3());
-        windsShader.Parameters["highlightsColor"].SetValue(Color.Fuchsia.ToVector3());
+        windsShader.Parameters["uDarkerPixelColor"].SetValue(Color.Lerp(Color.DarkGray, Color.Black, 0.64f).ToVector3());
+        windsShader.Parameters["uBrighterPixelColor"].SetValue(Color.Lerp(Color.DarkGray, Color.Black, 0.32f).ToVector3());
+        windsShader.Parameters["uHighlightsColor"].SetValue(Color.Fuchsia.ToVector3());
 
         Main.instance.GraphicsDevice.Textures[1] = highlightsTexture;
         Main.instance.GraphicsDevice.SamplerStates[1] = SamplerState.PointWrap;
@@ -244,14 +244,14 @@ public sealed class EaterDistortionSystem : ModSystem
         windsShader.CurrentTechnique.Passes["Pass0"].Apply();
         Main.spriteBatch.Draw(windsTexture, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White);
 
-        windsShader.Parameters["time"].SetValue(Main.GlobalTimeWrappedHourly * 0.8f);
-        windsShader.Parameters["overallOpacity"].SetValue(0.7f);
-        windsShader.Parameters["distortionStrength"].SetValue(0.6f);
-        windsShader.Parameters["mainNoiseTextureScale"].SetValue(1.24f);
-        windsShader.Parameters["distortionTextureScale"].SetValue(0.46f);
-        windsShader.Parameters["erosionTextureScale"].SetValue(3f);
-        windsShader.Parameters["erosionMin"].SetValue(0.75f);
-        windsShader.Parameters["highlightsColor"].SetValue(new Color(0, 221, 250).ToVector3());
+        windsShader.Parameters["uTime"].SetValue(Main.GlobalTimeWrappedHourly * 0.8f);
+        windsShader.Parameters["uOverallOpacity"].SetValue(0.7f);
+        windsShader.Parameters["uDistortionStrength"].SetValue(0.6f);
+        windsShader.Parameters["uMainNoiseTextureScale"].SetValue(1.24f);
+        windsShader.Parameters["uDistortionTextureScale"].SetValue(0.46f);
+        windsShader.Parameters["uErosionTextureScale"].SetValue(3f);
+        windsShader.Parameters["uErosionMin"].SetValue(0.75f);
+        windsShader.Parameters["uHighlightsColor"].SetValue(new Color(0, 221, 250).ToVector3());
 
         // Cyan highlights.
         windsShader.CurrentTechnique.Passes["Pass0"].Apply();
@@ -266,21 +266,21 @@ public sealed class EaterDistortionSystem : ModSystem
         Vector2 screenSize = new(Main.screenWidth, Main.screenHeight);
         /* Screen UVs keep the original 16:9 scale at any viewport. */
 
-        rollingCloudsShader.Parameters["time"].SetValue(Main.GlobalTimeWrappedHourly * 2f);
-        rollingCloudsShader.Parameters["overallOpacity"].SetValue(1f);
-        rollingCloudsShader.Parameters["distortionStrength"].SetValue(0.12f);
-        rollingCloudsShader.Parameters["mainNoiseTextureScale"].SetValue(1f);
-        rollingCloudsShader.Parameters["distortionTextureScale"].SetValue(0.8f);
-        rollingCloudsShader.Parameters["erosionTextureScale"].SetValue(0.26f);
-        rollingCloudsShader.Parameters["erosionMin"].SetValue(0.06f);
-        rollingCloudsShader.Parameters["gradientPrecision"].SetValue(20f);
+        rollingCloudsShader.Parameters["uTime"].SetValue(Main.GlobalTimeWrappedHourly * 2f);
+        rollingCloudsShader.Parameters["uOverallOpacity"].SetValue(1f);
+        rollingCloudsShader.Parameters["uDistortionStrength"].SetValue(0.12f);
+        rollingCloudsShader.Parameters["uMainNoiseTextureScale"].SetValue(1f);
+        rollingCloudsShader.Parameters["uDistortionTextureScale"].SetValue(0.8f);
+        rollingCloudsShader.Parameters["uErosionTextureScale"].SetValue(0.26f);
+        rollingCloudsShader.Parameters["uErosionMin"].SetValue(0.06f);
+        rollingCloudsShader.Parameters["uGradientPrecision"].SetValue(20f);
 
-        rollingCloudsShader.Parameters["aspectRatioCorrection"].SetValue(screenSize.X / screenSize.Y / (16f / 9f));
-        rollingCloudsShader.Parameters["pixelationFactor"].SetValue(screenSize * 0.5f);
-        rollingCloudsShader.Parameters["worldOffset"].SetValue(Main.screenPosition / cloudsTexture.Size() * 0.025f);
+        rollingCloudsShader.Parameters["uAspectRatioCorrection"].SetValue(screenSize.X / screenSize.Y / (16f / 9f));
+        rollingCloudsShader.Parameters["uPixelationFactor"].SetValue(screenSize * 0.5f);
+        rollingCloudsShader.Parameters["uWorldOffset"].SetValue(Main.screenPosition / cloudsTexture.Size() * 0.025f);
 
-        rollingCloudsShader.Parameters["darkerPixelColor"].SetValue(Color.Lerp(Color.Black, new(0, 221, 250), 0.25f).ToVector3());
-        rollingCloudsShader.Parameters["brighterPixelColor"].SetValue(Color.Lerp(Color.Black, Color.Fuchsia, 0.25f).ToVector3());
+        rollingCloudsShader.Parameters["uDarkerPixelColor"].SetValue(Color.Lerp(Color.Black, new(0, 221, 250), 0.25f).ToVector3());
+        rollingCloudsShader.Parameters["uBrighterPixelColor"].SetValue(Color.Lerp(Color.Black, Color.Fuchsia, 0.25f).ToVector3());
 
         Main.instance.GraphicsDevice.Textures[1] = cloudsTexture;
         Main.instance.GraphicsDevice.SamplerStates[1] = SamplerState.LinearWrap;

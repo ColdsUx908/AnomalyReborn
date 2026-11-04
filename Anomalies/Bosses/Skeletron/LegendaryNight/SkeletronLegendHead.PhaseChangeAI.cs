@@ -83,7 +83,7 @@ public sealed partial class SkeletronLegendHead
 
         if (Timer1 == PhaseChangeShockwaveTime)
         {
-            SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
+            SoundEngine.PlaySound(SoundID.Roar);
             if (TONetworkEnvironment.NotClient)
             {
                 Projectile.NewProjectileAction<LegendShockwave>(SourceAI, NPC.Center, Vector2.Zero, 0, 0f, action: p =>

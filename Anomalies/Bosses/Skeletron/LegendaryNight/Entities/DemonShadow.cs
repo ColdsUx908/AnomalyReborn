@@ -46,10 +46,9 @@ public sealed class DemonShadow : AnomalyModProjectile
         SkeletronLegendHead head = null;
         if (Projectile.ai[2] > 0f)
         {
-            NPC master = NPC.GetNPCFromIndex((int)Projectile.ai[2] - 1);
-            if (!master.active || master.type != NPCID.SkeletronHead || master.Anomaly.CustomAIType != 1
-                || !(HorizontalTracking ? SkeletronLegendHead.GetInstance(master).Phase2DemonShadowActive
-                    : SkeletronLegendHead.GetInstance(master).StarAvatarActive))
+            if (!LegendaryNightHandler.IsLegendaryNightHead((int)Projectile.ai[2], out head, oneBased: true)
+                || !(HorizontalTracking ? head.Phase2DemonShadowActive
+                    : head.StarAvatarActive))
             {
                 // 由服务端确认所属符卡结束，避免生成包早于 NPC 状态包到达时客户端误删。
                 if (TONetworkEnvironment.NotClient)
@@ -57,21 +56,20 @@ public sealed class DemonShadow : AnomalyModProjectile
                 return;
             }
 
-            head = SkeletronLegendHead.GetInstance(master);
-            int targetIndex = master.target + 1;
+            int targetIndex = head.NPC.target + 1;
             if (TargetIndex != targetIndex)
             {
                 TargetIndex = targetIndex;
                 Projectile.netUpdate = true;
             }
             Projectile.timeLeft = 2;
-            Vector2 awayFromTarget = master.GetVelocityTowards(Main.player[master.target], -180f);
+            Vector2 awayFromTarget = head.NPC.GetVelocityTowards(Main.player[head.NPC.target], -180f);
             if (awayFromTarget == Vector2.Zero)
                 awayFromTarget = Vector2.UnitX * 180f;
-            Player trackedPlayer = Main.player[master.target];
+            Player trackedPlayer = Main.player[head.NPC.target];
             Vector2 destination = HorizontalTracking
                 ? trackedPlayer.Center + Vector2.UnitX * 500f
-                : master.Center + awayFromTarget - Vector2.UnitY * 160f;
+                : head.NPC.Center + awayFromTarget - Vector2.UnitY * 160f;
             if (HorizontalTracking)
             {
                 Vector2 desiredVelocity = (destination - Projectile.Center) * 0.06f + trackedPlayer.velocity;

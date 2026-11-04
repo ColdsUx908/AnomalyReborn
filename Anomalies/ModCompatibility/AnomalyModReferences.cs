@@ -1,10 +1,12 @@
 namespace Anomalies.ModCompatibility;
 
-/// <summary>异象自身使用的可选依赖；不向通用框架注册其他模组名称。</summary>
+/// <summary>
+/// 异象自身使用的可选依赖；不向通用框架注册其他模组名称。
+/// </summary>
 public sealed class AnomalyModReferences : ILoadable
 {
     public static ModReference AnomaliesMusic { get => field ??= new("AnomaliesMusic"); private set; }
-    public static ModReference Calamity { get => field ??= new("CalamityMod"); private set; }
+    public static ModReference Calamity { get => field ??= new(CalamityModName); private set; }
 
     /// <summary>在 tML 内容加载时解析可选模组引用，并预先登记本轮清理。</summary>
     /// <param name="mod">由 tML 提供的所属模组。</param>

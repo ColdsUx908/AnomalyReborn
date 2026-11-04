@@ -6,6 +6,8 @@ public sealed partial class AnomalyPlayer
     {
         Debuff_DimensionalRend = false;
         Minion_VacuousBlack = false;
+        LegendaryNight_DamageBonusStacks = 0;
+        LegendaryNight_RegenerationBonusStacks = 0;
         LegendaryNight_StarGodBlessingActive = false;
         LegendaryNight_StarGodBlessingOpacity = 0f;
         Visual_DarknessIntensity = MathHelper.Max(Visual_DarknessIntensity - 0.05f, 0);

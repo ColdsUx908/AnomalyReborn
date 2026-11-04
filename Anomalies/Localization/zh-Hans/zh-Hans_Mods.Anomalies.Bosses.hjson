@@ -58,6 +58,7 @@ Skeletron: {
 	LegendaryNight: {
 		Summon: 传说之夜开始了！
 		AstralBlessing: 神秘的星神之力祝福着你，你获得了无限飞行的能力。
+		InterceptStarPower: 拦截向它飘去的星神之力！
 		SummonFailed: 传说之夜未能开始。它需要一个超凡的夜晚。
 		LegendaryNightRitual.DisplayName: 传说之夜仪式
 		LegendaryNightArena.DisplayName: 传说之夜竞技场
@@ -95,6 +96,8 @@ Skeletron: {
 		LegendaryNightPhase2Arena.DisplayName: 星神法阵
 		// LegendSlimeRain.DisplayName: Legend Slime Rain
 		// LegendEnergySphere.DisplayName: Legend Energy Sphere
+		// LegendEnergyLaser.DisplayName: Legend Energy Laser
+		LegendLightOrb.DisplayName: 星神光球
 	}
 }
 

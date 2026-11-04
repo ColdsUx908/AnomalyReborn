@@ -42,7 +42,7 @@ public sealed class LegendaryNightRitual : AnomalyModProjectile
 
         if (HasFinishedSummoning)
         {
-            if (NPC.TryGetNPCFromIndex(SummonedSkeletronHeadIndex, out NPC skeletronHead) && skeletronHead.active && skeletronHead.type == NPCID.SkeletronHead)
+            if (LegendaryNightHandler.IsLegendaryNightHead(SummonedSkeletronHeadIndex))
             {
             }
             else if (TONetworkEnvironment.NotClient)

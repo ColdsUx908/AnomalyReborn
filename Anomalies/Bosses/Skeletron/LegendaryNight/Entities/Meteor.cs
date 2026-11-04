@@ -73,9 +73,8 @@ public sealed class Meteor : AnomalyModProjectile
 
         if (ReducedAttack && Projectile.ai[2] > 0f)
         {
-            NPC master = NPC.GetNPCFromIndex((int)Projectile.ai[2] - 1);
-            if (!master.active || master.type != NPCID.SkeletronHead || master.Anomaly.CustomAIType != 1
-                || SkeletronLegendHead.GetInstance(master).CurrentPhase != SkeletronLegendHead.Phase.Phase2_1)
+            if (!LegendaryNightHandler.IsLegendaryNightHead((int)Projectile.ai[2], out SkeletronLegendHead head, oneBased: true)
+                || head.CurrentPhase != SkeletronLegendHead.Phase.Phase2_1)
                 return;
         }
 

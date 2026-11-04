@@ -5,6 +5,8 @@ namespace Anomalies.Bosses.KingSlime;
 
 public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocalizationPrefix
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.KingSlime;
+
     protected override int AI32Capacity => 10;
 
     #region 数据
@@ -477,9 +479,20 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
             modifiers.SetMaxDamage((int)(NPC.life - NPC.lifeMax * Phase2LifeRatio + 1));
     }
 
+    public override void Load()
+    {
+        BossDeathEffectRegistry.Register(NPCID.KingSlime,
+            npc => GetInstance(npc) is { ShouldProcess: true, DeathLocked: true });
+        BossDeathEffectRegistry.Register<RubyJewel>(jewel => jewel.DeathLocked);
+        BossDeathEffectRegistry.Register<EmeraldJewel>(jewel => jewel.DeathLocked);
+        BossDeathEffectRegistry.Register<SapphireJewel>(jewel => jewel.DeathLocked);
+    }
+
+    public bool DeathLocked => Ultra && !Phase2 && !NPC.downedSlimeKing;
+
     public override bool CheckDead()
     {
-        if (Ultra && !Phase2 && !NPC.downedSlimeKing)
+        if (DeathLocked)
         {
             NPC.life = 1;
             NPC.active = true;

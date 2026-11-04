@@ -2,14 +2,6 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class SlimeMount : AnomalyModProjectile
 {
-    /* 数组使用约定
-     * 
-     * Projectile.ai
-     * [0] 准备时间（单位：帧）；可飞向落点，也可原地等待
-     * [1] 阶段：0 准备，1 下落及预警
-     * [2] 目标索引（1-based，即 1 表示玩家索引 0，2 表示玩家索引 1，以此类推）
-     */
-
     private const float WarningMaxLength = 1600f;
     private const float WarningGrowthTime = 30f;
 
@@ -26,7 +18,7 @@ public sealed class SlimeMount : AnomalyModProjectile
     public override void SetStaticDefaults()
     {
         Main.projFrames[Projectile.type] = 4;
-        // 与 ThanatosLaser 相同：本体在屏幕上方时仍须提交延伸进屏幕的预警线。
+        // 本体在屏幕上方时仍须提交延伸进屏幕的预警线。
         ProjectileID.Sets.DrawScreenCheckFluff[Type] = 10000;
     }
 
@@ -46,53 +38,55 @@ public sealed class SlimeMount : AnomalyModProjectile
     {
         if (Projectile.ai[1] == 0f && MasterIndex > 0 && TONetworkEnvironment.NotClient)
         {
-            NPC master = NPC.GetNPCFromIndex(MasterIndex - 1);
-            if (!master.active || master.type != NPCID.SkeletronHead || master.Anomaly.CustomAIType != 1
-                || !(SkeletronLegendHead.GetInstance(master).CurrentAvatar == SkeletronLegendHead.Avatar.FlyingSlime
-                    || SkeletronLegendHead.GetInstance(master).Phase2SlimeRainActive))
+            if (!LegendaryNightHandler.IsLegendaryNightHead(MasterIndex, out SkeletronLegendHead head, oneBased: true)
+                || !(head.CurrentAvatar == SkeletronLegendHead.Avatar.FlyingSlime
+                    || head.Phase2SlimeRainActive))
             {
                 Projectile.Kill();
                 return;
             }
         }
 
-        // 2/3：化身直线喷射；3仅让贴图自转，不改变轨迹。
-        if (Projectile.ai[1] >= 2f)
+        switch (Projectile.ai[1])
         {
-            Projectile.frame = 1;
-            if (Projectile.ai[1] == 3f)
+            case 0f: //准备阶段
+                Timer1++;
+                if (Timer1 > Projectile.ai[0])
+                {
+                    Projectile.ai[1] = 1f;
+                    Timer2 = 0;
+                    Projectile.velocity = Vector2.Zero;
+                    Projectile.netUpdate = true;
+                }
+
+                Projectile.frame = 3;
+
+                Projectile.tileCollide = false;
+                break;
+
+            case 1f: //下落
+                Timer1++;
+                Timer2++;
+                Projectile.velocity.X = 0f;
+                Projectile.velocity.Y = Math.Min(Projectile.velocity.Y + 0.75f, 25f);
+
+                Projectile.frame = 1;
+
+                if (Player.TryGetPlayerFromIndex((int)Projectile.ai[2] - 1, out Player target) && Projectile.position.Y > target.Bottom.Y)
+                    Projectile.tileCollide = true;
+                break;
+
+            case 2f: //第二种行为：直线运动
+                Projectile.frame = 1;
+                break;
+
+            case 3f: //第三种行为：直线运动并旋转
+                Projectile.frame = 1;
                 Projectile.rotation += SkeletronLegendHead.Mechanic3Data.MountSpinSpeed;
-            return;
+                break;
         }
 
-        Timer1++;
-        if (Projectile.ai[1] == 0f)
-        {
-            if (Timer1 > Projectile.ai[0])
-            {
-                Projectile.ai[1] = 1f;
-                Timer2 = 0;
-                Projectile.velocity = Vector2.Zero;
-                Projectile.netUpdate = true;
-            }
-
-            Projectile.frame = 3;
-
-            Projectile.tileCollide = false;
-        }
-        else
-        {
-            Timer2++;
-            Projectile.velocity.X = 0f;
-            Projectile.velocity.Y = Math.Min(Projectile.velocity.Y + 0.75f, 25f);
-
-            Projectile.frame = 1;
-
-            if (Player.TryGetPlayerFromIndex((int)Projectile.ai[2] - 1, out Player target) && Projectile.position.Y > target.Bottom.Y)
-                Projectile.tileCollide = true;
-        }
-
-        if (!Main.dedServ && (Projectile.ai[1] > 0f || Projectile.velocity != Vector2.Zero))
+        if (!Main.dedServ)
         {
             Texture2D texture = TextureAssets.SlimeMount.Value;
             Rectangle frame = texture.Frame(1, 4, 0, Projectile.frame);

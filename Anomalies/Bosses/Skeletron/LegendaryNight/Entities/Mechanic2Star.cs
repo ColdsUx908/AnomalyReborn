@@ -26,13 +26,11 @@ public sealed class Mechanic2Star : AnomalyModProjectile
 
     public override void AI()
     {
-        NPC master = NPC.GetNPCFromIndex((int)Projectile.ai[2] - 1);
-        if (!master.active || master.type != NPCID.SkeletronHead || master.Anomaly.CustomAIType != 1)
+        if (!LegendaryNightHandler.IsLegendaryNightHead((int)Projectile.ai[2], out SkeletronLegendHead head, oneBased: true))
         {
             Projectile.Kill();
             return;
         }
-        SkeletronLegendHead head = SkeletronLegendHead.GetInstance(master);
         LegendaryNightPhase2Arena arena = head.Phase2Arena;
         if (!head.Mechanic2Active || arena is null)
         {

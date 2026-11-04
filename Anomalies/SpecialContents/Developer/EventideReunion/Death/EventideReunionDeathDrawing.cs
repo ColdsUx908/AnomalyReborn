@@ -42,7 +42,7 @@ internal static class EventideReunionDeathDrawing
         if (AnomalyEffects.Primitives.EventideDeathSweep is not { } eventideDeathSweepShader)
             return;
         Effect effect = eventideDeathSweepShader.Asset.Value;
-        effect.Parameters["Starfield"].SetValue(EventideReunionDeathAssets.Starfield);
+        effect.Parameters["uStarfield"].SetValue(EventideReunionDeathAssets.Starfield);
         DrawMesh(effect, vertices, Main.screenPosition);
     }
 
@@ -54,8 +54,8 @@ internal static class EventideReunionDeathDrawing
         if (AnomalyEffects.Overlays.EventideDeathVignette is not { } eventideDeathVignetteShader)
             return;
         Effect effect = eventideDeathVignetteShader.Asset.Value;
-        effect.Parameters["Resolution"].SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
-        effect.Parameters["Opacity"].SetValue(opacity);
+        effect.Parameters["uResolution"].SetValue(new Vector2(Main.screenWidth, Main.screenHeight));
+        effect.Parameters["uOpacity"].SetValue(opacity);
         VertexPositionColorTexture[] vertices =
         [
             new(Vector3.Zero, Color.White, Vector2.Zero),
@@ -79,10 +79,10 @@ internal static class EventideReunionDeathDrawing
             device.DepthStencilState = DepthStencilState.None;
             device.RasterizerState = RasterizerState.CullNone;
             device.SamplerStates[0] = SamplerState.LinearWrap;
-            effect.Parameters["TransformMatrix"].SetValue((screenSpace ? Matrix.Identity
+            effect.Parameters["uTransformMatrix"].SetValue((screenSpace ? Matrix.Identity
                 : Matrix.CreateTranslation(-screenPosition.X, -screenPosition.Y, 0f) * Main.GameViewMatrix.TransformationMatrix)
                 * Matrix.CreateOrthographicOffCenter(0f, Main.screenWidth, Main.screenHeight, 0f, -1f, 1f));
-            effect.Parameters["Time"]?.SetValue(Main.GlobalTimeWrappedHourly);
+            effect.Parameters["uTime"]?.SetValue(Main.GlobalTimeWrappedHourly);
             effect.CurrentTechnique.Passes["Pass0"].Apply();
             device.DrawUserPrimitives(PrimitiveType.TriangleStrip, vertices, 0, vertices.Length - 2);
         }

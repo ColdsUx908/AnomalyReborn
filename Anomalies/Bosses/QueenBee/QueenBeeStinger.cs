@@ -2,6 +2,8 @@ namespace Anomalies.Bosses.QueenBee;
 
 public sealed class QueenBeeStinger : AnomalyProjectileBehavior<QueenBeeStinger>
 {
+    public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.QueenBee;
+
     public override int ApplyingType => ProjectileID.QueenBeeStinger;
 
     public override bool AllowCalamityLogic(CalamityLogicType_ProjectileBehavior type) => type switch

@@ -20,7 +20,8 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
     }
 
     // 保留原版手的 ai 布局：ai[0] 左右侧，ai[1] 头部索引，ai[2] 动作，ai[3] 待机计时。
-    // 机制5复用原版ai[3]为已锁定攻击序号+1；ai[2]为0待机、1蓄势、2前挥、3收手。
+    // 机制5复用原版ai[3]为已锁定攻击序号+1；ai[2]为0待机、1蓄势、2前挥、3收手、4托球准备。
+    // 托球准备复用[0/1]保存相对头部的手部起点，不改变快照布局。
     // AnomalyAI32[0/1]为本次挥击起点，[2/3]为锁定的终点；完整快照支持中途加入。
     private Vector2 Mechanic5StrikeOrigin
     {
@@ -60,7 +61,7 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
             // 参照召唤仪式，在 SetDefaults 等早期环节识别正在生成的手。
             foreach (NPC head in NPC.ActiveNPCs)
             {
-                if (head.type == NPCID.SkeletronHead && head.Anomaly.CustomAIType == 1
+                if (LegendaryNightHandler.IsLegendaryNightHead(head)
                     && SkeletronLegendHead.GetInstance(head).IsSummoningHands)
                     return true;
             }
@@ -94,7 +95,7 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
         NPC.chaseable = false;
         NPC.dontTakeDamage = true;
 
-        if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master) || master.Anomaly.CustomAIType != 1)
+        if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master) || !LegendaryNightHandler.IsLegendaryNightHead(master))
         {
             if (TONetworkEnvironment.NotClient)
             {
@@ -129,10 +130,8 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
             NPC.velocity *= 0.8f;
             return false;
         }
-        if (head.Mechanic7Active && head.Phase2MusicElapsedTime < SkeletronLegendHead.Mechanic7Data.RecoverTime
-            + SkeletronLegendHead.Mechanic7Data.HandRecoverDuration)
-            Mechanic7HandAI(head);
-        else if (head.Mechanic6Active)
+        if (head.Mechanic6Active || head.Mechanic5Active
+            && head.Phase2MusicElapsedTime >= SkeletronLegendHead.Mechanic6Data.HandPrepareStartMusicTime)
             Mechanic6HandAI(head);
         else if (head.Mechanic5Active)
             Mechanic5HandAI(head);
@@ -146,70 +145,31 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
         }
         return false;
 
-        void Mechanic7HandAI(SkeletronLegendHead head)
-        {
-            int time = head.Phase2MusicElapsedTime;
-            int side = -Math.Sign(NPC.ai[0]);
-            AnomalyNPC.Z = 0f;
-            if (time == SkeletronLegendHead.Mechanic7Data.StartMusicTime && TONetworkEnvironment.NotClient)
-            {
-                // 复用机制5的起点槽，保存外展前相对头部的手部位置。
-                Mechanic5StrikeOrigin = NPC.Center - master.Center;
-                NPC.ai[2] = NPC.ai[3] = 0f;
-                NPC.netUpdate = true;
-            }
-            Vector2 offset;
-            if (time < SkeletronLegendHead.Mechanic7Data.RotationStart)
-            {
-                float progress = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(
-                    (time - SkeletronLegendHead.Mechanic7Data.StartMusicTime + 1f)
-                        / SkeletronLegendHead.Mechanic7Data.HandExtendDuration, 0f, 1f));
-                offset = Vector2.Lerp(Mechanic5StrikeOrigin, new Vector2(side * SkeletronLegendHead.Mechanic7Data.HandRadius, 0f), progress);
-            }
-            else
-            {
-                int orbitTime = Math.Min(time, SkeletronLegendHead.Mechanic7Data.RecoverTime)
-                    - SkeletronLegendHead.Mechanic7Data.RotationStart;
-                float angle = orbitTime * SkeletronLegendHead.Mechanic7Data.HandAngularSpeed * head.Mechanic7RotationDirection;
-                offset = new Vector2(side * SkeletronLegendHead.Mechanic7Data.HandRadius, 0f).RotatedBy(angle);
-                if (time >= SkeletronLegendHead.Mechanic7Data.RecoverTime)
-                {
-                    float progress = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(
-                        (time - SkeletronLegendHead.Mechanic7Data.RecoverTime + 1f)
-                            / SkeletronLegendHead.Mechanic7Data.HandRecoverDuration, 0f, 1f));
-                    offset = Vector2.Lerp(offset, GetIdleOffset(side), progress);
-                    NPC.ai[2] = NPC.ai[3] = 0f;
-                }
-            }
-            NPC.velocity = master.Center + master.velocity + offset - NPC.Center;
-            NPC.rotation = GetPositionRotation(NPC.Center + NPC.velocity, master.Center + master.velocity, side);
-        }
-
         void Mechanic6HandAI(SkeletronLegendHead head)
         {
             int time = head.Phase2MusicElapsedTime;
-            int cycle = SkeletronLegendHead.Mechanic6Data.Cycle(time);
             int side = -Math.Sign(NPC.ai[0]);
-            Vector2 idleOffset = GetIdleOffset(side);
-            int throwAge = time - SkeletronLegendHead.Mechanic6Data.ThrowTime(cycle);
-            float radius = SkeletronLegendHead.Mechanic6Data.Radius(time, cycle);
-            Vector2 sphereOffset = SkeletronLegendHead.Mechanic6Data.SphereOffset(time, cycle);
-            Vector2 raisedOffset = sphereOffset + new Vector2(side * (radius + 65f), radius * 0.25f);
-            Vector2 offset;
-            if (throwAge < 0)
+            float radius = SkeletronLegendHead.Mechanic6Data.Radius(time);
+            Vector2 sphereOffset = SkeletronLegendHead.Mechanic6Data.SphereOffset(time);
+            Vector2 offset = sphereOffset + new Vector2(side * (radius + 65f), radius * 0.25f);
+            if (time < SkeletronLegendHead.Mechanic6Data.StartMusicTime)
             {
-                float raise = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(
-                    (time - SkeletronLegendHead.Mechanic6Data.ChargeTime(cycle)) / 30f, 0f, 1f));
-                offset = Vector2.Lerp(idleOffset, raisedOffset, raise);
-            }
-            else
-            {
-                Vector2 thrownOffset = new(side * 100f, -30f);
-                float swing = MathHelper.Clamp((throwAge + 1f) / SkeletronLegendHead.Mechanic6Data.HandThrowDuration, 0f, 1f);
-                float recover = MathHelper.Clamp((throwAge - SkeletronLegendHead.Mechanic6Data.HandThrowDuration)
-                    / (float)SkeletronLegendHead.Mechanic6Data.HandReturnDuration, 0f, 1f);
-                offset = Vector2.Lerp(Vector2.Lerp(raisedOffset, thrownOffset, swing), idleOffset,
-                    MathHelper.SmoothStep(0f, 1f, recover));
+                if (NPC.ai[2] != 4f && TONetworkEnvironment.NotClient)
+                {
+                    Mechanic5StrikeOrigin = NPC.Center - master.Center;
+                    ChangeAction(4);
+                }
+                if (NPC.ai[2] != 4f)
+                {
+                    NPC.damage = 0;
+                    NPC.velocity = Vector2.Zero;
+                    return; // 等待服务器锁定的起点，避免读取上一轮挥击数据。
+                }
+                float progress = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(
+                    (time - SkeletronLegendHead.Mechanic6Data.HandPrepareStartMusicTime)
+                        / (float)(SkeletronLegendHead.Mechanic6Data.HandPrepareEndMusicTime
+                            - SkeletronLegendHead.Mechanic6Data.HandPrepareStartMusicTime), 0f, 1f));
+                offset = Vector2.Lerp(Mechanic5StrikeOrigin, offset, progress);
             }
             NPC.damage = 0;
             NPC.dontTakeDamage = true;
@@ -387,7 +347,7 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
 
     public override bool CanHitPlayer(Player target, ref int cooldownSlot) =>
         NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master)
-        && SkeletronLegendHead.GetInstance(master) is { Phase2: true, Mechanic2InBackground: false, HandsHidden: false } head
+        && LegendaryNightHandler.IsLegendaryNightHead(master) && SkeletronLegendHead.GetInstance(master) is { Phase2: true, Mechanic2InBackground: false, HandsHidden: false } head
         && (!head.Mechanic5Active || head.Phase2MusicElapsedTime >= SkeletronLegendHead.Mechanic5Data.StartMusicTime
             + SkeletronLegendHead.Mechanic5Data.HandReappearanceDuration);
 
@@ -448,7 +408,7 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
         if (NPC.hide) return false;
         // 原版骨节与血尘生成先执行；血尘由独立列表在本体的 Z 投影作用域内绘制。
         AnomalyNPC.Skeletron_HandBloodDust?.UpdateAndDraw(spriteBatch, NPC.netOffset - screenPos, NPC.Opacity);
-        if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master))
+        if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master) || !LegendaryNightHandler.IsLegendaryNightHead(master))
             return true;
         SkeletronLegendHead head = SkeletronLegendHead.GetInstance(master);
         if (!head.Mechanic2InBackground)
@@ -475,7 +435,7 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
     public override void ModifyHoverBoundingBox(ref Rectangle boundingBox)
     {
         if (NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master)
-            && SkeletronLegendHead.GetInstance(master) is { Mechanic2InBackground: true } head)
+            && LegendaryNightHandler.IsLegendaryNightHead(master) && SkeletronLegendHead.GetInstance(master) is { Mechanic2InBackground: true } head)
         {
             // 原版 hover box 不知道拍击手的额外放大；先匹配手的视觉尺寸，再由通用系统投影 Z。
             // HoverOverNPCs 已临时加入 netOffset，这里不再重复加入。
@@ -486,12 +446,15 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
     public override bool? DrawHealthBar(byte hbPosition, ref float scale, ref Vector2 position)
     {
         if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master)
-            || SkeletronLegendHead.GetInstance(master) is not { Mechanic2InBackground: true } head)
+            || !LegendaryNightHandler.IsLegendaryNightHead(master) || SkeletronLegendHead.GetInstance(master) is not { Mechanic2InBackground: true } head)
             return null;
         float halfHeight = NPC.frame.Height * NPC.scale * GetMechanic2VisualScale(head) * 0.5f;
         position = NPC.Center + new Vector2(0f, hbPosition == 1 ? halfHeight + 10f : -halfHeight - 24f);
         return true;
     }
+
+    public override void Load() => BossDeathEffectRegistry.Register(NPCID.SkeletronHand,
+        npc => GetInstance(npc).ShouldProcess);
 
     public override bool CheckDead()
     {
@@ -508,11 +471,11 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
     {
         get
         {
-            if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master))
+            if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master) || !LegendaryNightHandler.IsLegendaryNightHead(master))
                 return 0f;
             SkeletronLegendHead head = SkeletronLegendHead.GetInstance(master);
-            if (head.Mechanic6Active || head.Mechanic7Active && head.Phase2MusicElapsedTime
-                < SkeletronLegendHead.Mechanic7Data.RecoverTime + SkeletronLegendHead.Mechanic7Data.HandRecoverDuration)
+            if (head.Mechanic6Active || head.Mechanic5Active
+                && head.Phase2MusicElapsedTime >= SkeletronLegendHead.Mechanic6Data.HandPrepareStartMusicTime)
                 return 0f;
             if (head.Mechanic5Active)
             {

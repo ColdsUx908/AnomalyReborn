@@ -1,9 +1,13 @@
+using Anomalies.Bosses.Skeletron.LegendaryNight.Buffs;
+
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed class LegendaryNightFlightPlayer : AnomalyPlayerBehavior
 {
     public override void UpdateDead()
     {
+        AnomalyPlayer.LegendaryNight_DamageBonusStacks = 0;
+        AnomalyPlayer.LegendaryNight_RegenerationBonusStacks = 0;
         AnomalyPlayer.LegendaryNight_StarGodBlessingActive = false;
         AnomalyPlayer.LegendaryNight_StarGodBlessingOpacity = 0f;
     }
@@ -16,7 +20,7 @@ public sealed class LegendaryNightFlightPlayer : AnomalyPlayerBehavior
         // 从同步的 Boss 阶段和计时推导效果，支持复活、半途加入和多个 Boss 同时存在。
         foreach (NPC npc in NPC.ActiveNPCs)
         {
-            if (npc.type != NPCID.SkeletronHead || npc.Anomaly.CustomAIType != 1
+            if (!LegendaryNightHandler.IsLegendaryNightHead(npc)
                 || !SkeletronLegendHead.GetInstance(npc).StarGodBlessingActive)
                 continue;
 
@@ -28,6 +32,21 @@ public sealed class LegendaryNightFlightPlayer : AnomalyPlayerBehavior
         if (!AnomalyPlayer.LegendaryNight_StarGodBlessingActive)
             return;
 
+        Player.AddBuff(ModContent.BuffType<AstralBlessing>(), 2);
+
+        // 每帧只汇总一次；高频命中回调直接读取玩家缓存。
+        foreach (Projectile projectile in Projectile.ActiveProjectiles)
+        {
+            if (projectile.ModProjectile is LegendEnergySphere sphere
+                && sphere.Head is { Mechanic6Active: true, StarGodBlessingActive: true } head
+                && head.CurrentBaseBehavior != SkeletronLegendHead.BaseBehavior.Despawn)
+            {
+                LegendEnergySphere.LightOrbBonuses bonuses = sphere.GetBonuses(Player.whoAmI);
+                AnomalyPlayer.LegendaryNight_DamageBonusStacks += bonuses.DamageStacks;
+                AnomalyPlayer.LegendaryNight_RegenerationBonusStacks += bonuses.RegenerationStacks;
+            }
+        }
+
         // 功能翅膀优先：已有翅膀时只补充无限飞行，不覆盖其飞行参数。
         if (Player.wingsLogic <= 0)
         {
@@ -38,6 +57,22 @@ public sealed class LegendaryNightFlightPlayer : AnomalyPlayerBehavior
                 Player.wings = visibleWings;
         }
         Player.noFallDmg = true;
+    }
+
+    internal static float GetDamageBonusMultiplier(int count) => 1f + 0.05f * count;
+
+    public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+    {
+        if (!AnomalyPlayer.LegendaryNight_StarGodBlessingActive)
+            return;
+        // 同一玩家的层数先相加，再统一乘算最终伤害；两层为 1.10，而非 1.05²。
+        modifiers.FinalDamage *= GetDamageBonusMultiplier(AnomalyPlayer.LegendaryNight_DamageBonusStacks);
+    }
+
+    public override void UpdateLifeRegen()
+    {
+        if (AnomalyPlayer.LegendaryNight_StarGodBlessingActive)
+            Player.lifeRegen += AnomalyPlayer.LegendaryNight_RegenerationBonusStacks;
     }
 
     public override void PostUpdateMiscEffects()

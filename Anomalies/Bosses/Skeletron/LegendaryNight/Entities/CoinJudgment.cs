@@ -101,9 +101,8 @@ public sealed class CoinJudgment : AnomalyModProjectile
 
     public override void AI()
     {
-        NPC master = NPC.GetNPCFromIndex((int)Projectile.ai[2] - 1);
-        if (!master.active || master.type != NPCID.SkeletronHead || master.Anomaly.CustomAIType != 1
-            || SkeletronLegendHead.GetInstance(master).CurrentAvatar != SkeletronLegendHead.Avatar.PlatinumCoin)
+        if (!LegendaryNightHandler.IsLegendaryNightHead((int)Projectile.ai[2], out SkeletronLegendHead head, oneBased: true)
+            || head.CurrentAvatar != SkeletronLegendHead.Avatar.PlatinumCoin)
         {
             if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();
@@ -115,7 +114,7 @@ public sealed class CoinJudgment : AnomalyModProjectile
         if (!_WarningSoundPlayed && timer >= WarningDuration - DangerWarningDuration && timer < WarningDuration && !Main.dedServ)
         {
             _WarningSoundPlayed = true;
-            SoundEngine.PlaySound(WarningSound, Projectile.Center);
+            SoundEngine.PlaySound(WarningSound);
         }
 
         if (timer == WarningDuration - 5)
