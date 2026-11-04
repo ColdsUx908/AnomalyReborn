@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunionDeathWave : AnomalyModProjectile
@@ -69,3 +70,4 @@ public sealed partial class EventideReunionDeathWave : AnomalyModProjectile
     }
     public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) => EventideReunionDeathMark.CompleteHit(target);
 }
+#endif

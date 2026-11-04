@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 仅同步结算表现；真实伤害已经在服务器直接扣除，此弹幕不参与战斗。
@@ -51,3 +52,4 @@ public sealed class EventideReunionSamsaraEcho : AnomalyModProjectile
         return false;
     }
 }
+#endif

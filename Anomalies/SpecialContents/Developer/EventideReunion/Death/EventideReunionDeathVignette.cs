@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 using Anomalies.Visuals.Overlays;
 using Terraria.Graphics.Effects;
 
@@ -18,3 +19,4 @@ public sealed class EventideReunionDeathVignette : CustomOverlay
             EventideReunionDeathDrawing.DrawVignette(opacity);
     }
 }
+#endif

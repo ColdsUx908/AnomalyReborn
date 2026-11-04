@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed class EventideReunionSamsaraPlayer : AnomalyPlayerBehavior
@@ -24,3 +25,4 @@ public sealed class EventideReunionSamsaraPlayer : AnomalyPlayerBehavior
             Player.controlUseItem = Player.controlUseTile = false;
     }
 }
+#endif

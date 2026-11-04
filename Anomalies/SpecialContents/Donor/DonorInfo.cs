@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Donor;
 
 public record struct DonationInfo(DateOnly Date, decimal Price, string Message);
@@ -31,3 +32,4 @@ public record struct DonorInfo(string Name, List<DonationInfo> Donations)
     /// </summary>
     public static decimal TotalDonations => DonorsByID.Values.Sum(d => d.TotalDonation);
 }
+#endif

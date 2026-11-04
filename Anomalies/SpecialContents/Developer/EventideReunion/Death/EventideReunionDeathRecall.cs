@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 internal static class EventideReunionDeathRecall
@@ -17,3 +18,4 @@ internal static class EventideReunionDeathRecall
 
     public static Vector2 Center(Vector2 start, Vector2 player, float flight) => Vector2.Lerp(start, player, flight * flight * flight);
 }
+#endif

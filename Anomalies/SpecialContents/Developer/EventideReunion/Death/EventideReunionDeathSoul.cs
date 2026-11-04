@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 独立治疗逻辑，保留幽魂套的灵魂粒子表现。
@@ -53,3 +54,4 @@ public sealed class EventideReunionDeathSoul : AnomalyModProjectile
         Projectile.Kill();
     }
 }
+#endif

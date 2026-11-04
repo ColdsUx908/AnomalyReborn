@@ -2,6 +2,8 @@
 
     <Import Project="..\..\tModLoader.targets" />
 
+    <Import Project="AnomaliesModules.props" />
+
     <PropertyGroup>
         <LangVersion>preview</LangVersion>
         <TargetFramework>net8.0</TargetFramework>

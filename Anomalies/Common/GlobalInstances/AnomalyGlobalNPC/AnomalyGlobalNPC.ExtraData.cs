@@ -1,4 +1,6 @@
+#if SPECIAL_CONTENTS
 using Anomalies.SpecialContents.Developer.EventideReunion;
+#endif
 using Anomalies.Visuals.BossBar;
 
 namespace Anomalies.Common;
@@ -43,7 +45,9 @@ public sealed partial class AnomalyGlobalNPC
     public int EventideReunion_DeathMarkTime;
     public int EventideReunion_DeathOwner = -1;
     internal int EventideReunion_SamsaraOwner = -1;
+#if SPECIAL_CONTENTS
     internal EventideReunionSamsaraRecord EventideReunion_SamsaraRecord = new();
+#endif
     internal ulong EventideReunion_SamsaraStartTick;
     internal int EventideReunion_SamsaraVisualTime;
     #endregion

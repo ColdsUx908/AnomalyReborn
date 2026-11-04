@@ -14,7 +14,9 @@ public sealed partial class AnomalyGlobalNPC
         clone.EventideReunion_DeathMarkTime = 0;
         clone.EventideReunion_DeathMarkProgress = 0f;
         clone.EventideReunion_DeathOwner = -1;
+#if SPECIAL_CONTENTS
         clone.EventideReunion_SamsaraRecord = new();
+#endif
         clone.EventideReunion_SamsaraOwner = -1;
         clone.EventideReunion_SamsaraVisualTime = 0;
         clone._Network_ProjectileReferenceCache = (ProjectileNetReference[])_Network_ProjectileReferenceCache.Clone();

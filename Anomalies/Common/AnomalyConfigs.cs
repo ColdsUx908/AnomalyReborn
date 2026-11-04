@@ -48,6 +48,7 @@ public sealed class AnomalyClientConfig : ModConfig
     [ReloadRequired]
     public bool EnableShaders;
 
+#if TWEAK
     [Header("BaseBoosts")]
 
     [BackgroundColor(192, 54, 64, 192)]
@@ -84,5 +85,5 @@ public sealed class AnomalyClientConfig : ModConfig
             FasterTilePlacement = value;
         }
     }
+#endif
 }
-

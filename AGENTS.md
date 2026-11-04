@@ -17,7 +17,6 @@
 | `Transoceanic/` | 通用框架与 API；可复用工具不能反向依赖 Anomalies |
 | `TransoceanicCodeAssist/` | Roslyn 分析器与源生成器 |
 | `AnomaliesMusic/` | 音乐资源模组 |
-| `HumanMiracle/` | 独立模组项目 |
 | `Tools/` | 离线着色器编译、噪声与纹理生成工具；当前由 Git 忽略，使用前检查本地是否具备 |
 | `Tests/` | 全部测试源码与验证脚本，通过独立验证资料包提供 |
 | `docs/` | 实现说明、专项审计与改动记录，通过独立验证资料包提供 |
@@ -25,6 +24,17 @@
 - 主模组与框架使用 .NET 8、C# `preview`；代码辅助项目面向 `netstandard2.0`，Tools 下 EffectCompiler 面向 `net461`、C# 7.3，不要统一改写目标框架或语言版本。当前扩展成员与 `field` 语法需要支持它们的 SDK（框架文档的验证环境使用 .NET SDK 10）。
 - 模组项目导入仓库外的 `../../tModLoader.targets`，Anomalies 还引用相邻 CalamityMod 的 DLL。完整解决方案包含相邻仓库源码项目，公共解决方案为 `AnomalyRebornPublic.slnx`。
 - 不要把本机绝对路径写入项目配置，或为修复环境缺失而随意修改相邻仓库。构建受依赖阻塞时，报告具体缺失项。
+
+## Anomalies 功能模块
+
+- 修改 Anomalies 前遵循设计规范 2.9 及 `Anomalies/MODULES.md`。模块通过 `Anomalies/AnomaliesModules.props` 管理，使用构建时布尔属性和条件编译标签，默认全部开启。
+- 仅有四个模块：`ANOMALY_MODE`（异象难度、开启物品、全部异象 Boss 修改及相关机制）、`TWEAK`（武器修改、玩家基础属性配置及对应行为）、`GAME_CONTENTS`（GameContents 具体内容，不含共享基类）、`SPECIAL_CONTENTS`（SpecialContents 内容及接入）。
+- 菜单、星空和血条是默认开启内容，不随四个模块关闭，也不另设默认模块。除这三类默认内容及测试物品之外，所有额外内容（物品、NPC、弹幕、Buff、行为修改、配置对应功能、独立视觉等）必须归属现有模块；目录位置不能作为不受模块控制的理由。测试物品只要求 DEBUG 标签，不叠加模块标签；测试操作仍须安全处理被关闭的依赖。
+- 公共层原则上只提供无独立可见副作用的通用支持。玩家移速、跳跃、下落、攀绳与放置速度等配置和行为统一由 TWEAK 控制，不得留在默认公共行为中。
+- **不得私自新增模块。新增模块只能由项目所有者 ColdsUx 最终决定并提交，代理不得自行决定或代为提交。** 不得通过新标签、属性或隐式分组绕过此约束。
+- 四个模块独立开关；全关时除 DEBUG 测试物品外，不得增加物品、NPC、弹幕或实体行为修改。保留默认菜单、星空、血条和必要公共支持。跨模块分别控制内容存在与获取入口：HoneyedWildbloom 的存在由 GAME_CONTENTS 控制，蜂后掉落同时要求 GAME_CONTENTS、ANOMALY_MODE 及世界开启异象模式。
+- `AnomaliesModules.props` 只按目录处理全部文件，不处理单个文件；单文件归属和例外使用源码 `#if`。
+- 修改模块归属或公共接入后，运行独立资料包的 `pwsh -NoProfile -File Tests/Modules/Verify.ps1`，检查 16 种组合、实际程序集内容及配置/行为边界；仍需区分构建检查和游戏内验收。
 
 ## Tools 与离线资源流程
 

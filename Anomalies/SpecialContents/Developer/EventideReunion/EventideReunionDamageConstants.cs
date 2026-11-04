@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 /// <summary>
@@ -50,3 +51,4 @@ public static class EventideReunionDamageConstants
     /// <summary>用于 EventideReunionSamsaraRecord.Settlement，轮回标记累计伤害结算比例的分母，同时用于整数向上取整。</summary>
     public const int SamsaraSettlementDamageDenominator = 100;
 }
+#endif

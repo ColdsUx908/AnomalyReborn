@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunionDeathSkill
@@ -113,3 +114,4 @@ public sealed partial class EventideReunionDeathSkill
             0.1f, final ? 0.9f : 0.4f, 18, lifeEndRatio: 0.05f));
     }
 }
+#endif

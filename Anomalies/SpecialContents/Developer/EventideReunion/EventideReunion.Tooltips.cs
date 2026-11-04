@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 using Anomalies.Assets.Effects;
 using Anomalies.GameContents;
 
@@ -201,3 +202,4 @@ public sealed partial class EventideReunion
         }
     }
 }
+#endif

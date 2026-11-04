@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 /// <summary>物品栏专用：沿矛身闪烁的星芒与向矛尖逸散的金色火花。</summary>
@@ -78,3 +79,4 @@ public sealed class EventideReunionInventoryParticle : Particle
         return false;
     }
 }
+#endif

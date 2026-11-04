@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 using Anomalies.Visuals.Overlays;
 using Terraria.Graphics.Effects;
 
@@ -117,3 +118,4 @@ public sealed class EventideReunionSunFlash : CustomOverlay
         batch.End();
     }
 }
+#endif

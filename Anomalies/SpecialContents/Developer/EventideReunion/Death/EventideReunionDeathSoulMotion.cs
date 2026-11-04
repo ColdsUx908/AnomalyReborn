@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 internal static class EventideReunionDeathSoulMotion
@@ -13,3 +14,4 @@ internal static class EventideReunionDeathSoulMotion
     }
     public static int Healing(int life, int maxLife, bool moonLeech) => moonLeech ? 0 : Math.Clamp(maxLife - life, 0, 5);
 }
+#endif

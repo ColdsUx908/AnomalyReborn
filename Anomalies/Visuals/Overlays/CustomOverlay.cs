@@ -15,6 +15,7 @@ public abstract class PostTilesOverlay
     public abstract void Draw(SpriteBatch spriteBatch);
 }
 
+#if ANOMALY_MODE || SPECIAL_CONTENTS
 public sealed class CustomOverlayManager : ModSystem, IContentLoader
 {
     private static List<CustomOverlay> _Overlays = [];
@@ -54,3 +55,4 @@ public sealed class CustomOverlayManager : ModSystem, IContentLoader
         _PostTilesOverlays.Clear();
     }
 }
+#endif

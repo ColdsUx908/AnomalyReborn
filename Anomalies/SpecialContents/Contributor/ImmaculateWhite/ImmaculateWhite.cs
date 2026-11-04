@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 using Anomalies.GameContents;
 
 namespace Anomalies.SpecialContents.Contributor.ImmaculateWhite;
@@ -191,4 +192,4 @@ public sealed class ImmaculateWhite : AnomalyModItem, ILegendaryItem, ILocalizat
             .Register();
     }
 }
-
+#endif

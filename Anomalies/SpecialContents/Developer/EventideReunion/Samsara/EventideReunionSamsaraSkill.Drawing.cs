@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunionSamsaraSkill
@@ -131,3 +132,4 @@ public sealed partial class EventideReunionSamsaraSkill
             new Color(135, 90, 235), 0.22f, 18, rotationSpeed: 0.025f, bloomScale: 1.2f));
     }
 }
+#endif

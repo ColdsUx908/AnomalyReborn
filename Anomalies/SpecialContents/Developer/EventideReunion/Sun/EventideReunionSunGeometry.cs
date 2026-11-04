@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 世界像素坐标下的几何；渲染、命中检测及不同长宽比共用同一尺度。
@@ -76,3 +77,4 @@ public static class EventideReunionSunGeometry
     }
 
 }
+#endif

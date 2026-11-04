@@ -1,3 +1,4 @@
+#if TWEAK
 using MonoMod.Cil;
 
 namespace Anomalies.Common.SingleBehaviors;
@@ -133,4 +134,4 @@ public sealed class PlayerBaseStatBoosts : AnomalyPlayerBehavior
         cursor.EmitDelegate(() => AnomalyClientConfig.Instance.FasterJumpSpeed ? ConfigBoostedBaseJumpSpeed : VanillaBaseJumpSpeed);
     }
 }
-
+#endif

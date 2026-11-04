@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunionHoldout : AnomalyModProjectile
@@ -307,3 +308,4 @@ public sealed partial class EventideReunionHoldout : AnomalyModProjectile
 
     private Vector2 GetThrustTip(float currentProgress) => GetWeaponTip(GetThrustCenter(currentProgress), Projectile.velocity);
 }
+#endif

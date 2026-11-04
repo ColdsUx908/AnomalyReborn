@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed class EventideReunionDeathPlayer : AnomalyPlayerBehavior
@@ -50,3 +51,4 @@ public sealed class EventideReunionDeathPlayer : AnomalyPlayerBehavior
         }
     }
 }
+#endif

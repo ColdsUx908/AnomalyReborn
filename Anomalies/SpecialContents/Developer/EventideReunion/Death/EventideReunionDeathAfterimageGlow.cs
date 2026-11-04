@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 仅在一次残影绘制调用内有效的图形上下文，不是玩家实例状态。
@@ -62,3 +63,4 @@ public sealed class EventideReunionDeathAfterimageGlow : AnomalyPlayerBehavior
         cache.InsertRange(0, glow);
     }
 }
+#endif

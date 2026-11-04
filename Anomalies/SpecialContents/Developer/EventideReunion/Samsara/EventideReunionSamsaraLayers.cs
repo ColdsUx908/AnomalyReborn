@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 沿用 Sun 的横向投影方式，旋身以左半身为轴，快速转身后恢复正常宽度。
@@ -27,3 +28,4 @@ public sealed class EventideReunionSamsaraTurnLayer : PlayerDrawLayer
         }
     }
 }
+#endif

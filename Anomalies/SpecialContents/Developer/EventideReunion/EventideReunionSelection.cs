@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 独立读取按下沿，攻击 Holdout 占用 itemTime 时也能进入选择。
@@ -278,3 +279,4 @@ public sealed class EventideReunionSelection : AnomalyModProjectile
         return false;
     }
 }
+#endif

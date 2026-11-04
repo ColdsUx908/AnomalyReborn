@@ -1,0 +1,42 @@
+<Project>
+  <!-- 模块配置 -->
+  <PropertyGroup>
+    <AnomaliesEnableAnomalyMode Condition="'$(AnomaliesEnableAnomalyMode)' == ''">true</AnomaliesEnableAnomalyMode>
+    <AnomaliesEnableTweak Condition="'$(AnomaliesEnableTweak)' == ''">true</AnomaliesEnableTweak>
+    <AnomaliesEnableGameContents Condition="'$(AnomaliesEnableGameContents)' == ''">true</AnomaliesEnableGameContents>
+    <AnomaliesEnableSpecialContents Condition="'$(AnomaliesEnableSpecialContents)' == ''">true</AnomaliesEnableSpecialContents>
+  </PropertyGroup>
+  <!-- 模块常量 -->
+  <PropertyGroup Condition="'$(AnomaliesEnableAnomalyMode)' == 'true'">
+    <DefineConstants>$(DefineConstants);ANOMALY_MODE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(AnomaliesEnableTweak)' == 'true'">
+    <DefineConstants>$(DefineConstants);TWEAK</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(AnomaliesEnableGameContents)' == 'true'">
+    <DefineConstants>$(DefineConstants);GAME_CONTENTS</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(AnomaliesEnableSpecialContents)' == 'true'">
+    <DefineConstants>$(DefineConstants);SPECIAL_CONTENTS</DefineConstants>
+  </PropertyGroup>
+  <!-- 仅按目录筛选源码；单文件归属和跨模块接入使用源码中的 #if。 -->
+  <Target Name="SelectAnomaliesModules" BeforeTargets="BeforeCompile">
+    <ItemGroup Condition="'$(AnomaliesEnableAnomalyMode)' != 'true'">
+      <Compile Remove="AnomalyMode\**\*.cs;Bosses\**\*.cs;Common\EXChanges\**\*.cs" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(AnomaliesEnableTweak)' != 'true'">
+      <Compile Remove="Tweaks\**\*.cs" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(AnomaliesEnableGameContents)' != 'true'">
+      <Compile Remove="GameContents\**\*.cs" />
+      <Compile Include="GameContents\Base\**\*.cs" />
+    </ItemGroup>
+    <!-- SpecialContents 包含仅受 DEBUG 控制的测试物品，按各源码的 #if 筛选。 -->
+  </Target>
+  <Target Name="ValidateAnomaliesModules" BeforeTargets="CoreCompile">
+    <Error Condition="'$(AnomaliesEnableAnomalyMode)' != 'true' and '$(AnomaliesEnableAnomalyMode)' != 'false'" Text="AnomaliesEnableAnomalyMode must be true or false." />
+    <Error Condition="'$(AnomaliesEnableTweak)' != 'true' and '$(AnomaliesEnableTweak)' != 'false'" Text="AnomaliesEnableTweak must be true or false." />
+    <Error Condition="'$(AnomaliesEnableGameContents)' != 'true' and '$(AnomaliesEnableGameContents)' != 'false'" Text="AnomaliesEnableGameContents must be true or false." />
+    <Error Condition="'$(AnomaliesEnableSpecialContents)' != 'true' and '$(AnomaliesEnableSpecialContents)' != 'false'" Text="AnomaliesEnableSpecialContents must be true or false." />
+  </Target>
+</Project>

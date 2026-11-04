@@ -1,4 +1,6 @@
+#if ANOMALY_MODE
 using Anomalies.AnomalyMode;
+#endif
 
 namespace Anomalies.Common;
 
@@ -72,6 +74,7 @@ public sealed partial class AnomalySharedData : ModSystem
     /// </summary>
     public static bool Anomaly
     {
+#if ANOMALY_MODE
         get;
         internal set
         {
@@ -101,14 +104,21 @@ public sealed partial class AnomalySharedData : ModSystem
             OnAnomalyModeToggled?.Invoke(value);
             AnomalySynchronization.SyncAnomalyMode();
         }
+#else
+        get => false;
+        internal set { }
+#endif
     }
+#if ANOMALY_MODE
     public static event Action<bool> OnAnomalyModeToggled;
+#endif
 
     /// <summary>
     /// 异象超凡。
     /// </summary>
     public static bool AnomalyUltramundane
     {
+#if ANOMALY_MODE
         get;
         internal set
         {
@@ -124,8 +134,14 @@ public sealed partial class AnomalySharedData : ModSystem
             OnAnomalyUltramundaneToggled?.Invoke(value);
             AnomalySynchronization.SyncAnomalyMode();
         }
+#else
+        get => false;
+        internal set { }
+#endif
     }
+#if ANOMALY_MODE
     public static event Action<bool> OnAnomalyUltramundaneToggled;
+#endif
 
     /// <summary>
     /// 香溢模式。
@@ -138,6 +154,7 @@ public sealed partial class AnomalySharedData : ModSystem
     /// </summary>
     public static bool StoryMode
     {
+#if ANOMALY_MODE
         get;
         internal set
         {
@@ -146,6 +163,10 @@ public sealed partial class AnomalySharedData : ModSystem
             field = value;
             AnomalySynchronization.SyncAnomalyMode();
         }
+#else
+        get => false;
+        internal set { }
+#endif
     }
 
     /// <summary>
@@ -153,6 +174,7 @@ public sealed partial class AnomalySharedData : ModSystem
     /// </summary>
     public static bool EXMode
     {
+#if ANOMALY_MODE
         get;
         internal set
         {
@@ -161,6 +183,10 @@ public sealed partial class AnomalySharedData : ModSystem
             field = value;
             AnomalySynchronization.SyncAnomalyMode();
         }
+#else
+        get => false;
+        internal set { }
+#endif
     }
 
     public override void NetSend(BinaryWriter writer) => AnomalySynchronization.WriteWorldState(writer);

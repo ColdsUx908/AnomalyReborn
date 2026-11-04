@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunionSunSkill : AnomalyModProjectile
@@ -405,3 +406,4 @@ public sealed partial class EventideReunionSunSkill : AnomalyModProjectile
         ownerPlayer.Anomaly.EventideReunion_SunFallProtection = 30;
     }
 }
+#endif

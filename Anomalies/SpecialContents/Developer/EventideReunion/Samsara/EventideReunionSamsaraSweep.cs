@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 转矛、横抽各一个服务器伤害代理；不参与刺击的标记候选收集。
@@ -65,3 +66,4 @@ public sealed class EventideReunionSamsaraSweep : AnomalyModProjectile
 
     public override bool PreDraw(ref Color lightColor) => false;
 }
+#endif

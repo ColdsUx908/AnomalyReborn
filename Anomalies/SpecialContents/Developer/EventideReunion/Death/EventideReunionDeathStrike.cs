@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 技能姿态弹幕仍由玩家拥有；伤害代理由服务器拥有，统一结算横斩印记与击杀。
@@ -68,3 +69,4 @@ public sealed class EventideReunionDeathStrike : AnomalyModProjectile
             EventideReunionDeathMark.CompleteHit(target);
     }
 }
+#endif

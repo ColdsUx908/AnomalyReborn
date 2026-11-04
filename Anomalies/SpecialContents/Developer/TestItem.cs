@@ -1,14 +1,11 @@
-using Anomalies.Bosses.Skeletron.LegendaryNight;
-
 #if DEBUG
-using Anomalies.GameContents;
 
 namespace Anomalies.SpecialContents.Developer;
 
 /// <summary>
 /// Anomaly测试物品。
 /// </summary>
-public sealed class TestItem : AnomalyModItem, IDeveloperItem
+public sealed partial class TestItem : AnomalyModItem
 {
     public override string Texture => TOAssetUtils.FormatVanillaItemTexturePath(ItemID.IronBroadsword);
 
@@ -27,9 +24,8 @@ public sealed class TestItem : AnomalyModItem, IDeveloperItem
         Item.UseSound = SoundID.Item1;
         Item.knockBack = 5f;
         Item.noMelee = true;
-        Item.rare = ModContent.RarityType<Celestial>();
-        Item.value = Celestial.CelestialPrice;
-        Item.shoot = ModContent.ProjectileType<PlatinumCoin>();
+        Item.rare = ItemRarityID.Purple;
+        ConfigureBossTestItem();
         Item.shootSpeed = 15f;
     }
 
@@ -39,24 +35,22 @@ public sealed class TestItem : AnomalyModItem, IDeveloperItem
 
     public override bool CanUseItem(Player player)
     {
-        return true;
+        bool available = false;
+        ConfigureBossTestAvailability(ref available);
+        return available;
     }
 
     public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
     {
-        if (player.altFunctionUse == 2)
-        {
-            Projectile.NewProjectile(source, Main.MouseWorld, Vector2.Zero,
-                ModContent.ProjectileType<DemonShadow>(), damage, 0f, player.whoAmI, ai0: player.whoAmI + 1);
-            return false;
-        }
-
-        Projectile.NewProjectileAction(source, position, velocity, type, damage, knockback, action: p =>
-        {
-            p.scale = 1f;
-        });
+        ShootBossTest(player, source, position, velocity, type, damage, knockback);
         return false;
     }
+
+    partial void ConfigureBossTestItem();
+
+    partial void ConfigureBossTestAvailability(ref bool available);
+
+    partial void ShootBossTest(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback);
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
@@ -64,7 +58,9 @@ public sealed class TestItem : AnomalyModItem, IDeveloperItem
         if (!modifier.TryGet(null, "Tooltip0", out int index, out _))
             return;
 
-        IDeveloperItem.AddDeveloperItemIdentifier(Mod, tooltips, index);
+        tooltips.Insert(index, new TooltipLine(Mod, "Tooltip_DeveloperItemIdentifier",
+            Language.GetTextValue(AnomalySharedData.ModLocalizationPrefix + "SpecialContents.DeveloperItemIdentifier"))
+        { OverrideColor = AnomalySharedData.AnomalyUltramundaneColor });
     }
 }
 #endif

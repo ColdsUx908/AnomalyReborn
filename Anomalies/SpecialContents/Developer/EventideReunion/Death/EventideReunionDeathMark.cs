@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 internal static class EventideReunionDeathMark
@@ -145,3 +146,4 @@ public sealed class EventideReunionDeathMarkSystem : ModSystem
         }
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunionSamsaraSkill : AnomalyModProjectile
@@ -179,3 +180,4 @@ public sealed partial class EventideReunionSamsaraSkill : AnomalyModProjectile
             Projectile.netUpdate = true;
     }
 }
+#endif

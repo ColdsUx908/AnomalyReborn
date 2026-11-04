@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 using Anomalies.GameContents;
 
 namespace Anomalies.SpecialContents.Contributor.VacuousBlack;
@@ -108,4 +109,4 @@ public sealed class VacuousBlack : AnomalyModItem, ILegendaryItem, ILocalization
             .Register();
     }
 }
-
+#endif

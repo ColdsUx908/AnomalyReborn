@@ -1,3 +1,4 @@
+#if ANOMALY_MODE
 namespace Anomalies.Common;
 
 public sealed class StoryModeCommand : ModCommand, ILocalizationPrefix
@@ -42,3 +43,4 @@ public sealed class EXModeCommand : ModCommand, ILocalizationPrefix
         }
     }
 }
+#endif

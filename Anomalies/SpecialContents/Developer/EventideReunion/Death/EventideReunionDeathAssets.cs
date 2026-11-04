@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public static class EventideReunionDeathAssets
@@ -10,3 +11,4 @@ public static class EventideReunionDeathAssets
     private static Asset<Texture2D> _Starfield;
     public static Texture2D Starfield => _Starfield.Value;
 }
+#endif

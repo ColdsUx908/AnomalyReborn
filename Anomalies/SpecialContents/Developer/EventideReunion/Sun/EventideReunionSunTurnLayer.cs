@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 玩家素材是平面贴图：绕竖轴转身时压缩横向投影，并由技能 AI 在过侧面时切换朝向。
@@ -29,3 +30,4 @@ public sealed class EventideReunionSunTurnLayer : PlayerDrawLayer
         }
     }
 }
+#endif

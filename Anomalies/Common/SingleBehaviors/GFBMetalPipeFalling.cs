@@ -1,3 +1,4 @@
+#if ANOMALY_MODE
 namespace Anomalies.Common.SingleBehaviors;
 
 public sealed class GFBMetalPipeFalling : AnomalyPlayerBehavior
@@ -13,4 +14,4 @@ public sealed class GFBMetalPipeFalling : AnomalyPlayerBehavior
         return true;
     }
 }
-
+#endif

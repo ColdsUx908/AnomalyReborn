@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed class EventideReunionSunPlayer : AnomalyPlayerBehavior
@@ -55,3 +56,4 @@ public sealed class EventideReunionSunPlayer : AnomalyPlayerBehavior
         }
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 using System.Numerics;
 
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
@@ -48,3 +49,4 @@ public static class EventideReunionResonanceRules
     public static int Cooldown(int baseCooldown, byte mask, bool repeated) =>
         Math.Max(1, (int)Math.Ceiling(baseCooldown * (1d - 0.05d * Count(mask)) * (repeated ? 1.2d : 1d)));
 }
+#endif

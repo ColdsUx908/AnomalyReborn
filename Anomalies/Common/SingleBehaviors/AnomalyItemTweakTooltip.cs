@@ -1,3 +1,4 @@
+#if TWEAK
 using Anomalies.Assets.Effects;
 
 namespace Anomalies.Common.SingleBehaviors;
@@ -75,3 +76,4 @@ public sealed class AnomalyItemTweakTooltip : AnomalyGlobalItemBehavior, ILocali
         return result;
     }
 }
+#endif

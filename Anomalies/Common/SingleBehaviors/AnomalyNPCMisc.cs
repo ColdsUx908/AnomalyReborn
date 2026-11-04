@@ -1,3 +1,4 @@
+#if ANOMALY_MODE
 namespace Anomalies.Common.SingleBehaviors;
 
 public sealed class AnomalyNPCMisc : AnomalyGlobalNPCBehavior
@@ -39,4 +40,4 @@ public sealed class AnomalyNPCMisc : AnomalyGlobalNPCBehavior
         return true;
     }
 }
-
+#endif

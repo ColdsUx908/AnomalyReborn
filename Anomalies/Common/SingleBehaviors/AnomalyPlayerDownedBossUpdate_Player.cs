@@ -1,3 +1,4 @@
+#if ANOMALY_MODE
 namespace Anomalies.Common.SingleBehaviors;
 
 public sealed class AnomalyPlayerDownedBossUpdate_Player : AnomalyPlayerBehavior
@@ -77,3 +78,4 @@ public sealed class AnomalyPlayerDownedBossUpdate_System : ModSystem
             player.Anomaly.Progression_DownedBoss.WorldPolluted();
     }
 }
+#endif

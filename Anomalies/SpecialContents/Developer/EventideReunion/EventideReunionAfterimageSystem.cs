@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 持有弹幕的 PreDraw 会嵌套在 PlayerDrawLayers.RenderAllLayers 中。
@@ -43,3 +44,4 @@ public sealed class EventideReunionAfterimageSystem : ModSystem
         }
     }
 }
+#endif

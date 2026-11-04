@@ -1,3 +1,4 @@
+#if ANOMALY_MODE
 using Anomalies.Assets.Effects;
 using Terraria.Graphics.Effects;
 
@@ -108,3 +109,4 @@ public class EnhancedDarknessSystem : CustomOverlay, IContentLoader
         Lights.Clear();
     }
 }
+#endif

@@ -10,6 +10,9 @@ namespace Anomalies.Visuals;
 /// 仍沿用原版世界坐标视野裁剪；需要从屏幕外投影入画的 NPC 类型应设置 NPCID.Sets.MustAlwaysDraw。
 /// 自定义绘制若自行重建 SpriteBatch 矩阵，需要自行组合本系统的投影矩阵。
 /// </summary>
+#if !ANOMALY_MODE && !SPECIAL_CONTENTS
+[Autoload(false)]
+#endif
 public sealed partial class AnomalyDepthDrawSystem : ModSystem
 {
     /// <summary>焦距（世界像素）；Z 等于焦距时，视觉大小为原来的一半。</summary>
@@ -22,6 +25,7 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
 
     public override void Load()
     {
+#if ANOMALY_MODE || SPECIAL_CONTENTS
         LoadNPCCollision();
         if (!Main.dedServ)
         {
@@ -29,6 +33,7 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
             On_Main.DrawProj += DrawProjectile;
             LoadNPCInterface();
         }
+#endif
     }
 
     /// <summary>正深度缩小、负深度放大；最大倍率为10。可见性另由 IsVisible 裁剪，确保辅助坐标计算始终有限。</summary>

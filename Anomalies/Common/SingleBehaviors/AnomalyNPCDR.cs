@@ -1,3 +1,4 @@
+#if ANOMALY_MODE || GAME_CONTENTS || SPECIAL_CONTENTS
 namespace Anomalies.Common.SingleBehaviors;
 
 public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior
@@ -65,3 +66,4 @@ public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior
     }
 }
 
+#endif

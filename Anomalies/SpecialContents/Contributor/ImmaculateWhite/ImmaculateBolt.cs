@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Contributor.ImmaculateWhite;
 
 public sealed class ImmaculateBolt : AnomalyModProjectile
@@ -348,4 +349,4 @@ public sealed class ImmaculateBolt : AnomalyModProjectile
         }
     }
 }
-
+#endif

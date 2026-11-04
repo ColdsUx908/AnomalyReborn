@@ -1,3 +1,4 @@
+#if ANOMALY_MODE || GAME_CONTENTS || SPECIAL_CONTENTS
 namespace Anomalies.GameContents;
 
 public sealed class Celestial : ModRarity
@@ -20,3 +21,4 @@ public sealed class AnomalyUltramundaneRarity : ModRarity
     public override Color RarityColor => AnomalySharedData.AnomalyUltramundaneTitleColor;
     public override int GetPrefixedRarity(int offset, float valueMult) => Type;
 }
+#endif

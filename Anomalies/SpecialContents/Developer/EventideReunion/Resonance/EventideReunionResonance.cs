@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed class EventideReunionResonancePlayer : AnomalyPlayerBehavior
@@ -93,3 +94,4 @@ public sealed class EventideReunionResonance : ModBuff
         buffName += $" ({count}/6)";
     }
 }
+#endif

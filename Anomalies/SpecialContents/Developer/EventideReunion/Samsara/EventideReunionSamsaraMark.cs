@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 标记使用独立状态而非可被免疫/清除的 Buff；服务器拥有记录和结算。
@@ -123,3 +124,4 @@ public sealed class EventideReunionSamsaraSystem : ModSystem
         }
     }
 }
+#endif

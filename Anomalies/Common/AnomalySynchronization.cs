@@ -58,11 +58,20 @@ public sealed partial class AnomalySynchronization : ILoadable
         {
             case ID.PlayerDownedBossKill:
                 int npcType = reader.ReadInt32();
+#if ANOMALY_MODE
                 if (Main.netMode == NetmodeID.MultiplayerClient)
                     SingleBehaviors.AnomalyPlayerDownedBossUpdate_System.RecordKill(npcType);
+#endif
                 break;
             case ID.EventideResonance:
+#if SPECIAL_CONTENTS
                 SpecialContents.Developer.EventideReunion.EventideReunionResonancePlayer.Receive(reader, whoAmI);
+#else
+                // Player index, resonance mask, remaining ticks.
+                _ = reader.ReadByte();
+                _ = reader.ReadByte();
+                _ = reader.ReadUInt16();
+#endif
                 break;
             case ID.BrainIllusionHit:
                 int illusionIndex = reader.ReadByte();

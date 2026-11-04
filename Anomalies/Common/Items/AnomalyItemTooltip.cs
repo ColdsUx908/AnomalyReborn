@@ -1,3 +1,4 @@
+#if ANOMALY_MODE || GAME_CONTENTS || SPECIAL_CONTENTS
 using Anomalies.Assets.Effects;
 
 namespace Anomalies.GameContents.AnomalyItems;
@@ -87,3 +88,4 @@ public sealed class AnomalyItemTooltip : AnomalyGlobalItemBehavior
         }
     }
 }
+#endif

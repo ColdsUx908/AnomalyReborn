@@ -1,3 +1,4 @@
+#if ANOMALY_MODE
 using CalamityMod.Systems;
 using CalamityMod.UI.ModeIndicator;
 using Transoceanic.Runtime.Publicizing;
@@ -13,3 +14,4 @@ internal partial class DifficultyModeSystem_Publicizer(DifficultyModeSystem Sour
 [Publicize(typeof(ModeIndicatorUI))]
 [ExtendsFromMod(CalamityModName)]
 internal partial class ModeIndicatorUI_Publicizer(ModeIndicatorUI Source) : InstancedPublicizer(Source);
+#endif

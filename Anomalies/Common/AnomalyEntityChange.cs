@@ -167,6 +167,7 @@ public abstract class AnomalyNPCBehavior : SingleNPCBehavior, IAnomalyTweak
     /// </remarks>
     public virtual void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRentangle) { }
 
+#if ANOMALY_MODE
     public delegate void Orig_SetDefaults(NPC npc, bool createModNPC = true);
     [DetourMethodTo(typeof(NPCLoader))]
     public static void Detour_SetDefaults(Orig_SetDefaults orig, NPC npc, bool createModNPC = true)
@@ -179,6 +180,8 @@ public abstract class AnomalyNPCBehavior : SingleNPCBehavior, IAnomalyTweak
             npcBehavior.SetDefaultsFinal();
         }
     }
+
+#endif
 
     void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedNPCs[ApplyingType] = true;
 }
@@ -385,6 +388,7 @@ public sealed class AnomalyEntityChangeHelper : IContentLoader
 #endregion Handler
 
 #region Detour
+#if ANOMALY_MODE
 [ExtendsFromMod(CalamityModName)]
 public sealed class CalamityGlobalNPCBehaviorDetour : GlobalNPCDetour<CalamityGlobalNPC>
 {
@@ -480,4 +484,5 @@ public sealed class CalamityGlobalProjectileBehaviorDetour : GlobalProjectileDet
         return orig(self, projectile, ref lightColor);
     }
 }
+#endif
 #endregion Detour

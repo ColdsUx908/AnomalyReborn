@@ -1,3 +1,4 @@
+#if ANOMALY_MODE
 namespace Anomalies.Common;
 
 /// <summary>集中拦截被 Boss 锁血否决的死亡特效；条件由各 Boss 模块注册。</summary>
@@ -60,3 +61,4 @@ public sealed class BossDeathEffectRegistry : ModSystem
         orig(self, hit);
     }
 }
+#endif

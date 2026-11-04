@@ -1,3 +1,4 @@
+#if GAME_CONTENTS
 using Anomalies.GameContents.Drinks;
 
 namespace Anomalies.Common.SingleBehaviors;
@@ -16,3 +17,4 @@ public sealed class TravelShopHandler : AnomalyGlobalNPCBehavior
             shop[nextSlot++] = ModContent.ItemType<RaspberryBlackTea>();
     }
 }
+#endif

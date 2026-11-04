@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Contributor.ImmaculateWhite;
 
 public sealed class ImmaculateWhiteBow : AnomalyModProjectile
@@ -150,3 +151,4 @@ public sealed class ImmaculateWhiteBow : AnomalyModProjectile
     public override bool? CanHitNPC(NPC target) => false;
     public override bool CanHitPvp(Player target) => false;
 }
+#endif

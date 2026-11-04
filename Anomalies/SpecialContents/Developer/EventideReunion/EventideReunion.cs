@@ -1,3 +1,4 @@
+#if SPECIAL_CONTENTS
 using Anomalies.GameContents;
 using Terraria.Utilities;
 
@@ -132,3 +133,4 @@ public sealed partial class EventideReunion : AnomalyModItem, IDeveloperItem, IL
         return false;
     }
 }
+#endif

@@ -71,21 +71,6 @@ public sealed partial class SkeletronLegendHead
             Mechanic2StartMusicTime = Mechanic2Data.StartMusicTime;
             Mechanic2HandPattern = 0;
             NPC.velocity = Vector2.Zero;
-
-            if (TONetworkEnvironment.NotClient)
-            {
-                foreach (Projectile p in Projectile.ActiveProjectiles)
-                {
-                    bool owned = p.ModProjectile switch
-                    {
-                        SlimeMount slime => slime.MasterIndex == NPC.whoAmI + 1,
-                        FallingStar or PlatinumCoin or DemonShadow or SkullWarning or Meteor => (int)p.ai[2] == NPC.whoAmI + 1,
-                        _ => false
-                    };
-                    if (owned)
-                        p.Kill();
-                }
-            }
         }
 
         if (CurrentPhase == Phase.Phase2_2 && Phase2MusicElapsedTime >= Mechanic2Data.EndMusic)
