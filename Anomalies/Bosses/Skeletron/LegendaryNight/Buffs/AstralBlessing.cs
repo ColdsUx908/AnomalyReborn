@@ -5,6 +5,8 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight.Buffs;
 // 仅提示现有祝福状态；飞行效果由赋予祝福的机制负责。
 public sealed class AstralBlessing : ModBuff
 {
+    public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
+
     public override void SetStaticDefaults()
     {
         Main.buffNoTimeDisplay[Type] = true;

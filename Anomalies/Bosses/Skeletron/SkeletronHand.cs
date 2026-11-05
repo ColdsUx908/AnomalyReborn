@@ -165,9 +165,9 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
 
         float slapTimerIncrement = MathHelper.Lerp(1.5f, 3f, 1f - skeletronLifeRatio);
         if (Phase3)
-            slapTimerIncrement *= (2.5f);
+            slapTimerIncrement *= 2.5f;
         else if (Phase2)
-            slapTimerIncrement *= (2f);
+            slapTimerIncrement *= 2f;
 
         switch (CurrentBehavior)
         {

@@ -116,9 +116,25 @@ public sealed class LegendaryNightOverlay : CustomOverlay
             DrawArenaEdge(spriteBatch);
             DrawMagicCircle(spriteBatch);
             Phase2Arena.DrawEnergySpheres(spriteBatch);
+            DrawMechanic7Elements(spriteBatch);
         }
         else
             DrawBoundary(spriteBatch);
+    }
+
+    private void DrawMechanic7Elements(SpriteBatch spriteBatch)
+    {
+        if (Phase2Arena.MasterBehavior is not { Mechanic7Active: true } head)
+            return;
+        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
+            DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+        foreach (NPC npc in NPC.ActiveNPCs)
+            if (npc.type == NPCID.SkeletronHand && (int)npc.ai[1] == head.NPC.whoAmI)
+                SkeletronLegendHand.GetInstance(npc).DrawCircleHand(spriteBatch);
+        foreach (Projectile projectile in Projectile.ActiveProjectiles)
+            if (projectile.ModProjectile is LegendCircleElement element && (int)projectile.ai[0] == head.NPC.whoAmI + 1)
+                element.DrawElement(spriteBatch);
+        spriteBatch.End();
     }
 
     private void DrawBoundary(SpriteBatch spriteBatch)
@@ -197,18 +213,25 @@ public sealed class LegendaryNightOverlay : CustomOverlay
             DrawMagicCirclePart(spriteBatch, center, radius, rotation, true, i);
         }
         DrawMagicCirclePart(spriteBatch, Phase2Arena.Projectile.Center, Phase2Arena.Radius, 0f, false);
+        if (Phase2Arena.MasterBehavior is { Mechanic7Active: true } head)
+            for (int i = 0; i < 8; i++)
+            {
+                (Vector2 center, float radius, float rotation) = Phase2Arena.GetMechanic7Circle(i);
+                DrawMagicCirclePart(spriteBatch, center, radius, rotation, true,
+                    opacityMultiplier: SkeletronLegendHead.Mechanic7Data.CircleOpacity(head.Phase2MusicElapsedTime));
+            }
     }
 
     private void DrawArenaEdge(SpriteBatch spriteBatch)
     {
         const int FadeInDuration = 60;
         SkeletronLegendHead head = Phase2Arena.MasterBehavior;
-        if (head is null || !head.Mechanic6Active
+        if (head is null
             || !AnomalyClientConfig.Instance.EnableShaders
             || AnomalyEffects.Overlays.LegendaryNightArenaEdge is not { } shader
             || AnomalyTextures.Noise._Wave2 is not { IsLoaded: true } noise)
             return;
-        int age = head.Phase2MusicElapsedTime - SkeletronLegendHead.Mechanic6Data.StartMusicTime;
+        int age = head.Phase2MusicElapsedTime - SkeletronLegendHead.Mechanic2Data.StartMusicTime;
         float opacity = Phase2Arena.Intensity * MathHelper.SmoothStep(0f, 1f,
             MathHelper.Clamp(age / (float)FadeInDuration, 0f, 1f));
         if (opacity <= 0f)
@@ -235,7 +258,7 @@ public sealed class LegendaryNightOverlay : CustomOverlay
     private void DrawMechanic6ContractionWarning(SpriteBatch spriteBatch)
     {
         SkeletronLegendHead head = Phase2Arena.MasterBehavior;
-        if (head is not { Mechanic6Active: true })
+        if (head is not { StellarMechanicsActive: true })
             return;
         int time = head.Phase2MusicElapsedTime;
         int age = time - SkeletronLegendHead.Mechanic6Data.StartMusicTime;
@@ -272,7 +295,7 @@ public sealed class LegendaryNightOverlay : CustomOverlay
         spriteBatch.End();
     }
 
-    private void DrawMagicCirclePart(SpriteBatch spriteBatch, Vector2 worldCenter, float radius, float rotation, bool drawStar, int circleIndex = 0)
+    private void DrawMagicCirclePart(SpriteBatch spriteBatch, Vector2 worldCenter, float radius, float rotation, bool drawStar, int circleIndex = 0, float opacityMultiplier = 1f)
     {
         if (radius <= 0.01f)
             return;
@@ -284,7 +307,7 @@ public sealed class LegendaryNightOverlay : CustomOverlay
         if (circleIndex > 0)
             color = Color.Lerp(color, circleIndex == 2 ? LegendaryNightPhase2Arena.FastStarburstColor
                 : LegendaryNightPhase2Arena.SlowStarburstColor, starburstGlow);
-        float opacity = Phase2Arena.Intensity * MathHelper.Lerp(0.65f + warning * 0.3f, 1f, intensity);
+        float opacity = Phase2Arena.Intensity * MathHelper.Lerp(0.65f + warning * 0.3f, 1f, intensity) * opacityMultiplier;
         float width = MathHelper.Lerp(3f + warning * 5f, LegendaryNightPhase2Arena.LaserWidth, intensity);
         float glowWidth = MathHelper.Lerp(14f, 22f, intensity);
         AnomalyDrawUtils.DrawGlowingCircle(spriteBatch, worldCenter, radius, color, opacity, width, glowWidth);

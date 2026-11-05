@@ -171,20 +171,28 @@ public sealed partial class SkeletronLegendHead
     private Vector2 GetPhaseChangeStarPosition(float timer)
     {
         float completion = MathHelper.Clamp((timer - PhaseChangeStarSpawnTime) / PhaseChangeStarFallDuration, 0f, 1f);
-        // 二次加速下落，120 帧后准确抵达头顶；与 Boss 共用计时，无需额外同步弹幕。
+        // 二次加速下落，120帧后准确抵达头顶。
         return NPC.Top + new Vector2(0f, 8f - 1600f * (1f - completion * completion));
     }
 
     private void DrawPhaseChangeStar(SpriteBatch spriteBatch, Vector2 screenPos)
     {
+        int timer = Timer1;
+        int spawnTime = PhaseChangeStarSpawnTime;
+        DrawDescendingStar(spriteBatch, screenPos, timer - spawnTime, NPC.scale,
+            age => GetPhaseChangeStarPosition(spawnTime + age) + NPC.netOffset);
+    }
+
+    internal static void DrawDescendingStar(SpriteBatch spriteBatch, Vector2 screenPos, int age, float scale, Func<int, Vector2> positionAtAge)
+    {
         Texture2D bloom = ParticleHandler.GetTexture<BloomParticle>();
-        int samples = Math.Min(Timer1 - PhaseChangeStarSpawnTime, StarAvatarTrailLength);
+        int samples = Math.Min(age, StarAvatarTrailLength);
         for (int i = samples; i >= 1; i--)
         {
             float strength = 1f - i / (float)(samples + 1);
-            float diameter = MathHelper.Lerp(12f, 240f, strength) * NPC.scale * 1.6f;
+            float diameter = MathHelper.Lerp(12f, 240f, strength) * scale * 1.6f;
             float intensity = strength * strength;
-            Vector2 position = GetPhaseChangeStarPosition(Timer1 - i) + NPC.netOffset - screenPos;
+            Vector2 position = positionAtAge(age - i) - screenPos;
             Color outer = (LegendaryNightHandler.StarColor with { A = 0 }) * (intensity * 0.12f);
             Color inner = (LegendaryNightHandler.BoneColor with { A = 0 }) * (intensity * 0.18f);
             spriteBatch.DrawFromCenter(bloom, position, null, outer, 0f, diameter / bloom.Width);
@@ -193,9 +201,9 @@ public sealed partial class SkeletronLegendHead
 
         Texture2D star = FallingStar.HardTexture;
         Vector2 origin = new(star.Width / 2f, star.Height / (1f + MathF.Cos(TOMathUtils.PiOver5)));
-        float fadeIn = MathHelper.Clamp((Timer1 - PhaseChangeStarSpawnTime + 1f) / 10f, 0f, 1f);
-        spriteBatch.Draw(star, GetPhaseChangeStarPosition(Timer1) + NPC.netOffset - screenPos, null,
-            Color.White * fadeIn, MathHelper.Pi, origin, NPC.scale * 1.2f, SpriteEffects.None, 0f);
+        float fadeIn = MathHelper.Clamp((age + 1f) / 10f, 0f, 1f);
+        spriteBatch.Draw(star, positionAtAge(age) - screenPos, null,
+            Color.White * fadeIn, MathHelper.Pi, origin, scale * 1.2f, SpriteEffects.None, 0f);
     }
 
     private void DrawPhase2Glow(SpriteBatch spriteBatch, Vector2 screenPos)

@@ -9,7 +9,7 @@ public sealed partial class SkeletronLegendHead
         int previousTarget = NPC.target;
         bool validTarget;
         if (Phase2ArenaProjectileAlive)
-            validTarget = NPC.TargetIfInvalid(true, p => new Circle(ArenaProjectile.Center, Phase2Arena.TargetingRadius).Collides(p.Hitbox));
+            validTarget = NPC.TargetIfInvalid(true, p => new Circle(ArenaProjectile.Center, LegendaryNightPhase2Arena.TargetingRadius).Collides(p.Hitbox));
         else if (ArenaProjectileAlive && ArenaModProjectile.IsActivated)
             validTarget = NPC.TargetIfInvalid(true, p => new Circle(ArenaProjectile.Center, ArenaModProjectile.Radius * 2f).Collides(p.Hitbox));
         else

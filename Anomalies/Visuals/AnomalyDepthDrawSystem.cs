@@ -32,6 +32,7 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
             On_Main.DrawNPC += DrawNPC;
             On_Main.DrawProj += DrawProjectile;
             LoadNPCInterface();
+            LoadNPCCombatText();
         }
 #endif
     }
@@ -240,7 +241,13 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
     #region NPCCollision
     private static void LoadNPCCollision()
     {
-        IL_Projectile.Damage += ProjectProjectileNPCCollision;
+        System.Reflection.MethodInfo innerDamage = typeof(Projectile).GetMethod("Damage_PVE_Inner",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        if (innerDamage is not null)
+            MonoModHooks.Modify(innerDamage, ProjectSplitProjectileNPCCollision);
+        else
+            IL_Projectile.Damage += ProjectProjectileNPCCollision;
+        On_NPC.GetMeleeCollisionData += ProjectNPCContactCollision;
         IL_Player.ProcessHitAgainstNPC += ProjectMeleeNPCCollision;
     }
 
@@ -275,6 +282,35 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
 
     private static bool ProjectileHitsNPC(Projectile projectile, Rectangle projectileBounds, Rectangle npcBounds, NPC npc) =>
         IsVisible(npc.Anomaly.Z) && projectile.Colliding(projectileBounds, GetNPCDamageHitbox(npcBounds, npc));
+
+    private static void ProjectSplitProjectileNPCCollision(ILContext il)
+    {
+        ILCursor cursor = new(il);
+        // 当前 tML 在 Damage_PVE_Inner 中处理普通与 NPC 414 扩张后的碰撞箱。
+        Instruction[] collisions = il.Body.Instructions
+            .Where(i => i.MatchCall<Projectile>(nameof(Projectile.Colliding))).ToArray();
+        if (collisions.Length != 2)
+        {
+            AnomalyUtils.ILFailure(nameof(ProjectSplitProjectileNPCCollision), "Could not locate both projectile/NPC collision branches.");
+            return;
+        }
+        foreach (Instruction collision in collisions)
+        {
+            cursor.Goto(collision, MoveType.Before);
+            cursor.Remove();
+            // 实例方法第二个参数为 targetNPC，不再依赖旧版的数组访问模式。
+            cursor.Emit(OpCodes.Ldarg_2);
+            cursor.EmitDelegate(ProjectileHitsNPC);
+        }
+    }
+
+    private static void ProjectNPCContactCollision(On_NPC.orig_GetMeleeCollisionData orig, Rectangle victimHitbox,
+        int enemyIndex, ref int specialHitSetter, ref float damageMultiplier, ref Rectangle npcRect)
+    {
+        // 保留原版和模组的专属碰撞箱后再投影；调用者已加入 netOffset。
+        orig(victimHitbox, enemyIndex, ref specialHitSetter, ref damageMultiplier, ref npcRect);
+        npcRect = GetNPCDamageHitbox(npcRect, Main.npc[enemyIndex]);
+    }
 
     private static void ProjectProjectileNPCCollision(ILContext il)
     {

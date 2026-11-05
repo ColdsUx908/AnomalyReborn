@@ -47,6 +47,7 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         Phase2_4,
         Phase2_5 = 8,
         Phase2_6 = 9,
+        Phase2_7 = 10,
         Phase2_Finale = 7, // 保留已有同步值。
     }
 
@@ -87,7 +88,7 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
         }
     }
 
-    public bool Phase2DeathLocked => Phase2 && Phase2ElapsedTime < Phase2MinimumDuration;
+    public bool Phase2DeathLocked => Phase2 && Phase2MusicElapsedTime < Mechanic7Data.T9MusicTime;
 
     public bool DeathLocked => !Phase2 || Phase2DeathLocked;
 

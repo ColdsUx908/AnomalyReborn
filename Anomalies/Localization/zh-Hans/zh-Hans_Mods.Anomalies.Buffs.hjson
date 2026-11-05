@@ -1,18 +1,3 @@
-AstralBlessing: {
-	DisplayName: 星神祝福
-	Description: 获得无限飞行能力；未装备翅膀时获得骨之翼的飞行能力
-	StatBlessings:
-		'''
-		你的属性祝福：
-		最终伤害×{0}，生命回复{1}
-		'''
-}
-
-AstralSuppression: {
-	DisplayName: 星神威压
-	Description: 造成的伤害乘算降低50%
-}
-
 DimensionalRend: {
 	DisplayName: 维度撕裂
 	Description: 失去对真实的控制，是超越空间界限的代价

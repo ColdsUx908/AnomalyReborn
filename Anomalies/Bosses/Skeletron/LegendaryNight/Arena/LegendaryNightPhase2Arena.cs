@@ -38,7 +38,7 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
     public float MainCircleRadius => Radius / OuterCircleRadiusRatio;
     public float SmallCircleRadius => MainCircleRadius * SmallCircleRadiusRatio;
     // 目标有效范围以完整法阵为准，不随入场缩放收缩，避免展开时误判脱战。
-    public float TargetingRadius => MainCircleFullRadius * OuterCircleRadiusRatio * 2f;
+    public static float TargetingRadius => MainCircleFullRadius * OuterCircleRadiusRatio * 2f;
     public const float LaserWidth = 24f;
     public bool ChargeMaterialization => MasterBehavior is { Mechanic4Active: true };
     public bool Materialized => MasterBehavior is { } head && (ChargeMaterialization
@@ -73,7 +73,7 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
     // 统一提供视觉与后续交互使用的几何数据；0 主法阵，1/2 两个附属法阵。
     public (Vector2 Center, float Radius, float Rotation) GetMagicCircle(int index)
     {
-        float absorb = MasterBehavior is { } head && head.Mechanic6Active
+        float absorb = MasterBehavior is { } head && head.StellarMechanicsActive
             ? SkeletronLegendHead.Mechanic6Data.AbsorbProgress(head.Phase2MusicElapsedTime) : 0f;
         Vector2 destination = MasterBehavior is { } owner
             ? owner.NPC.Center + SkeletronLegendHead.Mechanic6Data.SphereOffset(owner.Phase2MusicElapsedTime) : Projectile.Center;
@@ -128,11 +128,12 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
             Projectile.netUpdate = true;
         }
         UpdateStarburst();
+        UpdateMechanic7Circles(head);
         Projectile.timeLeft = 100;
         Projectile.velocity = Vector2.Zero;
         // 圆心在生成时固定；半径与所有绘制共用同一份入场缩放。
         Radius = MainCircleFullRadius * OuterCircleRadiusRatio * AppearanceScale
-            * (head.Mechanic6Active ? SkeletronLegendHead.Mechanic6Data.ArenaScale(head.Phase2MusicElapsedTime) : 1f);
+            * (head.StellarMechanicsActive ? SkeletronLegendHead.Mechanic6Data.ArenaScale(head.Phase2MusicElapsedTime) : 1f);
         if (EnableMovementRestriction)
             MovementRestriction();
         else
@@ -202,7 +203,7 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
 
     internal void DrawEnergySpheres(SpriteBatch spriteBatch)
     {
-        if (MasterBehavior is not { Mechanic6Active: true } head
+        if (MasterBehavior is not { StellarMechanicsActive: true } head
             || head.CurrentBaseBehavior == SkeletronLegendHead.BaseBehavior.Despawn)
             return;
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
@@ -212,6 +213,8 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
             // Behavior 每次查询都会重新包装，按所属 NPC 判断是否为同一主人。
             if (projectile.ModProjectile is not LegendEnergySphere sphere || sphere.Head?.NPC != head.NPC)
                 continue;
+            sphere.DrawCompanionMatter(spriteBatch, behind: true);
+            sphere.DrawBlueCompanion(spriteBatch, behind: true);
             sphere.DrawBody(spriteBatch);
             sphere.DrawLightOrbTrails(spriteBatch);
             foreach (Projectile orbProjectile in Projectile.ActiveProjectiles)
@@ -220,6 +223,9 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
                     orb.Draw(spriteBatch);
             }
             sphere.DrawCore(spriteBatch);
+            sphere.DrawCompanionMatter(spriteBatch, behind: false);
+            sphere.DrawBlueCompanion(spriteBatch, behind: false);
+            sphere.DrawCompanionImpact(spriteBatch);
         }
         spriteBatch.End();
     }

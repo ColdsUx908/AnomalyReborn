@@ -241,7 +241,7 @@ public sealed partial class SkeletronHead
                             int type = ProjectileID.Skull;
 
                             // Inverse parabolic projectile spreads
-                            Vector2 baseVel = (Main.player[NPC.target].Center - NPC.Center).SafeNormalize(Vector2.UnitY) * (6f);
+                            Vector2 baseVel = (Main.player[NPC.target].Center - NPC.Center).SafeNormalize(Vector2.UnitY) * 6f;
                             Vector2 firingPos = NPC.Center + baseVel * 5f;
                             float centralCount = 0.5f * (numProj - 1f);
                             for (int i = 0; i < numProj; i++)
@@ -367,7 +367,7 @@ public sealed partial class SkeletronHead
         void ShootSkulls()
         {
             // Skull shooting
-            if ((handsDead) && CurrentBehavior == Behavior.Hover && !Phase4)
+            if (handsDead && CurrentBehavior == Behavior.Hover && !Phase4)
             {
                 float skullProjFrequency = Phase2 ? (48f - (10f * (1f - lifeRatio))) : 60f;
                 if (Main.getGoodWorld)
@@ -415,7 +415,7 @@ public sealed partial class SkeletronHead
         bool Hover()
         {
             AttackTimer += 1f;
-            float chargePhaseChangeRateBoost = Phase5 ? (24f) : Phase4 ? (6f) : ((4.5f) * ((1f - lifeRatio) / (1f - Phase4LifeRatio)));
+            float chargePhaseChangeRateBoost = Phase5 ? 24f : Phase4 ? 6f : (4.5f * ((1f - lifeRatio) / (1f - Phase4LifeRatio)));
             if (!handsDead)
                 chargePhaseChangeRateBoost *= 0.25f;
 
@@ -449,9 +449,9 @@ public sealed partial class SkeletronHead
                 }
             }
 
-            float headYAcceleration = (Main.getGoodWorld ? 0.07f : (0.06f + 0.04f * (1f - lifeRatio)));
+            float headYAcceleration = Main.getGoodWorld ? 0.07f : (0.06f + 0.04f * (1f - lifeRatio));
             float headYTopSpeed = headYAcceleration * 100f;
-            float headXAcceleration = (Main.getGoodWorld ? 0.21f : (0.16f + 0.08f * (1f - lifeRatio)));
+            float headXAcceleration = Main.getGoodWorld ? 0.21f : (0.16f + 0.08f * (1f - lifeRatio));
             float headXTopSpeed = headXAcceleration * 100f;
             float deceleration = Main.getGoodWorld ? 0.83f : 0.86f;
 
@@ -653,7 +653,7 @@ public sealed partial class SkeletronHead
                 if (Phase3)
                 {
                     // Dash directly towards the target until within 15 tiles of the target, and then continue in the same direction
-                    float altDashPhaseTime = dashPhaseTime * (0.9f);
+                    float altDashPhaseTime = dashPhaseTime * 0.9f;
                     if (CurrentLocalPhase == 0 && Timer < altDashPhaseTime)
                     {
                         if (NPC.Center.Distance(Main.player[NPC.target].Center) > altDashStopDistance || Timer == 1f + phaseChangeRateBoost)

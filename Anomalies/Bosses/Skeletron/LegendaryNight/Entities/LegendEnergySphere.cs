@@ -5,14 +5,14 @@ using static Anomalies.Bosses.Skeletron.LegendaryNight.SkeletronLegendHead.Mecha
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 /// <summary>ai[0]：主人索引+1；光球蓄力完成后持续保持。</summary>
-public sealed class LegendEnergySphere : AnomalyModProjectile
+public sealed partial class LegendEnergySphere : AnomalyModProjectile
 {
     // 光球与其激光共用的基础色，着色器不再另写一份色值。
     public static Vector3 GoldColor => new(1f, 0.82f, 0.06f);
     public static Vector3 StarlightColor => new(1f, 0.98f, 0.8f);
-
-    private const string AssetPath = LegendaryNightHandler.LegendaryNightEntityPath + "EnergySphere/";
-    private static readonly SoundStyle _ChargeSound = new(AssetPath + "TeslaSphereLoop") { IsLooped = true, Volume = 0.45f };
+    private static readonly SoundStyle _ChargeSound = new(LegendaryNightHandler.LegendaryNightEntityPath + "LegendEnergySphereLoop") { IsLooped = true, Volume = 0.45f };
+    private const float ChargeSoundFullVolumeDistance = 350f;
+    private const float ChargeSoundFadeOutDistance = 600f;
     private SlotId _ChargeSoundSlot;
     private bool _SoundStarted;
     private double _CoreFlashStart = double.NegativeInfinity;
@@ -22,7 +22,7 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
     {
         public override int ParticleLifetime => 0;
 
-        public LightOrbTrailSet() : base(0, 0f) => ParticleLimit = 1024;
+        public LightOrbTrailSet(int limit = 1024) : base(0, 0f) => ParticleLimit = limit;
 
         public override Particle SpawnParticle() =>
             throw new InvalidOperationException("Light orb trails accept explicit submissions only.");
@@ -35,7 +35,7 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
 
         public bool ApplyCollision(int color, bool noRequiredColorRemains)
         {
-            if ((color == 1) != ExpectsPlatinum && !noRequiredColorRemains)
+            if (color == 1 != ExpectsPlatinum && !noRequiredColorRemains)
             {
                 DamageStacks--;
                 RegenerationStacks--;
@@ -51,7 +51,16 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
     }
 
     private readonly LightOrbBonuses[] _PlayerBonuses = new LightOrbBonuses[Main.maxPlayers];
-    private int _LightOrbWavesSpawned;
+    private int _LightOrbsSpawned;
+    internal int AbsorbedLightOrbCount { get; private set; }
+
+    internal void RecordLightOrbAbsorption()
+    {
+        if (!TONetworkEnvironment.NotClient)
+            return;
+        AbsorbedLightOrbCount++;
+        Projectile.netUpdate = true;
+    }
 
     /// <summary>小球抵达球心时仅由服务器/单人端触发一次；不含拦截或退场取消。</summary>
     public event Action<LegendLightOrb> LightOrbAbsorbed;
@@ -60,7 +69,8 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
     private NPC Master => NPC.GetNPCFromIndex((int)Projectile.ai[0] - 1);
     internal SkeletronLegendHead Head => LegendaryNightHandler.IsLegendaryNightHead((int)Projectile.ai[0], out SkeletronLegendHead head, oneBased: true) ? head : null;
-    internal float SphereRadius => Head is { } head ? SkeletronLegendHead.Mechanic6Data.Radius(head.Phase2MusicElapsedTime) : 0f;
+    internal float SphereRadius => Head is { } head ? Radius(head.Phase2MusicElapsedTime)
+        * SkeletronLegendHead.Mechanic7Data.StarScale(head.Phase2MusicElapsedTime) : 0f;
     private float CoreFlash => LightOrbCoreFlash((float)(Main.timeForVisualEffects - _CoreFlashStart));
 
     internal void FlashCore()
@@ -95,12 +105,12 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
 
     internal LightOrbBonuses GetBonuses(int playerIndex) => _PlayerBonuses[playerIndex];
 
-    internal void InterceptLightOrb(int playerIndex, int color)
+    internal bool InterceptLightOrb(int playerIndex, int color)
     {
         if (!TONetworkEnvironment.NotClient)
-            return;
+            return false;
         int requiredColor = _PlayerBonuses[playerIndex].ExpectsPlatinum ? 1 : 0;
-        bool noRequiredColorRemains = _LightOrbWavesSpawned >= LightOrbWaveCount;
+        bool noRequiredColorRemains = _LightOrbsSpawned >= LightOrbCount;
         if (noRequiredColorRemains)
         {
             foreach (Projectile projectile in Projectile.ActiveProjectiles)
@@ -113,9 +123,11 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
                 }
             }
         }
-        if (!_PlayerBonuses[playerIndex].ApplyCollision(color, noRequiredColorRemains))
-            SpawnLasers(PunishmentLaserCount, punishment: true);
+        bool correct = _PlayerBonuses[playerIndex].ApplyCollision(color, noRequiredColorRemains);
+        //if (!correct)
+        //    SpawnLasers(PunishmentLaserCount, punishment: true);
         Projectile.netUpdate = true;
+        return correct;
     }
 
     internal void SpawnLasers(int count, bool punishment = false)
@@ -146,7 +158,8 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
     protected override void SendAnomalyExtraAI(BinaryWriter writer)
     {
         base.SendAnomalyExtraAI(writer);
-        writer.Write(_LightOrbWavesSpawned);
+        writer.Write(_LightOrbsSpawned);
+        writer.Write(AbsorbedLightOrbCount);
         for (int i = 0; i < Main.maxPlayers; i++)
         {
             writer.Write(_PlayerBonuses[i].DamageStacks);
@@ -158,7 +171,8 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
     protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
     {
         base.ReceiveAnomalyExtraAI(reader);
-        int wavesSpawned = reader.ReadInt32();
+        int orbsSpawned = reader.ReadInt32();
+        int absorbedCount = reader.ReadInt32();
         LightOrbBonuses[] bonuses = new LightOrbBonuses[Main.maxPlayers];
         for (int i = 0; i < Main.maxPlayers; i++)
         {
@@ -167,7 +181,8 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
             bonuses[i].ExpectsPlatinum = reader.ReadBoolean();
         }
         bonuses.CopyTo(_PlayerBonuses, 0);
-        _LightOrbWavesSpawned = wavesSpawned;
+        _LightOrbsSpawned = orbsSpawned;
+        AbsorbedLightOrbCount = absorbedCount;
     }
 
     public override void SetDefaults()
@@ -185,7 +200,7 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
     public override void AI()
     {
         SkeletronLegendHead head = Head;
-        if (head is not { Mechanic6Active: true } || head.CurrentBaseBehavior == SkeletronLegendHead.BaseBehavior.Despawn)
+        if (head is not { StellarMechanicsActive: true } || head.CurrentBaseBehavior == SkeletronLegendHead.BaseBehavior.Despawn)
         {
             if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();
@@ -194,7 +209,7 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
         int time = head.Phase2MusicElapsedTime;
         Projectile.timeLeft = 100;
         Projectile.Center = head.Phase2Arena is { } arena ? arena.Projectile.Center
-            : Master.Center + SkeletronLegendHead.Mechanic6Data.SphereOffset(time);
+            : Master.Center + SphereOffset(time);
         Projectile.velocity = Vector2.Zero;
         if (TONetworkEnvironment.NotClient)
         {
@@ -209,27 +224,45 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
         }
         if (TONetworkEnvironment.NotClient && ShouldSpawnLightOrb(time) && head.Phase2Arena is { } orbArena)
         {
-            SpawnLightOrbWave(orbArena);
+            SpawnLightOrb(orbArena);
         }
-        if (TONetworkEnvironment.NotClient && ShouldSpawnLaser(time))
-            SpawnLasers(LaserCount);
+        if (TONetworkEnvironment.NotClient)
+        {
+            if (head.Mechanic7Active && SkeletronLegendHead.Mechanic7Data.ShouldSpawnLaser(time))
+                SpawnLasers(SkeletronLegendHead.Mechanic7Data.LaserCount);
+            else if (head.Mechanic6Active && ShouldSpawnLaser(time))
+                SpawnLasers(LaserCounts[(time - LaserFirstMusicTime) / LaserInterval]);
+        }
         if (Main.dedServ)
             return;
+        UpdateCompanionShockwaveDamage();
+        UpdateBlueCompanion();
         _LightOrbTrails?.Update();
         Lighting.AddLight(Projectile.Center, LegendaryNightHandler.StarColor.ToVector3() * 1.5f);
         if (!_SoundStarted)
         {
             _SoundStarted = true;
-            _ChargeSoundSlot = SoundEngine.PlaySound(_ChargeSound, Projectile.Center, sound => Projectile.active);
-        }
-        if (SoundEngine.TryGetActiveSound(_ChargeSoundSlot, out ActiveSound activeSound))
-        {
-            activeSound.Position = Projectile.Center;
-            activeSound.Volume = 0.15f + 0.5f * SkeletronLegendHead.Mechanic6Data.ChargeProgress(time);
+            // 自行按本机玩家距离衰减，避免引擎按镜头距离再次降低近处音量。
+            _ChargeSoundSlot = SoundEngine.PlaySound(_ChargeSound, updateCallback: sound =>
+            {
+                if (!Projectile.active || Head is not { StellarMechanicsActive: true } soundHead
+                    || soundHead.CurrentBaseBehavior == SkeletronLegendHead.BaseBehavior.Despawn)
+                    return false;
+                float distance = Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center);
+                float attenuation = Utils.GetLerpValue(ChargeSoundFadeOutDistance, ChargeSoundFullVolumeDistance, distance, true);
+                sound.Volume = (0.15f + 0.5f * ChargeProgress(soundHead.Phase2MusicElapsedTime)) * attenuation;
+                sound.Sound.Pan = MathHelper.Clamp((Projectile.Center.X - Main.Camera.Center.X) / (Main.screenWidth * 0.5f), -1f, 1f);
+                return true;
+            });
         }
         const int AbsorptionParticleCount = 10;
-        for (int i = 0; i < AbsorptionParticleCount; i++)
+        // 与橙星的285帧消散共用时钟，平滑降低生成密度；完全消散后不再生成。
+        float absorptionSpawnChance = 1f - MathHelper.SmoothStep(0f, 1f,
+            SkeletronLegendHead.Mechanic7Data.StarDissipation(time));
+        for (int i = 0; i < AbsorptionParticleCount && absorptionSpawnChance > 0f; i++)
         {
+            if (absorptionSpawnChance < 1f && Main.rand.NextFloat() >= absorptionSpawnChance)
+                continue;
             // 起点覆盖整圈并位于球面之外，沿直线快速汇聚为星光能量。
             float angle = MathHelper.TwoPi * (i + Main.rand.NextFloat()) / AbsorptionParticleCount;
             float distance = SphereRadius + Main.rand.NextFloat(100f, 260f);
@@ -238,51 +271,48 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
                 Main.rand.NextFloat(0.3f, 0.6f), Main.rand.Next(12, 21)));
         }
 
-        void SpawnLightOrbWave(LegendaryNightPhase2Arena arena)
+        void SpawnLightOrb(LegendaryNightPhase2Arena arena)
         {
-            int wave = (time - LightOrbFirstMusicTime) / LightOrbInterval;
-            if (wave < _LightOrbWavesSpawned)
+            int index = (time - LightOrbFirstMusicTime) / LightOrbInterval;
+            if (index < _LightOrbsSpawned)
                 return;
-            if (wave == 0)
+            if (index == 0)
                 TOLocalizationUtils.ChatLocalizedText(AnomalySharedData.ModLocalizationPrefix
                     + LegendaryNightHandler.LocalizationCategory + ".InterceptStarPower", LegendaryNightHandler.StarColor);
-            int[] colors = CreateLightOrbColors(wave);
-            for (int i = colors.Length - 1; i > 0; i--)
-            {
-                int other = Main.rand.Next(i + 1);
-                (colors[i], colors[other]) = (colors[other], colors[i]);
-            }
-            for (int sector = 0; sector < LightOrbWaveSize; sector++)
-            {
-                float angle = GetLightOrbAngle(sector, Main.rand.NextFloat());
-                int color = colors[sector];
-                int lifetime = Main.rand.Next(GetLightOrbLifetime(wave, 0f), GetLightOrbLifetime(wave, 1f) + 1);
-                Projectile.NewProjectileAction<LegendLightOrb>(SourceAI,
-                    arena.Projectile.Center + angle.ToRotationVector2() * arena.Radius, Vector2.Zero, 0, 0f,
-                    action: p =>
-                    {
-                        p.ai[0] = color;
-                        p.ai[1] = time;
-                        p.ai[2] = angle;
-                        LegendLightOrb orb = p.GetModProjectile<LegendLightOrb>();
-                        orb.SphereProjectile = Projectile;
-                        orb.SpawnRadius = arena.Radius;
-                        orb.TravelDuration = lifetime;
-                        p.scale = 0f;
-                        p.Opacity = 0f;
-                        p.netUpdate = true;
-                    });
-            }
-            _LightOrbWavesSpawned = wave + 1;
+            float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+            int color = index % 2;
+            int lifetime = Main.rand.Next(GetLightOrbLifetime(index, 0f), GetLightOrbLifetime(index, 1f) + 1);
+            Projectile.NewProjectileAction<LegendLightOrb>(SourceAI,
+                arena.Projectile.Center + angle.ToRotationVector2() * arena.Radius, Vector2.Zero, 0, 0f,
+                action: p =>
+                {
+                    p.ai[0] = color;
+                    p.ai[1] = time;
+                    p.ai[2] = angle;
+                    LegendLightOrb orb = p.GetModProjectile<LegendLightOrb>();
+                    orb.SphereProjectile = Projectile;
+                    orb.SpawnRadius = arena.Radius;
+                    orb.TravelDuration = lifetime;
+                    p.scale = 0f;
+                    p.Opacity = 0f;
+                    p.netUpdate = true;
+                });
+            _LightOrbsSpawned = index + 1;
             Projectile.netUpdate = true;
         }
     }
 
     public override bool CanHitPlayer(Player target) => false;
-    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(Projectile.Center, SphereRadius).Collides(targetHitbox);
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => SkeletronLegendHead.Mechanic7Data.StarDissipation(Head?.Phase2MusicElapsedTime ?? 0) < 1f
+        && new Circle(Projectile.Center, SphereRadius).Collides(targetHitbox);
 
     public override void OnKill(int timeLeft)
     {
+        _CompanionMatter = null;
+        _MatterStreamPath = null;
+        _MatterRibbonVertices = null;
+        _CompanionImpactParticles?.Clear();
+        _CompanionImpactParticles = null;
         _LightOrbTrails?.Clear();
         _LightOrbTrails = null;
         if (!Main.dedServ && _SoundStarted && SoundEngine.TryGetActiveSound(_ChargeSoundSlot, out ActiveSound sound))
@@ -312,23 +342,30 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
     public override bool PreDraw(ref Color lightColor) => false;
 
     // 由竞技场在同一个绘制入口中按球面、小球、星核的顺序调用。
-    internal void DrawBody(SpriteBatch spriteBatch)
+    internal void DrawBody(SpriteBatch spriteBatch, Vector2? worldCenter = null, float? drawRadius = null, bool blue = false, float opacity = 1f)
     {
-        if (Main.dedServ || SphereRadius <= 0f)
+        float radius = drawRadius ?? SphereRadius;
+        if (Main.dedServ || radius <= 0f)
             return;
-        Vector2 center = Projectile.Center - Main.screenPosition;
+        float photosphere = blue ? 1f : PrimaryPhotosphere;
+        Vector2 center = (worldCenter ?? Projectile.Center) - Main.screenPosition;
+        if (photosphere >= 1f)
+        {
+            DrawStellarPhotosphere(spriteBatch, center, radius, blue, opacity);
+            return;
+        }
         Texture2D bloom = ParticleHandler.GetTexture<BloomParticle>();
-        spriteBatch.DrawFromCenter(bloom, center, null, new Color(255, 190, 20, 0) * 0.16f,
-            scale: SphereRadius * 5f / bloom.Width);
+        spriteBatch.DrawFromCenter(bloom, center, null, (blue ? new Color(90, 140, 255, 0) : new Color(255, 190, 20, 0)) * opacity * (1f - photosphere) * 0.16f,
+            scale: radius * 5f / bloom.Width);
         AnomalyEffects.MiscShaderContainer shader = AnomalyClientConfig.Instance.EnableShaders
             ? AnomalyEffects.Overlays.LegendEnergySphere : null;
         if (shader is null)
         {
             Texture2D body = AnomalyTextures.Extra.BasicCircleLarge;
-            spriteBatch.DrawFromCenter(body, center, null, new Color(255, 105, 8),
-                scale: SphereRadius * 2f / body.Width);
-            spriteBatch.DrawFromCenter(bloom, center, null, new Color(255, 235, 120, 0) * 0.7f,
-                scale: SphereRadius * 2f / bloom.Width);
+            spriteBatch.DrawFromCenter(body, center, null, (blue ? new Color(55, 90, 170) : new Color(255, 105, 8)) * opacity * (1f - photosphere),
+                scale: radius * 2f / body.Width);
+            spriteBatch.DrawFromCenter(bloom, center, null, (blue ? new Color(170, 200, 255, 0) : new Color(255, 235, 120, 0)) * opacity * (1f - photosphere) * 0.7f,
+                scale: radius * 2f / bloom.Width);
         }
         else
         {
@@ -337,12 +374,14 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             shader.Data.SetCustomParameter("uGlobalTime", (float)Main.timeForVisualEffects / 60f)
                 .SetCustomParameter("uNebulaNoiseTexture", AnomalyTextures.Noise.Perlin2)
-                .SetCustomParameter("uGoldColor", GoldColor)
-                .SetCustomParameter("uStarlightColor", StarlightColor)
-                .SetCustomParameter("uCoreFlash", CoreFlash)
+                .SetCustomParameter("uGoldColor", blue ? CompanionSurfaceColor : GoldColor)
+                .SetCustomParameter("uStarlightColor", blue ? CompanionCoreColor : StarlightColor)
+                .SetCustomParameter("uPhotosphere", photosphere)
+                .SetCustomParameter("uBluePalette", blue ? 1f : 0f)
+                .SetCustomParameter("uCoreFlash", blue ? 0f : CoreFlash)
                 .Apply();
             Texture2D pixel = TOTextures.FillerTexture;
-            spriteBatch.DrawFromCenter(pixel, center, null, Color.White, scale: SphereRadius * 4f / pixel.Width);
+            spriteBatch.DrawFromCenter(pixel, center, null, Color.White * opacity * (1f - photosphere), scale: radius * 4f / pixel.Width);
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
@@ -356,21 +395,27 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
             {
                 float distance = MathF.Sqrt((i + 0.5f) / 48f);
                 float angle = i * 2.399963f + time * (0.2f + distance * 0.4f);
-                Vector2 offset = angle.ToRotationVector2() * (SphereRadius * distance * 0.92f);
+                Vector2 offset = angle.ToRotationVector2() * (radius * distance * 0.92f);
                 float twinkle = 0.6f + 0.4f * MathF.Sin(time * 2f + i * 1.7f);
                 spriteBatch.DrawFromCenter(sparkle, center + offset, null,
-                    new Color(255, 235, 175, 0) * twinkle, time * 0.15f,
+                    (blue ? new Color(190, 215, 255, 0) : new Color(255, 235, 175, 0)) * opacity * (1f - photosphere) * twinkle, time * 0.15f,
                     (4f + 4f * twinkle) / sparkle.Width);
             }
         }
+        if (photosphere > 0f)
+            DrawStellarPhotosphere(spriteBatch, center, radius, blue, opacity * photosphere);
     }
 
-    internal void DrawCore(SpriteBatch spriteBatch)
+    internal void DrawCore(SpriteBatch spriteBatch, Vector2? worldCenter = null, float? drawRadius = null, bool blue = false, float opacity = 1f)
     {
-        if (Main.dedServ || SphereRadius <= 0f)
+        float radius = drawRadius ?? SphereRadius;
+        if (Main.dedServ || radius <= 0f)
             return;
-        Vector2 center = Projectile.Center - Main.screenPosition;
-        float flash = CoreFlash;
+        float photosphere = blue ? 1f : PrimaryPhotosphere;
+        Vector2 center = (worldCenter ?? Projectile.Center) - Main.screenPosition;
+        if (photosphere >= 1f)
+            return;
+        float flash = blue ? 0f : CoreFlash;
         AnomalyEffects.MiscShaderContainer shader = AnomalyClientConfig.Instance.EnableShaders
             ? AnomalyEffects.Overlays.LegendEnergySphere : null;
         if (shader is null)
@@ -378,10 +423,10 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
             Texture2D bloom = ParticleHandler.GetTexture<BloomParticle>();
             Texture2D sparkle = ParticleHandler.GetTexture<GenericSparkle>();
             float pulse = 1f + 0.08f * MathF.Sin((float)Main.timeForVisualEffects * 0.15f);
-            float coreSize = SphereRadius * (1f + flash * 0.65f) * pulse;
-            spriteBatch.DrawFromCenter(bloom, center, null, new Color(255, 235, 160, 0) * (0.8f + flash),
+            float coreSize = radius * (1f + flash * 0.65f) * pulse;
+            spriteBatch.DrawFromCenter(bloom, center, null, (blue ? new Color(150, 190, 255, 0) : new Color(255, 235, 160, 0)) * opacity * (1f - photosphere) * (0.8f + flash),
                 scale: coreSize * 0.8f / bloom.Width);
-            spriteBatch.DrawFromCenter(sparkle, center, null, new Color(255, 250, 220, 0) * (1f + flash),
+            spriteBatch.DrawFromCenter(sparkle, center, null, (blue ? new Color(225, 235, 255, 0) : new Color(255, 250, 220, 0)) * opacity * (1f - photosphere) * (1f + flash),
                 (float)Main.timeForVisualEffects * 0.005f, coreSize * 0.65f / sparkle.Width);
             return;
         }
@@ -390,13 +435,15 @@ public sealed class LegendEnergySphere : AnomalyModProjectile
             DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         shader.Data.SetCustomParameter("uGlobalTime", (float)Main.timeForVisualEffects / 60f)
             .SetCustomParameter("uNebulaNoiseTexture", AnomalyTextures.Noise.Perlin2)
-            .SetCustomParameter("uGoldColor", GoldColor)
-            .SetCustomParameter("uStarlightColor", StarlightColor)
+            .SetCustomParameter("uGoldColor", blue ? CompanionSurfaceColor : GoldColor)
+            .SetCustomParameter("uStarlightColor", blue ? CompanionCoreColor : StarlightColor)
+            .SetCustomParameter("uPhotosphere", photosphere)
+            .SetCustomParameter("uBluePalette", blue ? 1f : 0f)
             .SetCustomParameter("uCoreFlash", flash)
             .Apply();
         shader.Asset.Value.CurrentTechnique.Passes["Core"].Apply();
         Texture2D pixel = TOTextures.FillerTexture;
-        spriteBatch.DrawFromCenter(pixel, center, null, Color.White, scale: SphereRadius * 4f / pixel.Width);
+        spriteBatch.DrawFromCenter(pixel, center, null, Color.White * opacity, scale: radius * 4f / pixel.Width);
         spriteBatch.End();
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
             DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);

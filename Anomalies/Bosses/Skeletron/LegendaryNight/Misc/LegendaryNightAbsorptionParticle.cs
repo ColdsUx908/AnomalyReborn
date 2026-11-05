@@ -6,6 +6,8 @@ public sealed class LegendaryNightAbsorptionParticle : Particle
     private const int TrailLength = 12;
     internal const int PauseDuration = 3;
     private readonly Player _Target;
+    private readonly bool _FadeInPlace;
+    private readonly Projectile _SphereTarget;
     private readonly Vector2[] _TrailPositions = new Vector2[TrailLength];
     private readonly float _InitialScale;
     private readonly int _ScatterDuration;
@@ -16,9 +18,11 @@ public sealed class LegendaryNightAbsorptionParticle : Particle
     public override BlendState DrawBlendState => BlendState.Additive;
     public override bool AutoUpdatePosition => false;
 
-    public LegendaryNightAbsorptionParticle(Player target, Vector2 position, Vector2 velocity, Color color, float scale)
+    public LegendaryNightAbsorptionParticle(Player target, Vector2 position, Vector2 velocity, Color color, float scale, bool fadeInPlace = false, Projectile sphereTarget = null)
     {
         _Target = target;
+        _FadeInPlace = fadeInPlace;
+        _SphereTarget = sphereTarget;
         Center = position;
         Velocity = velocity;
         Color = color;
@@ -26,6 +30,8 @@ public sealed class LegendaryNightAbsorptionParticle : Particle
         Lifetime = 240;
         _ScatterDuration = Main.rand.Next(6, 11);
         _BrakeDuration = Main.rand.Next(10, 15);
+        if (fadeInPlace)
+            Lifetime = _ScatterDuration + _BrakeDuration + 30 + 24;
         _Spin = Main.rand.NextFloat(-0.018f, 0.018f);
         Array.Fill(_TrailPositions, position);
     }
@@ -53,15 +59,17 @@ public sealed class LegendaryNightAbsorptionParticle : Particle
 
     public override void Update()
     {
-        if (!_Target.active || _Target.dead || _Target.ghost)
+        if (!_FadeInPlace && (_SphereTarget is not null ? !_SphereTarget.active : !_Target.active || _Target.dead || _Target.ghost))
         {
             Kill();
             return;
         }
 
-        Vector2 offset = _Target.Center - Center;
+        Vector2 offset = (_SphereTarget?.Center ?? _Target.Center) - Center;
         Velocity = AdvanceVelocity(Velocity, offset, Timer, _ScatterDuration, _BrakeDuration, _Spin);
-        bool homing = Timer > _ScatterDuration + _BrakeDuration + PauseDuration;
+        if (_FadeInPlace && Timer > _ScatterDuration + _BrakeDuration)
+            Velocity = Vector2.Zero;
+        bool homing = !_FadeInPlace && Timer > _ScatterDuration + _BrakeDuration + PauseDuration;
         if (homing && offset.Length() <= Math.Max(8f, Velocity.Length()))
         {
             Kill();

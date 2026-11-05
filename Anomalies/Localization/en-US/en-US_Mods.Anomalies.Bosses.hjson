@@ -56,23 +56,39 @@ QueenBee: {
 
 Skeletron: {
 	LegendaryNight: {
-		Summon: The legendary night has begun!
-		AstralBlessing: The mysterious power of the Star God blesses you, granting you unlimited flight.
-		InterceptStarPower: Intercept the Star God's power drifting toward it!
 		SummonFailed: Legendary night has failed to begin. It requires an Ultramundane night.
-		LegendaryNightRitual.DisplayName: Legendary Night Ritual
+		Summon: The legendary night has begun!
+		AstralBlessingAnnouncement: The mysterious power of the Star God blesses you, granting you the ability to soar freely.
+		InterceptStarPower: Intercept the Star God's power drifting toward it!
+		TrialFailedDeath: "{0} failed the trial."
+		CoinJudgment.DisplayName: Coin Judgment
+		CoinRoulette.DisplayName: Coin Roulette
+		DemonShadow.DisplayName: Demon Shadow
+		FallingStar.DisplayName: Falling Star
+		FlyingSlime.DisplayName: Flying Slime
 		LegendaryNightArena.DisplayName: Legendary Night Arena
+		LegendaryNightPhase2Arena.DisplayName: Astral Magic Circle
+		LegendaryNightRitual.DisplayName: Legendary Night Ritual
+		LegendCircleCoinGun.DisplayName: Coin Gun
+		LegendCircleCrown.DisplayName: Slime Crown
+		LegendCircleStarCannon.DisplayName: Star Cannon
+		LegendEnergyLaser.DisplayName: Legendary Laser
+		LegendEnergySphere.DisplayName: Supernova
+		LegendFinalMeteor.DisplayName: Final Meteor
+		LegendFinalShockwave.DisplayName: Final Execution
+		LegendLightOrb.DisplayName: Astral Light Orb
 		LegendShockwave.DisplayName: Legend Shockwave
+		LegendSlimeRain.DisplayName: Slime Rain
+		Mechanic2Star.DisplayName: Astral Star Rain
+		Meteor.DisplayName: Meteor
+		PlatinumCoin.DisplayName: Platinum Coin
 		SkullWarning.DisplayName: Skull Warning
 		SlimeMount.DisplayName: Slime Mount
-		FlyingSlime.DisplayName: Flying Slime
-		FallingStar.DisplayName: Falling Star
-		Meteor.DisplayName: Meteor
-		DemonShadow.DisplayName: Demon Shadow
-		PlatinumCoin.DisplayName: Platinum Coin
-		CoinRoulette.DisplayName: Coin Roulette
-		CoinJudgment.DisplayName: Coin Judgment
-		Mechanic2Star.DisplayName: Astral Star Rain
+
+		AncientBattlefieldAltarItem: {
+			DisplayName: Altar of the Ancient Battlefield
+			Tooltip: The altar required to recreate the legendary night
+		}
 
 		FallenStarEssence: {
 			DisplayName: Fallen Star Essence
@@ -83,21 +99,29 @@ Skeletron: {
 				'''
 		}
 
-		AncientBattlefieldAltarItem: {
-			DisplayName: Altar of the Ancient Battlefield
-			Tooltip: The altar required to recreate the legendary night
-		}
-
 		MemoryofAstraeus: {
 			DisplayName: Memory of Astraeus
 			Tooltip: Place it on the altar to recreate the legendary night
 		}
 
-		LegendaryNightPhase2Arena.DisplayName: Astral Magic Circle
-		LegendSlimeRain.DisplayName: Legend Slime Rain
-		LegendEnergySphere.DisplayName: Legend Energy Sphere
-		LegendEnergyLaser.DisplayName: Legend Energy Laser
-		LegendLightOrb.DisplayName: Astral Light Orb
+		AstralBlessing: {
+			DisplayName: Astral Blessing
+			Description:
+				'''
+				Grants the ability to soar freely (Soaring Insignia effects) and Bone Wings flight abilities when no wings are equipped
+				Grants stable gravity
+				'''
+			StatBlessings:
+				'''
+				Your stat blessings:
+				Final damage ×{0}, life regeneration {1}
+				'''
+		}
+
+		AstralSuppression: {
+			DisplayName: Astral Suppression
+			Description: Damage dealt is halved
+		}
 	}
 }
 

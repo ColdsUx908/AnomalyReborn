@@ -2,6 +2,8 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight.Buffs;
 
 public sealed class AstralSuppression : ModBuff
 {
+    public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
+
     public override void SetStaticDefaults()
     {
         Main.debuff[Type] = true;

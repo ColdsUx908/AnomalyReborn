@@ -134,6 +134,32 @@ public sealed class SkeletronHandBloodDustSystem : ModSystem
             AnomalyUtils.ILFailure(nameof(SkeletronHandBloodDustSystem), "Could not locate Skeletron hand blood dust creation.");
             return;
         }
+        ILCursor armCursor = new(il);
+        if (armCursor.TryGotoNext(MoveType.Before,
+                i => i.MatchLdcI4(NPCID.SkeletronHand),
+                i => i.OpCode.FlowControl == FlowControl.Cond_Branch))
+        {
+            ILLabel skipArm = (ILLabel)armCursor.Next.Next.Operand;
+            armCursor.Index += 2;
+            armCursor.Emit(OpCodes.Ldarg_2);
+            armCursor.EmitDelegate(SkeletronLegendHand.DetachedFromArms);
+            armCursor.Emit(OpCodes.Brtrue, skipArm);
+        }
+        else
+            AnomalyUtils.ILFailure(nameof(SkeletronHandBloodDustSystem), "Could not locate Skeletron arm branch.");
+        // 原版两段骨节共用此颜色入口，默认没有应用手部 alpha。
+        ILCursor colorCursor = new(il);
+        if (colorCursor.TryGotoNext(MoveType.After,
+                i => i.MatchLdcI4(NPCID.SkeletronHand),
+                i => i.OpCode.FlowControl == FlowControl.Cond_Branch)
+            && colorCursor.TryGotoNext(MoveType.After, i => i.MatchCall<Lighting>(nameof(Lighting.GetColor))))
+        {
+            colorCursor.Emit(OpCodes.Ldarg_2);
+            colorCursor.EmitDelegate((Color color, NPC npc) => npc.Anomaly.CustomAIType == 1 ? color * npc.Opacity : color);
+        }
+        else
+            AnomalyUtils.ILFailure(nameof(SkeletronHandBloodDustSystem), "Could not locate Skeletron arm color.");
+
         cursor.Remove();
         cursor.Emit(OpCodes.Ldarg_2); // DrawNPCDirect 的 rCurrentNPC。
         cursor.EmitDelegate(CreateHandBloodDust);

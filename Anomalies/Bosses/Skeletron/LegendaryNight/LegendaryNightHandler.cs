@@ -4,6 +4,8 @@ public sealed class LegendaryNightHandler
 {
     public const string LegendaryNightPath = AnomalySharedData.ModPath + "Bosses/Skeletron/LegendaryNight/";
     public const string LegendaryNightEntityPath = AnomalySharedData.ModPath + "Bosses/Skeletron/LegendaryNight/Entities/";
+    public const float Mechanic7ElementProjectileMarker = -7f;
+
     public const string LocalizationCategory = "Bosses.Skeletron.LegendaryNight";
     public static readonly Color BoneColor = new(233, 225, 199);
     public static readonly Color SlimeColor = new(105, 140, 255);

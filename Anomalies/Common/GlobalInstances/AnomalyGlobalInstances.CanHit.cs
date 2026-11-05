@@ -50,6 +50,8 @@ public sealed partial class AnomalyGlobalNPC
 
     public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
     {
+        if (!AnomalyDepthDrawSystem.IsVisible(Z))
+            return false;
         if (!npc.TryGetBehavior(out AnomalyNPCBehavior behavior))
             return true;
         using EntityBehavior<NPC>.EntityLock entityLock = behavior.LockEntity();

@@ -128,6 +128,9 @@ public sealed class Skull : AnomalyProjectileBehavior<Skull>
         }
     }
 
+    // 机制 7 的头骨到达场心即被吸收，不触发原版死亡音效和爆散。
+    public override bool PreKill(int timeLeft) => Projectile.ai[2] != LegendaryNight.LegendaryNightHandler.Mechanic7ElementProjectileMarker;
+
     public override Color? GetAlpha(Color lightColor)
     {
         if (!IsHoming)

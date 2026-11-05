@@ -14,6 +14,8 @@ float uGlobalTime;
 float3 uGoldColor;
 float3 uStarlightColor;
 float uCoreFlash;
+float uBluePalette;
+float uPhotosphere;
 
 // Generated Perlin2: preserve the original LinearWrap sample mean and contrast.
 float SampleNebulaNoise(float2 uv)
@@ -68,7 +70,7 @@ float4 Main(float4 sampleColor : COLOR0, float2 coords : TEXCOORD0, uniform floa
         * pow(saturate(1 - coreDistance / (0.32 + corePulse * 0.08)), 2);
     float innerGlow = (coreBody * (1.8 + corePulse * 1.8) + coreHalo + coreRays) * (1 + uCoreFlash * 1.5);
     if (coreLayer > 0.5)
-        return float4(uStarlightColor * innerGlow * sampleColor.rgb * sampleColor.a, 0);
+        return float4(uStarlightColor * innerGlow * sampleColor.rgb * sampleColor.a * (1 - uPhotosphere), 0);
     float interiorMask = 1 - smoothstep(0.22, 0.25, distanceFromCenter);
     float streaks = 0;
     float tips = 0;
@@ -115,9 +117,9 @@ float4 Main(float4 sampleColor : COLOR0, float2 coords : TEXCOORD0, uniform floa
     float3 starlight = uStarlightColor;
     float bodyOpacity = 1 - smoothstep(0.24, 0.252, distanceFromCenter);
     // 明亮球体上用暖金短线保留颜色对比；线头叠加星芒，外圈保持原有窄亮边。
-    float3 bodyColor = float3(0.78, 0.72, 0.4) * (0.85 + noiseA * 0.1 + noiseB * 0.05);
-    bodyColor += lerp(float3(0.07, 0.055, 0.015), float3(0.18, 0.14, 0.055), cloudLight) * skyMask;
-    float3 streakColor = lerp(float3(1, 0.9, 0.52), float3(1, 0.97, 0.76), saturate(radiusRatio));
+    float3 bodyColor = lerp(float3(0.78, 0.72, 0.4), float3(0.34, 0.48, 0.78), uBluePalette) * (0.85 + noiseA * 0.1 + noiseB * 0.05);
+    bodyColor += lerp(lerp(float3(0.07, 0.055, 0.015), float3(0.015, 0.035, 0.09), uBluePalette), lerp(float3(0.18, 0.14, 0.055), float3(0.055, 0.11, 0.23), uBluePalette), cloudLight) * skyMask;
+    float3 streakColor = lerp(lerp(float3(1, 0.9, 0.52), float3(0.45, 0.65, 1), uBluePalette), lerp(float3(1, 0.97, 0.76), float3(0.83, 0.91, 1), uBluePalette), saturate(radiusRatio));
     float3 color = lerp(bodyColor, streakColor, streaks * 0.7) * bodyOpacity
         + gold * outerGlow * lerp(0.22, 1, smoothstep(0.17, 0.245, distanceFromCenter)) * (1 - streaks * 0.3)
         + starlight * (stars * 2 + tips * 2.5);

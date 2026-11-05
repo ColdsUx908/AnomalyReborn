@@ -38,7 +38,7 @@ public sealed class LegendaryNightFlightPlayer : AnomalyPlayerBehavior
         foreach (Projectile projectile in Projectile.ActiveProjectiles)
         {
             if (projectile.ModProjectile is LegendEnergySphere sphere
-                && sphere.Head is { Mechanic6Active: true, StarGodBlessingActive: true } head
+                && sphere.Head is { StellarMechanicsActive: true, StarGodBlessingActive: true } head
                 && head.CurrentBaseBehavior != SkeletronLegendHead.BaseBehavior.Despawn)
             {
                 LegendEnergySphere.LightOrbBonuses bonuses = sphere.GetBonuses(Player.whoAmI);
@@ -47,7 +47,10 @@ public sealed class LegendaryNightFlightPlayer : AnomalyPlayerBehavior
             }
         }
 
-        // 功能翅膀优先：已有翅膀时只补充无限飞行，不覆盖其飞行参数。
+        // 获得飞升之证效果，包含无限飞行与移动加成。
+        Player.empressBrooch = true;
+
+        // 功能翅膀优先：已有翅膀时保留其飞行参数。
         if (Player.wingsLogic <= 0)
         {
             AnomalyPlayer.LegendaryNight_VirtualBoneWings ??= new Item(ItemID.BoneWings);
@@ -82,6 +85,28 @@ public sealed class LegendaryNightFlightPlayer : AnomalyPlayerBehavior
             return;
 
         Player.wingTime = Player.wingTimeMax;
+
+        // 复原太空低重力，保留液体中的原版重力，并免疫星旋失重。
+        Player.buffImmune[BuffID.VortexDebuff] = true;
+        float worldSizeFactor = Main.maxTilesX / 4200f;
+        worldSizeFactor *= worldSizeFactor;
+        float spaceGravityMultiplier = (float)((Player.position.Y / 16f - (60f + 10f * worldSizeFactor))
+            / (Main.worldSurface / (Main.remixWorld ? 1.0 : 6.0)));
+        if (spaceGravityMultiplier < 1f)
+        {
+            Player.gravity = Player.defaultGravity;
+            if (Player.wet)
+            {
+                if (Player.honeyWet)
+                    Player.gravity = 0.1f;
+                else if (Player.merman)
+                    Player.gravity = 0.3f;
+                else if (Player.trident && !Player.lavaWet)
+                    Player.gravity = Player.controlUp ? 0.1f : 0.25f;
+                else
+                    Player.gravity = 0.2f;
+            }
+        }
         if (Main.dedServ)
             return;
 

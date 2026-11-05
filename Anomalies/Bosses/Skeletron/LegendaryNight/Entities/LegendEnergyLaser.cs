@@ -11,6 +11,8 @@ public sealed class LegendEnergyLaser : AnomalyModProjectile
     // Radiance 的直线光束形状：半宽700，实际绘制宽1400；中心伤害宽度独立为32。
     private const float BeamRadius = 700f;
 
+    public static readonly SoundStyle FiringSound = new(LegendaryNightHandler.LegendaryNightEntityPath + "LegendEnergyLaserFire") { MaxInstances = 0 };
+
     /// <summary>本束激光及预警的视觉底色；默认混合光球金色与40%星光色，不影响伤害判定。</summary>
     public Color BeamColor { get; set; } = new(Vector3.Lerp(LegendEnergySphere.GoldColor, LegendEnergySphere.StarlightColor, 0.4f));
 
@@ -18,7 +20,9 @@ public sealed class LegendEnergyLaser : AnomalyModProjectile
     public float TurnAngle { get; set; }
     public bool Punishment { get; set; }
     // 蓝色恒星的冷白核心与偏蓝外沿；保留着色器已有的白核过渡。
-    private Color EffectiveBeamColor => Punishment ? new Color(125, 155, 255) : BeamColor;
+    private Color EffectiveBeamColor => Punishment ? new Color(125, 155, 255)
+        : Projectile.ai[2] >= SkeletronLegendHead.Mechanic7Data.FirstLaserWarningMusicTime
+            ? SkeletronLegendHead.Mechanic7Data.LaserColor : BeamColor;
     private bool _PunishmentHit;
 
     public override string Texture => TOTextures.InvisibleTexturePath;
@@ -63,7 +67,7 @@ public sealed class LegendEnergyLaser : AnomalyModProjectile
     public override void AI()
     {
         SkeletronLegendHead head = Head;
-        if (head is not { Mechanic6Active: true }
+        if (head is not { StellarMechanicsActive: true }
             || head.CurrentBaseBehavior == SkeletronLegendHead.BaseBehavior.Despawn
             || Age >= LaserWarningDuration + LaserDuration)
         {
@@ -86,18 +90,18 @@ public sealed class LegendEnergyLaser : AnomalyModProjectile
             }
         }
         if (!Main.dedServ && Age == LaserWarningDuration)
-            PlayFiringSounds();
+            PlayFiringSound();
 
-        void PlayFiringSounds()
+        void PlayFiringSound()
         {
-            // Radiance 每帧只播放距本机玩家最近的一束，避免三束同时叠出九层音效。
+            // 同帧只播放距本机玩家最近的一束，避免多束激光叠加音效。
             Vector2 listener = Main.LocalPlayer.Center;
             Vector2 position = ClosestPoint(this);
             float distanceSquared = Vector2.DistanceSquared(listener, position);
             foreach (Projectile projectile in Projectile.ActiveProjectiles)
             {
                 if (projectile.ModProjectile is not LegendEnergyLaser other || other == this
-                    || other.Age != LaserWarningDuration || other.Head is not { Mechanic6Active: true } otherHead
+                    || other.Age != LaserWarningDuration || other.Head is not { StellarMechanicsActive: true } otherHead
                     || otherHead.CurrentBaseBehavior == SkeletronLegendHead.BaseBehavior.Despawn)
                     continue;
                 float otherDistanceSquared = Vector2.DistanceSquared(listener, ClosestPoint(other));
@@ -111,9 +115,12 @@ public sealed class LegendEnergyLaser : AnomalyModProjectile
             if (attenuation <= 0f)
                 return;
             float pan = MathHelper.Clamp((position.X - screenCenter.X) / (Main.screenWidth * 0.5f), -1f, 1f);
-            PlayLayer(SoundID.AbigailUpgrade, 1f, 0.8f);
-            PlayLayer(SoundID.Item122, 0.8f, 0.4f);
-            PlayLayer(SoundID.Item163, 0.5f, 0.3f);
+            SoundEngine.PlaySound(FiringSound, updateCallback: sound =>
+            {
+                sound.Volume = attenuation;
+                sound.Sound.Pan = pan;
+                return true;
+            });
 
             Vector2 ClosestPoint(LegendEnergyLaser laser)
             {
@@ -121,29 +128,10 @@ public sealed class LegendEnergyLaser : AnomalyModProjectile
                 float distance = MathHelper.Clamp(Vector2.Dot(listener - laser.Projectile.Center, direction), 0f, LaserLength);
                 return laser.Projectile.Center + direction * distance;
             }
-
-            void PlayLayer(SoundStyle style, float volume, float pitch)
-            {
-                // 用原生回调迁移 RadiantBeamShot 的逐帧衰减，尾音不随20帧弹幕寿命截断。
-                float remainingVolume = attenuation;
-                SoundEngine.PlaySound(style with
-                {
-                    Volume = volume,
-                    Pitch = pitch + Main.rand.NextFloat(-0.2f, 0.2f),
-                    MaxInstances = 0
-                }, updateCallback: sound =>
-                {
-                    remainingVolume *= 0.97f;
-                    sound.Volume = remainingVolume;
-                    sound.Pitch = (sound.Pitch + 0.8f) * 0.95f - 0.8f;
-                    sound.Sound.Pan = pan;
-                    return remainingVolume >= 0.02f;
-                });
-            }
         }
     }
 
-    public override bool CanHitPlayer(Player target) => !Punishment && Firing && Head is { Mechanic6Active: true } head
+    public override bool CanHitPlayer(Player target) => !Punishment && Firing && Head is { StellarMechanicsActive: true } head
         && head.CurrentBaseBehavior != SkeletronLegendHead.BaseBehavior.Despawn;
 
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => Firing
@@ -161,7 +149,7 @@ public sealed class LegendEnergyLaser : AnomalyModProjectile
     {
         int age = Age;
         if (Main.dedServ || age < 0 || age >= LaserWarningDuration + LaserDuration
-            || Head is not { Mechanic6Active: true } head
+            || Head is not { StellarMechanicsActive: true } head
             || head.CurrentBaseBehavior == SkeletronLegendHead.BaseBehavior.Despawn)
             return false;
         SpriteBatch spriteBatch = Main.spriteBatch;

@@ -27,6 +27,8 @@ public sealed partial class SkeletronLegendHead
     public bool Mechanic3Active => CurrentPhase == Phase.Phase2_3;
     public bool Mechanic4Active => CurrentPhase == Phase.Phase2_4;
     public bool Mechanic6Active => CurrentPhase == Phase.Phase2_6;
+    public bool Mechanic7Active => CurrentPhase == Phase.Phase2_7;
+    public bool StellarMechanicsActive => Mechanic6Active || Mechanic7Active;
     public bool Mechanic5Active => CurrentPhase == Phase.Phase2_5;
     public bool Phase2CoinAvatarActive => Mechanic4Active;
     public bool StarburstActive => Mechanic2Active || Mechanic3Active || Mechanic4Active || Mechanic5Active;
@@ -87,6 +89,9 @@ public sealed partial class SkeletronLegendHead
         if (TONetworkEnvironment.NotClient && CurrentPhase == Phase.Phase2_5 && Phase2MusicElapsedTime >= Mechanic6Data.StartMusicTime)
             ChangeState(Phase.Phase2_6);
 
+        if (TONetworkEnvironment.NotClient && Mechanic6Active && Phase2MusicElapsedTime >= Mechanic7Data.StartMusicTime)
+            ChangeState(Phase.Phase2_7);
+
         if (Phase2ArenaRequested && !ArenaProjectileAlive && !Phase2ArenaProjectileAlive)
             EnsureArenaForPhase2();
 
@@ -108,6 +113,9 @@ public sealed partial class SkeletronLegendHead
                 break;
             case Phase.Phase2_5:
                 Mechanic5();
+                break;
+            case Phase.Phase2_7:
+                Mechanic7();
                 break;
             case Phase.Phase2_6:
                 Mechanic6();
@@ -247,13 +255,43 @@ public sealed partial class SkeletronLegendHead
 
             void RepositionForArena(int remaining)
             {
+                const float RitualSelectionDistance = 1200f;
+                const float ArenaSelectionDistance = 1000f;
+                const float ArenaHeightAboveRitual = 850f;
+                const int RitualDestinationSelected = -2;
+
                 int age = Phase2MusicElapsedTime - Mechanic2Data.ArenaBrakeStartMusicTime;
+                if (age == 0 && TONetworkEnvironment.NotClient)
+                {
+                    foreach (Projectile projectile in Main.ActiveProjectiles)
+                    {
+                        if (projectile.ModProjectile is not LegendaryNightRitual ritual
+                            || ritual.SummonedSkeletronHeadIndex != NPC.whoAmI)
+                            continue;
+
+                        Vector2 ritualCenter = ritual.RitualCenter;
+                        Vector2 arenaCenter = ritualCenter - Vector2.UnitY * ArenaHeightAboveRitual;
+                        if (Vector2.DistanceSquared(Target.Center, ritualCenter) <= RitualSelectionDistance * RitualSelectionDistance
+                            || Vector2.DistanceSquared(Target.Center, arenaCenter) <= ArenaSelectionDistance * ArenaSelectionDistance)
+                        {
+                            AnomalyNPC.AnomalyAI32[10].F = arenaCenter.X;
+                            AnomalyNPC.AnomalyAI32[11].F = arenaCenter.Y;
+                            AnomalyNPC.AnomalyAI32[12].I = RitualDestinationSelected;
+                            for (int slot = 10; slot <= 12; slot++)
+                                AnomalyNPC.AIChanged32[slot] = true;
+                            NPC.netUpdate = true;
+                        }
+                        break;
+                    }
+                }
                 if (age < Mechanic2Data.ArenaRepositionDelay)
                 {
                     NPC.velocity *= 0.9f;
                     return;
                 }
-                Vector2 destination = Target.Center - Vector2.UnitY * Mechanic2Data.ArenaRepositionHeight;
+                Vector2 destination = AnomalyNPC.AnomalyAI32[12].I == RitualDestinationSelected
+                    ? new Vector2(AnomalyNPC.AnomalyAI32[10].F, AnomalyNPC.AnomalyAI32[11].F)
+                    : Target.Center - Vector2.UnitY * Mechanic2Data.ArenaRepositionHeight;
                 if (remaining > Mechanic2Data.ArenaRepositionBrakeDuration)
                 {
                     Vector2 desiredVelocity = (destination - NPC.Center) * 0.2f;
@@ -264,7 +302,7 @@ public sealed partial class SkeletronLegendHead
                     return;
                 }
 
-                // 蓄力前复用8/9为起点、10/11为停靠点，13/14保存初速度；12=-1表示已锁定。
+                // 蓄力前复用8/9为起点、10/11为停靠点，13/14保存初速度；12=-2表示选定仪式上方，-1表示已锁定刹停。
                 // 进入机制2时重置12，拍击仍按原职责使用8至12槽；13/14不再读取。
                 if (AnomalyNPC.AnomalyAI32[12].I != -1)
                 {
@@ -634,6 +672,8 @@ public sealed partial class SkeletronLegendHead
                     FireMounts(Mechanic3Data.RingCount, MathHelper.TwoPi / Mechanic3Data.RingCount, true);
                 return;
             }
+            if (time == Mechanic3Data.JumpTime)
+                SoundEngine.PlaySound(SoundID.Item92, NPC.Center);
             if (time == Mechanic3Data.JumpTime && TONetworkEnvironment.NotClient)
             {
                 float x = MathHelper.Clamp(Target.Center.X - arena.Projectile.Center.X, -arena.Radius * 0.85f, arena.Radius * 0.85f);
@@ -870,17 +910,51 @@ public sealed partial class SkeletronLegendHead
             }
         }
 
+        void Mechanic7()
+        {
+            AnomalyNPC.Z = 0f;
+            NPC.rotation = 0f;
+            NPC.velocity = Phase2Arena is { } arena ? arena.Projectile.Center - NPC.Center : Vector2.Zero;
+            // LocalPhase：0等待恒星转变，1变色膨胀，2保持橙星。
+            int time = Phase2MusicElapsedTime;
+            if (time == Mechanic7Data.T8MusicTime && TONetworkEnvironment.NotClient)
+                Projectile.NewProjectileAction<LegendFinalMeteor>(SourceAI, NPC.Top + new Vector2(0f, 8f), Vector2.Zero,
+                    0, 0f, action: p =>
+                    {
+                        p.ai[0] = NPC.whoAmI + 1;
+                        p.scale = NPC.scale;
+                        p.netUpdate = true;
+                    });
+            if (time == Mechanic7Data.T9MusicTime && TONetworkEnvironment.NotClient)
+                NPC.netUpdate = true;
+            if (time == Mechanic7Data.T10MusicTime && TONetworkEnvironment.NotClient && Phase2Arena is { } impactArena)
+            {
+                Projectile.NewProjectileAction<LegendFinalShockwave>(SourceAI, NPC.Top + new Vector2(0f, 8f),
+                    Vector2.Zero, 0, 0f, action: p =>
+                    {
+                        p.ai[0] = time;
+                        p.ai[1] = impactArena.Radius * Mechanic7Data.FinalShockwaveRadiusRatio;
+                        p.ai[2] = NPC.whoAmI + 1;
+                        p.netUpdate = true;
+                    });
+            }
+            int localPhase = time < Mechanic7Data.TransformationStartMusicTime ? 0
+                : time < Mechanic7Data.TransformationStartMusicTime + Mechanic7Data.TransformationDuration ? 1 : 2;
+            if (TONetworkEnvironment.NotClient && CurrentLocalPhase != localPhase)
+                ChangeState(Phase.Phase2_7, localPhase);
+        }
+
         void Mechanic6()
         {
             int time = Phase2MusicElapsedTime;
             AnomalyNPC.Z = 0f;
             NPC.rotation = 0f;
             NPC.velocity = Phase2Arena is { } arena
-                ? arena.Projectile.Center - Mechanic6Data.SphereOffset(time) - NPC.Center : Vector2.Zero;
+                ? arena.Projectile.Center - Mechanic6Data.SphereOffset(time) * (1f - Mechanic6Data.HeadReturnProgress(time)) - NPC.Center : Vector2.Zero;
             // LocalPhase：0蓄力，1持续保持满蓄力。
             int localPhase = time >= Mechanic6Data.ChargeCompleteMusicTime ? 1 : 0;
             if (TONetworkEnvironment.NotClient && CurrentLocalPhase != localPhase)
-                ChangeState(Phase.Phase2_6, localPhase);
+                ChangeState(CurrentPhase, localPhase);
             if (time == Mechanic6Data.StartMusicTime)
             {
                 SoundEngine.PlaySound(SoundID.ForceRoar);

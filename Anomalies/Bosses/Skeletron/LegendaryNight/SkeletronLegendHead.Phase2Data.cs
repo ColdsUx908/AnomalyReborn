@@ -378,54 +378,67 @@ public sealed partial class SkeletronLegendHead
     /// <summary>机制6：第一颗光球蓄力后持续保持；时间为音乐绝对帧数。</summary>
     public static class Mechanic6Data
     {
+        public const int HandLowerStartMusicTime = LegendEnergySphere.CompanionStartMusicTime;
+        public const int HandLowerDuration = 60;
+        public const int HeadReturnStartMusicTime = HandLowerStartMusicTime + HandLowerDuration;
+        public const int HeadReturnDuration = 90;
+        public const int HandDepartureStartMusicTime = HeadReturnStartMusicTime + HeadReturnDuration;
+        public const int HandDepartureDuration = 45;
+        public static float HandDepartureOpacity(int time) => 1f - MathHelper.SmoothStep(0f, 1f,
+            MathHelper.Clamp((time - HandDepartureStartMusicTime) / (float)HandDepartureDuration, 0f, 1f));
+        public static float HandLowerProgress(int time) => MathHelper.SmoothStep(0f, 1f,
+            MathHelper.Clamp((time - HandLowerStartMusicTime) / (float)HandLowerDuration, 0f, 1f));
+        public static float HeadReturnProgress(int time) => MathHelper.SmoothStep(0f, 1f,
+            MathHelper.Clamp((time - HeadReturnStartMusicTime) / (float)HeadReturnDuration, 0f, 1f));
+
         public const int StartMusicTime = 113 * 60 + 35;
         public const int HandPrepareStartMusicTime = LegendaryNightPhase2Arena.StarburstEndMusicTime;
         public const int HandPrepareEndMusicTime = StartMusicTime - 1;
         public const int RepositionDuration = 60;
         public const int RepositionStartMusicTime = StartMusicTime - RepositionDuration;
-        public const int ChargeCompleteMusicTime = 118 * 60 + 20;
+        public const int ChargeCompleteMusicTime = StartMusicTime + 16 * LightOrbInterval;
         public const int AbsorbMusicTime = 114 * 60 + 5;
         public const int ExpandMusicTime = 114 * 60 + 22;
         public const int ArenaTransitionDuration = 30;
         public const float ArenaTargetRadius = 800f;
         public const float SphereRadius = 240f;
         public const int LightOrbInterval = 95;
-        public const int LightOrbFirstMusicTime = 119 * 60 + 55;
-        public const int LightOrbWaveCount = 4;
-        public const int LightOrbWaveSize = 3;
-        public const int LightOrbMinimumLifetime = 15 * 60;
-        public const int LightOrbLifetimeStep = 90;
+        public const int LightOrbFirstMusicTime = StartMusicTime;
+        public const int LightOrbCount = 16;
+        public const int LightOrbMinimumLifetime = 12 * 60;
+        public const int LightOrbLifetimeStep = 25;
+        public const int LightOrbLifetimeWindow = 60;
         public const int LightOrbAppearanceDuration = 30;
         public const int LightOrbAbsorptionDuration = 30;
+        public const int LightOrbAbsorptionCompleteMusicTime = LegendEnergySphere.CompanionImpactMusicTime - 30;
         public const float LightOrbAbsorptionRadiusRatio = 1.5f;
         public const int LightOrbCoreFlashDuration = 24;
         public const int LightOrbEndMusicTime = 161 * 60;
 
         public static bool ShouldSpawnLightOrb(int time) => time >= LightOrbFirstMusicTime
-            && time <= LightOrbFirstMusicTime + (LightOrbWaveCount - 1) * LightOrbInterval
+            && time <= LightOrbFirstMusicTime + (LightOrbCount - 1) * LightOrbInterval
             && (time - LightOrbFirstMusicTime) % LightOrbInterval == 0;
 
-        public static int GetLightOrbLifetime(int wave, float sample) => LightOrbMinimumLifetime
-            + wave * LightOrbLifetimeStep + (int)(MathHelper.Clamp(sample, 0f, 1f) * LightOrbLifetimeStep);
-
-        public static int[] CreateLightOrbColors(int wave) => wave % 2 == 0 ? [0, 0, 1] : [0, 1, 1];
-
-        public static float GetLightOrbAngle(int sector, float sample) => -MathHelper.PiOver2
-            + (sector + MathHelper.Clamp(sample, 0f, 1f)) * MathHelper.TwoPi / LightOrbWaveSize;
+        public static int GetLightOrbLifetime(int index, float sample) => LightOrbMinimumLifetime
+            + index * LightOrbLifetimeStep + (int)(MathHelper.Clamp(sample, 0f, 1f) * LightOrbLifetimeWindow);
 
         public static float LightOrbAppearance(int age) => MathHelper.SmoothStep(0f, 1f,
             MathHelper.Clamp(age / (float)LightOrbAppearanceDuration, 0f, 1f));
         public static float LightOrbAbsorption(int age, int lifetime = LightOrbMinimumLifetime) => MathHelper.Clamp(
             (age - (lifetime - LightOrbAbsorptionDuration)) / (float)LightOrbAbsorptionDuration, 0f, 1f);
         public static float LightOrbDistance(int age, float spawnRadius, float sphereRadius,
-            int lifetime = LightOrbMinimumLifetime)
+            int lifetime = LightOrbMinimumLifetime, int? originalLifetime = null)
         {
             float edge = sphereRadius * LightOrbAbsorptionRadiusRatio;
             int driftDuration = lifetime - LightOrbAbsorptionDuration;
+            int originalDriftDuration = (originalLifetime ?? lifetime) - LightOrbAbsorptionDuration;
             if (age <= driftDuration)
-                return MathHelper.Lerp(spawnRadius, edge, MathHelper.Clamp(age / (float)driftDuration, 0f, 1f));
+                return MathHelper.Lerp(spawnRadius, edge, MathHelper.Clamp(age / (float)originalDriftDuration, 0f, 1f));
             float absorb = LightOrbAbsorption(age, lifetime);
-            return edge * (1f - absorb * absorb);
+            // 提前吸入时从原漂移轨迹的当前位置衔接，避免瞬移。
+            float absorptionRadius = MathHelper.Lerp(spawnRadius, edge,
+                MathHelper.Clamp(driftDuration / (float)originalDriftDuration, 0f, 1f));
+            return absorptionRadius * (1f - absorb * absorb);
         }
 
         public static Vector2 LightOrbDrawScale(int age, int lifetime = LightOrbMinimumLifetime)
@@ -447,11 +460,9 @@ public sealed partial class SkeletronLegendHead
         public const int LaserInterval = 190;
         public const int LaserFirstMusicTime = 118 * 60 + 20;
         public const int LaserWaveCount = 8;
-        public const int PunishmentLaserCount = 8;
-        public const int LaserEndMusicTime = 161 * 60;
         public const float LaserLength = 1800f;
         public const float LaserWidth = 32f;
-        public const int LaserCount = 3;
+        public static ReadOnlySpan<int> LaserCounts => [3, 3, 4, 4, 6, 6, 8, 10];
         public const float LaserMaxTurnAngle = MathHelper.Pi;
 
         public static bool ShouldSpawnLaser(int time) => time >= LaserFirstMusicTime
@@ -482,8 +493,8 @@ public sealed partial class SkeletronLegendHead
         public const float HeadCenterToSphereEdge = 64f;
         public static float ChargeProgress(int time) => MathHelper.Clamp(
             (time - StartMusicTime) / (float)(ChargeCompleteMusicTime - StartMusicTime), 0f, 1f);
-        // 三次方增长，开始时微小、后半程迅速凝聚，满蓄力后保持半径。
-        public static float Radius(int time) => MathHelper.Lerp(2f, SphereRadius, MathF.Pow(ChargeProgress(time), 3f));
+        // 指数1.5缓出增长，在16×95帧后达到并保持最大半径。
+        public static float Radius(int time) => TOMathUtils.Interpolation.ExponentialEaseOut(2f, SphereRadius, ChargeProgress(time), 1.5f);
         public static Vector2 SphereOffset(int time) => new(0f, -HeadCenterToSphereEdge - Radius(time));
         public static float AbsorbProgress(int time) => MathHelper.SmoothStep(0f, 1f,
             MathHelper.Clamp((time - AbsorbMusicTime) / (float)ArenaTransitionDuration, 0f, 1f));
@@ -491,5 +502,79 @@ public sealed partial class SkeletronLegendHead
             ArenaTargetRadius / (LegendaryNightPhase2Arena.MainCircleFullRadius * LegendaryNightPhase2Arena.OuterCircleRadiusRatio),
             MathHelper.SmoothStep(0f, 1f,
             MathHelper.Clamp((time - ExpandMusicTime) / (float)ArenaTransitionDuration, 0f, 1f)));
+    }
+
+    /// <summary>机制7：冲击波爆发后的恒星转变；时间为音乐绝对帧数。</summary>
+    public static class Mechanic7Data
+    {
+        public const int StartMusicTime = LegendEnergySphere.CompanionImpactMusicTime;
+        public const int TransformationStartMusicTime = 153 * 60 + 47;
+        public const int TransformationDuration = 143;
+        public const float FinalScale = 2f;
+        public const int CircleStartMusicTime = 156 * 60 + 10;
+        public const int FadeDuration = 60;
+        public const int ElementStartMusicTime = CircleStartMusicTime + 95;
+        public const int AttackStartMusicTime = ElementStartMusicTime + 95;
+        public const int AccelerationDuration = 120;
+        public const float MaximumSpeedMultiplier = 7.5f;
+        public const float ElementProjectileSpeed = 3.5f;
+        public const int LaserCount = 8;
+        public const int LaserWaveCount = 8;
+        public const int ElementWaveCount = 43;
+        // Tn = AttackStartMusicTime + (n - 1) * LaserInterval，包含95帧预警。
+        public const int T8MusicTime = AttackStartMusicTime + 7 * LaserInterval; // 10890，3:01:30
+        public const int T9MusicTime = AttackStartMusicTime + 8 * LaserInterval; // 11080，3:04:40
+        public const int T10MusicTime = AttackStartMusicTime + 9 * LaserInterval; // 11270，3:07:50
+        public const int StarDissipationDuration = 285;
+        public const int MeteorFallDuration = T10MusicTime - T8MusicTime;
+        public const float FinalShockwaveRadiusRatio = 2f;
+        public static float StarDissipation(int time) => MathHelper.Clamp(
+            (time - T8MusicTime) / (float)StarDissipationDuration, 0f, 1f);
+        public const int LaserInterval = 190;
+        public const int FirstLaserWarningMusicTime = AttackStartMusicTime - Mechanic6Data.LaserWarningDuration;
+        // 延续橙星外层的暖橙色，保留光束现有的白热核心。
+        public static readonly Color LaserColor = new(255, 132, 42);
+        public static bool ShouldSpawnLaser(int time) => time >= FirstLaserWarningMusicTime
+            && time < FirstLaserWarningMusicTime + LaserWaveCount * LaserInterval
+            && (time - FirstLaserWarningMusicTime) % LaserInterval == 0;
+
+        // 对线性速度乘数积分，避免加速起点或终点出现角度跳变。
+        public static float RollingTime(int time)
+        {
+            float age = Math.Max(0, time - CircleStartMusicTime);
+            float acceleratedAge = Math.Max(0, time - AttackStartMusicTime);
+            float rampAge = Math.Min(acceleratedAge, AccelerationDuration);
+            return age + (MaximumSpeedMultiplier - 1f) * rampAge * rampAge / (2f * AccelerationDuration)
+                + (MaximumSpeedMultiplier - 1f) * Math.Max(0, acceleratedAge - AccelerationDuration);
+        }
+
+        public static bool ShouldFire(int time)
+        {
+            int age = time - AttackStartMusicTime;
+            // 每95帧均分3轮，整数帧偏移0、31、63；第43轮仍落在T8。
+            return age >= 0 && age <= (ElementWaveCount - 1) * 95 / 3
+                && age % 95 is 0 or 31 or 63;
+        }
+        public const float CircleRadius = 100f;
+        // 独立公转角速度；编号奇数顺时针，偶数逆时针。
+        public static ReadOnlySpan<float> RollingSpeeds => [0.002f, 0.003f, 0.0033f, 0.0025f, 0.0023f, 0.0037f, 0.0027f, 0.0035f];
+        public static float CircleOpacity(int time) => MathHelper.Clamp((time - CircleStartMusicTime) / (float)FadeDuration, 0f, 1f)
+            * (1f - MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp((time - T9MusicTime) / (float)FadeDuration, 0f, 1f)));
+        public static int GetElementStartMusicTime(int index) => ElementStartMusicTime + index * 6;
+
+        // 按编号错开起显，所有元素在60帧淡入窗口末端完成淡入。
+        public static float ElementOpacity(int time, int index) => MathHelper.Clamp(
+            (time - GetElementStartMusicTime(index)) / (FadeDuration - index * 6f), 0f, 1f) * (time < T9MusicTime ? 1f : 0f);
+        public static Color ElementColor(int index) => (index / 2) switch
+        {
+            0 => LegendaryNightHandler.BoneColor,
+            1 => LegendaryNightHandler.SlimeColor,
+            2 => LegendaryNightHandler.StarColor,
+            _ => LegendaryNightHandler.PlatinumColor,
+        };
+
+        public static float TransformationProgress(int time) => MathHelper.SmoothStep(0f, 1f,
+            MathHelper.Clamp((time - TransformationStartMusicTime) / (float)TransformationDuration, 0f, 1f));
+        public static float StarScale(int time) => MathHelper.Lerp(1f, FinalScale, TransformationProgress(time));
     }
 }

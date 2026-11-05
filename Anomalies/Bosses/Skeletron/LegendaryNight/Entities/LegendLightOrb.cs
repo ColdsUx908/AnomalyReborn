@@ -14,10 +14,11 @@ public sealed class LegendLightOrb : AnomalyModProjectile
     {
         None,
         Intercepted,
-        Absorbed
+        Absorbed,
+        Incorrect
     }
 
-    public const float Radius = 16f;
+    public const float Radius = 20f;
     private ProjectileNetReference _SphereReference;
     private Resolution _Resolution;
     private bool _ResolutionVisualsPlayed;
@@ -30,7 +31,10 @@ public sealed class LegendLightOrb : AnomalyModProjectile
     }
     public float SpawnRadius { get; set; }
     public int TravelDuration { get; set; } = LightOrbMinimumLifetime;
-    internal bool AvailableForInterception => _Resolution == Resolution.None && Age < TravelDuration;
+    // 使用同步出生时间推导保底，沿用原有网络载荷。
+    private int EffectiveTravelDuration => Math.Min(TravelDuration,
+        LightOrbAbsorptionCompleteMusicTime - (int)Projectile.ai[1]);
+    internal bool AvailableForInterception => _Resolution == Resolution.None && Age < EffectiveTravelDuration;
     private LegendEnergySphere Sphere => SphereProjectile.ModProjectile as LegendEnergySphere;
     private int Age => Sphere?.Head is { } head ? head.Phase2MusicElapsedTime - (int)Projectile.ai[1] : -1;
 
@@ -61,7 +65,7 @@ public sealed class LegendLightOrb : AnomalyModProjectile
         if (_Resolution != Resolution.None)
             return;
         LegendEnergySphere sphere = Sphere;
-        if (sphere is null || sphere.Head is not { Mechanic6Active: true } head
+        if (sphere is null || sphere.Head is not { StellarMechanicsActive: true } head
             || head.CurrentBaseBehavior == SkeletronLegendHead.BaseBehavior.Despawn || head.Phase2Arena is null
             || head.Phase2MusicElapsedTime >= LightOrbEndMusicTime)
         {
@@ -73,9 +77,9 @@ public sealed class LegendLightOrb : AnomalyModProjectile
         int age = Age;
         Projectile.timeLeft = 120;
         Projectile.Center = sphere.Projectile.Center + Projectile.ai[2].ToRotationVector2()
-            * LightOrbDistance(age, SpawnRadius, sphere.SphereRadius, TravelDuration);
+            * LightOrbDistance(age, SpawnRadius, sphere.SphereRadius, EffectiveTravelDuration, TravelDuration);
         Projectile.rotation = Projectile.ai[2];
-        Projectile.scale = LightOrbAppearance(age) * (1f - LightOrbAbsorption(age, TravelDuration));
+        Projectile.scale = LightOrbAppearance(age) * (1f - LightOrbAbsorption(age, EffectiveTravelDuration));
         Projectile.Opacity = LightOrbAppearance(age);
         if (TONetworkEnvironment.NotClient)
         {
@@ -84,15 +88,14 @@ public sealed class LegendLightOrb : AnomalyModProjectile
             {
                 if (player.dead || player.ghost || !OverlapsPlayer(player.Hitbox))
                     continue;
-                sphere.InterceptLightOrb(player.whoAmI, (int)Projectile.ai[0]);
+                bool correct = sphere.InterceptLightOrb(player.whoAmI, (int)Projectile.ai[0]);
                 _InterceptingPlayerIndex = player.whoAmI;
-                Resolve(Resolution.Intercepted);
+                Resolve(correct ? Resolution.Intercepted : Resolution.Incorrect);
                 return;
             }
-            if (age >= TravelDuration)
+            if (age >= EffectiveTravelDuration)
             {
-                _Resolution = Resolution.Absorbed;
-                sphere.OnLightOrbAbsorbed(this);
+                sphere.RecordLightOrbAbsorption();
                 Resolve(Resolution.Absorbed);
                 return;
             }
@@ -105,29 +108,32 @@ public sealed class LegendLightOrb : AnomalyModProjectile
 
         void SpawnTrail()
         {
-            const int TrailInterval = 1;
+            const int TrailInterval = 2;
             const float TrailSpacing = 8f;
+            const float TrailHalfWidthRatio = 0.7f;
             if (age <= 0 || age % TrailInterval != 0 || Projectile.scale <= 0f)
                 return;
 
             // 按同步轨迹重建上一采样点，不使用收包瞬移距离；快速吸入时补足星芒间隔。
             Vector2 previous = sphere.Projectile.Center + Projectile.ai[2].ToRotationVector2()
-                * LightOrbDistance(Math.Max(0, age - TrailInterval), SpawnRadius, sphere.SphereRadius, TravelDuration);
+                * LightOrbDistance(Math.Max(0, age - TrailInterval), SpawnRadius, sphere.SphereRadius, EffectiveTravelDuration, TravelDuration);
             Vector2 displacement = Projectile.Center - previous;
             if (displacement.LengthSquared() <= 0.0001f)
                 return;
             int count = Math.Clamp((int)MathF.Ceiling(displacement.Length() / TrailSpacing), 1, 6);
             Vector2 backward = -displacement.SafeNormalize(Vector2.Zero);
-            Color color = OrbColor * Projectile.Opacity;
+            Vector2 sideways = new(-backward.Y, backward.X);
+            Color color = OrbColor * (Projectile.Opacity * 0.85f);
             for (int i = 0; i < count; i++)
             {
                 Vector2 position = Vector2.Lerp(previous, Projectile.Center, (i + Main.rand.NextFloat()) / count)
-                    + backward * (Radius * Projectile.scale + 4f)
-                    + Main.rand.NextVector2Circular(3f, 3f) * Projectile.scale;
-                Vector2 velocity = backward.RotatedBy(Main.rand.NextFloat(-0.22f, 0.22f)) * Main.rand.NextFloat(1.5f, 3.5f);
-                sphere.SpawnLightOrbTrailParticle(new GenericSparkle(position, velocity, color, color * 0.85f,
-                    Main.rand.NextFloat(0.3f, 0.45f) * Projectile.scale, Main.rand.Next(24, 37),
-                    rotationSpeed: 0.035f, bloomScale: 1.2f));
+                    + backward * ((Radius + 2f) * Projectile.scale)
+                    + sideways * (Main.rand.NextFloat(-1f, 1f) * Radius * TrailHalfWidthRatio * Projectile.scale);
+                // 光点基本停留在经过的世界位置；横向撒开且缩小星芒，避免连成球体的尖长附肢。
+                Vector2 velocity = Projectile.velocity.ToCustomLength(-3f) + Main.rand.NextPolarVector2(0.5f);
+                sphere.SpawnLightOrbTrailParticle(new GenericSparkle(position, velocity, color, color * 0.35f,
+                    Main.rand.NextFloat(0.14f, 0.2f) * Projectile.scale, Main.rand.Next(24, 37),
+                    rotationSpeed: 0.02f, bloomScale: 0.8f));
             }
         }
     }
@@ -157,13 +163,21 @@ public sealed class LegendLightOrb : AnomalyModProjectile
         if (_InterceptingPlayerIndex < 0 || _InterceptingPlayerIndex >= Main.maxPlayers)
             return;
         Player target = Main.player[_InterceptingPlayerIndex];
+        bool incorrect = _Resolution == Resolution.Incorrect;
+        if (incorrect && target.whoAmI == Main.myPlayer)
+            LegendaryNightDamage.HurtLocalPlayer(Projectile, 250, false, ignoreAllImmunity: true);
         const int ParticleCount = 40;
         for (int i = 0; i < ParticleCount; i++)
         {
             // 限制混白比例并关闭白色粒子核，保留金色/铂金色，避免过曝发白。
             Color color = Color.Lerp(OrbColor, Color.White, Main.rand.NextFloat(0.05f, 0.25f));
             ParticleHandler.SpawnParticle(new LegendaryNightAbsorptionParticle(target, Projectile.Center,
-                Main.rand.NextPolarVector2(2f, 6f), color, Main.rand.NextFloat(0.35f, 0.65f)));
+                Main.rand.NextPolarVector2(2f, 6f), color, Main.rand.NextFloat(0.35f, 0.65f), incorrect));
+            if (incorrect && SphereProjectile is { active: true } sphere)
+                ParticleHandler.SpawnParticle(new LegendaryNightAbsorptionParticle(target, target.Center,
+                    Main.rand.NextPolarVector2(2f, 6f),
+                    i % 2 == 0 ? LegendaryNightHandler.StarColor : LegendaryNightHandler.PlatinumColor,
+                    Main.rand.NextFloat(0.35f, 0.65f), sphereTarget: sphere));
         }
     }
 
@@ -193,11 +207,11 @@ public sealed class LegendLightOrb : AnomalyModProjectile
     internal void Draw(SpriteBatch spriteBatch)
     {
         int age = Age;
-        if (Main.dedServ || _Resolution != Resolution.None || age < 0 || age >= TravelDuration)
+        if (Main.dedServ || _Resolution != Resolution.None || age < 0 || age >= EffectiveTravelDuration)
             return;
 
         Vector2 position = Projectile.Center - Main.screenPosition;
-        Vector2 drawScale = LightOrbDrawScale(age, TravelDuration);
+        Vector2 drawScale = LightOrbDrawScale(age, EffectiveTravelDuration);
         AnomalyEffects.MiscShaderContainer shader = AnomalyClientConfig.Instance.EnableShaders
             ? AnomalyEffects.Primitives.LegendLightOrb : null;
         if (shader is null)

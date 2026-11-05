@@ -1,18 +1,3 @@
-AstralBlessing: {
-	DisplayName: Astral Blessing
-	Description: Grants infinite flight and Bone Wings flight abilities when no wings are equipped
-	StatBlessings:
-		'''
-		Your stat blessings:
-		Final damage ×{0}, life regeneration {1}
-		'''
-}
-
-AstralSuppression: {
-	DisplayName: Astral Suppression
-	Description: Damage dealt is halved
-}
-
 DimensionalRend: {
 	DisplayName: Dimensional Rend
 	Description: The cost of transcending the bounds of space is losing control over reality

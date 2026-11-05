@@ -122,6 +122,14 @@ public sealed class SlimeMount : AnomalyModProjectile
             length, 30f, outer, inner);
     }
 
+    public override bool TileCollideStyle(ref int width, ref int height, ref bool fallThrough, ref Vector2 hitboxCenterFrac)
+    {
+        // 下落阶段沿用低于目标后开启的地形碰撞，同时让平台阻挡坐骑。
+        if (Projectile.ai[1] == 1f)
+            fallThrough = false;
+        return true;
+    }
+
     public override bool CanHitPlayer(Player target) => Projectile.ai[1] > 0f;
 
     public override void OnHitPlayer(Player target, Player.HurtInfo info) => Projectile.velocity *= -0.8f;

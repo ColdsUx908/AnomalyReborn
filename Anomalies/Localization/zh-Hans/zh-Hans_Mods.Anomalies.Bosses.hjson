@@ -56,23 +56,39 @@ QueenBee: {
 
 Skeletron: {
 	LegendaryNight: {
-		Summon: 传说之夜开始了！
-		AstralBlessing: 神秘的星神之力祝福着你，你获得了无限飞行的能力。
-		InterceptStarPower: 拦截向它飘去的星神之力！
 		SummonFailed: 传说之夜未能开始。它需要一个超凡的夜晚。
-		LegendaryNightRitual.DisplayName: 传说之夜仪式
+		Summon: 传说之夜开始了！
+		AstralBlessingAnnouncement: 神秘的星神之力祝福着你，你获得了自由翱翔的能力。
+		InterceptStarPower: 拦截向它飘去的星神之力！
+		TrialFailedDeath: "{0}未能通过试炼。"
+		CoinJudgment.DisplayName: 钱币审判
+		CoinRoulette.DisplayName: 钱币轮盘
+		DemonShadow.DisplayName: 恶魔之影
+		FallingStar.DisplayName: 坠落之星
+		FlyingSlime.DisplayName: 飞翔史莱姆
 		LegendaryNightArena.DisplayName: 传说之夜竞技场
+		LegendaryNightPhase2Arena.DisplayName: 星神法阵
+		LegendaryNightRitual.DisplayName: 传说之夜仪式
+		LegendCircleCoinGun.DisplayName: 钱币枪
+		LegendCircleCrown.DisplayName: 史莱姆王冠
+		LegendCircleStarCannon.DisplayName: 星星炮
+		LegendEnergyLaser.DisplayName: 传奇之光
+		LegendEnergySphere.DisplayName: 超新星
+		LegendFinalMeteor.DisplayName: 终焉流星
+		LegendFinalShockwave.DisplayName: 终焉处决
+		LegendLightOrb.DisplayName: 星神光球
 		LegendShockwave.DisplayName: 传奇冲击波
+		LegendSlimeRain.DisplayName: 史莱姆雨
+		Mechanic2Star.DisplayName: 星神落雨
+		Meteor.DisplayName: 陨石
+		PlatinumCoin.DisplayName: 铂金币
 		SkullWarning.DisplayName: 骷髅预警
 		SlimeMount.DisplayName: 史莱姆鞍
-		FlyingSlime.DisplayName: 飞翔史莱姆
-		FallingStar.DisplayName: 坠落之星
-		Meteor.DisplayName: 陨石
-		DemonShadow.DisplayName: 恶魔之影
-		PlatinumCoin.DisplayName: 铂金币
-		CoinRoulette.DisplayName: 钱币轮盘
-		CoinJudgment.DisplayName: 钱币审判
-		Mechanic2Star.DisplayName: 星神落雨
+
+		AncientBattlefieldAltarItem: {
+			DisplayName: 古战场祭坛
+			Tooltip: 复现传说之夜所必须的祭坛
+		}
 
 		FallenStarEssence: {
 			DisplayName: 坠星精华
@@ -83,21 +99,29 @@ Skeletron: {
 				'''
 		}
 
-		AncientBattlefieldAltarItem: {
-			DisplayName: 古战场祭坛
-			Tooltip: 复现传说之夜所必须的祭坛
-		}
-
 		MemoryofAstraeus: {
 			DisplayName: 星星之神的记忆
 			Tooltip: 放置在祭坛上即可复现传说之夜
 		}
 
-		LegendaryNightPhase2Arena.DisplayName: 星神法阵
-		// LegendSlimeRain.DisplayName: Legend Slime Rain
-		// LegendEnergySphere.DisplayName: Legend Energy Sphere
-		// LegendEnergyLaser.DisplayName: Legend Energy Laser
-		LegendLightOrb.DisplayName: 星神光球
+		AstralBlessing: {
+			DisplayName: 星神祝福
+			Description:
+				'''
+				获得自由翱翔的能力（飞升之证效果）；未装备翅膀时获得骨之翼的飞行能力
+				获得稳定的重力
+				'''
+			StatBlessings:
+				'''
+				你的属性祝福：
+				最终伤害×{0}，生命回复{1}
+				'''
+		}
+
+		AstralSuppression: {
+			DisplayName: 星神威压
+			Description: 造成的伤害乘算降低50%
+		}
 	}
 }
 

@@ -14,9 +14,9 @@ public static class HPThresholdMath
     {
         if (totalMaxLife <= 0 || npcMaxLife <= 0)
             return 0f;
-        long bodyMax = System.Math.Min(npcMaxLife, totalMaxLife);
+        long bodyMax = Math.Min(npcMaxLife, totalMaxLife);
         long extraMax = totalMaxLife - bodyMax;
-        ratio = System.Math.Clamp(ratio, 0f, 1f);
+        ratio = Math.Clamp(ratio, 0f, 1f);
         if (source == HPThresholdLifeSource.Extra)
             return extraMax > 0 ? (bodyMax + extraMax * ratio) / totalMaxLife : 0f;
         return bodyMax * ratio / totalMaxLife;
@@ -27,7 +27,7 @@ public static class HPThresholdMath
         if (totalMaxLife <= 0)
             return 0f;
         return source == HPThresholdLifeSource.Extra
-            ? (System.Math.Min(npcMaxLife, totalMaxLife) + (float)System.Math.Max(extraLife, 0)) / totalMaxLife
-            : (float)System.Math.Max(npcLife, 0) / totalMaxLife;
+            ? (Math.Min(npcMaxLife, totalMaxLife) + (float)Math.Max(extraLife, 0)) / totalMaxLife
+            : (float)Math.Max(npcLife, 0) / totalMaxLife;
     }
 }

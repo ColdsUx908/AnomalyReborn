@@ -126,7 +126,7 @@ public sealed partial class SkeletronLegendHead
         if (Timer1 == PhaseChangeBlessingTime)
         {
             if (TONetworkEnvironment.NotClient)
-                TOLocalizationUtils.ChatLocalizedText(AnomalySharedData.ModLocalizationPrefix + LegendaryNightHandler.LocalizationCategory + ".AstralBlessing", LegendaryNightHandler.StarColor);
+                TOLocalizationUtils.ChatLocalizedText(AnomalySharedData.ModLocalizationPrefix + LegendaryNightHandler.LocalizationCategory + ".AstralBlessingAnnouncement", LegendaryNightHandler.StarColor);
             if (!Main.dedServ)
             {
                 foreach (Player player in Main.ActivePlayers)

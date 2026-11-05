@@ -65,7 +65,7 @@ public sealed class EventideReunionResonancePlayer : AnomalyPlayerBehavior
         byte mask = reader.ReadByte();
         int time = reader.ReadUInt16();
         if ((uint)index >= Main.maxPlayers || mask > EventideReunionResonanceRules.AllAspects
-            || time > EventideReunionResonanceRules.Duration || (mask == 0) != (time == 0)
+            || time > EventideReunionResonanceRules.Duration || mask == 0 != (time == 0)
             || (Main.netMode == NetmodeID.Server && index != sender))
             return;
         Player player = Main.player[index];

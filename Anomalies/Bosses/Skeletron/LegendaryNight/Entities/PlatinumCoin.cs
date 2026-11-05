@@ -55,7 +55,8 @@ public sealed class PlatinumCoin : AnomalyModProjectile
         if (Main.dedServ)
             return;
 
-        SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
+        if (Projectile.ai[2] != LegendaryNightHandler.Mechanic7ElementProjectileMarker)
+            SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
         for (int i = 0; i < 15; i++)
         {
             Dust.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, DustID.PlatinumCoin, Projectile.oldVelocity, d =>

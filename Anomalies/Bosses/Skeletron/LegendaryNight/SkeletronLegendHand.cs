@@ -106,6 +106,33 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
         }
 
         SkeletronLegendHead head = SkeletronLegendHead.GetInstance(master);
+        NPC.timeLeft = Math.Max(NPC.timeLeft, 180);
+        if (DetachedFromArms(NPC) && head.Phase2Arena is { } arena)
+        {
+            if (head.Phase2MusicElapsedTime >= SkeletronLegendHead.Mechanic7Data.T9MusicTime)
+            {
+                NPC.Opacity = 0f;
+                NPC.damage = 0;
+                if (TONetworkEnvironment.NotClient)
+                {
+                    NPC.active = false;
+                    NPC.netUpdate = true;
+                }
+                return false;
+            }
+            int index = NPC.ai[0] < 0f ? 0 : 1;
+            (Vector2 center, _, _) = arena.GetMechanic7Circle(index);
+            NPC.hide = false;
+            NPC.damage = 0;
+            NPC.velocity = Vector2.Zero;
+            NPC.Center = center;
+            NPC.spriteDirection = -(int)NPC.ai[0];
+            NPC.rotation = (arena.Projectile.Center - center).ToRotation() + MathHelper.PiOver2;
+            NPC.Opacity = SkeletronLegendHead.Mechanic7Data.ElementOpacity(head.Phase2MusicElapsedTime, index);
+            AnomalyNPC.Z = 0f;
+            AnomalyNPC.Skeletron_HandBloodDust = null;
+            return false;
+        }
         NPC.hide = head.HandsHidden;
         if (head.HandsHidden)
         {
@@ -118,7 +145,6 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
         NPC.damage = NPC.defDamage;
         NPC.spriteDirection = -(int)NPC.ai[0];
         NPC.target = master.target;
-        NPC.dontTakeDamage = !head.Phase2;
         int increasedLife = Math.Min(NPC.lifeMax - NPC.life, Math.Max(1, NPC.lifeMax / 60));
         if (increasedLife > 0)
         {
@@ -130,7 +156,7 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
             NPC.velocity *= 0.8f;
             return false;
         }
-        if (head.Mechanic6Active || head.Mechanic5Active
+        if (head.StellarMechanicsActive || head.Mechanic5Active
             && head.Phase2MusicElapsedTime >= SkeletronLegendHead.Mechanic6Data.HandPrepareStartMusicTime)
             Mechanic6HandAI(head);
         else if (head.Mechanic5Active)
@@ -174,8 +200,19 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
             NPC.damage = 0;
             NPC.dontTakeDamage = true;
             AnomalyNPC.Z = 0f;
+            // 收进球内而非普通待机位置，为原版向外伸出的两段骨节留出余量。
+            Vector2 concealedOffset = (head.Phase2Arena?.Projectile.Center ?? master.Center + sphereOffset)
+                - master.Center + new Vector2(side * 40f, -40f);
+            offset = Vector2.Lerp(offset, concealedOffset,
+                SkeletronLegendHead.Mechanic6Data.HandLowerProgress(time));
             NPC.velocity = master.Center + offset - NPC.Center;
             NPC.rotation = GetPositionRotation(NPC.Center + NPC.velocity, master.Center, side);
+            NPC.Opacity = SkeletronLegendHead.Mechanic6Data.HandDepartureOpacity(time);
+            if (NPC.Opacity <= 0f)
+            {
+                AnomalyNPC.Skeletron_HandBloodDust = null;
+                NPC.hide = true;
+            }
         }
 
         void Mechanic5HandAI(SkeletronLegendHead head)
@@ -247,6 +284,12 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
                 }
             }
             NPC.rotation = GetPositionRotation(NPC.Center + NPC.velocity, master.Center, side);
+            NPC.Opacity = SkeletronLegendHead.Mechanic6Data.HandDepartureOpacity(time);
+            if (NPC.Opacity <= 0f)
+            {
+                AnomalyNPC.Skeletron_HandBloodDust = null;
+                NPC.hide = true;
+            }
         }
 
         // 从原版 NPC.AI 的 aiStyle == 12（type 36）复制，保留 0/3 待机、1/2 下拍、4/5 横扫。
@@ -348,6 +391,7 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
     public override bool CanHitPlayer(Player target, ref int cooldownSlot) =>
         NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master)
         && LegendaryNightHandler.IsLegendaryNightHead(master) && SkeletronLegendHead.GetInstance(master) is { Phase2: true, Mechanic2InBackground: false, HandsHidden: false } head
+        && !head.StellarMechanicsActive
         && (!head.Mechanic5Active || head.Phase2MusicElapsedTime >= SkeletronLegendHead.Mechanic5Data.StartMusicTime
             + SkeletronLegendHead.Mechanic5Data.HandReappearanceDuration);
 
@@ -403,9 +447,33 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
         NPC.rotation += MathHelper.WrapAngle(destinationRotation - NPC.rotation) * entry;
     }
 
+    internal void DrawCircleHand(SpriteBatch spriteBatch)
+    {
+        if (!DetachedFromArms(NPC) || NPC.hide)
+            return;
+        SkeletronLegendHead head = SkeletronLegendHead.GetInstance(Master);
+        int index = NPC.ai[0] < 0f ? 0 : 1;
+        float opacity = SkeletronLegendHead.Mechanic7Data.ElementOpacity(head.Phase2MusicElapsedTime, index);
+        if (opacity <= 0f)
+            return;
+        Texture2D texture = TextureAssets.Npc[NPC.type].Value;
+        float scale = SkeletronLegendHead.Mechanic7Data.CircleRadius * 1.9f / NPC.frame.Size().Length();
+        spriteBatch.Draw(texture, NPC.Center + NPC.netOffset - Main.screenPosition, NPC.frame,
+            Color.White * opacity, NPC.rotation, NPC.frame.Size() * 0.5f, scale,
+            NPC.spriteDirection == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
+    }
+
+    internal static bool DetachedFromArms(NPC npc) => npc.Anomaly.CustomAIType == 1
+        && npc.TryGetMaster(NPCID.SkeletronHead, out NPC master)
+        && LegendaryNightHandler.IsLegendaryNightHead(master)
+        && SkeletronLegendHead.GetInstance(master) is { Mechanic7Active: true } head
+        && head.Phase2MusicElapsedTime >= SkeletronLegendHead.Mechanic7Data.CircleStartMusicTime;
+
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         if (NPC.hide) return false;
+        if (DetachedFromArms(NPC))
+            return false;
         // 原版骨节与血尘生成先执行；血尘由独立列表在本体的 Z 投影作用域内绘制。
         AnomalyNPC.Skeletron_HandBloodDust?.UpdateAndDraw(spriteBatch, NPC.netOffset - screenPos, NPC.Opacity);
         if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master) || !LegendaryNightHandler.IsLegendaryNightHead(master))
@@ -474,7 +542,7 @@ public sealed class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLegendHand
             if (!NPC.TryGetMaster(NPCID.SkeletronHead, out NPC master) || !LegendaryNightHandler.IsLegendaryNightHead(master))
                 return 0f;
             SkeletronLegendHead head = SkeletronLegendHead.GetInstance(master);
-            if (head.Mechanic6Active || head.Mechanic5Active
+            if (head.StellarMechanicsActive || head.Mechanic5Active
                 && head.Phase2MusicElapsedTime >= SkeletronLegendHead.Mechanic6Data.HandPrepareStartMusicTime)
                 return 0f;
             if (head.Mechanic5Active)

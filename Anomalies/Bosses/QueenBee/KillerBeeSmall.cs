@@ -19,7 +19,7 @@ public sealed class KillerBeeSmall : AnomalyModProjectile
     protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
     {
         base.ReceiveAnomalyExtraAI(reader);
-        _SpecialCombCellReference = Anomalies.DataStructures.ProjectileNetReference.Read(reader);
+        _SpecialCombCellReference = ProjectileNetReference.Read(reader);
     }
 
     /* 数组使用约定

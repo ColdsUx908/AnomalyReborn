@@ -472,7 +472,7 @@ public partial class BossHealthBar : ILocalizationPrefix
             result &= npcBehavior.PreUpdateBossBar(this);
             hasSingle = true;
         }
-        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in global::Transoceanic.Behaviors.BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PreUpdateCalBossBar)))
+        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PreUpdateCalBossBar)))
             result &= anomalyGNPCBehavior.PreUpdateCalBossBar(NPC, this, hasSingle);
         return result;
     }
@@ -494,7 +494,7 @@ public partial class BossHealthBar : ILocalizationPrefix
             npcBehavior.PostUpdateBossBar(this);
             hasSingle = true;
         }
-        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in global::Transoceanic.Behaviors.BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PostUpdateCalBossBar)))
+        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PostUpdateCalBossBar)))
             anomalyGNPCBehavior.PostUpdateCalBossBar(NPC, this, hasSingle);
     }
 
@@ -603,7 +603,7 @@ public partial class BossHealthBar : ILocalizationPrefix
             result &= npcBehavior.PreDrawBossBar(this, spriteBatch, ref x, ref y);
             hasSingle = true;
         }
-        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in global::Transoceanic.Behaviors.BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PreDrawCalBossBar)))
+        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PreDrawCalBossBar)))
             result &= anomalyGNPCBehavior.PreDrawCalBossBar(NPC, this, spriteBatch, ref x, ref y, hasSingle);
         return result;
     }
@@ -625,7 +625,7 @@ public partial class BossHealthBar : ILocalizationPrefix
             npcBehavior.PostDrawBossBar(this, spriteBatch, x, y);
             hasSingle = true;
         }
-        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in global::Transoceanic.Behaviors.BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PostDrawCalBossBar)))
+        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PostDrawCalBossBar)))
             anomalyGNPCBehavior.PostDrawCalBossBar(NPC, this, spriteBatch, x, y, hasSingle);
     }
 
