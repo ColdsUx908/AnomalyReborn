@@ -62,7 +62,7 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
 
     private static Vector2 GetNPCAnchorTranslation(NPC npc, Vector2 vanishingPoint, bool includeNetOffset = true)
     {
-        if (npc.Anomaly.Depth_DrawAnchor is not { } anchor)
+        if (npc.Anomaly.Depth_DrawAnchor is not (Vector2 LocalOffset, Vector2 Target, float Weight) anchor)
             return Vector2.Zero;
         return GetAnchorTranslation(npc.Center + (includeNetOffset ? npc.netOffset : Vector2.Zero) + anchor.LocalOffset, anchor.Target,
             npc.Anomaly.Z, vanishingPoint, anchor.Weight);

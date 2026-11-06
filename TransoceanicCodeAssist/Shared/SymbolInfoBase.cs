@@ -108,7 +108,7 @@ internal class TypeSymbolInfoBase : SymbolInfoBase<INamedTypeSymbol>
     public TypeSymbolInfoBase(INamedTypeSymbol symbol) : base(symbol)
     {
         InitializeCore(
-            symbolNamespace: symbol.ContainingNamespace is { IsGlobalNamespace: false } space ? space.ToDisplayString() : "",
+            symbolNamespace: symbol.ContainingNamespace is INamespaceSymbol { IsGlobalNamespace: false } space ? space.ToDisplayString() : "",
             containingType: symbol.ContainingType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
             memberType: symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
     }

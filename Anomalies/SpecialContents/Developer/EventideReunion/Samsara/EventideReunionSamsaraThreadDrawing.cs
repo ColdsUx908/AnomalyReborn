@@ -18,7 +18,7 @@ internal static class EventideReunionSamsaraThreadDrawing
         Vector2[] centers = new Vector2[count];
         float[] distances = new float[count];
         VertexPositionColorTexture[] vertices = new VertexPositionColorTexture[count * 2];
-        if (AnomalyEffects.Primitives.EventideSamsaraThread is not { } eventideSamsaraThreadShader)
+        if (AnomalyEffects.Primitives.EventideSamsaraThread is not AnomalyEffects.MiscShaderContainer eventideSamsaraThreadShader)
             return;
         Effect effect = eventideSamsaraThreadShader.Asset.Value;
         GraphicsDevice device = Main.instance.GraphicsDevice;

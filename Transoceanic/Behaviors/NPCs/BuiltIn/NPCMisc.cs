@@ -33,7 +33,7 @@ internal sealed class NPCMisc : GlobalNPCBehavior
 
         TOGlobalNPC ocean = npc.Ocean;
 
-        if (Main.dedServ || ocean.ActiveAfterimages is not { } afterimages)
+        if (Main.dedServ || ocean.ActiveAfterimages is not List<AfterimageParticle> afterimages)
             return;
         foreach (AfterimageParticle afterimage in afterimages)
             ParticleHandler.UpdateParticle(afterimage);
@@ -46,7 +46,7 @@ internal sealed class NPCMisc : GlobalNPCBehavior
     /// </remarks>
     public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        if (Main.dedServ || npc.Ocean.ActiveAfterimages is not { } afterimages)
+        if (Main.dedServ || npc.Ocean.ActiveAfterimages is not List<AfterimageParticle> afterimages)
             return true;
         foreach (AfterimageParticle afterimage in afterimages)
         {

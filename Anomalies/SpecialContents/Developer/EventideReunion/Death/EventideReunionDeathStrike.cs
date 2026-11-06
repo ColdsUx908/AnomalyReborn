@@ -42,7 +42,7 @@ public sealed class EventideReunionDeathStrike : AnomalyModProjectile
         // 命中后的穿身可持续数秒，伤害代理跟随阶段存活，不能先于突进过期。
         Projectile.timeLeft = 2;
     }
-    public override bool? CanDamage() => Main.netMode != NetmodeID.MultiplayerClient && Skill is { } skill
+    public override bool? CanDamage() => Main.netMode != NetmodeID.MultiplayerClient && Skill is EventideReunionDeathSkill skill
         && (Slash ? skill.IsSlashing : skill.IsDashing) ? null : false;
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
     {

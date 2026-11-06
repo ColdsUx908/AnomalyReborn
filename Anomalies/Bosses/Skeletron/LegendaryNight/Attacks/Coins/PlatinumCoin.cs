@@ -1,0 +1,93 @@
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
+
+/// <summary>
+/// 具有可选重力的铂金币弹幕。
+/// </summary>
+/// <remarks>
+/// <para>ai[0]：目标玩家索引 + 1，0未指定；ai[1]：重力加速度，0匀速；ai[2]：机制七元素标记（-7），决定消失音效。</para>
+/// <para>localAI：未使用；框架 Timer1..5：未使用；无实体专属 ExtraAI。</para>
+/// </remarks>
+public sealed class PlatinumCoin : AnomalyModProjectile
+{
+    /// <summary>抛掷音效。</summary>
+    public static readonly SoundStyle TossSound = SoundID.Item11 with { Volume = 0.75f };
+    /// <summary>无限抛掷音效。</summary>
+    public static readonly SoundStyle UnlimitedTossSound = TossSound with { MaxInstances = 0 };
+
+    // ai[0]：目标玩家索引（1-based，0 表示未指定目标）。ai[1]：重力加速度，0 保持匀速。
+    /// <summary>动画帧数量。</summary>
+    private const int FrameCount = 8;
+    /// <summary>每动画帧游戏帧数。</summary>
+    private const int TicksPerFrame = 6;
+    /// <summary>点金持续时间，单位为游戏帧。</summary>
+    private const int MidasDuration = 300;
+
+    // 原版铂金币物品在世界中的动画贴图，区别于背包内的静态 Item_74。
+    public override string Texture => "Terraria/Images/Coin_3";
+
+    public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
+
+    public override void SetStaticDefaults() => Main.projFrames[Type] = FrameCount;
+
+    public override void SetDefaults()
+    {
+        Projectile.width = 12;
+        Projectile.height = 12;
+        Projectile.hostile = true;
+        Projectile.friendly = false;
+        Projectile.penetrate = -1;
+        Projectile.timeLeft = 450;
+        Projectile.tileCollide = false;
+        Projectile.ignoreWater = true;
+    }
+
+    public override void AI()
+    {
+        Lighting.AddLight(Projectile.Center, LegendaryNightHandler.PlatinumColor.ToVector3() * 0.6f);
+
+        if (Projectile.ai[1] > 0f)
+            Projectile.velocity.Y = Math.Min(Projectile.velocity.Y + Projectile.ai[1], 20f);
+
+        if (Player.TryGetPlayerFromIndex((int)Projectile.ai[0] - 1, out Player target) && Projectile.Top.Y > target.Bottom.Y)
+            Projectile.tileCollide = true;
+
+        if (++Projectile.frameCounter >= TicksPerFrame)
+        {
+            Projectile.frameCounter = 0;
+            Projectile.frame = (Projectile.frame + 1) % FrameCount;
+        }
+
+        Projectile.VelocityToRotation(MathHelper.PiOver2);
+    }
+
+    public override void OnHitPlayer(Player target, Player.HurtInfo info) => target.AddBuff(BuffID.Midas, MidasDuration);
+
+    public override void OnKill(int timeLeft)
+    {
+        if (Main.dedServ)
+            return;
+
+        if (Projectile.ai[2] != LegendaryNightHandler.Mechanic7ElementProjectileMarker)
+            SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
+        for (int i = 0; i < 15; i++)
+        {
+            Dust.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, DustID.PlatinumCoin, Projectile.oldVelocity, d =>
+            {
+                d.alpha = 50;
+                d.scale = 1.5f;
+                d.noGravity = true;
+                d.velocity *= 0.5f;
+            });
+        }
+    }
+
+    public override bool PreDraw(ref Color lightColor)
+    {
+        Texture2D texture = Projectile.Texture;
+        Rectangle frame = texture.Frame(1, FrameCount, 0, Projectile.frame);
+        // 与原版 DrawAnimationVertical 一致，裁掉帧底部的两像素间隔。
+        frame.Height -= 2;
+        Main.spriteBatch.DrawFromCenter(texture, Projectile.Center - Main.screenPosition, frame, lightColor * Projectile.Opacity, Projectile.rotation, Projectile.scale, SpriteEffects.None, 0f);
+        return false;
+    }
+}

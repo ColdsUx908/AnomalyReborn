@@ -11,9 +11,9 @@ public sealed class TOGameTime : ModSystem
     public static GameTime Time { get; private set; }
 
     /// <summary>
-    /// 从游戏开始经过的总时间，以秒为单位。
+    /// 从游戏开始经过的总时间，以秒为单位；首次宿主更新前及卸载后返回零。
     /// </summary>
-    public static float TotalSeconds => (float)Time.TotalGameTime.TotalSeconds;
+    public static float TotalSeconds => (float)(Time?.TotalGameTime.TotalSeconds ?? 0d);
 
     /// <summary>
     /// 从游戏开始经过的总时间，以分钟为单位。

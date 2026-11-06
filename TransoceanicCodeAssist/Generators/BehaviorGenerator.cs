@@ -177,12 +177,24 @@ public sealed class BehaviorGenerator : IIncrementalGenerator
                 string args = string.Join(", ", method.Parameters.Select(Argument));
                 string behaviorArgs = string.Join(", ", method.Parameters.Skip(single ? 1 : 0).Select(Argument));
                 string call = "__behavior." + Escape(method.Name) + generic + "(" + behaviorArgs + ")";
+                string behaviorType = single ? Escape(handler.TypeParameters[0].Name) : behavior.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                string entityLockType = "";
+                if (single)
+                    for (INamedTypeSymbol type = behavior; type is not null; type = type.BaseType)
+                    {
+                        IMethodSymbol lockMethod = type.GetMembers("LockEntity").OfType<IMethodSymbol>().FirstOrDefault(m => m.Parameters.Length == 0);
+                        if (lockMethod is null)
+                            continue;
+                        entityLockType = lockMethod.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                        break;
+                    }
+                string returnType = method.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                 string fallback = "base." + Escape(method.Name) + generic + "(" + args + ")";
                 code.Append("    ").Append(GeneratedCodeMarker).Append("\n    public override ")
                     .Append(method.ToDisplayString(SignatureFormat)).Append("\n    {\n");
                 if (single)
                 {
-                    code.Append("        if (TryGetBehavior(").Append(Escape(method.Parameters[0].Name)).Append(", out var __behavior))\n        {\n            using var __entityLock = __behavior.LockEntity();\n");
+                    code.Append("        if (TryGetBehavior(").Append(Escape(method.Parameters[0].Name)).Append(", out ").Append(behaviorType).Append(" __behavior))\n        {\n            using ").Append(entityLockType).Append(" __entityLock = __behavior.LockEntity();\n");
                     if (method.ReturnsVoid)
                         code.Append("            ").Append(call).Append(";\n        }\n        else\n            ").Append(fallback).Append(";\n");
                     else
@@ -192,18 +204,18 @@ public sealed class BehaviorGenerator : IIncrementalGenerator
                 {
                     string enumeration = player ? "_BehaviorSet.Enumerate(Player)" : "_BehaviorSet.Enumerate()";
                     if (method.ReturnsVoid)
-                        code.Append("        foreach (var __behavior in ").Append(enumeration).Append(")\n            ").Append(call).Append(";\n");
+                        code.Append("        foreach (").Append(behaviorType).Append(" __behavior in ").Append(enumeration).Append(")\n            ").Append(call).Append(";\n");
                     else if (method.ReturnType.SpecialType == SpecialType.System_Boolean)
                     {
                         code.Append("        bool __identity = ").Append(fallback).Append(";\n        bool __result = __identity;\n")
-                            .Append("        foreach (var __behavior in ").Append(enumeration).Append(")\n        {\n            bool __value = ").Append(call)
+                            .Append("        foreach (").Append(behaviorType).Append(" __behavior in ").Append(enumeration).Append(")\n        {\n            bool __value = ").Append(call)
                             .Append(";\n            __result = __identity ? __result & __value : __result | __value;\n        }\n        return __result;\n");
                     }
                     else if (method.ReturnType.SpecialType is SpecialType.System_Single or SpecialType.System_Double)
-                        code.Append("        var __result = ").Append(fallback).Append(";\n        foreach (var __behavior in ").Append(enumeration)
+                        code.Append("        ").Append(returnType).Append(" __result = ").Append(fallback).Append(";\n        foreach (").Append(behaviorType).Append(" __behavior in ").Append(enumeration)
                             .Append(")\n            __result *= ").Append(call).Append(";\n        return __result;\n");
                     else
-                        code.Append("        foreach (var __behavior in ").Append(enumeration).Append(")\n        {\n            var __result = ")
+                        code.Append("        foreach (").Append(behaviorType).Append(" __behavior in ").Append(enumeration).Append(")\n        {\n            ").Append(returnType).Append(" __result = ")
                             .Append(call).Append(";\n            if (__result is not null)\n                return __result;\n        }\n        return ").Append(fallback).Append(";\n");
                 }
                 code.Append("    }\n\n");

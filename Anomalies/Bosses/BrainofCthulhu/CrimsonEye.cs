@@ -136,7 +136,7 @@ public class CrimsonEye : AnomalyModProjectile
             Main.EntitySpriteDraw(tex, Projectile.Center + (dir * rangeScale * range) - Main.screenPosition, null, lightColor, 0, tex.Size() * 0.5f, 1f, 0);
         }
 
-        if (DistanceRatio > 0 && AnomalyEffects.Primitives.CircularAoETelegraph is { } telegraph)
+        if (DistanceRatio > 0 && AnomalyEffects.Primitives.CircularAoETelegraph is AnomalyEffects.MiscShaderContainer telegraph)
         {
             float opacity = DistanceRatio;
             if (Time <= 65)

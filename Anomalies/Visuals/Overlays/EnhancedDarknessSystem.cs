@@ -101,12 +101,19 @@ public class EnhancedDarknessSystem : CustomOverlay, IContentLoader
 
     void IContentLoader.PostSetupContent()
     {
-        _DefaultTexture = ParticleHandler.GetTexture<BloomParticle>();
+        // 粒子定义和纹理只在客户端初始化，专用服务器不得读取它们。
+        _DefaultTexture = Main.dedServ ? null : ParticleHandler.GetTexture<BloomParticle>();
     }
 
     void IContentLoader.OnWorldUnload()
     {
         Lights.Clear();
+    }
+
+    void IContentLoader.OnModUnload()
+    {
+        Lights.Clear();
+        _DefaultTexture = null;
     }
 }
 #endif

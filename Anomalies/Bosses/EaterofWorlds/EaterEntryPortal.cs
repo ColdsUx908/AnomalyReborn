@@ -32,7 +32,7 @@ public sealed class EaterEntryPortal : ModProjectile
     }
     public override bool PreDraw(ref Color lightColor)
     {
-        if (AnomalyEffects.Overlays.EaterPortal is not { } shader)
+        if (AnomalyEffects.Overlays.EaterPortal is not AnomalyEffects.MiscShaderContainer shader)
             return false;
         using SpriteBatchScope scope = new(Main.spriteBatch, SpriteSortMode.Immediate);
         Texture2D noise = AnomalyTextures.Noise.Voronoi2;

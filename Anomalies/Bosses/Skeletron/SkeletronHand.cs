@@ -200,43 +200,8 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
                 deceleration *= 0.75f;
                 velocityIncrement *= 1.5f;
 
-                float maxX = velocityIncrement * 100f * velocityMultiplier;
-                float maxY = velocityIncrement * 100f * velocityMultiplier;
-
-                if (NPC.Top.Y > Main.npc[(int)NPC.ai[1]].Top.Y - 100f * yMultiplier)
-                {
-                    if (NPC.velocity.Y > 0f)
-                        NPC.velocity.Y *= deceleration;
-                    NPC.velocity.Y -= velocityIncrement;
-                    if (NPC.velocity.Y > maxY)
-                        NPC.velocity.Y = maxY;
-                }
-                else if (NPC.Top.Y < Main.npc[(int)NPC.ai[1]].Top.Y - 100f * yMultiplier)
-                {
-                    if (NPC.velocity.Y < 0f)
-                        NPC.velocity.Y *= deceleration;
-                    NPC.velocity.Y += velocityIncrement;
-                    if (NPC.velocity.Y < -maxY)
-                        NPC.velocity.Y = -maxY;
-                }
-
-                if (NPC.Center.X > Main.npc[(int)NPC.ai[1]].Center.X - 120f * NPC.ai[0])
-                {
-                    if (NPC.velocity.X > 0f)
-                        NPC.velocity.X *= deceleration;
-                    NPC.velocity.X -= velocityIncrement;
-                    if (NPC.velocity.X > maxX)
-                        NPC.velocity.X = maxX;
-                }
-
-                if (NPC.Center.X < Main.npc[(int)NPC.ai[1]].Center.X - 120f * NPC.ai[0])
-                {
-                    if (NPC.velocity.X < 0f)
-                        NPC.velocity.X *= deceleration;
-                    NPC.velocity.X += velocityIncrement;
-                    if (NPC.velocity.X < -maxX)
-                        NPC.velocity.X = -maxX;
-                }
+                Vector2 destination = Main.npc[headIndex].Center + GetIdleOffset(-Math.Sign(NPC.ai[0]), NPC.height, Main.npc[headIndex].height, yMultiplier, raised: true);
+                UpdateIdleMovement(NPC, destination, velocityIncrement, velocityMultiplier, deceleration);
             }
             else
             {
@@ -265,50 +230,11 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
                     }
                 }
 
-                float maxX = velocityIncrement * 100f * velocityMultiplier;
-                float maxY = velocityIncrement * 100f * velocityMultiplier;
-
-                if (NPC.Top.Y > Main.npc[(int)NPC.ai[1]].Top.Y + 230f * yMultiplier)
-                {
-                    if (NPC.velocity.Y > 0f)
-                        NPC.velocity.Y *= deceleration;
-                    NPC.velocity.Y -= velocityIncrement;
-                    if (NPC.velocity.Y > maxY)
-                        NPC.velocity.Y = maxY;
-                }
-                else if (NPC.Top.Y < Main.npc[(int)NPC.ai[1]].Top.Y + 230f * yMultiplier)
-                {
-                    if (NPC.velocity.Y < 0f)
-                        NPC.velocity.Y *= deceleration;
-                    NPC.velocity.Y += velocityIncrement;
-                    if (NPC.velocity.Y < -maxY)
-                        NPC.velocity.Y = -maxY;
-                }
-
-                if (NPC.Center.X > Main.npc[(int)NPC.ai[1]].Center.X - 200f * NPC.ai[0])
-                {
-                    if (NPC.velocity.X > 0f)
-                        NPC.velocity.X *= deceleration;
-                    NPC.velocity.X -= velocityIncrement;
-                    if (NPC.velocity.X > maxX)
-                        NPC.velocity.X = maxX;
-                }
-
-                if (NPC.Center.X < Main.npc[(int)NPC.ai[1]].Center.X - 200f * NPC.ai[0])
-                {
-                    if (NPC.velocity.X < 0f)
-                        NPC.velocity.X *= deceleration;
-                    NPC.velocity.X += velocityIncrement;
-                    if (NPC.velocity.X < -maxX)
-                        NPC.velocity.X = -maxX;
-                }
+                Vector2 destination = Main.npc[headIndex].Center + GetIdleOffset(-Math.Sign(NPC.ai[0]), NPC.height, Main.npc[headIndex].height, yMultiplier, raised: false);
+                UpdateIdleMovement(NPC, destination, velocityIncrement, velocityMultiplier, deceleration);
             }
 
-            Vector2 handCurrentPos = NPC.Center;
-            float handIdleXPos = Main.npc[(int)NPC.ai[1]].Center.X - 200f * NPC.ai[0] - handCurrentPos.X;
-            float handIdleYPos = Main.npc[(int)NPC.ai[1]].Top.Y + 230f - handCurrentPos.Y;
-            float handIdleDist = (float)Math.Sqrt(handIdleXPos * handIdleXPos + handIdleYPos * handIdleYPos);
-            NPC.rotation = (float)Math.Atan2(handIdleYPos, handIdleXPos) + MathHelper.PiOver2;
+            UpdateIdleRotation(NPC, Main.npc[headIndex]);
 
             return;
         }
@@ -320,13 +246,7 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
             float handDrawbackYPos = Main.npc[(int)NPC.ai[1]].Top.Y + 230f - handCurrentPosition.Y;
             float handDrawbackDist = (float)Math.Sqrt(handDrawbackXPos * handDrawbackXPos + handDrawbackYPos * handDrawbackYPos);
             NPC.rotation = (float)Math.Atan2(handDrawbackYPos, handDrawbackXPos) + MathHelper.PiOver2;
-            NPC.velocity.X *= 0.95f;
-            NPC.velocity.Y -= velocityIncrement;
-
-            if (NPC.velocity.Y < -14f)
-                NPC.velocity.Y = -14f;
-            else if (NPC.velocity.Y > 10f)
-                NPC.velocity.Y = 10f;
+            UpdateVerticalDrawbackMovement(NPC, velocityIncrement);
 
             if (Main.netMode != NetmodeID.MultiplayerClient && (NPC.Top.Y < Main.npc[(int)NPC.ai[1]].Top.Y - 200f))
             {
@@ -376,13 +296,7 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
             float handStrikeYPos = Main.npc[(int)NPC.ai[1]].Top.Y + 230f - handStrikeCurrentPos.Y;
             float handStrikeDist = (float)Math.Sqrt(handStrikeXPos * handStrikeXPos + handStrikeYPos * handStrikeYPos);
             NPC.rotation = (float)Math.Atan2(handStrikeYPos, handStrikeXPos) + MathHelper.PiOver2;
-            NPC.velocity.Y *= 0.95f;
-            NPC.velocity.X += velocityIncrement * -NPC.ai[0];
-
-            if (NPC.velocity.X < -10f)
-                NPC.velocity.X = -10f;
-            else if (NPC.velocity.X > 14f)
-                NPC.velocity.X = 14f;
+            UpdateHorizontalDrawbackMovement(NPC, velocityIncrement);
 
             if (Main.netMode != NetmodeID.MultiplayerClient && (NPC.Center.X < Main.npc[(int)NPC.ai[1]].Center.X - 500f || NPC.Center.X > Main.npc[(int)NPC.ai[1]].Center.X + 500f))
             {
@@ -424,6 +338,107 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// 普通手部的待机位置；保留原版以实体顶部计算高度的语义。
+    /// </summary>
+    internal static Vector2 GetIdleOffset(int side, int handHeight, int headHeight, float yMultiplier = 1.3f, bool raised = false) =>
+        new(side * (raised ? 120f : 200f), (raised ? -100f : 230f) * yMultiplier + (handHeight - headHeight) * 0.5f);
+
+    /// <summary>
+    /// 普通与传说之夜手部共用的逐轴待机加速、反向制动和速度限制。
+    /// </summary>
+    internal static void UpdateIdleMovement(NPC hand, Vector2 destination, float velocityIncrement, float velocityMultiplier, float deceleration,
+        Vector2? followVelocity = null)
+    {
+        // 传说之夜接近待机点后改为相对头部的阻尼收敛，避免固定加速度反复跨越目标。
+        // 此分支直接替代逐轴加速，不在同一帧叠加两套归位；普通手部沿用原有分支。
+        if (followVelocity is Vector2 ownerVelocity)
+        {
+            const float SettlingRadius = 48f;
+            const float SettlingSpeed = 6f;
+            const float VelocityDamping = 0.65f;
+            const float PositionResponse = 0.035f;
+            Vector2 relativeOffset = hand.Center - destination + ownerVelocity;
+            Vector2 relativeVelocity = hand.velocity - ownerVelocity;
+            if (relativeOffset.LengthSquared() <= SettlingRadius * SettlingRadius
+                && relativeVelocity.LengthSquared() <= SettlingSpeed * SettlingSpeed)
+            {
+                Vector2 nextVelocity = relativeVelocity * VelocityDamping - relativeOffset * PositionResponse;
+                hand.velocity = ownerVelocity + nextVelocity;
+                return;
+            }
+        }
+
+        float maxX = velocityIncrement * 100f * velocityMultiplier;
+        float maxY = velocityIncrement * 100f * velocityMultiplier;
+
+        if (hand.Center.Y > destination.Y)
+        {
+            if (hand.velocity.Y > 0f)
+                hand.velocity.Y *= deceleration;
+            hand.velocity.Y -= velocityIncrement;
+            if (hand.velocity.Y > maxY)
+                hand.velocity.Y = maxY;
+        }
+        else if (hand.Center.Y < destination.Y)
+        {
+            if (hand.velocity.Y < 0f)
+                hand.velocity.Y *= deceleration;
+            hand.velocity.Y += velocityIncrement;
+            if (hand.velocity.Y < -maxY)
+                hand.velocity.Y = -maxY;
+        }
+
+        if (hand.Center.X > destination.X)
+        {
+            if (hand.velocity.X > 0f)
+                hand.velocity.X *= deceleration;
+            hand.velocity.X -= velocityIncrement;
+            if (hand.velocity.X > maxX)
+                hand.velocity.X = maxX;
+        }
+
+        if (hand.Center.X < destination.X)
+        {
+            if (hand.velocity.X < 0f)
+                hand.velocity.X *= deceleration;
+            hand.velocity.X += velocityIncrement;
+            if (hand.velocity.X < -maxX)
+                hand.velocity.X = -maxX;
+        }
+    }
+
+    /// <summary>普通与传说之夜待机手部共用的朝向，使用当前位置和原有头部参考点。</summary>
+    internal static void UpdateIdleRotation(NPC hand, NPC master)
+    {
+        Vector2 handCenter = hand.Center;
+        float offsetX = master.Center.X - 200f * hand.ai[0] - handCenter.X;
+        float offsetY = master.Top.Y + 230f - handCenter.Y;
+        hand.rotation = (float)Math.Atan2(offsetY, offsetX) + MathHelper.PiOver2;
+    }
+
+    /// <summary>普通与传说之夜下拍前的抬手运动。</summary>
+    internal static void UpdateVerticalDrawbackMovement(NPC hand, float velocityIncrement)
+    {
+        hand.velocity.X *= 0.95f;
+        hand.velocity.Y -= velocityIncrement;
+        if (hand.velocity.Y < -14f)
+            hand.velocity.Y = -14f;
+        else if (hand.velocity.Y > 10f)
+            hand.velocity.Y = 10f;
+    }
+
+    /// <summary>普通与传说之夜横扫前的侧向蓄势运动。</summary>
+    internal static void UpdateHorizontalDrawbackMovement(NPC hand, float velocityIncrement)
+    {
+        hand.velocity.Y *= 0.95f;
+        hand.velocity.X += velocityIncrement * -hand.ai[0];
+        if (hand.velocity.X < -10f)
+            hand.velocity.X = -10f;
+        else if (hand.velocity.X > 14f)
+            hand.velocity.X = 14f;
     }
 
     public override void PostDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)

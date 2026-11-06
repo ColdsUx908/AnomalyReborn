@@ -134,3 +134,7 @@ Publicizer 修复同名类型、泛型实参和数组导致的辅助成员冲突
 旋转矩形碰撞的 AABB 预筛修复相切和退化形状漏检。Circle/Annulus 构造拒绝无效半径，NormalizeWithPeriod 拒绝非有限或非正周期。MathInterval 修复倒置闭区间没有标为空的问题；支持无穷端点并将其规范化为开放，Contains 不包含无穷值本身。完整边界见 [兼容性契约](Compatibility-1.3.md)。
 
 NPC 缩放依赖在原生加载时提前校验；宿主签名或 IL 不兼容将带明确诊断中止加载，不等到战斗中第一次调用才失败。本轮不改变网络字节格式；SyncEnabled setter 在 1.3 保留兼容，正式启用仍使用 EnableSync。
+
+## 内容加载期间的游戏时间
+
+`TOGameTime.TotalSeconds` 和 `TotalMinutes` 在首次宿主更新之前、专用服务器尚无宿主时间或卸载清理后返回零。内容注册（例如稀有度颜色初始化）可以安全查询；收到实际宿主 `GameTime` 后继续返回对应时间。`Time` 本身在这些边界仍可为空，直接访问其成员的消费方须自行判空。

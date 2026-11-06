@@ -1,0 +1,222 @@
+namespace Anomalies.Bosses.Skeletron.LegendaryNight;
+
+/// <summary>
+/// 星星符卡与二阶段使用的恶魔之影发射载体。
+/// </summary>
+/// <remarks>
+/// <para>ai[0]：目标玩家索引 + 1，0未指定；ai[1]：射击累计帧；ai[2]：主体 NPC 索引 + 1，0为独立测试实例。</para>
+/// <para>localAI：未使用；框架 Timer1..5：未使用。</para>
+/// <para>ExtraAI：HorizontalTracking（Boolean）；_DrawPlayer 为客户端外观缓存，不同步。</para>
+/// </remarks>
+public sealed class DemonShadow : AnomalyModProjectile
+{
+    private int ShotInterval => HorizontalTracking ? SkeletronLegendHead.Mechanic1Parameters.AttackAnimationDuration : 12;
+    /// <summary>发射速度，以世界像素和游戏帧计量。</summary>
+    private const float ShotSpeed = 14f;
+    /// <summary>追踪最大速度，以世界像素和游戏帧计量。</summary>
+    private const float TrackingMaxSpeed = 24f;
+    /// <summary>追踪加速。</summary>
+    private const float TrackingAcceleration = 0.6f;
+    /// <summary>追踪响应。</summary>
+    private const float TrackingResponse = 0.08f;
+
+    private Player _DrawPlayer;
+
+    // 二阶段模式：始终尝试跟随在玩家右侧约500像素处，与玩家同高。
+    public bool HorizontalTracking;
+
+    protected override void SendAnomalyExtraAI(BinaryWriter writer) => writer.Write(HorizontalTracking);
+    protected override void ReceiveAnomalyExtraAI(BinaryReader reader) => HorizontalTracking = reader.ReadBoolean();
+
+    // ai[0]：目标玩家索引（1-based，0 表示未指定目标）。ai[1]：射击计时器。
+    // ai[2]：所属骷髅王索引（1-based，0 表示独立测试实例）。
+    public int TargetIndex
+    {
+        get => (int)Projectile.ai[0];
+        set => Projectile.ai[0] = value;
+    }
+
+    public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
+
+    public override string Texture => TOTextures.InvisibleTexturePath;
+
+    public override void SetDefaults()
+    {
+        Projectile.netImportant = true;
+        Projectile.width = 20;
+        Projectile.height = 42;
+        Projectile.friendly = false;
+        Projectile.hostile = false;
+        Projectile.tileCollide = false;
+        Projectile.ignoreWater = true;
+        Projectile.penetrate = -1;
+        Projectile.timeLeft = 600;
+    }
+
+    public override void AI()
+    {
+        SkeletronLegendHead head = null;
+        if (Projectile.ai[2] > 0f)
+        {
+            if (!LegendaryNightHandler.TryGetLegendaryNightHead((int)Projectile.ai[2], out head, oneBased: true)
+                || !(HorizontalTracking ? head.Phase2DemonShadowActive
+                    : head.StarAvatarActive))
+            {
+                // 由服务端确认所属符卡结束，避免生成包早于 NPC 状态包到达时客户端误删。
+                if (TONetworkEnvironment.NotClient)
+                    Projectile.Kill();
+                return;
+            }
+
+            int targetIndex = head.NPC.target + 1;
+            if (TargetIndex != targetIndex)
+            {
+                TargetIndex = targetIndex;
+                Projectile.netUpdate = true;
+            }
+            Projectile.timeLeft = 2;
+            Vector2 awayFromTarget = head.NPC.GetVelocityTowards(Main.player[head.NPC.target], -180f);
+            if (awayFromTarget == Vector2.Zero)
+                awayFromTarget = Vector2.UnitX * 180f;
+            Player trackedPlayer = Main.player[head.NPC.target];
+            Vector2 destination = HorizontalTracking
+                ? trackedPlayer.Center + Vector2.UnitX * 500f
+                : head.NPC.Center + awayFromTarget - Vector2.UnitY * 160f;
+            if (HorizontalTracking)
+            {
+                Vector2 desiredVelocity = (destination - Projectile.Center) * 0.06f + trackedPlayer.velocity;
+                if (desiredVelocity.Length() > TrackingMaxSpeed)
+                    desiredVelocity = desiredVelocity.ToCustomLength(TrackingMaxSpeed);
+
+                // 保留当前动量，以有限加速度逐渐追上目标速度；玩家急停或转向时会有跟随延迟。
+                Vector2 acceleration = (desiredVelocity - Projectile.velocity) * TrackingResponse;
+                if (acceleration.Length() > TrackingAcceleration)
+                    acceleration = acceleration.ToCustomLength(TrackingAcceleration);
+                Projectile.velocity += acceleration;
+            }
+            else
+            {
+                Vector2 velocity = (destination - Projectile.Center) * 0.08f;
+                if (velocity.Length() > 24f)
+                    velocity = Projectile.GetVelocityTowards(destination, 24f);
+                Projectile.velocity = velocity;
+            }
+        }
+
+        bool hasTarget = Player.TryGetPlayerFromIndex(TargetIndex - 1, out Player target) && target.active && !target.dead;
+        Vector2 aimDirection = hasTarget
+            ? Projectile.GetVelocityTowards(target)
+            : Vector2.UnitX * Projectile.direction;
+        if (aimDirection == Vector2.Zero)
+            aimDirection = Vector2.UnitX * Projectile.direction;
+
+        if (aimDirection.X != 0f)
+            Projectile.direction = aimDirection.X > 0f ? 1 : -1;
+
+        if (hasTarget)
+        {
+            Projectile.ai[1]++;
+            bool shoot = HorizontalTracking && head is not null
+                ? SkeletronLegendHead.Mechanic1Parameters.IsAttackSpawnTime(head.Phase2MusicElapsedTime,
+                    SkeletronLegendHead.Mechanic1Timeline.StarShockwaveMusicTime, SkeletronLegendHead.Mechanic1Timeline.DemonShadowEndMusicTime)
+                : Projectile.ai[1] >= ShotInterval;
+            if (shoot)
+            {
+                Projectile.ai[1] = 0f;
+                Vector2 muzzlePosition = Projectile.Center + aimDirection * (40f * Projectile.scale);
+                if (TONetworkEnvironment.NotClient)
+                {
+                    Projectile.NewProjectileAction<FallingStar>(SourceAI, muzzlePosition,
+                        aimDirection * ShotSpeed, SkeletronLegendHead.FallingStarDamage, Projectile.knockBack, Projectile.owner, action: p =>
+                        {
+                            p.scale = 0.2f;
+                            p.ai[2] = HorizontalTracking ? Projectile.ai[2] : 0f;
+                            p.GetModProjectile<FallingStar>().TrailType = 1;
+                            p.GetModProjectile<FallingStar>().AccelerationStartTime = 420;
+                            p.netUpdate = true;
+                        });
+                }
+
+                if (!Main.dedServ)
+                    SoundEngine.PlaySound(SoundID.Item9, muzzlePosition);
+            }
+        }
+        else
+            Projectile.ai[1] = 0f;
+
+        if (Main.dedServ)
+            return;
+
+        if (_DrawPlayer is null)
+        {
+            // new Player() 保留原版默认性别、发型、肤色及衣物颜色，不复制召唤者外观。
+            _DrawPlayer = new Player();
+            _DrawPlayer.armor[0].SetDefaults(ItemID.ShadowHelmet);
+            _DrawPlayer.armor[1].SetDefaults(ItemID.ShadowScalemail);
+            _DrawPlayer.armor[2].SetDefaults(ItemID.ShadowGreaves);
+            _DrawPlayer.armor[3].SetDefaults(ItemID.DemonWings);
+            _DrawPlayer.inventory[0].SetDefaults(ItemID.StarCannon);
+            _DrawPlayer.lastVisualizedSelectedItem = _DrawPlayer.inventory[0];
+        }
+
+        // 参照原版 PlayerSegment / UICharacter，只更新绘制需要的状态。
+        using Main.CurrentPlayerOverride currentPlayer = new(_DrawPlayer);
+        _DrawPlayer.ResetEffects();
+        _DrawPlayer.ResetVisibleAccessories();
+        _DrawPlayer.UpdateMiscCounter();
+        _DrawPlayer.UpdateDyes();
+        _DrawPlayer.Center = Projectile.Center;
+        _DrawPlayer.velocity = Projectile.velocity;
+        // 只给绘制用 Player 一个非零竖直速度，使悬停时也保持空中姿态。
+        if (_DrawPlayer.velocity.Y == 0f)
+            _DrawPlayer.velocity.Y = -0.01f;
+        _DrawPlayer.direction = Projectile.direction;
+        _DrawPlayer.controlJump = true;
+        _DrawPlayer.wingsLogic = _DrawPlayer.armor[3].wingSlot;
+        _DrawPlayer.wingTime = 1f;
+        _DrawPlayer.itemAnimationMax = ShotInterval;
+        _DrawPlayer.itemAnimation = ShotInterval - (int)Projectile.ai[1];
+        _DrawPlayer.itemRotation = (aimDirection * Projectile.direction).ToRotation();
+        // 原版 Shoot 使用姿势：武器锚点位于人物中心左移 direction * 2、上移半个物品高度。
+        // 不调用完整 ItemCheck，避免虚拟玩家消耗弹药或额外生成原版星星。
+        _DrawPlayer.itemLocation = _DrawPlayer.MountedCenter + new Vector2(-2f * Projectile.direction, -_DrawPlayer.HeldItem.height * 0.5f);
+        _DrawPlayer.PlayerFrame();
+        _DrawPlayer.WingFrame(wingFlap: true);
+    }
+
+    public override void OnKill(int timeLeft)
+    {
+        if (Main.dedServ)
+            return;
+
+        for (int i = 0; i < 70; i++)
+        {
+            Color color = Color.Lerp(new Color(55, 25, 85), new Color(145, 90, 200), Main.rand.NextFloat());
+            ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center + Main.rand.NextVector2Circular(12f, 24f),
+                Main.rand.NextPolarVector2(2f, 9f), Main.rand.Next(25, 45), Main.rand.NextFloat(0.3f, 0.8f), color, lifeEndRatio: 0.2f, glowCenter: false));
+        }
+    }
+
+    public override bool PreDraw(ref Color lightColor)
+    {
+        if (_DrawPlayer is null)
+            return false;
+
+        using Main.CurrentPlayerOverride currentPlayer = new(_DrawPlayer);
+        Vector2 drawOffset = Projectile.Center - _DrawPlayer.Center;
+        _DrawPlayer.Center = Projectile.Center;
+        _DrawPlayer.itemLocation += drawOffset;
+        _DrawPlayer.opacityForAnimation = Projectile.Opacity;
+
+        // DrawPlayer 接收世界坐标，内部会减去 Main.screenPosition。
+        // 原版以脚底为缩放中心；补偿位置，使缩放后的人物中心仍与弹幕中心重合。
+        Vector2 position = _DrawPlayer.position + Vector2.UnitY * (_DrawPlayer.height * (Projectile.scale - 1f) * 0.5f);
+        // 玩家渲染器直接提交图元；Immediate 确保先应用普通透明混合，避免继承冲击波的叠加状态。
+        using SpriteBatchScope drawScope = new(Main.spriteBatch, SpriteSortMode.Immediate, BlendState.AlphaBlend,
+            Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer,
+            transformMatrix: Main.GameViewMatrix.TransformationMatrix, effectIsNull: true);
+        Main.PlayerRenderer.DrawPlayer(Main.Camera, _DrawPlayer, position, Projectile.rotation,
+            _DrawPlayer.Size * 0.5f, scale: Projectile.scale);
+        return false;
+    }
+}

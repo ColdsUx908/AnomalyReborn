@@ -1,0 +1,144 @@
+# 传说之夜代码组织
+
+全部源码统一使用 `Anomalies.Bosses.Skeletron.LegendaryNight` 命名空间，不随子目录新增命名空间层级。所有内容属于现有 `ANOMALY_MODE`；专属贴图、音效跟随功能目录移动，代码显式引用实际路径。
+
+## 目录与职责
+
+| 目录 | 职责 |
+| --- | --- |
+| `Head`、`Hand` | 主体/手部状态机、绘制与手部专属绘制钩子 |
+| `Arena` | 场地生命周期、边界、法阵几何、公转、实体化碰撞、八元素圆几何 |
+| `Attacks/Bone` | 头骨预警 |
+| `Attacks/Slime` | 飞行史莱姆 NPC、坐骑、史莱姆雨及专属蓄力粒子 |
+| `Attacks/Stars` | 落星、拍击落星、恶魔之影、陨石 |
+| `Attacks/Coins` | 金币、轮盘、审判及其专属 Overlay |
+| `Attacks/Starburst` | 星爆公共音乐时序、单次星爆弹幕和音效 |
+| `Attacks/Stellar` | 中心恒星、蓝星、光球、激光、结算冲击波及专属粒子 |
+| `Attacks/Finale` | 八元素发射编排、元素载体、终幕陨星 |
+| `Scene` | 天空、天空星点、云层、实体照明、世界时间、音乐场景 |
+| `Players` | 星神祝福 Behavior 和玩家光晕绘制层，数据仍在统一 AnomalyPlayer |
+| `Rendering` | 场地遮罩/预警/跨实体绘制次序，以及天空和落星共用的绘制工具 |
+| `Particles` | 仪式和主体共用的蓄力星芒 |
+| `Combat` | 保留现有免疫语义的本地玩家伤害结算 |
+| `Buffs`、`Summoning` | 减益、祝福提示、祭坛、召唤物与仪式 |
+
+不再使用 `Entities`、`Misc` 目录。`LegendSlapStar` 是原 `Mechanic2Star` 的用途命名；本地化已同步更名。
+
+## 攻击和场地边界
+
+Head 保持阶段与音乐时钟的所有权。`Mechanic3/4/5Timeline` 持有各星爆音乐节点，`LegendaryNightStarburstTimeline` 提供共享节拍查询，`LegendaryNightStarburstParameters` 提供相对窗口、音效和颜色，`Arena.Orbits` 提供连续公转及爆点预测，服务器通过 `LegendStarburst.EnsureAttack` 确保当前窗口存在一枚星爆；星爆自己的 AI 负责音效、伤害与淡出。法阵蓄光通过时序查询计算，不依赖星爆实体是否已经出现。
+
+机制二的半场拍击伤害在 Head 中结算。`LegendaryNightElementBarrage` 由机制七调度，负责八元素载体补建、发射、声音与出现粒子；Arena 只提供圆的位置、半径与旋转。
+
+中心黄色光球及膨胀后的恒星共用 `SphereRadius` 圆形接触判定，预设伤害为396，命中施加15秒群星威压；完全消散后停止碰撞。错色拦截的250伤害与蓝星撞击按吸收数量计算的伤害均为直接结算值，使用 `PlayerHurtDamageIgnoresDifficultyScaling` 避免 `Player.Hurt` 按弹幕来源再次乘难度倍率；防御、减伤和原有免疫规则继续由受击流程处理。其他使用 `ProjectileDamageContainer` 的攻击继续沿用原有难度换算。
+
+恒星系统的三个主要弹幕职责：
+
+- `LegendEnergySphere`：中心星、光球生成/拦截/吸收、玩家奖励和循环音效。
+- `LegendBlueStar`：蓝星公转、透视投影、物质转移和吸积流缓存；通过 owner + identity 引用中心星，服务器生成撞击冲击波。
+- `LegendCompanionShockwave`：独立持有爆发半径、伤害、单次命中标记和爆裂粒子。
+
+`Attacks/Stellar/LegendStellarShockwave.cs` 定义扩张与绘制基类；蓝星结算实现位于同目录 `LegendCompanionShockwave.cs`，终幕实现位于 `Attacks/Finale/LegendFinalShockwave.cs`。两者保留各自伤害规则。普通符卡的 `LegendShockwave` 继续使用原有通用基类。
+
+Overlay 在原层次调用中心星的完整绘制入口，由中心星组合蓝星后层、星体、光球、核心、蓝星前层。终幕冲击波使用自身的普通弹幕绘制入口，由终幕陨星在落点生成并独立计时。主体被成功击杀后，陨星同步记录成功标记，仍在终幕生成无伤害的淡金色光环：半径为失败版本的55%，亮度为45%，并减弱爆炸音量和震屏；失败版本保留原秒杀判定。成功版本使用共享着色器的 CurtainCall Pass 绘制，包含淡金色层叠光环、柔光薄雾和十六枚渐显星芒，随后缓缓消散；关闭着色器时保留柔和光环回退。
+
+## 着色器命名与职责
+
+着色器按实际视觉职责命名，恒星系统统一使用 LegendStellar 前缀。文件名、AnomalyEffects 字段和编译产物保持一致；实体类型名不随着色器重命名。资源继续由统一容器加载和清理。
+
+| 分类 | 名称 | 职责 |
+| --- | --- | --- |
+| Overlays | LegendStellarExplosion | 蓝星撞击、终幕失败爆炸及成功谢幕；Pass0 为爆炸，CurtainCall 为柔和谢幕 |
+| Overlays | LegendStellarSphere | 星体基础球面、星野和 Core 星核层 |
+| Overlays | LegendStellarPhotosphere | 恒星光球层、日冕与消散 |
+| Primitives | LegendStellarAccretion | 星体间的物质吸积流 |
+| Primitives | LegendStellarLaser | 恒星激光主体 |
+| Primitives | LegendStellarLaserWarning | 恒星激光预警 |
+| Primitives | LegendStellarLightOrb | 恒星系统的小型光球 |
+| Overlays | LegendaryNightArenaMist | 场地外侧雾幕 |
+| Overlays | LegendaryNightArenaEdge | 场地金色边缘 |
+| Texts | LegendaryNightGold | 名称与提示的金色文字 |
+| BossBars | Skeletron | 骷髅王血条，包含传说之夜表现 |
+
+## 实体数据槽位查阅
+
+每个实体主声明统一使用 XML `<summary>` 描述用途，`<remarks>` 内的 `<para>` 依次列出原版 `ai`、`localAI`、框架 Timer、额外同步载荷和客户端状态。未使用的槽位明确说明；继承的有效槽位也列在具体实体中。
+
+弹幕 Timer1/Timer2 分别对应 `OceanAI32[2].I`、`[3].I`；NPC Timer1/Timer2/Timer5 分别对应 `OceanAI32[4].I`、`[5].I`、`[8].I`。这些不属于原版 `ai` 数组。主体/手部的槽位复用说明位于各自主文件的类型 XML 注释；对应语义属性仍放在 State 或主文件中。
+
+所有跨端弹幕引用使用 owner + identity。粒子缓存、一次性本地音效/命中标记和绘制顶点不加入网络快照。世界时间系统独立于客户端天空运行，专用服务器仍能控制时间。
+
+## 当前验证入口
+
+独立资料包入口为 `Tests/LegendaryNight.Round7/Verify.ps1`。它检查当前源码/资源组织、原有生产计算指纹、真实 AI 的延迟同步与恢复、完整快照往返，并执行 Boss 隔离、16种模块组合和 Release 构建。旧轮次入口只用于历史追溯，不代表当前源码已通过对应旧断言。
+
+Release 测试包由 `Tests/LegendaryNight.Round7/Build-Release.ps1` 在仓库内独立打包、核对 DLL 与资源后生成，包含 Anomalies、Transoceanic、AnomaliesMusic。附带校验和及测试说明。默认模块全部开启，Release 不包含 DEBUG 测试物品。
+
+离线验证不代替游戏内战斗、音乐节拍、特殊分辨率与着色器关闭时的视觉验收。异象模式现有多人禁用策略保持不变；网络验证使用实际生产 AI 和序列化的离线环境，不表示本版本已开放多人测试。
+
+## 文件职责
+
+- `LegendaryNightHandler.cs`：共享路径、颜色、主体身份检查、主体 Behavior 查询和祝福粒子。
+- `Head/SkeletronLegendHead.cs`：Behavior 身份、默认属性、受击与死亡规则。
+- `Head/SkeletronLegendHead.State.cs`：枚举、同步槽位映射、竞技场引用、阶段和表现查询；所有伤害容器、直接结算伤害、伤害公式和增减伤倍率集中在“伤害数据”region。
+- `Head/SkeletronLegendHead.AI.cs`：目标选择、退场、阶段分派及跨阶段攻击辅助。
+- `Head/SkeletronLegendHead.Phase1AI.cs`：常态/旋转与符卡组合，符卡池与行为切换。
+- `Head/SkeletronLegendHead.PhaseChangeAI.cs`：转场开始、旧攻击清理、回血、召手、祝福和进入二阶段。
+- `Head/SkeletronLegendHead.Avatar.cs`：化身选择、切换、计时、朝向和切换粒子。
+- `Head/SkeletronLegendHead.Drawing.cs`：主体、化身、拖尾、光晕、图标和血条着色。
+- `Head/Phase2/SkeletronLegendHead.Phase2AI.cs`：二阶段时钟、阶段推进、七套机制分派及竞技场恢复。
+- `Head/Phase2/SkeletronLegendHead.Mechanic1.cs` 至 `Mechanic7.cs`：每个文件包含一套机制的参数、纯计算及主体 AI；不合并机制。各 `MechanicNTimeline` 和 `MechanicNParameters` 保持为 Head 的嵌套类型，分别集中音乐绝对帧与相对时长、运动/攻击参数和纯计算。
+- `Hand/SkeletronLegendHand.cs`：身份、实体规则、动作槽位映射、共享几何与主体发出的手部命令。
+- `Hand/SkeletronLegendHand.AI.cs`：主人验证、公共更新、手部运动优先级及各运动的本地函数。
+- `Hand/SkeletronLegendHand.Drawing.cs`：手掌、预警、脱离骨节绘制、悬停框和血条位置。
+
+## 状态与时间
+
+`Phase` 是战斗阶段，`Behavior` 是一阶段常态/旋转等行为，`Spell` 是独立符卡选择，`CurrentLocalPhase` 是当前行为内部步骤。阶段和行为分别保留在原版 AI 联合体的 Byte0、Byte1，符卡保留在 Byte2。
+
+| 时间 | 用途 | 重置边界 |
+| --- | --- | --- |
+| `Timer1` | 当前行为或局部步骤的帧数 | 按各行为原有切换规则重置 |
+| `Timer2` | 转场回血插值的初始生命值 | 转场开始时保存 |
+| `Timer5` / `Phase2MusicElapsedTime` | 从转场开始累计的音乐绝对帧 | 开始转场时归零，机制切换不重置 |
+| `Phase2ElapsedTime` | 二阶段生存时间，供动态减伤使用 | 进入二阶段时归零，最多累计 10800 帧 |
+| `Mechanic2Age` | 相对机制 2 起点的帧数 | 由音乐时钟和同步起点计算 |
+
+不要按枚举声明位置重新编号：机制 5/6/7 的网络值分别是 8/9/10，历史 `Phase2_Finale` 值 7 继续保留。阶段分类由显式查询统一解释，不依赖枚举大小顺序；未知网络值不激活二阶段音乐或场地。
+
+## 同步数据
+
+| 数据 | 当前同步位置 |
+| --- | --- |
+| 竞技场引用 | `AnomalyAI64[1]` 的 owner + identity |
+| 化身、化身计时、化身旋转 | `AnomalyAI32[1]`、`[2]`、`[3]` |
+| 生存时间、正在召手、拍击左右位图、机制 2 音乐起点 | `AnomalyAI32[4]` 至 `[7]` |
+| 停靠起点/终点/初速度 | `AnomalyAI64[2]`、`[3]`、`[4]`，仅停靠期间有效 |
+| 机制 2 拍击起点/目标 | `AnomalyAI64[2]`、`[3]` |
+| 机制 3 跳跃起点/落点 | `AnomalyAI64[2]`、`[3]` |
+| 机制 4 回中起点/冲刺速度 | `AnomalyAI64[2]`、`[3]` |
+| 停靠状态/拍击锁定序号/史莱姆雨目标 | `AnomalyAI32[8]`，按机制解释 |
+
+上述复用通过语义属性访问，不能增加 Behavior 实例存储。Head 的业务容量为 9 个 AI32 槽和 5 个 AI64 槽；容器另行附加尾部同步标记槽。二维向量完整占用一个 AI64 槽，对应 `AIChanged64` 标记。
+
+手的原版 `ai[0]` 和 `ai[1]` 保留左右侧和主人索引。`ai[2]` 的常态动作与脚本动作分别由 `NormalAction`、`ScriptedAction` 解释；机制 5 的 `ai[3]` 是 1-based 已锁定攻击序号。机制 5 的起点/终点分别使用 `AnomalyAI64[0/1]`，机制 6 准备阶段的相对起点复用机制 5 起点槽；机制 2 入场复用这两个槽保存相对起点和初速度，由服务器锁定，并用动作值 6 区分常态动作，保证客户端等待及中途加入可恢复。入场用固定 Hermite 曲线衔接普通待机惯性，非拍击手保持下垂朝向，随预警移至本体侧下方，留出横向骨节空间并从玩家侧旁掠过，继续沿用本体深度和绘制锚点，不另存状态。
+
+## 必须保留的顺序
+
+主入口先用上帧竞技场激活状态选择目标，再清除激活标志，由本帧符卡重新开启。二阶段由 `AdvanceMechanics` 的 switch 表和循环统一推进；保留同帧连续跨越多个机制、随后增加 `Timer1`、最后只执行最终选中机制的顺序。前两次切换保留客户端音乐预测，其余由服务器推进，不能用单次互斥分支替换循环或移动计时位置。
+
+召唤早期尚未赋值主人和自定义 AI 标志，因此保留仪式和 `IsSummoningHands` 的身份兜底。手部锁定数据未到达时，客户端保留等待分支。机制 2 绘制尺寸、悬停框及血条位置必须一起维护。手掌自定义绘制沿用原版 type 36 的底部对齐中心，常规 DrawNPCs/悬停作用域已临时加入 netOffset，不再重复添加。常态待机远距离复用普通手部逐轴追随，近距离替换为相对头部的阻尼收敛，避免固定加速度在目标两侧形成持续振荡；普通手部不启用此可选收敛分支。
+
+测试与改动记录沿用独立资料包及仓库忽略规则。此前各轮次的布局、迁移记录和基线保留供追溯；主文档只说明当前实现。
+
+## 机制二的同步与读取边界
+
+机制二保持在 `Head/Phase2/SkeletronLegendHead.Mechanic2.cs` 单文件内，参数和纯查询集中在 `Mechanic2Parameters`，实际 AI 按侧位图、伤害、回程、场地等待、主体轨迹和攻击生成组织。本地函数直接服务于该 AI，不另建机制对象或实体状态容器。
+
+三次拍击的随机左右位图及每次起点/目标由服务器锁定。客户端缺少位图、当前拍击锁定或最后一次回程锁定时停速等待，不自行使用本机目标位置补写同步槽。完整快照到达后按音乐年龄恢复轨迹。主体暂缺有效目标时，客户端等待服务器状态，不自行决定退场；一阶段血量触发转场也由服务器决定。
+
+`GetStrikeIndex` 查询手部动作所属的拍击，`GetBodyStrikeIndex` 查询主体后撤至回收的有效窗口；两者结束边界不同，不可互相替换。半场预警仍逐拍绘制，以保留可能重叠的预警和余光。半场伤害只在确切拍击帧执行，并用统一 GlobalNPC 中的本地位图防止音乐回拨重复结算；该位图不进入快照，初始化及克隆重置。错过伤害帧不补算历史伤害。
+
+拍击落星先于主体、阶段或场地引用到达客户端时等待，依赖恢复后继续执行；服务器负责确认退场。所有参数、三次拍击音乐帧、弹幕生成顺序及同步载荷布局保留。
+
+分发前还检查实际专用服务器加载。公共黑暗遮罩的内容初始化在服务器跳过客户端粒子纹理读取，卸载时清理借用引用；通用时钟在首次宿主更新前返回零，支持内容注册期间的稀有度颜色查询。这些检查独立于 C# 构建和离线快照验证。

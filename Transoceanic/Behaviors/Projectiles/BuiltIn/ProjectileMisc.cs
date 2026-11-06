@@ -32,7 +32,7 @@ internal sealed class ProjectileMisc : GlobalProjectileBehavior
             projectile.VelocityToRotation(projectile.RotationOffset);
 
         TOGlobalProjectile ocean = projectile.Ocean;
-        if (Main.dedServ || ocean.ActiveAfterimages is not { } afterimages)
+        if (Main.dedServ || ocean.ActiveAfterimages is not List<AfterimageParticle> afterimages)
             return;
         foreach (AfterimageParticle afterimage in afterimages)
             ParticleHandler.UpdateParticle(afterimage);
@@ -45,7 +45,7 @@ internal sealed class ProjectileMisc : GlobalProjectileBehavior
     /// </remarks>
     public override bool PreDraw(Projectile projectile, ref Color lightColor)
     {
-        if (Main.dedServ || projectile.Ocean.ActiveAfterimages is not { } afterimages)
+        if (Main.dedServ || projectile.Ocean.ActiveAfterimages is not List<AfterimageParticle> afterimages)
             return true;
         SpriteBatch spriteBatch = Main.spriteBatch;
         foreach (AfterimageParticle afterimage in afterimages)

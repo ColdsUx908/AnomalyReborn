@@ -5,6 +5,12 @@ using Terraria.ObjectData;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
+/// <summary>
+/// 传说之夜召唤内容。
+/// </summary>
+/// <remarks>
+/// <para>数据槽位：不使用 NPC/Projectile 的 ai、localAI 或框架计时槽；状态由物品/物块原版字段及调用的仪式实体管理。</para>
+/// </remarks>
 public sealed class AncientBattlefieldAltarItem : AnomalyModItem
 {
     public override string Texture => LegendaryNightHandler.LegendaryNightPath + "Summoning/AncientBattlefieldAltarItem";
@@ -51,16 +57,26 @@ public sealed class AncientBattlefieldAltarItem : AnomalyModItem
     }
 }
 
+/// <summary>
+/// 传说之夜召唤内容。
+/// </summary>
+/// <remarks>
+/// <para>数据槽位：不使用 NPC/Projectile 的 ai、localAI 或框架计时槽；状态由物品/物块原版字段及调用的仪式实体管理。</para>
+/// </remarks>
 public sealed class AncientBattlefieldAltar : ModTile
 {
     public override string Texture => LegendaryNightHandler.LegendaryNightPath + "Summoning/AncientBattlefieldAltar";
 
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
 
+    /// <summary>宽度。</summary>
     public const int Width = 5;
+    /// <summary>高度。</summary>
     public const int Height = 5;
+    /// <summary>动画帧数量。</summary>
     public const int FrameCount = 7;
 
+    /// <summary>传说之夜祭坛激活音效。</summary>
     public static readonly SoundStyle LegendaryNightActivate = new(LegendaryNightHandler.LegendaryNightPath + "Summoning/LegendaryNightActivate");
 
     public override void SetStaticDefaults()
@@ -131,7 +147,6 @@ public sealed class AncientBattlefieldAltar : ModTile
 
     public override void MouseOver(int i, int j) => DisplayIcon(i, j);
     public override void MouseOverFar(int i, int j) => DisplayIcon(i, j);
-
     public static void DisplayIcon(int i, int j)
     {
         Main.LocalPlayer.cursorItemIconID = ModContent.ItemType<MemoryofAstraeus>();

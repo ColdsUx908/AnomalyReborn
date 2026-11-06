@@ -406,7 +406,7 @@ internal static class SourceGeneratorHelper
                 if (typeSymbol.ContainingType is not null)
                     return typeSymbol.ContainingType.FullMetadataName + "+" + typeSymbol.MetadataName;
 
-                string ns = typeSymbol.ContainingNamespace is { IsGlobalNamespace: false } space ? space.ToDisplayString() : "";
+                string ns = typeSymbol.ContainingNamespace is INamespaceSymbol { IsGlobalNamespace: false } space ? space.ToDisplayString() : "";
                 if (!string.IsNullOrEmpty(ns))
                     return ns + "." + typeSymbol.MetadataName;
                 return typeSymbol.MetadataName;

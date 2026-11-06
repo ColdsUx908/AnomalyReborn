@@ -28,16 +28,6 @@ public readonly record struct ProjectileDamageContainer(
     public ProjectileDamageContainer(int damage) : this(damage, damage, damage, damage, damage, damage) { }
 
     /// <summary>
-    /// 专家模式下接触伤害的原版乘数。
-    /// </summary>
-    public const float ExpertContactVanillaMultiplier = 2f;
-
-    /// <summary>
-    /// 大师模式下接触伤害的原版乘数。
-    /// </summary>
-    public const float MasterContactVanillaMultiplier = 3f;
-
-    /// <summary>
     /// 普通模式下弹幕伤害的原版乘数。
     /// </summary>
     public const float NormalProjectileVanillaMultiplier = 2f;
@@ -91,6 +81,58 @@ public readonly record struct ProjectileDamageContainer(
         get
         {
             float damageAdjustment = Main.masterMode ? MasterProjectileVanillaMultiplier : Main.expertMode ? ExpertProjectileVanillaMultiplier : NormalProjectileVanillaMultiplier;
+            float expectedDamage =
+                AnomalySharedData.AnomalyUltramundane ? AnomalyUltramundaneDamage
+                : AnomalySharedData.Anomaly ? AnomalyDamage
+                : TOWorldState.LegendaryMode ? LegendaryDamage
+                : Main.masterMode ? MasterDamage
+                : Main.expertMode ? ExpertDamage
+                : NormalDamage;
+
+            return (int)MathF.Round(expectedDamage / damageAdjustment);
+        }
+    }
+}
+
+/// <summary>存储 NPC 在不同难度与特殊模式下的预设接触伤害，并反算 NPC 基础伤害。</summary>
+/// <remarks>
+/// 普通、专家、大师接触伤害的缩放分别为 1、2、3，不包含弹幕命中玩家时额外的 2 倍倍率。
+/// 将 <see cref="Value"/> 赋给 <see cref="NPC.damage"/> 时，应在 NPC 的难度缩放之前（例如 SetDefaults）执行；
+/// NPC 随后的初始化负责难度缩放及保存 defDamage，不要在缩放完成后再次使用反算值覆盖伤害。
+/// 预设伤害指防御、减伤及其他模组修正之前的伤害。
+/// </remarks>
+/// <param name="NormalDamage">普通模式伤害，无倍数约束。</param>
+/// <param name="ExpertDamage">专家模式伤害，须为 2 的倍数。</param>
+/// <param name="MasterDamage">大师模式伤害，须为 3 的倍数。</param>
+/// <param name="LegendaryDamage">传奇模式伤害，须为 3 的倍数。</param>
+/// <param name="AnomalyDamage">异象模式伤害，须为 3 的倍数。</param>
+/// <param name="AnomalyUltramundaneDamage">异象超凡伤害，须为 3 的倍数。</param>
+public readonly record struct NPCContactDamageContainer(
+    int NormalDamage, int ExpertDamage, int MasterDamage, int LegendaryDamage,
+    int AnomalyDamage, int AnomalyUltramundaneDamage)
+{
+    /// <summary>为所有难度设置相同的预设伤害。</summary>
+    /// <param name="damage">预设伤害，须满足所用难度的倍数约束；跨全部难度使用时须为 6 的倍数。</param>
+    public NPCContactDamageContainer(int damage) : this(damage, damage, damage, damage, damage, damage) { }
+
+    /// <summary>普通模式下 NPC 接触伤害的原版乘数。</summary>
+    public const float NormalContactVanillaMultiplier = 1f;
+    /// <summary>专家模式下 NPC 接触伤害的原版乘数。</summary>
+    public const float ExpertContactVanillaMultiplier = 2f;
+    /// <summary>大师模式下 NPC 接触伤害的原版乘数。</summary>
+    public const float MasterContactVanillaMultiplier = 3f;
+
+    /// <summary>获取难度缩放前应写入 NPC.damage 的基础接触伤害。</summary>
+    /// <remarks>
+    /// 模式优先级与弹幕伤害容器相同：异象超凡、异象、传奇、大师、专家、普通。
+    /// 根据当前普通、专家或大师难度反算基础值，并用 MathF.Round 消除浮点舍入误差。
+    /// </remarks>
+    public int Value
+    {
+        get
+        {
+            float damageAdjustment = Main.masterMode ? MasterContactVanillaMultiplier
+                : Main.expertMode ? ExpertContactVanillaMultiplier : NormalContactVanillaMultiplier;
             float expectedDamage =
                 AnomalySharedData.AnomalyUltramundane ? AnomalyUltramundaneDamage
                 : AnomalySharedData.Anomaly ? AnomalyDamage

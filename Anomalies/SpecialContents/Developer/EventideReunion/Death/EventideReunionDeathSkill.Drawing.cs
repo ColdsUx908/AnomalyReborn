@@ -14,7 +14,7 @@ public sealed partial class EventideReunionDeathSkill
         if (Phase == DeathPhase.Slash)
             EmitSlashSparkles();
         Vector2 tip = player.MountedCenter + WeaponVector * WeaponTipDistance;
-        if (Phase == DeathPhase.Charge || Phase == DeathPhase.Slash)
+        if (Phase is DeathPhase.Charge or DeathPhase.Slash)
             Dust.NewDustPerfectAction(tip, DustID.Smoke, d =>
             {
                 d.noGravity = true;

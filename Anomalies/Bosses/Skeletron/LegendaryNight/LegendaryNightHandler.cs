@@ -1,15 +1,22 @@
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
-public sealed class LegendaryNightHandler
+/// <summary>传说之夜共享资源路径、主题颜色和主体查询入口。</summary>
+public static class LegendaryNightHandler
 {
+    /// <summary>传说之夜资源根路径。</summary>
     public const string LegendaryNightPath = AnomalySharedData.ModPath + "Bosses/Skeletron/LegendaryNight/";
-    public const string LegendaryNightEntityPath = AnomalySharedData.ModPath + "Bosses/Skeletron/LegendaryNight/Entities/";
+    /// <summary>机制七元素弹幕标记。</summary>
     public const float Mechanic7ElementProjectileMarker = -7f;
 
+    /// <summary>本地化分类路径。</summary>
     public const string LocalizationCategory = "Bosses.Skeletron.LegendaryNight";
+    /// <summary>骨质颜色。</summary>
     public static readonly Color BoneColor = new(233, 225, 199);
+    /// <summary>史莱姆颜色。</summary>
     public static readonly Color SlimeColor = new(105, 140, 255);
+    /// <summary>星体颜色。</summary>
     public static readonly Color StarColor = new(255, 215, 0);
+    /// <summary>铂金颜色。</summary>
     public static readonly Color PlatinumColor = new(242, 243, 236);
 
     /// <summary>
@@ -27,7 +34,7 @@ public sealed class LegendaryNightHandler
     /// <summary>
     /// 按索引检查并创建一次头部 Behavior，供调用方复用；失败时输出 null。
     /// </summary>
-    public static bool IsLegendaryNightHead(int index, out SkeletronLegendHead head, bool oneBased = false)
+    public static bool TryGetLegendaryNightHead(int index, out SkeletronLegendHead head, bool oneBased = false)
     {
         head = null;
         if (!IsLegendaryNightHead(index, oneBased))
@@ -37,6 +44,39 @@ public sealed class LegendaryNightHandler
         return true;
     }
 
+    /// <summary>取得仍在运行的场景候选，排除退场及未接入当前行为的主体。</summary>
+    internal static bool TryGetSceneCandidate(NPC npc, out SkeletronLegendHead head)
+    {
+        head = null;
+        if (!IsLegendaryNightHead(npc))
+            return false;
+        SkeletronLegendHead candidate = SkeletronLegendHead.GetInstance(npc);
+        if (!candidate.ShouldProcess || candidate.CurrentBehavior == SkeletronLegendHead.Behavior.Despawn)
+            return false;
+        head = candidate;
+        return true;
+    }
+
+    /// <summary>天空、世界时间和音乐共用的主体选择：时间控制优先，其次二阶段音乐，同优先级按 NPC 槽位顺序。</summary>
+    internal static bool TryGetSceneHead(out SkeletronLegendHead head)
+    {
+        head = null;
+        int selectedPriority = -1;
+        foreach (NPC npc in NPC.ActiveNPCs)
+        {
+            if (!TryGetSceneCandidate(npc, out SkeletronLegendHead candidate))
+                continue;
+            int priority = candidate.SuppressSkyClouds ? 2 : candidate.Phase2MusicActive ? 1 : 0;
+            if (priority > selectedPriority)
+            {
+                head = candidate;
+                selectedPriority = priority;
+            }
+            if (priority == 2)
+                return true;
+        }
+        return head is not null;
+    }
     public static void SpawnBlessingBurst(Vector2 position)
     {
         if (Main.dedServ)

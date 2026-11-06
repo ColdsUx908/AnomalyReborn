@@ -170,7 +170,7 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
             Vector2 offset = new Vector2(EvenID ? -256 : 256, 0) + Vector2.UnitX.RotatedBy(rotation + BossCounter / 60f * (EvenID ? -1 : 1)) * 64;
             NPC.Center = Brain.Center + offset;
             NPC.velocity = Vector2.Zero;
-            if (!Main.dedServ && BrainOfCthulhuSystem.VerletTendrils is { } tendrils && (uint)CreeperID < tendrils.Length)
+            if (!Main.dedServ && BrainOfCthulhuSystem.VerletTendrils is (int creeper, List<VerletSimulatedSegment> tendril, int reelInTimer)[] tendrils && (uint)CreeperID < tendrils.Length)
             {
                 List<VerletSimulatedSegment> segments = tendrils[CreeperID].tendril;
                 for (int i = 0; i < segments.Count; i++)
@@ -658,7 +658,7 @@ public sealed partial class CreeperAI : AnomalyNPCBehavior<CreeperAI>
         // VanillaHitEffect has already emitted the creeper's blood dust and gore.
         PhantomDeathEffectsPlayed = true;
         SoundEngine.PlaySound(NPC.DeathSound, NPC.Center);
-        if (BrainOfCthulhuSystem.VerletTendrils is { } tendrils && (uint)CreeperID < tendrils.Length && tendrils[CreeperID].tendril is { Count: >= 2 } segments)
+        if (BrainOfCthulhuSystem.VerletTendrils is (int creeper, List<VerletSimulatedSegment> tendril, int reelInTimer)[] tendrils && (uint)CreeperID < tendrils.Length && tendrils[CreeperID].tendril is List<VerletSimulatedSegment> { Count: >= 2 } segments)
         {
             Vector2 direction = (NPC.Center - segments[^2].Position).SafeNormalize(Vector2.UnitY);
             for (int i = 0; i < 5; i++)

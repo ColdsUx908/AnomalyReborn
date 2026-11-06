@@ -43,7 +43,7 @@ public sealed partial class EventideReunion
         {
             const string Name = "VectorChaos";
             if (developerLine.Mod != AnomalyMain.Instance.Name || developerLine.Name != "Tooltip_DeveloperItemOwnerIdentifier"
-                || AnomalyEffects.Texts.EventideReunion is not { } shader)
+                || AnomalyEffects.Texts.EventideReunion is not AnomalyEffects.MiscShaderContainer shader)
                 return false;
             int index = developerLine.Text.IndexOf(Name, StringComparison.Ordinal);
             if (index < 0)
@@ -83,7 +83,7 @@ public sealed partial class EventideReunion
         static bool TryDrawAspectTooltip(DrawableTooltipLine line)
         {
             if (line.Mod != "Terraria" || line.Name is not ("Tooltip0" or "Tooltip1")
-                || AnomalyEffects.Texts.EventideReunion is not { } shader)
+                || AnomalyEffects.Texts.EventideReunion is not AnomalyEffects.MiscShaderContainer shader)
                 return false;
 
             if (line.Name == "Tooltip1")
@@ -140,7 +140,7 @@ public sealed partial class EventideReunion
         static bool TryDrawItemName(DrawableTooltipLine line)
         {
             if (line.Mod == "Terraria" && line.Name == "ItemName"
-                && AnomalyEffects.Texts.EventideReunion is { } shader)
+                && AnomalyEffects.Texts.EventideReunion is AnomalyEffects.MiscShaderContainer shader)
             {
                 SpriteBatch spriteBatch = Main.spriteBatch;
                 Vector2 position = new(line.X, line.Y);

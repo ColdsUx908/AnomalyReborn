@@ -2,6 +2,12 @@ using Anomalies.GameContents;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
+/// <summary>
+/// 传说之夜召唤内容。
+/// </summary>
+/// <remarks>
+/// <para>数据槽位：不使用 NPC/Projectile 的 ai、localAI 或框架计时槽；状态由物品/物块原版字段及调用的仪式实体管理。</para>
+/// </remarks>
 public sealed class FallenStarEssence : AnomalyModItem
 {
     public override string Texture => LegendaryNightHandler.LegendaryNightPath + "Summoning/FallenStarEssence";

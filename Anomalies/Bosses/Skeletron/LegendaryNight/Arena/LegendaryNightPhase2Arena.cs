@@ -1,20 +1,36 @@
-using Anomalies.Bosses.Skeletron.LegendaryNight.Buffs;
 using Anomalies.GameContents.Base;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
+/// <summary>
+/// 二阶段竞技场，提供边界、法阵几何、公转和实体化碰撞。
+/// </summary>
+/// <remarks>
+/// <para>ai[0]：主体 NPC 索引 + 1；ai[1]：展开起始音乐帧；ai[2]：首次交汇方位弧度 + 1，0 表示服务器尚未初始化。</para>
+/// <para>localAI：未使用；框架 Timer1..5：未使用。</para>
+/// <para>ExtraAI：继承竞技场基类的 Radius、OutofArenaTimer；其余几何由音乐时钟推导。</para>
+/// </remarks>
 public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
 {
+    /// <summary>显现持续时间，单位为游戏帧。</summary>
     public const int AppearanceDuration = 90;
+    /// <summary>主圆完整半径，单位为世界像素。</summary>
     public const float MainCircleFullRadius = 600f;
+    /// <summary>小圆半径比例。</summary>
     public const float SmallCircleRadiusRatio = 1f / 6f;
+    /// <summary>外圆半径比例。</summary>
     public const float OuterCircleRadiusRatio = 1f + 2f * SmallCircleRadiusRatio; //800f
-    public const float RotationSpeed = 0.007f;
+    /// <summary>自转或公转角速度，单位为弧度/游戏帧。</summary>
+    public const float RotationSpeed = 0.006f;
+    /// <summary>首次小圆公转速度，以世界像素和游戏帧计量。</summary>
     public static float FirstSmallCircleOrbitSpeed => SlowOrbitSpeed;
     public static float GetFastOrbitSpeed(int musicTime) => GetOrbitSpeed(2, musicTime);
+    /// <summary>自转或公转角速度，单位为弧度/游戏帧。</summary>
     public const float FirstSmallCircleSpinSpeed = RotationSpeed * 2f;
+    /// <summary>自转或公转角速度，单位为弧度/游戏帧。</summary>
     public const float SecondSmallCircleSpinSpeed = -RotationSpeed * 3f;
 
+    /// <summary>召唤音效。</summary>
     public static readonly SoundStyle SummonSound = new(LegendaryNightHandler.LegendaryNightPath + "Arena/Phase2ArenaSummon");
 
     // ai[0]：所属骷髅王索引（1-based）；ai[1]：法阵出现时的音乐帧数。
@@ -29,7 +45,7 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
         get => (int)Projectile.ai[1];
         set => Projectile.ai[1] = value;
     }
-    public SkeletronLegendHead MasterBehavior => LegendaryNightHandler.IsLegendaryNightHead((int)Projectile.ai[0], out SkeletronLegendHead head, oneBased: true) && head.NPC.life > 0 ? head : null;
+    public SkeletronLegendHead MasterBehavior => LegendaryNightHandler.TryGetLegendaryNightHead((int)Projectile.ai[0], out SkeletronLegendHead head, oneBased: true) && head.NPC.life > 0 ? head : null;
     public int MusicAge => Math.Max(0, (MasterBehavior?.Phase2MusicElapsedTime ?? AppearanceStartMusicTime) - AppearanceStartMusicTime);
     public float AppearanceProgress => MathHelper.Clamp(MusicAge / (float)AppearanceDuration, 0f, 1f);
     public float Intensity => MathHelper.SmoothStep(0f, 1f, AppearanceProgress);
@@ -38,60 +54,10 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
     public float MainCircleRadius => Radius / OuterCircleRadiusRatio;
     public float SmallCircleRadius => MainCircleRadius * SmallCircleRadiusRatio;
     // 目标有效范围以完整法阵为准，不随入场缩放收缩，避免展开时误判脱战。
+    /// <summary>目标选择半径，单位为世界像素。</summary>
     public static float TargetingRadius => MainCircleFullRadius * OuterCircleRadiusRatio * 2f;
+    /// <summary>激光宽度，单位为世界像素。</summary>
     public const float LaserWidth = 24f;
-    public bool ChargeMaterialization => MasterBehavior is { Mechanic4Active: true };
-    public bool Materialized => MasterBehavior is { } head && (ChargeMaterialization
-        ? SkeletronLegendHead.Mechanic4Data.LasersActive(head.Phase2MusicElapsedTime)
-        : head.Mechanic2Active && SkeletronLegendHead.Mechanic2Data.LasersActive(head.Mechanic2Age));
-    public float MaterializationWarning => MasterBehavior is not { } head ? 0f : ChargeMaterialization
-        ? SkeletronLegendHead.Mechanic4Data.LaserWarning(head.Phase2MusicElapsedTime)
-        : head.Mechanic2Active ? SkeletronLegendHead.Mechanic2Data.LaserWarning(head.Mechanic2Age) : 0f;
-    public float MaterializationIntensity => MasterBehavior is not { } head ? 0f : ChargeMaterialization
-        ? SkeletronLegendHead.Mechanic4Data.LaserIntensity(head.Phase2MusicElapsedTime)
-        : head.Mechanic2Active ? SkeletronLegendHead.Mechanic2Data.LaserIntensity(head.Mechanic2Age) : 0f;
-    public Annulus MaterializedRing => new(Projectile.Center, MainCircleRadius, Radius);
-
-    // 中央五边形与五个星角三角形的并集；凹口保持安全。
-    public bool CentralStarCollides(Rectangle hitbox)
-    {
-        Pentagon core = GetCentralPentagon(Projectile.Center, MainCircleRadius, MagicCircleRotation);
-        if (core.Collides(hitbox))
-            return true;
-        for (int i = 0; i < 5; i++)
-        {
-            float angle = MagicCircleRotation + MathHelper.TwoPi * i / 5f;
-            Vector2 firstInner = Projectile.Center + (angle + MathHelper.Pi / 5f).ToRotationVector2() * core.CircumRadius;
-            Vector2 secondInner = Projectile.Center + (angle - MathHelper.Pi / 5f).ToRotationVector2() * core.CircumRadius;
-            Triangle triangle = new(GetStarVertex(0, i), firstInner, secondInner);
-            if (triangle.Collides(hitbox))
-                return true;
-        }
-        return false;
-    }
-
-    // 统一提供视觉与后续交互使用的几何数据；0 主法阵，1/2 两个附属法阵。
-    public (Vector2 Center, float Radius, float Rotation) GetMagicCircle(int index)
-    {
-        float absorb = MasterBehavior is { } head && head.StellarMechanicsActive
-            ? SkeletronLegendHead.Mechanic6Data.AbsorbProgress(head.Phase2MusicElapsedTime) : 0f;
-        Vector2 destination = MasterBehavior is { } owner
-            ? owner.NPC.Center + SkeletronLegendHead.Mechanic6Data.SphereOffset(owner.Phase2MusicElapsedTime) : Projectile.Center;
-        float originalRadius = MainCircleFullRadius * AppearanceScale;
-        if (index == 0)
-            return (Vector2.Lerp(Projectile.Center, destination, absorb), originalRadius * (1f - absorb), MagicCircleRotation);
-        // 同向公转；交汇位置由音乐时钟和同步初始角确定。
-        float spinSpeed = index == 1 ? FirstSmallCircleSpinSpeed : SecondSmallCircleSpinSpeed;
-        float angle = GetOrbitAngle(index, MasterBehavior?.Phase2MusicElapsedTime ?? AppearanceStartMusicTime);
-        Vector2 center = Projectile.Center + angle.ToRotationVector2() * (originalRadius * (1f + SmallCircleRadiusRatio));
-        return (Vector2.Lerp(center, destination, absorb), originalRadius * SmallCircleRadiusRatio * (1f - absorb), MusicAge * spinSpeed);
-    }
-
-    public Vector2 GetStarVertex(int circleIndex, int vertexIndex)
-    {
-        (Vector2 Center, float Radius, float Rotation) circle = GetMagicCircle(circleIndex);
-        return circle.Center + (circle.Rotation + MathHelper.TwoPi * vertexIndex / 5f).ToRotationVector2() * circle.Radius;
-    }
 
     public override string Texture => TOTextures.InvisibleTexturePath;
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
@@ -127,31 +93,15 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
             Projectile.ai[2] = 1f + Main.rand.NextFloat(MathHelper.TwoPi);
             Projectile.netUpdate = true;
         }
-        UpdateStarburst();
-        UpdateMechanic7Circles(head);
         Projectile.timeLeft = 100;
         Projectile.velocity = Vector2.Zero;
         // 圆心在生成时固定；半径与所有绘制共用同一份入场缩放。
         Radius = MainCircleFullRadius * OuterCircleRadiusRatio * AppearanceScale
-            * (head.StellarMechanicsActive ? SkeletronLegendHead.Mechanic6Data.ArenaScale(head.Phase2MusicElapsedTime) : 1f);
+            * (head.StellarMechanicsActive ? SkeletronLegendHead.Mechanic6Parameters.ArenaScale(head.Phase2MusicElapsedTime) : 1f);
         if (EnableMovementRestriction)
             MovementRestriction();
         else
             OutofArenaTimer = 0;
-
-        if (!Main.dedServ && head.Mechanic2Active)
-        {
-            int age = head.Mechanic2Age;
-            for (int strike = 0; strike < SkeletronLegendHead.Mechanic2Data.StrikeCount; strike++)
-            {
-                if (age != SkeletronLegendHead.Mechanic2Data.GetStrikeTime(strike))
-                    continue;
-                Player player = Main.LocalPlayer;
-                if (new Circle(Projectile.Center, Radius).Collides(player.Hitbox)
-                    && (head.Mechanic2StrikeSide(strike) < 0 ? player.Hitbox.Left < Projectile.Center.X : player.Hitbox.Right > Projectile.Center.X))
-                    LegendaryNightDamage.HurtLocalPlayer(Projectile, SkeletronLegendHead.SlapDamage, true);
-            }
-        }
     }
 
     public override bool CanHitPlayer(Player target) => Materialized || EnableMovementRestriction && base.CanHitPlayer(target);
@@ -160,73 +110,10 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
         Materialized && MaterializedGeometryCollides(targetHitbox)
         || EnableMovementRestriction && Vector2.DistanceSquared(targetHitbox.Center.ToVector2(), Projectile.Center) > Radius * Radius;
 
-    public static Pentagon GetCentralPentagon(Vector2 center, float radius, float rotation) => new(center,
-        radius * MathF.Cos(MathHelper.TwoPi / 5f) / MathF.Cos(MathHelper.Pi / 5f), rotation + MathHelper.Pi / 5f);
-
-    public bool MaterializedGeometryCollides(Rectangle hitbox)
-    {
-        // 金币冲刺同样实体化圆周与外围圆环，但不填充中央实心星形。
-        if (!ChargeMaterialization && CentralStarCollides(hitbox)
-            || MaterializedRing.Collides(hitbox)
-            || new Annulus(Projectile.Center, Radius - LaserWidth * 0.5f, Radius + LaserWidth * 0.5f).Collides(hitbox))
-            return true;
-        for (int circle = 0; circle < 3; circle++)
-        {
-            (Vector2 center, float radius, float rotation) = GetMagicCircle(circle);
-            if (MagicCircleCollides(center, radius, rotation, hitbox))
-                return true;
-        }
-        return false;
-    }
-
-    public static bool MagicCircleCollides(Vector2 center, float radius, float rotation, Rectangle hitbox, bool includeCircle = true)
-    {
-        if (includeCircle && new Annulus(center, radius - LaserWidth * 0.5f, radius + LaserWidth * 0.5f).Collides(hitbox))
-            return true;
-        for (int i = 0; i < 5; i++)
-        {
-            Vector2 start = center + (rotation + MathHelper.TwoPi * i / 5f).ToRotationVector2() * radius;
-            Vector2 end = center + (rotation + MathHelper.TwoPi * (i + 2) / 5f).ToRotationVector2() * radius;
-            RotatedRectangle laser = RotatedRectangle.FromLineSegment(start, end, LaserWidth);
-            if (laser.Collides(hitbox))
-                return true;
-        }
-        return false;
-    }
-
     public override void OnHitPlayer(Player target, Player.HurtInfo info)
     {
         if (Materialized && MaterializedGeometryCollides(target.Hitbox))
             target.AddBuff(ModContent.BuffType<AstralSuppression>(), 15 * 60);
     }
     public override bool PreDraw(ref Color lightColor) => false;
-
-    internal void DrawEnergySpheres(SpriteBatch spriteBatch)
-    {
-        if (MasterBehavior is not { StellarMechanicsActive: true } head
-            || head.CurrentBaseBehavior == SkeletronLegendHead.BaseBehavior.Despawn)
-            return;
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
-            DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-        foreach (Projectile projectile in Projectile.ActiveProjectiles)
-        {
-            // Behavior 每次查询都会重新包装，按所属 NPC 判断是否为同一主人。
-            if (projectile.ModProjectile is not LegendEnergySphere sphere || sphere.Head?.NPC != head.NPC)
-                continue;
-            sphere.DrawCompanionMatter(spriteBatch, behind: true);
-            sphere.DrawBlueCompanion(spriteBatch, behind: true);
-            sphere.DrawBody(spriteBatch);
-            sphere.DrawLightOrbTrails(spriteBatch);
-            foreach (Projectile orbProjectile in Projectile.ActiveProjectiles)
-            {
-                if (orbProjectile.ModProjectile is LegendLightOrb orb && orb.SphereProjectile == projectile)
-                    orb.Draw(spriteBatch);
-            }
-            sphere.DrawCore(spriteBatch);
-            sphere.DrawCompanionMatter(spriteBatch, behind: false);
-            sphere.DrawBlueCompanion(spriteBatch, behind: false);
-            sphere.DrawCompanionImpact(spriteBatch);
-        }
-        spriteBatch.End();
-    }
 }

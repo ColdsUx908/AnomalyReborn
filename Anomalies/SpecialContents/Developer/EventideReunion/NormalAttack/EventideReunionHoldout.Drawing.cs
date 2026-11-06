@@ -7,7 +7,7 @@ public sealed partial class EventideReunionHoldout
     private void DrawThrust()
     {
         float currentProgress = MathHelper.Clamp(Progress, 0f, 1f);
-        if (currentProgress <= 0f || currentProgress >= 0.8f)
+        if (currentProgress is <= 0f or >= 0.8f)
             return;
 
         float intensity = MathF.Sin(currentProgress / 0.8f * MathHelper.Pi);

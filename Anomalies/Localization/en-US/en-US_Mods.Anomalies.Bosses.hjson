@@ -79,7 +79,10 @@ Skeletron: {
 		LegendLightOrb.DisplayName: Astral Light Orb
 		LegendShockwave.DisplayName: Legend Shockwave
 		LegendSlimeRain.DisplayName: Slime Rain
-		Mechanic2Star.DisplayName: Astral Star Rain
+		LegendSlapStar.DisplayName: Astral Star Rain
+		LegendStarburst.DisplayName: Starburst
+		LegendBlueStar.DisplayName: Blue Companion Star
+		LegendCompanionShockwave.DisplayName: Stellar Impact
 		Meteor.DisplayName: Meteor
 		PlatinumCoin.DisplayName: Platinum Coin
 		SkullWarning.DisplayName: Skull Warning

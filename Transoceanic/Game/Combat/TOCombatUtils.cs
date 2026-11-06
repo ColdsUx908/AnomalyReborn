@@ -153,8 +153,8 @@ public struct NPCTargetingParameters : IEquatable<NPCTargetingParameters>
     /// </summary>
     public static bool operator ==(NPCTargetingParameters ctp1, NPCTargetingParameters ctp2)
     {
-        bool targetingCentersEqual = ctp1.TargetingCenter is { } first
-            ? ctp2.TargetingCenter is { } second && first.X.Equals(second.X) && first.Y.Equals(second.Y)
+        bool targetingCentersEqual = ctp1.TargetingCenter is Vector2 first
+            ? ctp2.TargetingCenter is Vector2 second && first.X.Equals(second.X) && first.Y.Equals(second.Y)
             : ctp2.TargetingCenter is null;
         return targetingCentersEqual
             && ctp1.FaceTarget == ctp2.FaceTarget

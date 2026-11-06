@@ -40,7 +40,7 @@ internal static class EventideReunionDeathDrawing
             vertices[i * 2] = new(new Vector3(center + vector, 0f), color, new Vector2(factor, 0f));
             vertices[i * 2 + 1] = new(new Vector3(center + vector * EventideReunionDeathGeometry.InnerRatio, 0f), color, new Vector2(factor, 1f));
         }
-        if (AnomalyEffects.Primitives.EventideDeathSweep is not { } eventideDeathSweepShader)
+        if (AnomalyEffects.Primitives.EventideDeathSweep is not AnomalyEffects.MiscShaderContainer eventideDeathSweepShader)
             return;
         Effect effect = eventideDeathSweepShader.Asset.Value;
         effect.Parameters["uStarfield"].SetValue(EventideReunionDeathAssets.Starfield);
@@ -52,7 +52,7 @@ internal static class EventideReunionDeathDrawing
 
     public static void DrawVignette(float opacity)
     {
-        if (AnomalyEffects.Overlays.EventideDeathVignette is not { } eventideDeathVignetteShader)
+        if (AnomalyEffects.Overlays.EventideDeathVignette is not AnomalyEffects.MiscShaderContainer eventideDeathVignetteShader)
             return;
         Effect effect = eventideDeathVignetteShader.Asset.Value;
         effect.Parameters["uResolution"].SetValue(new Vector2(Main.screenWidth, Main.screenHeight));

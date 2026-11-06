@@ -79,7 +79,10 @@ Skeletron: {
 		LegendLightOrb.DisplayName: 星神光球
 		LegendShockwave.DisplayName: 传奇冲击波
 		LegendSlimeRain.DisplayName: 史莱姆雨
-		Mechanic2Star.DisplayName: 星神落雨
+		LegendSlapStar.DisplayName: 星神落雨
+		LegendStarburst.DisplayName: 星爆
+		LegendBlueStar.DisplayName: 蓝色伴星
+		LegendCompanionShockwave.DisplayName: 恒星撞击
 		Meteor.DisplayName: 陨石
 		PlatinumCoin.DisplayName: 铂金币
 		SkullWarning.DisplayName: 骷髅预警

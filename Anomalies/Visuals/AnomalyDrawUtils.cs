@@ -26,7 +26,7 @@ public static class AnomalyDrawUtils
     {
         if (radius <= 0f || opacity <= 0f || lineWidth <= 0f || glowWidth <= 0f)
             return;
-        if (AnomalyClientConfig.Instance.EnableShaders && AnomalyEffects.Primitives.GlowCircle is { } shader)
+        if (AnomalyClientConfig.Instance.EnableShaders && AnomalyEffects.Primitives.GlowCircle is AnomalyEffects.MiscShaderContainer shader)
         {
             Matrix view = Main.GameViewMatrix.TransformationMatrix;
             Vector2 screenCenter = Vector2.Transform(center - Main.screenPosition, view);

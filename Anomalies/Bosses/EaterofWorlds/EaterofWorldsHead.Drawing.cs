@@ -63,7 +63,7 @@ public sealed partial class EaterofWorldsHead
         Color color = new(128, 78, 159);
         switch (CurrentBehavior)
         {
-            case Behavior.Phase1_Hunt when Timer1 % 110 >= 50 && Timer1 % 110 < 86:
+            case Behavior.Phase1_Hunt when Timer1 % 110 is >= 50 and < 86:
                 Warning(NPC.Center, WarningDirection(NPC), Timer1 % 110 - 50, 36, 280f);
                 break;
             case Behavior.Phase1_BurrowCharge when CurrentLocalPhase == 1:

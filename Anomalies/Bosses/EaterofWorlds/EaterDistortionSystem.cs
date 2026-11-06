@@ -105,7 +105,7 @@ public sealed class EaterDistortionSystem : ModSystem
             batch.End();
             DrawCracks(device);
         }
-        if (AnomalyEffects.Overlays.EaterMetaballEdge is not { } edge
+        if (AnomalyEffects.Overlays.EaterMetaballEdge is not AnomalyEffects.MiscShaderContainer edge
             || AnomalyEffects.Overlays.EaterDistortionFog is null || AnomalyEffects.Overlays.EaterDistortionWinds is null)
         {
             batch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
