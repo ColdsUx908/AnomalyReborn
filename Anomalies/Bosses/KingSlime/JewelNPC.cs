@@ -4,6 +4,19 @@ public abstract class JewelNPC : AnomalyModNPC
 {
     public const float DespawnDistance = 5000f;
 
+    private bool _SpawnEffectPlayed;
+
+    public override void PostAI()
+    {
+        if (Main.dedServ || _SpawnEffectPlayed)
+            return;
+
+        _SpawnEffectPlayed = true;
+        SoundEngine.PlaySound(JewelHandler.SpawnSound, NPC.Center);
+        for (int i = 0; i < 50; i++)
+            JewelHandler.SpawnOrbParticle(NPC, Main.rand.NextFloat(5f, 10f), Main.rand.Next(40, 60), Main.rand.NextFloat(0.4f, 0.7f));
+    }
+
     public int CurrentLocalPhase
     {
         get => (int)NPC.ai[1];

@@ -431,6 +431,7 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
         JewelRuby = NPC.DummyNPC;
         JewelEmerald = NPC.DummyNPC;
         JewelSapphire = NPC.DummyNPC;
+        JewelRainbow = NPC.DummyNPC;
 
         AnomalyNPC.DamageReduction_DynamicHandler = new TimedDDRHandler(
             new TimedDDRHandler.SingleDDRHandler(1f, Phase2LifeRatio, null, n => GetInstance(n).CurrentPhase >= Phase.PhaseChange_1To2, 60),

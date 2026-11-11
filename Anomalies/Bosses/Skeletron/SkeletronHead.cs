@@ -39,9 +39,7 @@ public sealed partial class SkeletronHead : AnomalyNPCBehavior<SkeletronHead>
         ForwardSkullSpin,
         PhaseChange_2To3,
         Phase3_NodeVolley,
-        Phase3_OppositeGuardians,
-        Phase3_ChordCharge,
-        Phase3_ClosingRing,
+        Phase3_GuardianRain,
         Despawn = byte.MaxValue,
     }
 
@@ -55,6 +53,8 @@ public sealed partial class SkeletronHead : AnomalyNPCBehavior<SkeletronHead>
     private const float Phase3HealLifeRatio = 0.3f;
     private const int Phase3StillDuration = 60;
     private const int Phase3HealDuration = 60;
+    private const int Phase3CenterMoveDelay = 30;
+    private const int Phase3CenterMoveDuration = 120;
     private const int Phase3HealInterval = 10;
     private const int Phase3ApproachDuration = 63;
     private const int Phase3BrakeDuration = 30;
@@ -181,13 +181,13 @@ public sealed partial class SkeletronHead : AnomalyNPCBehavior<SkeletronHead>
 
     private bool Phase3 => CurrentPhase == Phase.Phase3;
     internal bool IsEnteringPhase3 => CurrentPhase == Phase.PhaseChange_2To3;
-    private bool ShouldEnterPhase3 => Ultra && (Phase2 || CurrentPhase == Phase.Phase1 && CurrentBehavior == Behavior.Enraged)
+    private bool ShouldEnterPhase3 => Ultra && (Phase2 || CurrentPhase == Phase.Phase1)
         && NPC.life <= Phase3LifeFloor;
     private int Phase3LifeFloor => Math.Max(1, (int)(NPC.lifeMax * Phase3LifeRatio));
     private bool DeathLocked => Ultra && !Phase3 && CurrentBehavior != Behavior.Despawn;
 
     public bool IsSpinning => CurrentBehavior is Behavior.Spin or Behavior.SkullWarningSpin
-        or Behavior.TripleSpinCharge or Behavior.ForwardSkullSpin or Behavior.Enraged or Behavior.Phase3_ChordCharge;
+        or Behavior.TripleSpinCharge or Behavior.ForwardSkullSpin or Behavior.Enraged;
 
     // 各行为的局部步骤编号见 AI 中对应的 switch。
     public int CurrentLocalPhase
@@ -334,13 +334,12 @@ public sealed partial class SkeletronHead : AnomalyNPCBehavior<SkeletronHead>
     // [1] local phase, [2] timer, [3] teleport timer.
     // AI32: [0] life ratio at enhanced hover start, [1] attack age (negative during post-spin quiet), [2..3] teleport destination,
     // [4] charge readiness, [5] charge telegraph, [6] rapid skull duration, [7] life at phase-three transition start, [8] resync timer, [9] phase-three cycle (0..31).
-    // AI64: [0..2] phase-three approach brake origin, destination and initial velocity; in phase three [0..1] hold chord endpoints.
+    // AI64: [0..2] phase-three approach brake origin, destination and initial velocity.
     public override void BossHeadRotation(ref float rotation) =>
         rotation = IsSpinning ? NPC.rotation : 0f;
 
     public override void PostDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        DrawPhase3ChordWarning(spriteBatch);
         // Telegraph for charges
         float beginTelegraphGateValue = ChargeGateValue - ChargeTelegraphTime;
         if (ChargeTelegraphTimer > beginTelegraphGateValue)

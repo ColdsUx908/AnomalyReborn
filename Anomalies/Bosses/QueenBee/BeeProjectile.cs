@@ -30,6 +30,8 @@ public sealed class BeeProjectile : AnomalyModProjectile
         Projectile.height = 16;
         Projectile.hostile = true;
         Projectile.tileCollide = false;
+        // 网络接收会复用弹幕槽位，而原版 SetDefaults 不会清除 honeyWet。
+        Projectile.honeyWet = false;
         Projectile.timeLeft = 450;
     }
 
@@ -103,7 +105,8 @@ public sealed class BeeProjectile : AnomalyModProjectile
                 break;
 
             case BehaviorKilledByHoney:
-                if (Projectile.honeyWet)
+                // 蜂巢位置在客户端为预测值，消除蜜蜂由服务器确认。
+                if (TONetworkEnvironment.NotClient && Projectile.honeyWet)
                     Projectile.Kill();
 
                 if (Timer1 >= 40)

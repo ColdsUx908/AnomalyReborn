@@ -14,7 +14,8 @@ public sealed class EventideReunionSamsaraMarkBehavior : AnomalyGlobalNPCBehavio
     internal static bool Apply(NPC npc, int owner)
     {
         if (Main.netMode == NetmodeID.MultiplayerClient || !npc.active || npc.life <= 0
-            || !npc.Anomaly.EventideReunion_SamsaraRecord.Begin(npc.life))
+            || !npc.TryGetGlobalNPC(out AnomalyGlobalNPC data)
+            || !data.EventideReunion_SamsaraRecord.Begin(npc.life))
             return false;
         npc.Anomaly.EventideReunion_SamsaraOwner = owner;
         npc.Anomaly.EventideReunion_SamsaraStartTick = Main.GameUpdateCount;
@@ -46,7 +47,9 @@ public sealed class EventideReunionSamsaraSystem : ModSystem
         if (Main.netMode != NetmodeID.MultiplayerClient)
         {
             NPC root = EventideReunionSamsaraMarkBehavior.Root(npc);
-            root.Anomaly.EventideReunion_SamsaraRecord.Observe(root.life);
+            // 网络受击及清除工具可能传入已失效或尚未完成初始化的 NPC。
+            if (root.TryGetGlobalNPC(out AnomalyGlobalNPC data))
+                data.EventideReunion_SamsaraRecord.Observe(root.life);
         }
     }
 
@@ -70,7 +73,8 @@ public sealed class EventideReunionSamsaraSystem : ModSystem
     {
         foreach (NPC npc in Main.ActiveNPCs)
         {
-            AnomalyGlobalNPC data = npc.Anomaly;
+            if (!npc.TryGetGlobalNPC(out AnomalyGlobalNPC data))
+                continue;
             if (Main.netMode == NetmodeID.MultiplayerClient)
             {
                 if (data.EventideReunion_SamsaraVisualTime > 0)

@@ -10,6 +10,7 @@ sampler uNebulaSampler : register(s1) = sampler_state
     AddressV = Wrap;
 };
 float3 uOrbColor;
+float2 uSpriteWorldSize;
 float uOpacity;
 float uGlobalTime;
 
@@ -31,9 +32,14 @@ float4 Main(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
     float noiseB = SampleNebulaNoise(polar * float2(9, 5) + uGlobalTime * float2(-0.14, -0.025));
     float edgeNoise = SampleNebulaNoise(polar * float2(3, 4) + uGlobalTime * float2(-0.45, 0));
     float distance = radius + (edgeNoise - 0.5) * 0.012;
-    // Screen derivatives soften the moving rim at this much smaller size and during absorption.
-    float aa = max(fwidth(distance), 0.004);
-    float outerGlow = 0.05 / max(abs(distance - 0.25), aa)
+    // Normalize the profile to one world pixel, matching the original at unit camera zoom.
+    float2 worldPerPixel = max(float2(0.001, 0.001),
+        float2(length(ddx(coords) * uSpriteWorldSize), length(ddy(coords) * uSpriteWorldSize)));
+    float rimWidth = max(abs(ddx(distance)) / worldPerPixel.x
+        + abs(ddy(distance)) / worldPerPixel.y, 0.004);
+    // Screen-space antialiasing may widen coverage, but never controls glow brightness.
+    float aa = max(fwidth(distance), rimWidth);
+    float outerGlow = 0.05 / max(abs(distance - 0.25), rimWidth)
         * (1 - smoothstep(0.25, 0.4, distance));
     float bodyOpacity = 1 - smoothstep(0.25 - aa, 0.25 + aa, distance);
     float3 bodyColor = lerp(uOrbColor, float3(1, 1, 1), 0.22)

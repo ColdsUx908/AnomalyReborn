@@ -133,6 +133,8 @@ Skeletron: {
 			Description: 造成的伤害乘算降低50%
 		}
 	}
+
+	// SkeletronPhase3Guardian.DisplayName: Skeletron Phase3 Guardian
 }
 
 QueenSlime: {

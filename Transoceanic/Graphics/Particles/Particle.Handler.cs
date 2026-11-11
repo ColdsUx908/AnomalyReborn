@@ -112,6 +112,9 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
     /// <param name="drawOffset">可选的绘制偏移量。</param>
     public static void DrawParticle(SpriteBatch spriteBatch, Particle particle, Vector2 drawOffset = default)
     {
+        if (Main.dedServ)
+            return;
+
         if (!IsOnScreen(particle, drawOffset))
             return;
         DrawVisibleParticle(spriteBatch, particle, drawOffset);
@@ -153,6 +156,9 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
     /// </summary>
     public static void EnterDrawRegion_AlphaBlend(SpriteBatch spriteBatch)
     {
+        if (Main.dedServ)
+            return;
+
         spriteBatch.End();
         Main.Rasterizer.ScissorTestEnable = true;
         Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
@@ -165,6 +171,9 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
     /// </summary>
     public static void EnterDrawRegion_NonPremultiplied(SpriteBatch spriteBatch)
     {
+        if (Main.dedServ)
+            return;
+
         spriteBatch.End();
         Main.Rasterizer.ScissorTestEnable = true;
         Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
@@ -177,6 +186,9 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
     /// </summary>
     public static void EnterDrawRegion_Additive(SpriteBatch spriteBatch)
     {
+        if (Main.dedServ)
+            return;
+
         spriteBatch.End();
         Main.Rasterizer.ScissorTestEnable = true;
         Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
@@ -189,6 +201,9 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
     /// </summary>
     public static void EnterDrawRegion_Opaque(SpriteBatch spriteBatch)
     {
+        if (Main.dedServ)
+            return;
+
         spriteBatch.End();
         Main.Rasterizer.ScissorTestEnable = true;
         Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;

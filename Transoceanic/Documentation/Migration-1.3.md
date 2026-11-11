@@ -4,6 +4,8 @@
 
 ## 性能与绘制约定更新
 
+NewProjectileAction（含泛型和弧形生成入口）在恢复调用方速度、完成初始化回调后，由弹幕所有端立即补发 SyncProjectile。原版 NewProjectile 会在返回前发送经过速度修正、尚未执行回调的首包；仅设置 netUpdate 会让远端先使用这份状态。此修正不改变生成权限或网络载荷布局，但每次联网生成会增加一次同步发送。
+
 TOBossChallenge.BossList 现在是缓存的实时只读视图，持有该视图会看到后续帧的列表更新和世界退出清空，不是某一帧的快照。
 
 ParticleSet 移除 OrderFunction，统一按提交顺序绘制，不再按 Timer 排序。粒子绘制新增两倍可见视野的屏外剔除，DrawScreenCheckFluff 为每实例额外世界像素边距；PulseRing 自动计算边距。屏外不调用 PreDraw/PostDraw，更新与寿命继续推进，不应在绘制回调中维护游戏状态。
@@ -64,7 +66,7 @@ NPCTargetingParameters 的相等和哈希现在包含排除玩家集合，按内
 
 ## 验证与剩余限制
 
-从仓库根运行 `pwsh -File Tests/Transoceanic/Verify.ps1 -IncludeConsumers`。Behavior 测试覆盖 internal Handler 的生成与执行，并读取实际框架程序集检查类型边界与独立消费程序集的访问限制；单独运行该测试前须先构建 Transoceanic。
+从仓库根运行 `pwsh -File Validation/Tests/Transoceanic/Verify.ps1 -IncludeConsumers`。Behavior 测试覆盖 internal Handler 的生成与执行，并读取实际框架程序集检查类型边界与独立消费程序集的访问限制；单独运行该测试前须先构建 Transoceanic。
 
 本版本还包含实体 AI 容量调整：Ocean ExtraAI 仅保留 AI32 稀疏完整快照，NPC 12 数据槽、弹幕 7 数据槽；删除 OceanAI64 段并重排计时器槽位。这是网络协议变化，各端必须一起升级为相同构建。通用 Union64 和 AI64 编解码工具仍保留给消费方使用。真实 tML 自动加载、卸载、多人连接和绘制仍需宿主验证；仓库外第三方需要按上述规则迁移。
 
@@ -104,7 +106,7 @@ Particle 仍是普通运行对象，带参构造函数和生成调用保持可�
 
 `particle.Definition` 和 `ParticleHandler.GetDefinition<T>()` 可以取得定义；`GetTemplateInstance<T>()` 保留兼容用途。模板不能提交到全局、原子批次或局部 ParticleSet。纹理配置仍通过原 AutoLoadTexture/TexturePath 重写读取：兼容模板刻意不执行运行构造函数，配置 getter 不得依赖构造初始化字段；这不是运行粒子实例。
 
-Autoload(false) 等 tML 筛选会禁用自动定义。需要条件化手动定义时，在粒子类标记 Autoload(false)，在所属 Mod.Load 中 AddContent(new MyParticleDefinition(...))，由自定义定义重写 IsLoadingEnabled；不要同时自动和手动注册同一粒子。专用服务器不注册粒子定义，也不请求其纹理。缓存未就绪或定义禁用时不能构造运行粒子，会收到明确异常。
+Autoload(false) 等 tML 筛选会禁用自动定义。需要条件化手动定义时，在粒子类标记 Autoload(false)，在所属 Mod.Load 中 AddContent(new MyParticleDefinition(...))，由自定义定义重写 IsLoadingEnabled；不要同时自动和手动注册同一粒子。专用服务器同样注册并初始化粒子定义、请求纹理占位资产，普通调用点可以直接构造粒子；全局与局部集合统一跳过服务器提交、更新和绘制。缓存未就绪或定义禁用时不能构造运行粒子，会收到明确异常。
 
 粒子 ID 每轮从零建立，仅供本地视觉使用，不能持久化或作为网络协议 ID；纹理路径与帧更新、生成容量、重要粒子和队列时序保持原语义。
 
@@ -138,3 +140,9 @@ NPC 缩放依赖在原生加载时提前校验；宿主签名或 IL 不兼容将
 ## 内容加载期间的游戏时间
 
 `TOGameTime.TotalSeconds` 和 `TotalMinutes` 在首次宿主更新之前、专用服务器尚无宿主时间或卸载清理后返回零。内容注册（例如稀有度颜色初始化）可以安全查询；收到实际宿主 `GameTime` 后继续返回对应时间。`Time` 本身在这些边界仍可为空，直接访问其成员的消费方须自行判空。
+
+## 专用服务器粒子构造
+
+粒子生命周期契约调整：以前专用服务器不注册 `ParticleDefinition`，直接调用普通粒子构造函数会因缺少定义抛异常；现在客户端与服务端都完成定义注册、模板初始化和纹理资产请求。`TexturePulseParticle.SpriteAsset` 在服务端也保存请求得到的占位资产，而非强制为 null。普通调用点可以直接构造粒子，再交给全局、局部集合或实体残影入口；这些入口统一跳过服务端提交、更新与绘制，不执行粒子生成回调，也不访问 GPU。直接绘制单粒子、切换粒子绘制状态和绘制框架残影的入口同样在服务端返回。
+
+不再以“服务端没有粒子定义”或 `SpriteAsset == null` 判断运行端；确需区分时使用 `Main.dedServ`。已有的纯表现分支可以保留以减少无用分配。粒子 ID 仍为本地加载编号，不加入网络协议；缓存未就绪或定义被显式禁用时，构造继续抛出明确异常。自定义构造函数不得创建 GPU 资源或执行绘制；这类操作仍须留在客户端绘制流程。

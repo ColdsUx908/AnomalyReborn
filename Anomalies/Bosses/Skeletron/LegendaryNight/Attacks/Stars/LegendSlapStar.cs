@@ -62,7 +62,7 @@ public sealed class LegendSlapStar : AnomalyModProjectile
             return;
         }
         Projectile.rotation += 0.14f;
-        FallingStar.SpawnFlightSparkle(Projectile);
+        FallingStar.SpawnFlightSparkle(Projectile, new Color(255, 180, 45));
         if (!Main.dedServ)
         {
             Player player = Main.LocalPlayer;

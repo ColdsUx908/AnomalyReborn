@@ -56,8 +56,8 @@ float4 Main(float2 uv : TEXCOORD0, uniform float writeMask) : COLOR0
         float aa = max(0.001, fwidth(distance));
         float coverage = saturate(0.5 - distance / aa);
         // Max blending retains the nearest shape at each pixel, including across overlaps.
-        float worldPerPixel = max(0.001, length(ddx(world)));
-        float proximity = 1.0 - saturate(distance / (worldPerPixel * uEdgeDistanceRange));
+        // Encode world distance so the rim follows camera zoom instead of viewport dimensions.
+        float proximity = 1.0 - saturate(distance / uEdgeDistanceRange);
         return float4(coverage, coverage * uStrength, proximity, 0.0);
     }
 
@@ -83,7 +83,9 @@ float4 Main(float2 uv : TEXCOORD0, uniform float writeMask) : COLOR0
     // Sample the continuous exterior distance so the orange rim fades without discrete bands.
     float tongues = smoothstep(0.16, 0.84, broad * 0.62 + medium * 0.38);
     float reach = lerp(38.0, 54.0, tongues);
-    float exterior = SampleExterior(uv, reach / uResolution);
+    // Convert the fixed world-space reach to UV offsets through the inverse camera transform.
+    float2 worldPerPixel = max(float2(0.001, 0.001), float2(length(ddx(world)), length(ddy(world))));
+    float exterior = SampleExterior(uv, reach / worldPerPixel / uResolution);
     float rim = smoothstep(0.08, 0.95, exterior / reach);
     float hotRim = smoothstep(0.24, 0.85, heat * 0.65 + fine * 0.35);
 

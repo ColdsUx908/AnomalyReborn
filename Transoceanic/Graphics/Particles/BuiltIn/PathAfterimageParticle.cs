@@ -60,6 +60,9 @@ public class PathAfterimageParticle : AfterimageParticle
     /// </summary>
     public new void Draw(SpriteBatch spriteBatch)
     {
+        if (Main.dedServ)
+            return;
+
         Color color = Color * Opacity;
         if (AffectedByLight) color.MultiplyWithWorldLight(Center);
         spriteBatch.Draw(Texture, Center + DrawOffset - Main.screenPosition, Frame, color, Rotation,

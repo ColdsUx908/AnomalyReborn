@@ -76,6 +76,8 @@ Overlay 在原层次调用中心星的完整绘制入口，由中心星组合蓝
 
 两种终幕冲击波的外圈先沿原扩张曲线推进，第 36 帧起连续减速并继续越过初始半径，直至消散。内圈和失败判定沿用各自的时间与半径。
 
+落星飞行星屑使用本模块的 `StarTrailParticle` 及蓝、黄、橙、红四种颜色粒子，贴图位于 `Attacks/Stars/`。蓝、黄贴图分别保留原版 Gore 17、16，橙、红版本保留星形轮廓与高光调色。暖色拖尾使用黄橙星芒；蓝色拖尾保留原版黄蓝比例及十周年世界变体。生成频率、初始漂移、缩放衰减和发光沿用原版，生命周期与清理由 ParticleHandler 管理，不再调用原版 Gore。
+
 ## 实体数据槽位查阅
 
 每个实体主声明统一使用 XML `<summary>` 描述用途，`<remarks>` 内的 `<para>` 依次列出原版 `ai`、`localAI`、框架 Timer、额外同步载荷和客户端状态。未使用的槽位明确说明；继承的有效槽位也列在具体实体中。
@@ -86,9 +88,9 @@ Overlay 在原层次调用中心星的完整绘制入口，由中心星组合蓝
 
 ## 当前验证入口
 
-独立资料包入口为 `Tests/LegendaryNight/Verify.ps1`。它检查当前源码/资源组织、生产计算指纹、各机制回归、真实 AI 的延迟同步与恢复、完整快照往返，并执行 Boss 隔离、16种模块组合和 Release 构建。旧轮次入口只用于历史追溯，不代表当前源码已通过对应旧断言。
+独立资料包入口为 `Validation/Tests/Anomalies/LegendaryNight/Verify.ps1`。它检查当前源码/资源组织、生产计算指纹、各机制回归、真实 AI 的延迟同步与恢复、完整快照往返，并执行 Boss 隔离、16种模块组合和 Release 构建。旧轮次入口只用于历史追溯，不代表当前源码已通过对应旧断言。
 
-历轮验证包、离线渲染预览和迁移脚本集中保存在独立资料包的 `Tests/LegendaryNight/History/`。当前验证日志与汇总写入 `Tests/LegendaryNight/Results/`。
+历轮验证包、离线渲染预览和迁移脚本集中保存在独立资料包的 `Validation/Tests/Anomalies/LegendaryNight/History/`。当前验证日志与汇总写入 `Validation/Tests/Anomalies/LegendaryNight/Results/`。
 
 离线验证不代替游戏内战斗、音乐节拍、特殊分辨率与着色器关闭时的视觉验收。异象模式现有多人禁用策略保持不变；网络验证使用实际生产 AI 和序列化的离线环境，不表示本版本已开放多人测试。
 

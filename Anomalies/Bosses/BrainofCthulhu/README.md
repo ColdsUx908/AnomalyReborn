@@ -27,7 +27,7 @@ Behavior 不保存实体实例字段。主脑的普通状态使用 NPC.ai 与 An
 
 通用寻敌参数 `NPCTargetingParameters`、目标偏好 `NPCTargetPreference` 和 `TOCombatUtils.TargetWithOptions` 位于 Transoceanic；通用地形射线、弹幕计数和 Boss 召唤工具也由该层提供。向量与图鉴扩展位于 `TOCombatExtensions`，缓动统一使用 `TOMathUtils.Interpolation`。带距离衰减的变种震屏策略位于 `AnomalyCombatUtils`；灾厄 Boss Rush、肾上腺素、破防与真近战接口位于公共 `BridgeUtils`。攻击队列的槽位布局、脑的灾厄换皮与 AI 覆盖、幻象命中和血条规则仍归本 Boss 模块所有。
 
-依赖 Boss 类型的 GlobalNPC 字段与克隆、血条扩展和网络处理使用本目录下的部分类实现；公共入口仅保留可选的 partial 方法。模块移除检查见 `Tests/Bosses/BossIsolation`。
+依赖 Boss 类型的 GlobalNPC 字段与克隆、血条扩展和网络处理使用本目录下的部分类实现；公共入口仅保留可选的 partial 方法。模块移除检查见 `Validation/Tests/Anomalies/Bosses/BossIsolation`。
 
 本目录声明的属性与索引器统一为 public。主脑的 AI 行为函数收在对应阶段入口内，飞眼怪的 8 个 AI 专用函数收在 `PreAI` 内；同时服务于 AI、命中和死亡回调的状态重置、死亡触发等方法保留为类成员，绘制与同步回调保留框架要求的入口。
 
@@ -35,7 +35,7 @@ Behavior 不保存实体实例字段。主脑的普通状态使用 NPC.ai 与 An
 
 先编译通用库：`dotnet msbuild Transoceanic/Transoceanic.csproj /t:Build /p:BuildProjectReferences=false /p:BuildMod=false`；再编译克脑代码：`dotnet msbuild Anomalies/Anomalies.csproj /t:ResolveReferences,Compile /p:BuildProjectReferences=false`。
 
-存储回归检查位于 `Tests/Bosses/BrainofCthulhu.State`，覆盖跨 32/64 位数组边界的队列、玩家目标位图、实体隔离、快照恢复及同步保留槽，并包含 Bézier 采样与 Verlet 模拟的边界检查。执行 `dotnet run --project Tests/Bosses/BrainofCthulhu.State/BrainofCthulhu.State.csproj`；同目录的 `verify_assets.py` 检查本地资源引用、统一着色器路径、本地化键及难度/数量约定。
+存储回归检查位于 `Validation/Tests/Anomalies/Bosses/BrainofCthulhu.State`，覆盖跨 32/64 位数组边界的队列、玩家目标位图、实体隔离、快照恢复及同步保留槽，并包含 Bézier 采样与 Verlet 模拟的边界检查。执行 `dotnet run --project Validation/Tests/Anomalies/Bosses/BrainofCthulhu.State/BrainofCthulhu.State.csproj`；同目录的 `verify_assets.py` 检查本地资源引用、统一着色器路径、本地化键及难度/数量约定。
 
 仍需游戏内复核：普通异象与 Ultra 各完整战斗一次；不同高度及血腥脊椎入场（统一使用地表行为）；飞眼怪死亡后断裂触须及再生；眩晕中压到 70% 转阶段；25% 强制幻象；真假脑命中与超时惩罚；死亡演出；所有玩家死亡或远离后的收场；猩红外召唤与战斗；两类幻象均不显示血条。联机应覆盖两名玩家、战斗中途加入、真假脑同时命中及无灾厄环境。
 

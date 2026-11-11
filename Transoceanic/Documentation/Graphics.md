@@ -1,6 +1,6 @@
 # 粒子与图形资源
 
-所有粒子和 GPU 操作仅用于客户端。创建纹理、读取 Entity.Texture、构造依赖纹理的粒子之前，先跳过 Main.dedServ。资源加载完成前不要构造依赖类型缓存的粒子。运行 Particle 与注册 ParticleDefinition 分离；所属模组由定义提供，带参构造不变。定义由 tML 自动加载流程注册，禁用类型不会进入缓存。
+粒子定义在客户端与专用服务器均注册并初始化；资源加载完成后，两端都可以正常调用粒子构造函数和请求纹理资产。专用服务器的纹理请求沿用 tModLoader 的占位资源行为，不创建 GPU 纹理。ParticleHandler、ParticleSet 和实体残影提交入口统一拒绝服务器提交，更新和绘制入口跳过服务器，因此普通调用点无需为了构造粒子额外判断 Main.dedServ。直接访问 GraphicsDevice、创建纹理或执行自定义绘制仍须只在客户端进行。运行 Particle 与注册 ParticleDefinition 分离；所属模组由定义提供。定义由 tML 自动加载流程注册，禁用类型不会进入缓存；缓存就绪前或定义禁用时，构造仍会抛出明确异常。
 
 ## 全局粒子
 
@@ -38,7 +38,7 @@ Clear 清空两个列表和占用记录，不重置 LocalTimer；世界退出不
 
 ## 实体残影
 
-NPC、弹幕默认不分配残影列表。显式访问 Ocean.Afterimages 或调用 SpawnAfterimage 才启用；框架的更新和绘制仅查询已经启用的列表。DisableAfterimages 清空并关闭；Clone 不继承视觉缓存。残影不进入网络状态，接受寿命和颜色参数的 SpawnAfterimage 在服务器上于纹理读取和对象构造前退出；接受已有粒子的重载只跳过提交，调用方仍须避免服务器上构造粒子。
+NPC、弹幕默认不分配残影列表。显式访问 Ocean.Afterimages 或调用 SpawnAfterimage 才启用；框架的更新和绘制仅查询已经启用的列表。DisableAfterimages 清空并关闭；Clone 不继承视觉缓存。残影不进入网络状态，接受寿命和颜色参数的 SpawnAfterimage 在服务器上于纹理读取和对象构造前退出；接受已有粒子的重载也只跳过服务器提交，允许调用方先构造粒子；定义仍须已完成初始化。
 
 ## 渲染目标与 SpriteBatch
 

@@ -45,14 +45,14 @@ public class TexturePulseParticle : Particle
     public override BlendState DrawBlendState { get; }
 
     /// <summary>
-    /// 请求指定纹理并创建脉冲粒子；lifetime 必须为正帧数，设置双轴形变、弧度旋转、起止缩放、透明度与光照，专用服务器不请求纹理。
+    /// 请求指定纹理并创建脉冲粒子；lifetime 必须为正帧数，设置双轴形变、弧度旋转、起止缩放、透明度与光照。
     /// </summary>
     public TexturePulseParticle(Vector2 center, Vector2 velocity, Color color, string texturePath, Vector2 squish,
         float rotation, float originalScale, float finalScale, int lifetime, bool additive = true,
         float baseOpacity = 1f, bool fadeOut = true, float lightStrength = 1f, SpriteEffects spriteEffects = SpriteEffects.None)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(lifetime);
-        SpriteAsset = Main.dedServ ? null : ModContent.Request<Texture2D>(texturePath);
+        SpriteAsset = ModContent.Request<Texture2D>(texturePath);
         Center = center;
         Velocity = velocity;
         BaseColor = color;

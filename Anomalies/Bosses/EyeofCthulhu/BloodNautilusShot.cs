@@ -1,6 +1,6 @@
 namespace Anomalies.Bosses.EyeofCthulhu;
 
-public sealed class BloodNautilusShot : AnomalyProjectileBehavior<BloodShot>
+public sealed class BloodNautilusShot : AnomalyProjectileBehavior<BloodNautilusShot>
 {
     public override bool ShouldProcess => base.ShouldProcess && AnomalyBossChangeToggler.EyeofCthulhu;
 

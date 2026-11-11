@@ -271,6 +271,7 @@ public sealed class LegendLightOrb : AnomalyModProjectile
             DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         MiscShaderData data = shader.Data;
         data.SetCustomParameter("uOrbColor", OrbColor.ToVector3())
+            .SetCustomParameter("uSpriteWorldSize", new Vector2(Radius * 4f) * drawScale)
             .SetCustomParameter("uGlobalTime", (float)Main.timeForVisualEffects / 60f + Projectile.ai[1] / 60f + Projectile.ai[2])
             .SetCustomParameter("uNebulaNoiseTexture", AnomalyTextures.Noise.Perlin2);
         data.UseOpacity(Projectile.Opacity);

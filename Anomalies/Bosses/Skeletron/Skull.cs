@@ -112,8 +112,7 @@ public sealed partial class Skull : AnomalyProjectileBehavior<Skull>
         if (headIndex >= 0 && ((uint)headIndex >= Main.maxNPCs
             || Main.npc[headIndex] is not { active: true, type: NPCID.SkeletronHead }
             || SkeletronHead.GetInstance(Main.npc[headIndex]) is not { ShouldProcess: true } head
-            || head.IsEnteringPhase3 || head.CurrentBehavior == SkeletronHead.Behavior.Despawn
-            || head.CurrentPhase == SkeletronHead.Phase.Phase3 && AnomalyProjectile.AnomalyAI32[Phase3SourceSlot].I == 0))
+            || head.CurrentBehavior == SkeletronHead.Behavior.Despawn))
         {
             if (TONetworkEnvironment.NotClient)
             {

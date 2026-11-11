@@ -67,22 +67,41 @@ public sealed class FallingStar : AnomalyModProjectile
         else if (Timer1 > AccelerationStartTime)
             Projectile.velocity *= 1.02f;
 
-        SpawnFlightSparkle(Projectile);
+        SpawnFlightSparkle(Projectile, TrailType == 2 ? TrailColorOverride ?? new Color(255, 180, 45) : null);
     }
 
-    internal static void SpawnFlightSparkle(Projectile projectile)
+    internal static void SpawnFlightSparkle(Projectile projectile, Color? trailColor = null)
     {
         if (Main.dedServ || projectile.velocity == Vector2.Zero)
             return;
 
-        // 原版星星炮的飞行星芒。
+        // 使用本模块的星芒粒子，保留原版生成频率与屏外裁剪。
         Vector2 screenSize = new(Main.screenWidth, Main.screenHeight);
         Rectangle visibleArea = Utils.CenteredRectangle(Main.screenPosition + screenSize * 0.5f, screenSize + new Vector2(400f));
         if (!projectile.Hitbox.Intersects(visibleArea) || !Main.rand.NextBool(6))
             return;
 
-        int goreType = Main.rand.Next(4) < (Main.tenthAnniversaryWorld ? 3 : 1) ? 16 : 17;
-        Gore.NewGoreAction(projectile.GetSource_FromAI(), projectile.Center, projectile.velocity * 0.2f, goreType);
+        Vector2 velocity = projectile.velocity * 0.2f;
+        Particle sparkle;
+        if (trailColor is Color color)
+        {
+            if (color.B >= color.R)
+                sparkle = new StarTrailBlueParticle(projectile.Center, velocity);
+            else if (color.G < color.R * 0.5f)
+                sparkle = new StarTrailRedParticle(projectile.Center, velocity);
+            else
+                sparkle = Main.rand.NextBool(4)
+                    ? new StarTrailYellowParticle(projectile.Center, velocity)
+                    : new StarTrailOrangeParticle(projectile.Center, velocity);
+        }
+        else
+        {
+            // 蓝色光尾保留原版黄/蓝星芒的比例，包括十周年世界的反转。
+            sparkle = Main.rand.Next(4) < (Main.tenthAnniversaryWorld ? 3 : 1)
+                ? new StarTrailYellowParticle(projectile.Center, velocity)
+                : new StarTrailBlueParticle(projectile.Center, velocity);
+        }
+        ParticleHandler.SpawnParticle(sparkle);
     }
 
     public override bool PreDraw(ref Color lightColor)

@@ -5,6 +5,7 @@ namespace Transoceanic.Graphics.Particles;
 /// <summary>
 /// 已注册的粒子类型定义，与带参构造的运行粒子分离。
 /// 为兼容现有 TexturePath/AutoLoadTexture 重写，元数据模板仍不执行运行构造函数。
+/// 客户端与专用服务器均初始化定义和模板资产；服务器的提交、更新及绘制由粒子系统统一跳过。
 /// </summary>
 [Autoload(false)]
 public class ParticleDefinition : RegisteredContent<ParticleDefinition>
@@ -43,11 +44,9 @@ public class ParticleDefinition : RegisteredContent<ParticleDefinition>
     }
 
     /// <inheritdoc/>
-    /// <remarks>
-    /// 粒子定义只在客户端注册；专用服务器不创建模板或请求纹理。
-    /// </remarks>
+    /// <remarks>客户端与专用服务器均允许注册；派生定义仍可重写以禁用具体粒子。</remarks>
     /// <param name="mod">尝试注册内容的模组。</param>
-    public override bool IsLoadingEnabled(Mod mod) => !Main.dedServ;
+    public override bool IsLoadingEnabled(Mod mod) => true;
 
     internal void Initialize(int id)
     {

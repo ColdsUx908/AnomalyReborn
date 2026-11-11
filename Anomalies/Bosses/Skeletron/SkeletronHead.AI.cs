@@ -652,7 +652,7 @@ public sealed partial class SkeletronHead
             NPC.damage = 0;
             NPC.dontTakeDamage = true;
             NPC.chaseable = false;
-            NPC.rotation = 0f;
+            NPC.rotation = NPC.rotation.AngleTowards(0f, MathHelper.Pi / Phase3StillDuration);
 
             switch (CurrentLocalPhase)
             {
@@ -715,21 +715,36 @@ public sealed partial class SkeletronHead
                             p.ai[0] = BoneShockwave.PhaseChangeVariant;
                             p.timeLeft = p.GetModProjectile<BoneShockwave>().LifeTime;
                             p.scale = 0f;
+                            SetBrakeVector(0, NPC.Center);
                             CurrentLocalPhase = 4;
                             Timer = 0f;
                         });
                     }
                     break;
-                case 4: // 停留在玩家上方回血，完成后进入三阶段。
+                case 4: // 冲击波后稍作停留，缓慢移至竞技场中心，同时回血。
                     NPC.velocity = Vector2.Zero;
                     Timer++;
+                    if (Timer > Phase3CenterMoveDelay)
+                    {
+                        foreach (Projectile projectile in Projectile.ActiveProjectiles)
+                        {
+                            if (projectile.ModProjectile is SkeletronPhase3Arena arena && arena.Master == NPC && arena.IsActivated)
+                            {
+                                float progress = MathHelper.Clamp((Timer - Phase3CenterMoveDelay) / Phase3CenterMoveDuration, 0f, 1f);
+                                Vector2 position = Vector2.SmoothStep(AnomalyNPC.AnomalyAI64[0].GetValue<Vector2>(),
+                                    arena.ArenaPolygon.Center, progress);
+                                NPC.velocity = position - NPC.Center;
+                                break;
+                            }
+                        }
+                    }
                     if (!TONetworkEnvironment.NotClient)
                         break;
 
                     if (Timer % Phase3HealInterval == 0f || Timer >= Phase3HealDuration)
                         HealDuringTransition();
 
-                    if (Timer >= Phase3HealDuration + 90)
+                    if (Timer >= Phase3CenterMoveDelay + Phase3CenterMoveDuration)
                     {
                         CurrentPhase = Phase.Phase3;
                         CurrentBehavior = Behavior.Phase3_NodeVolley;

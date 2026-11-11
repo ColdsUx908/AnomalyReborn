@@ -133,6 +133,8 @@ Skeletron: {
 			Description: Damage dealt is halved
 		}
 	}
+
+	SkeletronPhase3Guardian.DisplayName: Skeletron Phase3 Guardian
 }
 
 QueenSlime: {

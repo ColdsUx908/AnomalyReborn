@@ -1,13 +1,14 @@
 namespace Anomalies.Bosses.Skeletron;
 
-/// <summary>普通骷髅王三阶段的小守卫：固定路线预警后飞行，在终点消散。</summary>
-/// <remarks>ai[0]：头部索引 + 1；ai[1]：年龄；ai[2]：0 对径加速，1 径向收束。</remarks>
+/// <summary>普通骷髅王三阶段的小守卫：固定路线预警后飞行，或作为竖直匀速弹幕雨。</summary>
+/// <remarks>ai[0]：头部索引 + 1；ai[1]：年龄；ai[2]：0 对径加速，1 径向收束（保留），2 匀速下落。</remarks>
 public sealed class SkeletronPhase3Guardian : AnomalyModProjectile
 {
     public override string Texture => TOAssetUtils.FormatVanillaProjectileTexturePath(ProjectileID.BabySkeletronHead);
     public override string LocalizationCategory => "Bosses.Skeletron";
     public Vector2 Destination { get; set; }
-    private int WarningDuration => Projectile.ai[2] == 0f ? 48 : 60;
+    private bool IsRain => Projectile.ai[2] == 2f;
+    private int WarningDuration => IsRain ? 0 : Projectile.ai[2] == 0f ? 48 : 60;
 
     public override void SetStaticDefaults() => ProjectileID.Sets.DrawScreenCheckFluff[Type] = 10000;
 
@@ -51,6 +52,11 @@ public sealed class SkeletronPhase3Guardian : AnomalyModProjectile
 
         int age = (int)Projectile.ai[1]++;
         Projectile.rotation += 0.3f;
+        if (IsRain)
+        {
+            Projectile.Center += Projectile.velocity;
+            return;
+        }
         if (age < WarningDuration)
             return;
         if (age == WarningDuration && !Main.dedServ)

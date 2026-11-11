@@ -184,12 +184,6 @@ public sealed partial class KingSlime
             }
         }
 
-        void SpawnJewelParticle(NPC jewel, int amount)
-        {
-            for (int i = 0; i < amount; i++)
-                JewelHandler.SpawnOrbParticle(jewel, Main.rand.NextFloat(5f, 10f), Main.rand.Next(40, 60), Main.rand.NextFloat(0.4f, 0.7f));
-        }
-
         void ChangeScale() => NPC.ChangeScaleFixBottom(98, 92, MathHelper.Lerp(
             Aroma ? MinScale : MaxScale,
             Aroma ? MaxScale : MinScale,
@@ -214,8 +208,6 @@ public sealed partial class KingSlime
         {
             n.Master = NPC;
             n.netUpdate = true;
-            SoundEngine.PlaySound(JewelHandler.SpawnSound, GetJewelSpawnPosition());
-            SpawnJewelParticle(n, 50);
         }
 
         void SpawnGelAction(Projectile p)

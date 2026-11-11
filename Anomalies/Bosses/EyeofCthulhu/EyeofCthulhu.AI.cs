@@ -910,18 +910,20 @@ public sealed partial class EyeofCthulhu
                         StopMovement();
                         NormalUpdateRotation(Math.Clamp(Timer1 * 0.015f, 0f, 3.5f));
 
-                        if (TONetworkEnvironment.NotClient)
+                        int projectileAmountOver4 = Ultra ? 8 : 6;
+                        Vector2 projectileVelocity = NPC.GetVelocityTowards(Target, Ultra ? 18f : 16f);
+                        if (!Main.dedServ && Timer1 == 0)
                         {
-                            int projectileAmountOver4 = Ultra ? 8 : 6;
                             int particleAmount = projectileAmountOver4 * 8;
                             for (int i = 0; i < particleAmount; i++)
                                 EyeofCthulhuHandler.SpawnOrbParticle(NPC.Center, Main.rand.NextFloat(5f, 10f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.5f, 1f));
 
-                            Vector2 projectileVelocity = NPC.GetVelocityTowards(Target, Ultra ? 18f : 16f);
-                            int type = ProjectileID.BloodShot;
-                            EyeofCthulhuHandler.ShootEyeProjectile(NPC, type, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 450);
                             EyeofCthulhuHandler.SpawnEyeParticle(NPC, projectileVelocity * 1.4f);
+                        }
 
+                        if (TONetworkEnvironment.NotClient)
+                        {
+                            EyeofCthulhuHandler.ShootEyeProjectile(NPC, ProjectileID.BloodShot, BloodDamage, projectileVelocity, projectileAmountOver4, p => p.timeLeft = 450);
                             CheckPhaseChange();
                             SelectNextBehavior();
                         }

@@ -42,7 +42,7 @@ public sealed class SkeletronSkullWarning : AnomalyModProjectile
         int headIndex = Math.Abs((int)Projectile.ai[2]) - 1;
         if ((uint)headIndex >= Main.maxNPCs || Main.npc[headIndex] is not { active: true, type: NPCID.SkeletronHead }
             || SkeletronHead.GetInstance(Main.npc[headIndex]) is not
-                { ShouldProcess: true, IsEnteringPhase3: false, CurrentBehavior: not SkeletronHead.Behavior.Despawn }
+                { ShouldProcess: true, CurrentBehavior: not SkeletronHead.Behavior.Despawn }
             || !Player.TryGetPlayerFromIndex((int)Projectile.ai[0] - 1, out Player target) || !target.active || target.dead)
         {
             if (TONetworkEnvironment.NotClient)

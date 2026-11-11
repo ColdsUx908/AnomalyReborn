@@ -122,6 +122,8 @@ public sealed partial class AnomalyGlobalNPC : GlobalNPC
         TONetUtils.WriteAI64Snapshot(binaryWriter, AnomalyAI64, 1);
         TONetUtils.WriteAI32Snapshot(binaryWriter, InternalAnomalyAI32, 1);
         TONetUtils.WriteAI64Snapshot(binaryWriter, InternalAnomalyAI64, 1);
+        // 客户端 SetDefaults 早于自定义 AI 身份收包，最大生命值必须以服务器最终缩放结果为准。
+        binaryWriter.Write(npc.lifeMax);
     }
 
     public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
@@ -130,6 +132,7 @@ public sealed partial class AnomalyGlobalNPC : GlobalNPC
         AnomalyAI64 = AnomalyAICapacity.Read64(binaryReader, AnomalyAI64, 32);
         TONetUtils.ReadAI32Snapshot(binaryReader, InternalAnomalyAI32, 1);
         TONetUtils.ReadAI64Snapshot(binaryReader, InternalAnomalyAI64, 1);
+        npc.lifeMax = binaryReader.ReadInt32();
     }
 }
 

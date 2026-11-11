@@ -75,6 +75,10 @@ public class RainbowBullet : AnomalyModProjectile
     {
         Projectile.rotation += 0.25f;
 
+        // 参数构造会先读取材质和光照，必须在调用残影接口之前跳过服务器。
+        if (Main.dedServ)
+            return;
+
         for (int i = 0; i < 2; i++)
         {
             Dust.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, JewelHandler.GetRandomDustID(), Projectile.velocity, d =>
@@ -91,6 +95,9 @@ public class RainbowBullet : AnomalyModProjectile
 
     public override void OnKill(int timeLeft)
     {
+        if (Main.dedServ)
+            return;
+
         SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
         for (int i = 0; i < 15; i++)
         {

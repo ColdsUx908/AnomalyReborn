@@ -34,4 +34,4 @@ C# 检查可以追加 `-p:BuildMod=false`，实际进入游戏前须完成正常
 - 关闭 `ANOMALY_MODE` 时，世界难度查询始终为 `false`，存档读取、网络收包与 Mod.Call 不能激活难度。公共网络入口仍消费已定义消息的固定载荷。
 - 全关时除 `DEBUG` 测试物品外，不编译新增物品、NPC、弹幕、Buff 或具体实体修改行为；菜单、星空和血条保持默认开启，保留必要的公共数据容器、接口及视觉支持。
 
-验证脚本随独立验证资料包提供：`pwsh -NoProfile -File Tests/Integration/Modules/Verify.ps1`。它构建全部 16 种组合，检查实际输出 DLL 中的类型，并恢复默认全开构建。构建和元数据检查不替代游戏内加载、战斗和联机验证。
+验证脚本随独立验证资料包提供：`pwsh -NoProfile -File Validation/Tests/Anomalies/Integration/Modules/Verify.ps1`。它构建全部 16 种组合，检查实际输出 DLL 中的类型，并恢复默认全开构建。构建和元数据检查不替代游戏内加载、战斗和联机验证。

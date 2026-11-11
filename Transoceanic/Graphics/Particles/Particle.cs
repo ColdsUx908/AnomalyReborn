@@ -119,6 +119,7 @@ public abstract class Particle : IAutoload<ParticleAutoloader>
     /// 获取与该粒子具体类型对应的 <see cref="Type"/> 和 <see cref="Asset"/>。
     /// <para>注意：应在粒子类型缓存完成初始化后构造实例，再通过 <see cref="ParticleHandler.SpawnParticle(Particle)"/>
     /// 或 <see cref="ParticleHandler.TrySpawnParticle(Particle)"/> 提交给全局系统；ParticleSet 中的实例由集合管理。</para>
+    /// <para>定义初始化后也可在专用服务器构造；粒子系统会跳过服务器提交、更新及绘制。</para>
     /// </summary>
     public Particle()
     {

@@ -431,6 +431,10 @@ public static partial class TOTerrariaExtensions
                 projectile.velocity = velocity;
                 action?.Invoke(projectile);
                 projectile.netUpdate = true;
+                // NewProjectile already sends an initial packet before returning. Replace its
+                // vanilla-adjusted velocity and incomplete state before the next entity update.
+                if (Main.netMode != NetmodeID.SinglePlayer && projectile.owner == Main.myPlayer)
+                    NetMessage.SendData(MessageID.SyncProjectile, number: index);
             }
         }
 

@@ -84,6 +84,9 @@ public class AfterimageParticle : Particle
     /// </summary>
     public void Draw(SpriteBatch spriteBatch)
     {
+        if (Main.dedServ)
+            return;
+
         Color color = Color * Opacity;
         if (AffectedByLight)
             color.MultiplyWithWorldLight(Center);

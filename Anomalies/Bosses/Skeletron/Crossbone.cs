@@ -23,7 +23,6 @@ public sealed class Crossbone : AnomalyModProjectile
         if (headIndex >= 0 && ((uint)headIndex >= Main.maxNPCs
             || Main.npc[headIndex] is not { active: true, type: NPCID.SkeletronHead }
             || SkeletronHead.GetInstance(Main.npc[headIndex]) is not { ShouldProcess: true } head
-            || head.IsEnteringPhase3 || head.CurrentPhase == SkeletronHead.Phase.Phase3
             || head.CurrentBehavior == SkeletronHead.Behavior.Despawn))
         {
             if (TONetworkEnvironment.NotClient)

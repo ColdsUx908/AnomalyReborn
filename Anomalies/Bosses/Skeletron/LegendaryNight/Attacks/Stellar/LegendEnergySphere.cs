@@ -23,7 +23,7 @@ public sealed partial class LegendEnergySphere : AnomalyModProjectile
     /// <summary>星光颜色。</summary>
     public static Vector3 StarlightColor => new(1f, 0.98f, 0.8f);
     /// <summary>蓄力音效。</summary>
-    private static readonly SoundStyle _ChargeSound = new(LegendaryNightHandler.LegendaryNightPath + "Attacks/Stellar/LegendEnergySphereLoop") { IsLooped = true, Volume = 0.45f };
+    private static readonly SoundStyle _ChargeSound = new(LegendaryNightHandler.LegendaryNightPath + "Attacks/Stellar/LegendEnergySphereLoop") { IsLooped = true, Volume = 0.5f };
     /// <summary>蓄力音效最大音量距离，单位为世界像素。</summary>
     private const float ChargeSoundFullVolumeDistance = 350f;
     /// <summary>蓄力音效淡出距离，单位为世界像素。</summary>
