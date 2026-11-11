@@ -67,6 +67,13 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
     public override int DustType => DustID.GoldFlame;
     public override bool EnableMovementRestriction => MasterBehavior is { Phase2ArenaRequested: true } && AppearanceProgress >= 1f;
 
+    private const int OutsideDamageInterval = 30;
+    private int _OutsideTime;
+    private int _OutsideDamageCooldown;
+
+    public override void SetStaticDefaults() =>
+        ProjectileID.Sets.PlayerHurtDamageIgnoresDifficultyScaling[Type] = true;
+
     public override void SetDefaults()
     {
         Projectile.netImportant = true;
@@ -98,17 +105,34 @@ public sealed partial class LegendaryNightPhase2Arena : BaseRingArenaProjectile
         // 圆心在生成时固定；半径与所有绘制共用同一份入场缩放。
         Radius = MainCircleFullRadius * OuterCircleRadiusRatio * AppearanceScale
             * (head.StellarMechanicsActive ? SkeletronLegendHead.Mechanic6Parameters.ArenaScale(head.Phase2MusicElapsedTime) : 1f);
-        if (EnableMovementRestriction)
+        bool restrictMovement = EnableMovementRestriction;
+        if (!Main.dedServ)
+        {
+            Player player = Main.LocalPlayer;
+            bool outside = restrictMovement && player == Target && player.Alive && !player.ghost
+                && Vector2.DistanceSquared(player.Center, Projectile.Center) > Radius * Radius;
+
+            if (_OutsideDamageCooldown > 0)
+                _OutsideDamageCooldown--;
+            if (outside && _OutsideDamageCooldown == 0)
+            {
+                LegendaryNightDamage.HurtLocalPlayer(Projectile, SkeletronLegendHead.GetOutsideArenaDamage(_OutsideTime),
+                    false, ignoreAllImmunity: true);
+                _OutsideDamageCooldown = OutsideDamageInterval;
+            }
+            _OutsideTime = SkeletronLegendHead.GetNextOutsideArenaTime(_OutsideTime, outside);
+        }
+
+        if (restrictMovement)
             MovementRestriction();
         else
             OutofArenaTimer = 0;
     }
 
-    public override bool CanHitPlayer(Player target) => Materialized || EnableMovementRestriction && base.CanHitPlayer(target);
+    public override bool CanHitPlayer(Player target) => Materialized;
     // 平时圆周安全；每次拍击时将内外圆之间的圆环、五角星线段和整个中央实心五角星一起实体化。
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>
-        Materialized && MaterializedGeometryCollides(targetHitbox)
-        || EnableMovementRestriction && Vector2.DistanceSquared(targetHitbox.Center.ToVector2(), Projectile.Center) > Radius * Radius;
+        Materialized && MaterializedGeometryCollides(targetHitbox);
 
     public override void OnHitPlayer(Player target, Player.HurtInfo info)
     {

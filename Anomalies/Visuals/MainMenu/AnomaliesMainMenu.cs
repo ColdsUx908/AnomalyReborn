@@ -11,7 +11,9 @@ public sealed class AnomaliesMainMenu : ModMenu
     private static Asset<Texture2D> _InvisibleTexture;
 
     public override string DisplayName => "Anomalous Permafrost"; //异常冻土
-    public override int Music => AnomaliesMusicHandler.PathwaytoReverie > 0 ? AnomaliesMusicHandler.PathwaytoReverie : MusicID.OtherworldlySnow;
+    public override int Music => AnomaliesMusicHandler.IsPathwaytoReverieEnabled
+        ? AnomaliesMusicHandler.PathwaytoReverie
+        : MusicID.OtherworldlySnow;
     public override Asset<Texture2D> Logo => TextureAssets.Logo;
     public override Asset<Texture2D> SunTexture => _InvisibleTexture;
     public override Asset<Texture2D> MoonTexture => SunTexture;

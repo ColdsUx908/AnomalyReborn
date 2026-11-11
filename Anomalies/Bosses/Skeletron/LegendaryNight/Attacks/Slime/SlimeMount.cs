@@ -17,6 +17,7 @@ public sealed class SlimeMount : AnomalyModProjectile
 
     // 所属骷髅王索引（1-based），用于清场和准备状态有效性检查；下落后不再依赖主人。
     public int MasterIndex;
+    internal const float FallAcceleration = 0.75f;
 
     protected override void SendAnomalyExtraAI(BinaryWriter writer) => writer.Write(MasterIndex);
     protected override void ReceiveAnomalyExtraAI(BinaryReader reader) => MasterIndex = reader.ReadInt32();
@@ -78,7 +79,7 @@ public sealed class SlimeMount : AnomalyModProjectile
                 Timer1++;
                 Timer2++;
                 Projectile.velocity.X = 0f;
-                Projectile.velocity.Y = Math.Min(Projectile.velocity.Y + 0.75f, 25f);
+                Projectile.velocity.Y = Math.Min(Projectile.velocity.Y + FallAcceleration, 25f);
 
                 Projectile.frame = 1;
 

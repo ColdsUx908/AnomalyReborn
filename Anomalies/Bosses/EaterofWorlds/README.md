@@ -31,10 +31,10 @@ Ultra 与普通 Anomaly 使用同一套 AI，旧 AI 已移除。`Phase1` 在共�
 自动验证命令：
 
 - `dotnet build Anomalies/Anomalies.csproj --no-restore -m:1 -p:BuildMod=false`
-- `dotnet run --project Tests/EaterofWorlds.Topology/EaterofWorlds.Topology.csproj`
-- `dotnet run --project Tests/EaterofWorlds.Portals/EaterofWorlds.Portals.csproj`
-- `pwsh -NoProfile -File Tests/BossIsolation/Verify.ps1`
-- `python Tests/BossIsolation/verify_dependencies.py`
+- `dotnet run --project Tests/Bosses/EaterofWorlds.Topology/EaterofWorlds.Topology.csproj`
+- `dotnet run --project Tests/Bosses/EaterofWorlds.Portals/EaterofWorlds.Portals.csproj`
+- `pwsh -NoProfile -File Tests/Bosses/BossIsolation/Verify.ps1`
+- `python Tests/Bosses/BossIsolation/verify_dependencies.py`
 
 拓扑测试覆盖 60/90 节反复分合、局部链双向一致性、不重复/不遗漏体节、非法分裂请求。传送测试调用实际编译出的裂隙类型，覆盖蓄力快照、中途加入、爆裂淡出、重复快照不累加裂纹缩放，以及绘制缓存不进入额外同步载荷。
 

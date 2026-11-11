@@ -23,6 +23,10 @@ public static class LegendaryNightDamage
                 player.immuneTime = 0;
                 Array.Clear(player.hurtCooldowns);
             }
+            // 手动 Hurt 会进入 tML 的弹幕难度钩子，但跳过原版敌对弹幕的 2 倍倍率。
+            if (!source.reflected && !ProjectileID.Sets.PlayerHurtDamageIgnoresDifficultyScaling[source.type])
+                damage *= 2;
+
             if (player.Hurt(PlayerDeathReason.ByProjectile(source.owner, source.whoAmI), damage, 0,
                 cooldownCounter: ImmunityCooldownID.General, dodgeable: false, knockback: knockback) > 0 && suppressDamage)
                 player.AddBuff(ModContent.BuffType<AstralSuppression>(), 15 * 60);

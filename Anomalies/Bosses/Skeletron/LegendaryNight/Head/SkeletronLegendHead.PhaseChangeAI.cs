@@ -20,8 +20,6 @@ public sealed partial class SkeletronLegendHead
     private const int PhaseChangeBlessingTime = 370;
     /// <summary>转阶段持续时间，单位为游戏帧。</summary>
     private const int PhaseChangeDuration = 475;
-    /// <summary>转阶段冲击波缩放。</summary>
-    private const float PhaseChangeShockwaveScale = 2.5f;
 
     private void ResetCombatStateForTransition()
     {
@@ -96,12 +94,11 @@ public sealed partial class SkeletronLegendHead
             SoundEngine.PlaySound(SoundID.Roar);
             if (TONetworkEnvironment.NotClient)
             {
-                Projectile.NewProjectileAction<LegendShockwave>(SourceAI, NPC.Center, Vector2.Zero, 0, 0f, action: p =>
+                Projectile.NewProjectileAction<LegendTransitionShockwave>(SourceAI, NPC.Center, Vector2.Zero, 0, 0f, action: p =>
                 {
-                    p.GetModProjectile<LegendShockwave>().TargetScale = PhaseChangeShockwaveScale;
+                    p.ai[1] = LegendTransitionShockwave.ImpactRadius;
                     p.netUpdate = true;
                 });
-
             }
         }
 

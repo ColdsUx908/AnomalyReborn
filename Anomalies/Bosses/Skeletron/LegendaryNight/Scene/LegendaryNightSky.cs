@@ -7,17 +7,20 @@ public sealed partial class LegendaryNightSky : CustomSky, IContentLoader
     /// <summary>天空注册键。</summary>
     public const string SkyKey = "Anomalies:SkeletronLegendSky";
 
-    /// <summary>天空贴图。</summary>
-    [LoadTexture(LegendaryNightHandler.LegendaryNightPath + "Scene/LegendaryNightSky")]
-    private static Asset<Texture2D> _SkyTexture;
-    /// <summary>天空贴图。</summary>
-    public static Texture2D SkyTexture => _SkyTexture.Value;
+    /// <summary>蓝色天空贴图。</summary>
+    [LoadTexture(LegendaryNightHandler.LegendaryNightPath + "Scene/LegendaryNightSkyBlue")]
+    private static Asset<Texture2D> _BlueSkyTexture;
+    /// <summary>蓝色天空贴图。</summary>
+    public static Texture2D BlueSkyTexture => _BlueSkyTexture.Value;
 
     /// <summary>橙色天空贴图。</summary>
-    [LoadTexture(LegendaryNightHandler.LegendaryNightPath + "Scene/LegendaryNightSky2")]
+    [LoadTexture(LegendaryNightHandler.LegendaryNightPath + "Scene/LegendaryNightSkyOrange")]
     private static Asset<Texture2D> _OrangeSkyTexture;
     /// <summary>橙色天空贴图。</summary>
     public static Texture2D OrangeSkyTexture => _OrangeSkyTexture.Value;
+
+    [LoadTexture(LegendaryNightHandler.LegendaryNightPath + "Scene/LegendaryNightSkyRed")]
+    private static Asset<Texture2D> _RedSkyTexture;
 
     /// <summary>当前天空实例，卸载时清空。</summary>
     public static LegendaryNightSky Instance { get; private set; }
@@ -27,6 +30,8 @@ public sealed partial class LegendaryNightSky : CustomSky, IContentLoader
     private bool _IsActive;
     private int _Timer;
     private float _OrangeBlend;
+    private float _RedBlend;
+    private LegendFinalMeteor _FinalMeteor;
     private bool _FullBrightActive;
     private bool _CloudSuppressionActive;
     public float Intensity => _Timer / 120f;
@@ -42,8 +47,11 @@ public sealed partial class LegendaryNightSky : CustomSky, IContentLoader
         {
             _Timer = Math.Clamp(_Timer + 1, 0, 120);
             _OrangeBlend = head.SkyOrangeBlend;
+            if (!head.Mechanic7Active || head.Phase2MusicElapsedTime < SkeletronLegendHead.Mechanic7Timeline.FinalMeteorStartMusicTime)
+                _RedBlend = 0f;
         }
-        else
+        // 提前击杀主体后，保留天空直到陨星完成谢幕。
+        else if (_FinalMeteor?.Projectile is not Projectile { active: true } meteor || meteor.ModProjectile != _FinalMeteor)
             _Timer = Math.Clamp(_Timer - 2, 0, 120);
 
         bool phase2 = head?.Phase2 ?? false;
@@ -56,7 +64,8 @@ public sealed partial class LegendaryNightSky : CustomSky, IContentLoader
         {
             _Stars.Clear();
             _RisingStarlights.Clear();
-            _OrangeBlend = 0f;
+            _OrangeBlend = _RedBlend = 0f;
+            _FinalMeteor = null;
             return;
         }
 
@@ -96,6 +105,15 @@ public sealed partial class LegendaryNightSky : CustomSky, IContentLoader
         }
     }
 
+    internal void UpdateFinalMeteorBlend(LegendFinalMeteor meteor, int ownerIndex, int age)
+    {
+        if (LegendaryNightHandler.TryGetSceneHead(out SkeletronLegendHead head) && head.NPC.whoAmI != ownerIndex)
+            return;
+
+        _FinalMeteor = meteor;
+        _RedBlend = MathHelper.Clamp(age / (float)SkeletronLegendHead.Mechanic7Parameters.MeteorFallDuration, 0f, 1f);
+    }
+
     public override void Draw(SpriteBatch spriteBatch, float minDepth, float maxDepth)
     {
         using (spriteBatch.Scope(blendState: BlendState.Additive))
@@ -104,8 +122,21 @@ public sealed partial class LegendaryNightSky : CustomSky, IContentLoader
             {
                 Rectangle destination = new(0, Math.Max(0, (int)(((float)Main.worldSurface * 16f - Main.screenPosition.Y - 2400f) * 0.1f)), Main.screenWidth, Main.screenHeight);
                 Color color = Color.White * MathHelper.Clamp((Main.screenPosition.Y - 800f) / 1000f, 0f, 1f) * Intensity * 0.8f;
-                spriteBatch.Draw(SkyTexture, destination, color * (1f - _OrangeBlend));
-                spriteBatch.Draw(OrangeSkyTexture, destination, color * _OrangeBlend);
+                spriteBatch.Draw(BlueSkyTexture, destination, color * (1f - _OrangeBlend));
+                Color phase2Color = color * _OrangeBlend;
+                if (_RedBlend > 0f && _RedSkyTexture?.Value is Texture2D redSky)
+                {
+                    // Additive 会用源 Alpha 再乘一次 RGB，交叉淡入时仅对 RGB 加权。
+                    Color redTint = phase2Color * _RedBlend;
+                    Color orangeTint = new(phase2Color.R - redTint.R, phase2Color.G - redTint.G,
+                        phase2Color.B - redTint.B, phase2Color.A);
+                    redTint.A = phase2Color.A;
+                    if (_RedBlend < 1f)
+                        spriteBatch.Draw(OrangeSkyTexture, destination, orangeTint);
+                    spriteBatch.Draw(redSky, destination, redTint);
+                }
+                else
+                    spriteBatch.Draw(OrangeSkyTexture, destination, phase2Color);
             }
         }
     }
@@ -116,7 +147,8 @@ public sealed partial class LegendaryNightSky : CustomSky, IContentLoader
     {
         _IsActive = false;
         _Timer = 0;
-        _OrangeBlend = 0f;
+        _OrangeBlend = _RedBlend = 0f;
+        _FinalMeteor = null;
         _FullBrightActive = false;
         _CloudSuppressionActive = false;
         _Stars.Clear();
@@ -154,7 +186,8 @@ public sealed partial class LegendaryNightSky : CustomSky, IContentLoader
     {
         _FullBrightActive = false;
         _CloudSuppressionActive = false;
-        _OrangeBlend = 0f;
+        _OrangeBlend = _RedBlend = 0f;
+        _FinalMeteor = null;
         if (!_IsActive)
             SkyManager.Instance.Activate(SkyKey);
 
@@ -167,7 +200,8 @@ public sealed partial class LegendaryNightSky : CustomSky, IContentLoader
     {
         _FullBrightActive = false;
         _CloudSuppressionActive = false;
-        _OrangeBlend = 0f;
+        _OrangeBlend = _RedBlend = 0f;
+        _FinalMeteor = null;
         _Stars.Clear();
         _RisingStarlights.Clear();
         _Timer = 0;

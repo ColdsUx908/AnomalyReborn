@@ -9,8 +9,8 @@ public sealed partial class SkeletronLegendHead
         public const int StartMusicTime = PhaseChangeDuration;
         /// <summary>本机制结束的音乐绝对帧（不包含此帧），与下一机制的开始帧衔接。</summary>
         public const int EndMusicTime = 47 * 60 + 10;
-        /// <summary>旋转结束的音乐绝对帧，从转场音乐开始累计。</summary>
-        public const int RotationEndMusicTime = 15 * 60 + 40;
+        /// <summary>自转结束的音乐绝对帧，从转场音乐开始累计。</summary>
+        public const int SpinEndMusicTime = 15 * 60 + 40;
         /// <summary>史莱姆冲击波的音乐绝对帧，从转场音乐开始累计。</summary>
         public const int SlimeShockwaveMusicTime = 22 * 60;
         /// <summary>星体冲击波的音乐绝对帧，从转场音乐开始累计。</summary>
@@ -61,12 +61,14 @@ public sealed partial class SkeletronLegendHead
 
     private void Mechanic1AI()
     {
+        #region 音乐步骤与自转追击
+
         int localPhase = Phase2MusicElapsedTime switch
         {
             >= Mechanic1Timeline.PlatinumCoinShockwaveMusicTime => 4,
             >= Mechanic1Timeline.StarShockwaveMusicTime => 3,
             >= Mechanic1Timeline.SlimeShockwaveMusicTime => 2,
-            >= Mechanic1Timeline.RotationEndMusicTime => 1,
+            >= Mechanic1Timeline.SpinEndMusicTime => 1,
             _ => 0
         };
         bool stateChanged = CurrentLocalPhase != localPhase;
@@ -80,11 +82,19 @@ public sealed partial class SkeletronLegendHead
                 SoundEngine.PlaySound(SoundID.ForceRoar);
                 NPC.Face(Target);
             }
-            SkeletronHead.RotatingMovement(NPC, Target, 0.3f, 10f);
-            SummonRotatingSkullWarnings(Timer1);
+            float spinSpeed = 0.3f;
+            float distance = NPC.Distance(Target.Center);
+            float moveSpeed = distance < 240f ? Utils.Remap(distance, 120f, 240f, 7.5f, 10f) : Utils.Remap(distance, 480f, 1920f, 10f, 40f);
+            SkeletronHandler.SpinMovement(NPC, Target, spinSpeed, moveSpeed);
+            if (Timer1 % 75 == 0 && Timer1 <= 300)
+                SummonSpinSkullWarnings(4);
             SummonStarMeteors(Timer1, reducedStarCount: true);
             return;
         }
+
+        #endregion
+
+        #region 常态移动与符卡切换
 
         if (Phase2MusicElapsedTime >= Mechanic2Timeline.ArenaBrakeStartMusicTime)
         {
@@ -93,17 +103,20 @@ public sealed partial class SkeletronLegendHead
             NPC.rotation = MathF.Abs(rotation) < 0.001f ? 0f : rotation;
         }
         int arenaBrakeRemaining = Mechanic2Timeline.ArenaBrakeEndMusicTime - Phase2MusicElapsedTime;
-        if (arenaBrakeRemaining <= 0)
+        switch (arenaBrakeRemaining)
         {
-            NPC.velocity = Vector2.Zero;
-            SummonArenaChargeParticles();
+            case <= 0:
+                NPC.velocity = Vector2.Zero;
+                SummonArenaChargeParticles();
+                break;
+            case int remaining when Phase2MusicElapsedTime >= Mechanic2Timeline.ArenaBrakeStartMusicTime:
+                RepositionForArena(remaining);
+                break;
+            default:
+                NormalMovement();
+                break;
         }
-        else if (Phase2MusicElapsedTime >= Mechanic2Timeline.ArenaBrakeStartMusicTime)
-        {
-            RepositionForArena(arenaBrakeRemaining);
-        }
-        else
-            NormalMovement();
+
         if (stateChanged && CurrentLocalPhase >= 2)
         {
             Spell shockwave = CurrentLocalPhase switch
@@ -127,6 +140,10 @@ public sealed partial class SkeletronLegendHead
             }
         }
 
+        #endregion
+
+        #region 常态攻击的并行时钟
+
         // 全部常态子阶段共享音乐时钟，切换冲击波不会打断已激活的攻击节奏。
         bool summonSlime = Phase2SlimeRainActive && Mechanic1Parameters.IsAttackSpawnTime(
             Phase2MusicElapsedTime, Mechanic1Timeline.SlimeShockwaveMusicTime, Mechanic1Timeline.SlimeEndMusicTime);
@@ -140,7 +157,7 @@ public sealed partial class SkeletronLegendHead
         }
         if (TONetworkEnvironment.NotClient)
         {
-            if (Phase2StarRainActive && (Phase2MusicElapsedTime - Mechanic1Timeline.RotationEndMusicTime) % Mechanic1Parameters.StarRainInterval == 0)
+            if (Phase2StarRainActive && (Phase2MusicElapsedTime - Mechanic1Timeline.SpinEndMusicTime) % Mechanic1Parameters.StarRainInterval == 0)
             {
                 Vector2 position = Target.Center + new Vector2(Main.rand.NextFloat(-1200f, 1200f), -1000f);
                 Projectile.NewProjectileAction<FallingStar>(SourceAI, position, new Vector2(Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(6f, 10f)), FallingStarDamage, 0f, action: p =>
@@ -175,6 +192,10 @@ public sealed partial class SkeletronLegendHead
                 });
             }
         }
+
+        #endregion
+
+        #region 法阵停靠与蓄力
 
         void RepositionForArena(int remaining)
         {
@@ -281,5 +302,7 @@ public sealed partial class SkeletronLegendHead
                 }
             }
         }
+
+        #endregion
     }
 }

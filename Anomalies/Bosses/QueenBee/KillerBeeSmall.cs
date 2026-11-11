@@ -2,7 +2,7 @@ namespace Anomalies.Bosses.QueenBee;
 
 public sealed class KillerBeeSmall : AnomalyModProjectile
 {
-    private Anomalies.DataStructures.ProjectileNetReference _SpecialCombCellReference;
+    private ProjectileNetReference _SpecialCombCellReference;
 
     public Projectile SpecialCombCell
     {

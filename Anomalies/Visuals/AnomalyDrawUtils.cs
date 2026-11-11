@@ -22,7 +22,7 @@ public static class AnomalyDrawUtils
     /// color 决定光晕颜色，亮芯向白色提亮；透明度由 opacity 控制。
     /// </summary>
     public static void DrawGlowingCircle(SpriteBatch spriteBatch, Vector2 center, float radius, Color color,
-        float opacity = 1f, float lineWidth = 3f, float glowWidth = 14f)
+        float opacity = 1f, float lineWidth = 3f, float glowWidth = 14f, Color? coreColor = null)
     {
         if (radius <= 0f || opacity <= 0f || lineWidth <= 0f || glowWidth <= 0f)
             return;
@@ -50,7 +50,7 @@ public static class AnomalyDrawUtils
                 .SetCustomParameter("uLineWidth", lineWidth)
                 .SetCustomParameter("uGlowWidth", glowWidth)
                 .UseColor(color)
-                .UseSecondaryColor(Color.Lerp(color, Color.White, 0.75f))
+                .UseSecondaryColor(coreColor ?? Color.Lerp(color, Color.White, 0.75f))
                 .UseOpacity(opacity)
                 .Apply();
             spriteBatch.Draw(TOTextures.FillerTexture, new Rectangle(left, top, right - left, bottom - top), Color.White);
@@ -63,7 +63,7 @@ public static class AnomalyDrawUtils
         const int Segments = 360;
         for (int i = 0; i < Segments; i++)
             DrawFallbackGlowLine(spriteBatch, center + (MathHelper.TwoPi * i / Segments).ToRotationVector2() * radius,
-                center + (MathHelper.TwoPi * (i + 1) / Segments).ToRotationVector2() * radius, color, opacity, lineWidth, glowWidth);
+                center + (MathHelper.TwoPi * (i + 1) / Segments).ToRotationVector2() * radius, color, opacity, lineWidth, glowWidth, coreColor);
         spriteBatch.End();
     }
 
@@ -78,7 +78,7 @@ public static class AnomalyDrawUtils
 
     /// <summary>一次 Begin/End 批量绘制同色线段，所有端点均为世界坐标。</summary>
     public static void DrawGlowingLines(SpriteBatch spriteBatch, ReadOnlySpan<(Vector2 Start, Vector2 End)> lines, Color color,
-        float opacity = 1f, float lineWidth = 3f, float glowWidth = 14f)
+        float opacity = 1f, float lineWidth = 3f, float glowWidth = 14f, Color? coreColor = null)
     {
         if (lines.IsEmpty || opacity <= 0f || lineWidth <= 0f || glowWidth <= 0f)
             return;
@@ -93,7 +93,7 @@ public static class AnomalyDrawUtils
                 continue;
             if (shader is null)
             {
-                DrawFallbackGlowLine(spriteBatch, start, end, color, opacity, lineWidth, glowWidth);
+                DrawFallbackGlowLine(spriteBatch, start, end, color, opacity, lineWidth, glowWidth, coreColor);
                 continue;
             }
             float padding = glowWidth * 6f;
@@ -103,7 +103,7 @@ public static class AnomalyDrawUtils
                 .SetCustomParameter("uLineWidth", lineWidth)
                 .SetCustomParameter("uGlowWidth", glowWidth)
                 .UseColor(color)
-                .UseSecondaryColor(Color.Lerp(color, Color.White, 0.75f))
+                .UseSecondaryColor(coreColor ?? Color.Lerp(color, Color.White, 0.75f))
                 .UseOpacity(opacity)
                 .Apply();
             Texture2D texture = TOTextures.FillerTexture;
@@ -114,16 +114,16 @@ public static class AnomalyDrawUtils
     }
 
     private static void DrawFallbackGlowLine(SpriteBatch spriteBatch, Vector2 start, Vector2 end,
-        Color color, float opacity, float lineWidth, float glowWidth)
+        Color color, float opacity, float lineWidth, float glowWidth, Color? coreColor)
     {
         Vector2 edge = end - start;
         Texture2D texture = TextureAssets.MagicPixel.Value;
-        Color coreColor = Color.Lerp(color, Color.White, 0.75f);
+        Color lineCoreColor = coreColor ?? Color.Lerp(color, Color.White, 0.75f);
         for (int layer = 0; layer < 3; layer++)
         {
             float width = layer switch { 0 => glowWidth * 2f, 1 => glowWidth, _ => lineWidth };
             float strength = layer switch { 0 => 0.08f, 1 => 0.18f, _ => 0.8f };
-            Color layerColor = (layer == 2 ? coreColor : color) with { A = 0 };
+            Color layerColor = (layer == 2 ? lineCoreColor : color) with { A = 0 };
             spriteBatch.DrawFromCenter_VectorScale(texture, (start + end) * 0.5f - Main.screenPosition,
                 null, layerColor * (opacity * strength), edge.ToRotation(), new Vector2(edge.Length() / texture.Width, width / texture.Height));
         }

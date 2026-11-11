@@ -24,7 +24,7 @@ public sealed partial class SkeletronLegendHead
         None = 0,
 
         Normal,
-        Rotate,
+        Spin,
     }
 
     public enum Spell : byte
@@ -58,7 +58,7 @@ public sealed partial class SkeletronLegendHead
     public static int SlimeMountDamage => _SlimeMountDamage.Value;
 
     /// <summary>陨星伤害。</summary>
-    private static readonly ProjectileDamageContainer _MeteorDamage = new(150);
+    private static readonly ProjectileDamageContainer _MeteorDamage = new(240);
     /// <summary>陨星伤害。</summary>
     public static int MeteorDamage => _MeteorDamage.Value;
 
@@ -73,28 +73,50 @@ public sealed partial class SkeletronLegendHead
     public static int PlatinumCoinDamage => _PlatinumCoinDamage.Value;
 
     /// <summary>金币审判伤害。</summary>
-    private static readonly ProjectileDamageContainer _CoinJudgmentDamage = new(396);
+    private static readonly ProjectileDamageContainer _CoinJudgmentDamage = new(300);
     /// <summary>金币审判伤害。</summary>
     public static int CoinJudgmentDamage => _CoinJudgmentDamage.Value;
 
     /// <summary>中心恒星接触伤害。</summary>
-    private static readonly ProjectileDamageContainer _EnergySphereDamage = new(396);
+    private static readonly ProjectileDamageContainer _EnergySphereDamage = new(300);
     /// <summary>中心恒星接触伤害。</summary>
     public static int EnergySphereDamage => _EnergySphereDamage.Value;
 
-    /// <summary>半场拍击伤害。</summary>
-    private static readonly ProjectileDamageContainer _SlapDamage = new(180);
-    /// <summary>半场拍击伤害。</summary>
-    public static int SlapDamage => _SlapDamage.Value;
+    private static readonly ProjectileDamageContainer _RedEnergySphereDamage = new(450);
+    internal static int RedEnergySphereDamage => _RedEnergySphereDamage.Value;
+    private static readonly ProjectileDamageContainer _EnergyLaserDamage = new(180);
+    internal static int EnergyLaserDamage => _EnergyLaserDamage.Value;
+    private static readonly ProjectileDamageContainer _StarburstDamage = new(240);
+    internal static int StarburstDamage => _StarburstDamage.Value;
+    private static readonly ProjectileDamageContainer _LargePlatinumCoinDamage = new(SpinContactDamage);
+
+    private const int Phase1ContactDamage = 192;
+    private const int SpinContactDamage = 240;
+    // 原版 FTW 大师接触伤害：基础 32/20 × 4，加三分之一，再乘 1.1（原版逐步截断）。
+    private const int Phase2HeadContactDamage = 187;
+    internal const int Phase2HandContactDamage = 116;
 
     /// <summary>场地伤害。</summary>
-    private static readonly ProjectileDamageContainer _ArenaDamage = new(90);
     /// <summary>场地伤害。</summary>
-    public static int ArenaDamage => _ArenaDamage.Value;
+    public static int ArenaDamage => SkeletronBoneArena.BoundaryDamage;
+
+    // 二阶段法阵跳过 tML 难度倍率，常规碰撞仍有原版敌对弹幕的 2 倍倍率。
+    internal const int Phase2ArenaDamage = 240 / 2;
 
     // 直接结算伤害，不经过 ProjectileDamageContainer 的弹幕基础伤害反算。
     /// <summary>错色光球拦截惩罚伤害。</summary>
-    public const int IncorrectLightOrbDamage = 250;
+    public const int IncorrectLightOrbDamage = 180;
+    internal const int SlapStarDamage = 1;
+    internal const int SlapDamage = 396;
+    private const int OutsideArenaMinDamage = 30;
+    private const int OutsideArenaMaxDamage = 396;
+    private const int OutsideArenaRampTime = 120;
+
+    internal static int GetOutsideArenaDamage(int time) =>
+        OutsideArenaMinDamage + (OutsideArenaMaxDamage - OutsideArenaMinDamage) * Math.Min(time, OutsideArenaRampTime) / OutsideArenaRampTime;
+
+    internal static int GetNextOutsideArenaTime(int time, bool outside) =>
+        outside ? time + 1 : Math.Max(0, time - 1);
     /// <summary>伴星撞击的基础结算伤害。</summary>
     private const int CompanionShockwaveBaseDamage = 100;
     /// <summary>伴星撞击伤害随吸收光球数量增长的指数。</summary>
@@ -103,10 +125,21 @@ public sealed partial class SkeletronLegendHead
     internal static int CompanionShockwaveDamage(int count) => count == 0 ? CompanionShockwaveBaseDamage
         : (int)(CompanionShockwaveBaseDamage * Math.Pow(count, CompanionShockwaveDamageExponent));
 
-    /// <summary>飞行史莱姆的预设接触伤害，保留原基础20对应的普通20、专家40、大师及特殊模式60。</summary>
-    private static readonly NPCContactDamageContainer _FlyingSlimeContactDamage = new(60);
+    /// <summary>飞行史莱姆的预设接触伤害。</summary>
+    private static readonly NPCContactDamageContainer _FlyingSlimeContactDamage = new(192);
     /// <summary>飞行史莱姆难度缩放前的 NPC 基础接触伤害。</summary>
-    public static int FlyingSlimeContactDamage => _FlyingSlimeContactDamage.Value;
+    public static int FlyingSlimeContactDamage
+    {
+        get
+        {
+            int damage = _FlyingSlimeContactDamage.Value;
+            if (!Main.getGoodWorld || Main.GameModeInfo.IsJourneyMode)
+                return damage;
+
+            // FTW 给原版难度乘数加一，大师难度缩放后再加三分之一。
+            return Main.masterMode ? damage * 9 / 16 : Main.expertMode ? damage * 2 / 3 : damage / 2;
+        }
+    }
     /// <summary>传说之夜手部每次受击的固定伤害。</summary>
     public const int HandIncomingDamage = 1;
     /// <summary>终幕试炼失败时直接致死所记录的伤害。</summary>
@@ -312,8 +345,8 @@ public sealed partial class SkeletronLegendHead
     public int Mechanic2StrikeSide(int strike) => (Mechanic2HandPattern & (1 << strike)) == 0 ? -1 : 1;
     public LegendaryNightPhase2Arena Phase2Arena => Phase2ArenaProjectileAlive ? ArenaProjectile.GetModProjectile<LegendaryNightPhase2Arena>() : null;
 
-    // Phase2_1 的 LocalPhase：0 旋转，1 常态星星雨，2 史莱姆，3 叠加恶魔之影，4 再叠加铂金币。
-    public bool Mechanic1Rotating => CurrentPhase == Phase.Phase2_1 && CurrentLocalPhase == 0;
+    // Phase2_1 的 LocalPhase：0 自转，1 常态星星雨，2 史莱姆，3 叠加恶魔之影，4 再叠加铂金币。
+    public bool Mechanic1Spinning => CurrentPhase == Phase.Phase2_1 && CurrentLocalPhase == 0;
     public bool Phase2SlimeRainActive => CurrentPhase == Phase.Phase2_1 && CurrentLocalPhase >= 2
         && Phase2MusicElapsedTime < Mechanic1Timeline.SlimeEndMusicTime;
     public bool Phase2DemonShadowActive => CurrentPhase == Phase.Phase2_1 && CurrentLocalPhase >= 3

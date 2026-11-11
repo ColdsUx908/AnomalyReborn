@@ -84,7 +84,7 @@ public sealed partial class SkeletronLegendHead
         public static bool ShouldFireElementWave(int musicTime)
         {
             int age = musicTime - Mechanic7Timeline.AttackStartMusicTime;
-            // 每95帧均分3轮，整数帧偏移0、31、63；第43轮仍落在攻击开始后的第1330帧。
+            // 每95帧均分3轮，整数帧偏移0、31、63；第43轮（最后一轮）落在攻击开始后的第1330帧。
             return age >= 0 && age <= (ElementWaveCount - 1) * 95 / 3
                 && age % 95 is 0 or 31 or 63;
         }
@@ -124,10 +124,11 @@ public sealed partial class SkeletronLegendHead
 
     private void Mechanic7AI()
     {
+        #region 主体回中与终幕事件
+
         AnomalyNPC.Z = 0f;
         NPC.rotation = 0f;
         NPC.velocity = Phase2Arena is LegendaryNightPhase2Arena arena ? arena.Projectile.Center - NPC.Center : Vector2.Zero;
-        // LocalPhase：0等待恒星转变，1变色膨胀，2保持橙星。
         int time = Phase2MusicElapsedTime;
         if (time == Mechanic7Timeline.FinalMeteorStartMusicTime && TONetworkEnvironment.NotClient)
             Projectile.NewProjectileAction<LegendFinalMeteor>(SourceAI, NPC.Top + new Vector2(0f, 8f), Vector2.Zero,
@@ -140,6 +141,12 @@ public sealed partial class SkeletronLegendHead
                 });
         if (time == Mechanic7Timeline.DeathUnlockMusicTime && TONetworkEnvironment.NotClient)
             NPC.netUpdate = true;
+
+        #endregion
+
+        #region 恒星转变步骤同步
+
+        // LocalPhase：0等待恒星转变，1变色膨胀，2保持橙星。
         int localPhase = time switch
         {
             < Mechanic7Timeline.TransformationStartMusicTime => 0,
@@ -148,5 +155,7 @@ public sealed partial class SkeletronLegendHead
         };
         if (TONetworkEnvironment.NotClient && CurrentLocalPhase != localPhase)
             ChangePhase2State(Phase.Phase2_7, localPhase);
+
+        #endregion
     }
 }

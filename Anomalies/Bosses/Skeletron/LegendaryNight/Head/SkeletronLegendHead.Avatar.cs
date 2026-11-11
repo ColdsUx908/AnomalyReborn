@@ -2,11 +2,13 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed partial class SkeletronLegendHead
 {
+    private const float StarAvatarRotationSpeed = 0.08f;
+
     private Avatar RequestedAvatar => CurrentPhase switch
     {
         _ when Phase2SlimeAvatarActive => Avatar.FlyingSlime,
         _ when Phase2CoinAvatarActive => Avatar.PlatinumCoin,
-        Phase.Phase1 when CurrentBehavior == Behavior.Rotate && CurrentLocalPhase == 1 => CurrentSpell switch
+        Phase.Phase1 when CurrentBehavior == Behavior.Spin && CurrentLocalPhase == 1 => CurrentSpell switch
         {
             Spell.Slime => Avatar.FlyingSlime,
             Spell.Star => Avatar.Star,
@@ -33,9 +35,14 @@ public sealed partial class SkeletronLegendHead
         switch (CurrentAvatar)
         {
             case Avatar.Star:
+                // 化身出现时继承头部朝向，之后沿用头部的自转方向独立累积角度。
+                AvatarRotation = MathHelper.WrapAngle(AvatarTimer == 1
+                    ? NPC.rotation
+                    : AvatarRotation + NPC.direction * StarAvatarRotationSpeed);
+                break;
             case Avatar.PlatinumCoin:
                 {
-                    // 两张贴图的上方均为 -Y，补偿 π/2，使上方持续指向目标。
+                    // 贴图上方为 -Y，补偿 π/2，使上方持续指向目标。
                     Vector2 direction = NPC.GetVelocityTowards(Target);
                     AvatarRotation = direction == Vector2.Zero ? 0f : direction.ToRotation() + MathHelper.PiOver2;
                     break;

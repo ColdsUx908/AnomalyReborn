@@ -60,6 +60,8 @@ public sealed partial class SkeletronLegendHead
 
     private void Mechanic3AI()
     {
+        #region 场地与音乐步骤
+
         int time = Phase2MusicElapsedTime;
         LegendaryNightPhase2Arena arena = Phase2Arena;
         HideHands();
@@ -83,6 +85,11 @@ public sealed partial class SkeletronLegendHead
         {
             ChangePhase2LocalPhase(localPhase);
         }
+
+        #endregion
+
+        #region 史莱姆雨与目标锁定
+
         bool firstRain = time is >= Mechanic3Timeline.StartMusicTime
             and < Mechanic3Timeline.StartMusicTime + Mechanic3Parameters.RainDuration;
         bool finalRain = time is >= Mechanic3Timeline.LandingMusicTime and < (Mechanic3Timeline.LandingMusicTime + Mechanic3Parameters.RainDuration);
@@ -117,19 +124,35 @@ public sealed partial class SkeletronLegendHead
                         p.netUpdate = true;
                     });
         }
+
+        #endregion
+
+        #region 起跳前的常态攻击
+
         if (time < Mechanic3Timeline.JumpMusicTime)
         {
-            SkeletronHead.NormalMovement(NPC, Target, 20f, 8f, 0.2f, 0.08f, 300f, 20f);
+            SkeletronHandler.NormalMovement(NPC, Target, 20f, 8f, 0.2f, 0.08f, 300f, 20f);
             Charge(Mechanic3Timeline.FanMusicTime);
             Charge(Mechanic3Timeline.FirstRingMusicTime);
             Charge(Mechanic3Timeline.SecondRingMusicTime);
             Charge(Mechanic3Timeline.JumpMusicTime);
-            if (time == Mechanic3Timeline.FanMusicTime)
-                FireMounts(Mechanic3Parameters.FanCount, TOMathUtils.PiOver3 * 2 / (Mechanic3Parameters.FanCount - 1), false);
-            if (time is Mechanic3Timeline.FirstRingMusicTime or Mechanic3Timeline.SecondRingMusicTime)
-                FireMounts(Mechanic3Parameters.RingCount, MathHelper.TwoPi / Mechanic3Parameters.RingCount, true);
+            switch (time)
+            {
+                case Mechanic3Timeline.FanMusicTime:
+                    FireMounts(Mechanic3Parameters.FanCount, TOMathUtils.PiOver3 * 2 / (Mechanic3Parameters.FanCount - 1), false);
+                    break;
+                case Mechanic3Timeline.FirstRingMusicTime:
+                case Mechanic3Timeline.SecondRingMusicTime:
+                    FireMounts(Mechanic3Parameters.RingCount, MathHelper.TwoPi / Mechanic3Parameters.RingCount, true);
+                    break;
+            }
             return;
         }
+
+        #endregion
+
+        #region 起跳锁点、落底与回中
+
         if (time == Mechanic3Timeline.JumpMusicTime)
             SoundEngine.PlaySound(SoundID.Item92, NPC.Center);
         if (time == Mechanic3Timeline.JumpMusicTime && TONetworkEnvironment.NotClient)
@@ -161,6 +184,10 @@ public sealed partial class SkeletronLegendHead
             NPC.velocity = Vector2.Lerp(bottom, arena.Projectile.Center, progress) - NPC.Center;
         }
 
+        #endregion
+
+        #region 坐骑发射与蓄力粒子
+
         void FireMounts(int count, float spacing, bool spin)
         {
             SoundEngine.PlaySound(SoundID.Item81, NPC.Center);
@@ -188,5 +215,7 @@ public sealed partial class SkeletronLegendHead
                 AnomalyNPC.SpawnVisualParticle(new LegendaryNightSlimeChargeParticle(NPC, offset));
             }
         }
+
+        #endregion
     }
 }

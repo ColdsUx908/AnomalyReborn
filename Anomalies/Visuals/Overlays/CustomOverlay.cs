@@ -44,7 +44,7 @@ public sealed class CustomOverlayManager : ModSystem, IContentLoader
 
     void IContentLoader.PostSetupContent()
     {
-        _Overlays.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<CustomOverlay>(true));
+        _Overlays.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<CustomOverlay>());
         _PostTilesOverlays.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<PostTilesOverlay>(true));
         On_OverlayManager.Draw += On_OverlayManager_Draw;
     }

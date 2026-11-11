@@ -66,6 +66,23 @@ public sealed class FallingStar : AnomalyModProjectile
         }
         else if (Timer1 > AccelerationStartTime)
             Projectile.velocity *= 1.02f;
+
+        SpawnFlightSparkle(Projectile);
+    }
+
+    internal static void SpawnFlightSparkle(Projectile projectile)
+    {
+        if (Main.dedServ || projectile.velocity == Vector2.Zero)
+            return;
+
+        // 原版星星炮的飞行星芒。
+        Vector2 screenSize = new(Main.screenWidth, Main.screenHeight);
+        Rectangle visibleArea = Utils.CenteredRectangle(Main.screenPosition + screenSize * 0.5f, screenSize + new Vector2(400f));
+        if (!projectile.Hitbox.Intersects(visibleArea) || !Main.rand.NextBool(6))
+            return;
+
+        int goreType = Main.rand.Next(4) < (Main.tenthAnniversaryWorld ? 3 : 1) ? 16 : 17;
+        Gore.NewGoreAction(projectile.GetSource_FromAI(), projectile.Center, projectile.velocity * 0.2f, goreType);
     }
 
     public override bool PreDraw(ref Color lightColor)

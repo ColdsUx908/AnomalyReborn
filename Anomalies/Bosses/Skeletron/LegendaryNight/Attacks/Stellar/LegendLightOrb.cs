@@ -25,7 +25,7 @@ public sealed class LegendLightOrb : AnomalyModProjectile
     }
 
     /// <summary>半径，单位为世界像素。</summary>
-    public const float Radius = 20f;
+    public const float Radius = 32f;
     private ProjectileNetReference _SphereReference;
     private Resolution _Resolution;
     private bool _ResolutionFeedbackApplied;
@@ -54,7 +54,6 @@ public sealed class LegendLightOrb : AnomalyModProjectile
     public Color OrbColor => OrbColorIndex == 1
         ? LegendaryNightHandler.PlatinumColor : LegendaryNightHandler.StarColor;
 
-    // 250 是惩罚的预设伤害；手动 Hurt 仍会按弹幕来源进入难度缩放钩子。
     public override void SetStaticDefaults() => ProjectileID.Sets.PlayerHurtDamageIgnoresDifficultyScaling[Type] = true;
 
     public override void SetDefaults()
@@ -217,7 +216,7 @@ public sealed class LegendLightOrb : AnomalyModProjectile
     private void ApplyIncorrectInterceptionDamage(Player target, bool incorrect)
     {
         if (incorrect && target.whoAmI == Main.myPlayer)
-            LegendaryNightDamage.HurtLocalPlayer(Projectile, SkeletronLegendHead.IncorrectLightOrbDamage, false, ignoreAllImmunity: true);
+            LegendaryNightDamage.HurtLocalPlayer(Projectile, SkeletronLegendHead.IncorrectLightOrbDamage, true, ignoreAllImmunity: true);
     }
 
     protected override void SendAnomalyExtraAI(BinaryWriter writer)

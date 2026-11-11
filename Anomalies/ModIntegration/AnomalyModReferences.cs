@@ -1,4 +1,4 @@
-namespace Anomalies.ModCompatibility;
+namespace Anomalies.ModIntegration;
 
 /// <summary>
 /// 异象自身使用的可选依赖；不向通用框架注册其他模组名称。

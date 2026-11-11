@@ -5,11 +5,11 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed partial class SkeletronLegendHead
 {
-    public bool IsRotating => Mechanic1Rotating
-        || CurrentPhase == Phase.Phase1 && CurrentBehavior == Behavior.Rotate && CurrentLocalPhase == 1;
+    public bool IsSpinning => Mechanic1Spinning
+        || CurrentPhase == Phase.Phase1 && CurrentBehavior == Behavior.Spin && CurrentLocalPhase == 1;
 
     public override void BossHeadRotation(ref float rotation) =>
-        rotation = IsRotating ? NPC.rotation : 0f;
+        rotation = IsSpinning ? NPC.rotation : 0f;
 
     /// <summary>星体化身拖尾长度。</summary>
     private const int StarAvatarTrailLength = 50;

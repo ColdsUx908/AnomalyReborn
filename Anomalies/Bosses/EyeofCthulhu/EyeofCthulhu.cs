@@ -78,10 +78,10 @@ public sealed partial class EyeofCthulhu : AnomalyNPCBehavior<EyeofCthulhu>
     public static readonly SoundStyle Roar = SoundID.ForceRoar with { MaxInstances = 0 };
     public static readonly SoundStyle ForceRoar = SoundID.ForceRoarPitched with { MaxInstances = 0 };
 
-    private static readonly ProjectileDamageContainer _BloodDamage = new(30, 60, 75, 90, 120, 150);
+    private static readonly ProjectileDamageContainer _BloodDamage = new(30, 60, 72, 90, 90, 120);
     public static int BloodDamage => _BloodDamage.Value;
 
-    private static readonly ProjectileDamageContainer _ArenaDamage = new(150);
+    private static readonly ProjectileDamageContainer _ArenaDamage = new(120);
     public static int ArenaDamage => _ArenaDamage.Value;
 
     public static readonly Color Phase3Color = Color.Lerp(Color.DarkRed, Color.Tomato, 0.4f);

@@ -39,11 +39,13 @@ public sealed class AnomalyEffects : ILoadable
         public static MiscShaderContainer EaterPortal;
         public static MiscShaderContainer EaterRealityCrack;
         public static MiscShaderContainer EventideDeathVignette;
+        public static MiscShaderContainer LegendImpactFlame;
         public static MiscShaderContainer LegendaryNightArenaEdge;
         public static MiscShaderContainer LegendaryNightArenaMist;
         public static MiscShaderContainer LegendStellarExplosion;
         public static MiscShaderContainer LegendStellarPhotosphere;
         public static MiscShaderContainer LegendStellarSphere;
+        public static MiscShaderContainer Shockwave;
         public static MiscShaderContainer SolidColor;
         public static MiscShaderContainer SolidColorMask;
     }
@@ -62,6 +64,7 @@ public sealed class AnomalyEffects : ILoadable
         public static MiscShaderContainer LegendStellarLaser;
         public static MiscShaderContainer LegendStellarLaserWarning;
         public static MiscShaderContainer LegendStellarLightOrb;
+        public static MiscShaderContainer SkeletronForwardBeam;
     }
 
     public static class Texts

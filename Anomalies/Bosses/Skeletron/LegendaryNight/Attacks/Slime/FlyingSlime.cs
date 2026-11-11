@@ -21,12 +21,12 @@ public sealed class FlyingSlime : AnomalyModNPC
         NPC.width = NPC.height = 30;
         NPC.scale = 1f;
         AnimationType = NPCID.Slimer;
-        NPC.lifeMax = 30;
+        NPC.lifeMax = 50;
         NPC.damage = SkeletronLegendHead.FlyingSlimeContactDamage;
         NPC.defense = 0;
         NPC.noGravity = true;
         NPC.noTileCollide = true;
-        NPC.knockBackResist = 0.05f;
+        NPC.knockBackResist = 0.1f;
         NPC.HitSound = SoundID.NPCHit1;
         NPC.DeathSound = SoundID.NPCDeath1;
         NPC.IsImportantBossMinion = true;
@@ -61,6 +61,8 @@ public sealed class FlyingSlime : AnomalyModNPC
                 NPC.velocity = NPC.GetVelocityTowards(NPC.PlayerTarget, 20f);
                 NPC.netUpdate = true;
             }
+
+            NPC.velocity *= Utils.Remap(NPC.ai[0], 50f, 70f, 1f, 1.02f);
         }
     }
 

@@ -3,7 +3,7 @@ using CalamityMod.Systems;
 using CalamityMod.UI.ModeIndicator;
 using Transoceanic.Runtime.Publicizing;
 
-namespace Anomalies.ModCompatibility;
+namespace Anomalies.ModIntegration;
 
 //按字母顺序排列
 

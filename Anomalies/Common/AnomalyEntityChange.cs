@@ -176,7 +176,7 @@ public abstract class AnomalyNPCBehavior : SingleNPCBehavior, IAnomalyTweak
 
         if (npc.TryGetBehavior(out AnomalyNPCBehavior npcBehavior, nameof(SetDefaultsFinal)))
         {
-            using EntityBehavior<NPC>.EntityLock entityLock = npcBehavior.LockEntity();
+            using EntityLock entityLock = npcBehavior.LockEntity();
             npcBehavior.SetDefaultsFinal();
         }
     }
@@ -296,7 +296,7 @@ public abstract class AnomalyItemBehavior : SingleItemBehavior, IAnomalyTweak
     public AnomalyGlobalItem AnomalyItem { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => Entity.Anomaly; }
 
     /// <summary>
-    /// 设置物品基本属性，确保在 <see cref="Item.SetDefaults(int, bool, global::Terraria.GameContent.Items.ItemVariant)"/> 方法末尾调用。
+    /// 设置物品基本属性，确保在 <see cref="Item.SetDefaults(int, bool, Terraria.GameContent.Items.ItemVariant)"/> 方法末尾调用。
     /// </summary>
     public virtual void SetDefaultsFinal() { }
 
@@ -311,12 +311,12 @@ public abstract class AnomalyItemBehavior : SingleItemBehavior, IAnomalyTweak
     /// <summary>在每个实际注册的物品行为加载时安装末尾属性钩子，保留既有注册次数。</summary>
     public override void Load() => On_Item.SetDefaults_int_bool_ItemVariant += On_Item_SetDefaults_int_bool_ItemVariant;
 
-    private static void On_Item_SetDefaults_int_bool_ItemVariant(On_Item.orig_SetDefaults_int_bool_ItemVariant orig, Item self, int Type, bool noMatCheck, global::Terraria.GameContent.Items.ItemVariant variant)
+    private static void On_Item_SetDefaults_int_bool_ItemVariant(On_Item.orig_SetDefaults_int_bool_ItemVariant orig, Item self, int Type, bool noMatCheck, Terraria.GameContent.Items.ItemVariant variant)
     {
         orig(self, Type, noMatCheck, variant);
         if (self.TryGetBehavior(out AnomalyItemBehavior itemBehavior, nameof(SetDefaultsFinal)))
         {
-            using EntityBehavior<Item>.EntityLock entityLock = itemBehavior.LockEntity();
+            using EntityLock entityLock = itemBehavior.LockEntity();
             itemBehavior.SetDefaultsFinal();
         }
     }

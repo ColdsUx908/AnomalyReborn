@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using CalamityMod;
 
-namespace Anomalies.ModCompatibility;
+namespace Anomalies.ModIntegration;
 
 public static partial class BridgeUtils
 {

@@ -34,7 +34,11 @@ public sealed class LegendFinalMeteor : AnomalyModProjectile
     {
         if (LegendaryNightHandler.TryGetLegendaryNightHead((int)Projectile.ai[0], out SkeletronLegendHead head, oneBased: true))
             Projectile.Center = head.NPC.Top + new Vector2(0f, 8f);
-        if (Age >= SkeletronLegendHead.Mechanic7Parameters.MeteorFallDuration)
+        int age = Age;
+        // 在同一帧先更新天空，再结算命中并移除陨星。
+        if (!Main.dedServ)
+            LegendaryNightSky.Instance?.UpdateFinalMeteorBlend(this, (int)Projectile.ai[0] - 1, age);
+        if (age >= SkeletronLegendHead.Mechanic7Parameters.MeteorFallDuration)
         {
             if (TONetworkEnvironment.NotClient)
             {
@@ -51,7 +55,7 @@ public sealed class LegendFinalMeteor : AnomalyModProjectile
                     success ? 0 : 1, 0f, action: p =>
                     {
                         // 独立计时，主体死亡后仍完成终幕。
-                        p.ai[1] = Projectile.ai[1] * (success ? 0.55f : 1f);
+                        p.ai[1] = Projectile.ai[1];
                         p.netUpdate = true;
                     });
             }

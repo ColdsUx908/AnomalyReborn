@@ -7,7 +7,7 @@ global using System.Runtime.CompilerServices;
 global using Anomalies.Assets;
 global using Anomalies.Common;
 global using Anomalies.DataStructures;
-global using Anomalies.ModCompatibility;
+global using Anomalies.ModIntegration;
 global using Anomalies.Visuals;
 global using Microsoft.Xna.Framework;
 global using Microsoft.Xna.Framework.Graphics;

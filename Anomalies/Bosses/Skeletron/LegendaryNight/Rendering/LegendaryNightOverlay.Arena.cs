@@ -4,35 +4,8 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed partial class LegendaryNightOverlay
 {
-    private void DrawBoundary(SpriteBatch spriteBatch)
-    {
-        Hexadecagon polygon = Arena.VisualPolygon;
-        Span<Vector2> vertices = stackalloc Vector2[VertexCount];
-        for (int i = 0; i < VertexCount; i++)
-            vertices[i] = polygon.GetVertex(i) - Main.screenPosition;
-
-        Texture2D stick = _BoneStick.Value;
-        Texture2D ball = _BoneBall.Value;
-        Color color = Color.White * Arena.Intensity;
-
-        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
-            DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-
-        // 先画所有骨棒，仅沿材质自身的横轴拉伸，再用原尺寸骨球覆盖接缝。
-        for (int i = 0; i < VertexCount; i++)
-        {
-            Vector2 start = vertices[i];
-            Vector2 end = vertices[(i + 1) % VertexCount];
-            Vector2 edge = end - start;
-            spriteBatch.DrawFromCenter_VectorScale(stick, (start + end) * 0.5f, null, color, edge.ToRotation(),
-                new Vector2(edge.Length() / stick.Width, 1f));
-        }
-
-        for (int i = 0; i < VertexCount; i++)
-            spriteBatch.DrawFromCenter(ball, vertices[i], null, color);
-
-        spriteBatch.End();
-    }
+    private static readonly Color _MaterializationCoreColor = new(255, 214, 90);
+    private static readonly Color _MaterializationGlowColor = new(255, 162, 24);
 
     private void DrawMagicCircle(SpriteBatch spriteBatch)
     {
@@ -40,9 +13,27 @@ public sealed partial class LegendaryNightOverlay
         foreach (Projectile projectile in Projectile.ActiveProjectiles)
             if (projectile.ModProjectile is LegendStarburst burst && burst.Head?.NPC == Phase2Arena.MasterBehavior?.NPC)
                 burst.Draw(spriteBatch);
-        DrawMechanic2HalfField(spriteBatch);
+        if (!UseImpactFlame)
+            DrawMechanic2HalfField(spriteBatch);
+        for (int i = 0; i < 3; i++)
+        {
+            (Vector2 center, float radius, float rotation) = Phase2Arena.GetMagicCircle(i);
+            DrawMagicCirclePart(spriteBatch, center, radius, rotation, true, i);
+        }
+        DrawMagicCirclePart(spriteBatch, Phase2Arena.Projectile.Center, Phase2Arena.Radius, 0f, false);
+        if (Phase2Arena.MasterBehavior is SkeletronLegendHead { Mechanic7Active: true } head)
+            for (int i = 0; i < 8; i++)
+            {
+                (Vector2 center, float radius, float rotation) = Phase2Arena.GetMechanic7Circle(i);
+                DrawMagicCirclePart(spriteBatch, center, radius, rotation, true,
+                    opacityMultiplier: SkeletronLegendHead.Mechanic7Parameters.CircleOpacity(head.Phase2MusicElapsedTime));
+            }
+    }
+
+    private void DrawMaterializedFill(SpriteBatch spriteBatch)
+    {
         float intensity = Phase2Arena.MaterializationIntensity;
-        float materializedOpacity = MathHelper.Lerp(Phase2Arena.MaterializationWarning * 0.22f, 0.65f, intensity);
+        float materializedOpacity = MathHelper.Lerp(Phase2Arena.MaterializationWarning * 0.22f, 0.24f, intensity);
         if (materializedOpacity > 0f)
         {
             using RenderTargetLease lease = RenderTargetPool.Shared.Rent(
@@ -72,23 +63,13 @@ public sealed partial class LegendaryNightOverlay
             }
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
                 DepthStencilState.None, Main.Rasterizer, null, Matrix.Identity);
-            spriteBatch.Draw(lease.Target, Vector2.Zero,
-                Color.Lerp(LegendaryNightHandler.StarColor, Color.White, intensity) * materializedOpacity);
+            Color fillColor = Color.Lerp(LegendaryNightHandler.StarColor, _MaterializationGlowColor, intensity);
+            // 薄底色勾勒实心区域，额外的发光分量只增加亮度。
+            float emission = 0.24f * intensity;
+            Color tint = (fillColor * (materializedOpacity + emission)) with { A = (byte)(255f * materializedOpacity) };
+            spriteBatch.Draw(lease.Target, Vector2.Zero, tint);
             spriteBatch.End();
         }
-        for (int i = 0; i < 3; i++)
-        {
-            (Vector2 center, float radius, float rotation) = Phase2Arena.GetMagicCircle(i);
-            DrawMagicCirclePart(spriteBatch, center, radius, rotation, true, i);
-        }
-        DrawMagicCirclePart(spriteBatch, Phase2Arena.Projectile.Center, Phase2Arena.Radius, 0f, false);
-        if (Phase2Arena.MasterBehavior is SkeletronLegendHead { Mechanic7Active: true } head)
-            for (int i = 0; i < 8; i++)
-            {
-                (Vector2 center, float radius, float rotation) = Phase2Arena.GetMechanic7Circle(i);
-                DrawMagicCirclePart(spriteBatch, center, radius, rotation, true,
-                    opacityMultiplier: SkeletronLegendHead.Mechanic7Parameters.CircleOpacity(head.Phase2MusicElapsedTime));
-            }
     }
 
     private void DrawArenaEdge(SpriteBatch spriteBatch)
@@ -128,18 +109,20 @@ public sealed partial class LegendaryNightOverlay
     {
         if (radius <= 0.01f)
             return;
-        float intensity = Phase2Arena.MaterializationIntensity;
+        float materialization = Phase2Arena.MaterializationIntensity;
         float warning = Phase2Arena.MaterializationWarning;
         float starburstGlow = circleIndex > 0 ? Phase2Arena.StarburstGlow : 0f;
-        intensity = Math.Max(intensity, starburstGlow);
-        Color color = Color.Lerp(Color.Lerp(LegendaryNightHandler.StarColor, Color.OrangeRed, warning), Color.White, intensity);
+        float intensity = Math.Max(materialization, starburstGlow);
+        Color color = Color.Lerp(Color.Lerp(LegendaryNightHandler.StarColor, Color.OrangeRed, warning), Color.White, starburstGlow);
         if (circleIndex > 0)
             color = Color.Lerp(color, circleIndex == 2 ? LegendaryNightStarburstParameters.FastStarburstColor
                 : LegendaryNightStarburstParameters.SlowStarburstColor, starburstGlow);
         float opacity = Phase2Arena.Intensity * MathHelper.Lerp(0.65f + warning * 0.3f, 1f, intensity) * opacityMultiplier;
         float width = MathHelper.Lerp(3f + warning * 5f, LegendaryNightPhase2Arena.LaserWidth, intensity);
-        float glowWidth = MathHelper.Lerp(14f, 22f, intensity);
-        AnomalyDrawUtils.DrawGlowingCircle(spriteBatch, worldCenter, radius, color, opacity, width, glowWidth);
+        Color coreColor = Color.Lerp(Color.Lerp(color, Color.White, 0.75f), _MaterializationCoreColor, materialization);
+        color = Color.Lerp(color, _MaterializationGlowColor, materialization);
+        float glowWidth = MathHelper.Lerp(MathHelper.Lerp(14f, 22f, starburstGlow), 36f, materialization);
+        AnomalyDrawUtils.DrawGlowingCircle(spriteBatch, worldCenter, radius, color, opacity, width, glowWidth, coreColor);
         if (!drawStar)
             return;
 
@@ -147,6 +130,6 @@ public sealed partial class LegendaryNightOverlay
         for (int i = 0; i < edges.Length; i++)
             edges[i] = (worldCenter + (rotation + MathHelper.TwoPi * i / 5f).ToRotationVector2() * radius,
                 worldCenter + (rotation + MathHelper.TwoPi * (i + 2) / 5f).ToRotationVector2() * radius);
-        AnomalyDrawUtils.DrawGlowingLines(spriteBatch, edges, color, opacity, width, glowWidth);
+        AnomalyDrawUtils.DrawGlowingLines(spriteBatch, edges, color, opacity, width, glowWidth, coreColor);
     }
 }

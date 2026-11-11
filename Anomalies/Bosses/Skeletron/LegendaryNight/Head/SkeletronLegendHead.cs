@@ -6,7 +6,7 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 /// <remarks>
 /// <para>ai[0]（Union32）：Byte0阶段、Byte1行为、Byte2当前符卡；ai[1]：局部步骤；ai[2]（Union32）：Byte0剩余符卡位掩码、Byte2首轮完成标志；ai[3]：未使用。</para>
 /// <para>localAI：本行为未使用；Timer1（OceanAI32[4].I）：行为/局部步骤累计帧；Timer2（OceanAI32[5].I）：转场回血初始生命；Timer5（OceanAI32[8].I）：转场起累计音乐帧；Timer3/4未使用。</para>
-/// <para>AnomalyAI32[0]：未使用；[1].Byte0：化身；[2].I：化身帧；[3].F：化身旋转；[4].I：二阶段生存帧；[5].Bits[0]：正在召手。</para>
+/// <para>AnomalyAI32[0]：一阶段钱币审判位图及机制五首轮币种；[1].Byte0：化身；[2].I：化身帧；[3].F：化身旋转；[4].I：二阶段生存帧；[5].Bits[0]：正在召手。</para>
 /// <para>AnomalyAI32[6].I：拍击左右位图（bit3表示初始化）；[7].I：机制二音乐起点。</para>
 /// <para>AnomalyAI32[8].I：停靠锁定状态、已锁定拍击序号或机制三雨目标玩家索引 + 1，按机制复用。</para>
 /// <para>AnomalyAI64[1]：竞技场 owner + identity；[2]：停靠/拍击/跳跃/回中起点；[3]：终点、落点或冲刺速度；[4]：停靠初速度。[0]未使用。</para>
@@ -23,21 +23,34 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
     /// <summary>进入二阶段的剩余生命比例阈值。</summary>
     public const float Phase2LifeRatio = 0.1f;
     /// <summary>二阶段动态减伤采用的预期生存秒数。</summary>
-    public const int Phase2ExpectedTimeInSeconds = 180;
+    public const int Phase2ExpectedTimeInSeconds = 185;
     /// <summary>二阶段动态减伤的累计生存帧上限。</summary>
     public const int Phase2MinimumDuration = Phase2ExpectedTimeInSeconds * 60;
 
     public override int ApplyingType => NPCID.SkeletronHead;
 
-    public override bool CanHitPlayer(Player target, ref int cooldownSlot) => CurrentPhase != Phase.PhaseChange_1To2 && !Mechanic2InBackground;
+    public override bool CanHitPlayer(Player target, ref int cooldownSlot) => CurrentPhase != Phase.PhaseChange_1To2 && !Mechanic2InBackground
+        && !ReturningToPosition
+        && !(CurrentPhase == Phase.Phase1 && CurrentBehavior == Behavior.Normal && CurrentSpell == Spell.Star);
 
-    public override decimal Priority => 10m;
+    private bool ReturningToPosition => CurrentPhase switch
+    {
+        Phase.Phase2_1 => Phase2MusicElapsedTime >= Mechanic2Timeline.ArenaBrakeStartMusicTime,
+        Phase.Phase2_3 => Phase2MusicElapsedTime is >= Mechanic3Timeline.LandingMusicTime
+            and <= Mechanic3Timeline.LandingMusicTime + Mechanic3Parameters.ReturnDuration,
+        Phase.Phase2_4 => Phase2MusicElapsedTime >= Mechanic4Timeline.ReturnStartMusicTime,
+        Phase.Phase2_6 => Phase2MusicElapsedTime is >= Mechanic6Timeline.HeadReturnStartMusicTime
+            and <= Mechanic6Timeline.HandDepartureStartMusicTime,
+        _ => false
+    };
+
+    public override decimal Priority => 110m;
 
     public override bool ShouldProcess
     {
         get
         {
-            if (!base.ShouldProcess)
+            if (!AnomalyBossChangeToggler.LegendaryNight || !base.ShouldProcess)
                 return false;
 
             if (AnomalyNPC?.CustomAIType == 1)
@@ -76,12 +89,12 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
             new TimedDDRHandler.SingleDDRHandler(1f, 0f,
                 n => GetInstance(n).Phase2 && GetInstance(n).Phase2ElapsedTime > 0,
                 n => GetInstance(n).Phase2ElapsedTime >= Phase2MinimumDuration,
-                Phase2ExpectedTimeInSeconds, storyModeOnly: false));
+                Phase2ExpectedTimeInSeconds, drFactor: 10f, storyModeOnly: false));
     }
 
     public override void SetDefaultsFinal()
     {
-        NPC.lifeMax = CalamityEnabled ? 9000 : 7500;
+        NPC.lifeMax = CalamityEnabled ? 15000 : 11250;
         BridgeUtils.ApplyCalamityHealthBoost(NPC);
     }
 
@@ -98,6 +111,9 @@ public sealed partial class SkeletronLegendHead : AnomalyNPCBehavior<SkeletronLe
 
     public override void Load() => BossDeathEffectRegistry.Register(NPCID.SkeletronHead,
         npc => GetInstance(npc) is { ShouldProcess: true, DeathLocked: true });
+
+    // 竞技场边缘可能超出原版存活范围，场内战斗由 PreAI 判定是否退场。
+    public override bool CheckActive() => !Phase2ArenaRequested;
 
     public override bool CheckDead()
     {

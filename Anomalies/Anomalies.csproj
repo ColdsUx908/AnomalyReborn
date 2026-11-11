@@ -37,8 +37,8 @@
     </ItemGroup>
 
     <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-	  <!--暂时禁用编译器的统一调用站点，需要修改着色器时自行调用编译器-->
-      <!--<Exec Command="call &quot;$(ProjectDir)PreBuild\EffectCompiler\EffectCompiler.exe&quot;" />-->
+	  <!--生成前自动调用着色器编译器。如果因为此编译器导致受阻，请自行禁用之-->
+      <Exec Command="call &quot;$(ProjectDir)PreBuild\EffectCompiler\EffectCompiler.exe&quot;" />
     </Target>
 
 </Project>

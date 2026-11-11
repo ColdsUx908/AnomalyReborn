@@ -132,7 +132,7 @@ public sealed class DemonShadow : AnomalyModProjectile
                             p.scale = 0.2f;
                             p.ai[2] = HorizontalTracking ? Projectile.ai[2] : 0f;
                             p.GetModProjectile<FallingStar>().TrailType = 1;
-                            p.GetModProjectile<FallingStar>().AccelerationStartTime = 420;
+                            p.GetModProjectile<FallingStar>().AccelerationStartTime = 60;
                             p.netUpdate = true;
                         });
                 }

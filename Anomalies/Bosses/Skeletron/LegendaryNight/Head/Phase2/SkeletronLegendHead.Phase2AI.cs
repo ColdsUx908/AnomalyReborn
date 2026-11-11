@@ -62,6 +62,8 @@ public sealed partial class SkeletronLegendHead
 
         #endregion
 
+        #region 跨机制推进
+
         void AdvanceMechanics()
         {
             // 保留原有预测边界：前两次切换允许客户端跟随音乐，其余由服务器推进。
@@ -86,7 +88,11 @@ public sealed partial class SkeletronLegendHead
                 ChangePhase2State(nextPhase);
             }
         }
+
+        #endregion
     }
+
+    #region 机制进出与局部步骤切换
 
     private void ChangePhase2State(Phase phase, int localPhase = 0)
     {
@@ -127,7 +133,11 @@ public sealed partial class SkeletronLegendHead
         NPC.netUpdate = true;
     }
 
-    private void NormalMovement() => SkeletronHead.NormalMovement(NPC, Target, 20f, 8f, 0.2f, 0.08f, 300f, 20f);
+    #endregion
+
+    #region 共用运动与场地恢复
+
+    private void NormalMovement() => SkeletronHandler.NormalMovement(NPC, Target, 20f, 8f, 0.2f, 0.08f, 300f, 20f);
 
     private void HideHands() => SkeletronLegendHand.HideOwnedHands(NPC);
 
@@ -143,4 +153,7 @@ public sealed partial class SkeletronLegendHead
                 ArenaProjectile = p;
             });
     }
+
+    #endregion
+
 }

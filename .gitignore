@@ -377,3 +377,6 @@ FodyWeavers.xsd
 
 # Local shader compiler cache
 /Anomalies/Assets/Effects_Cache/
+
+# Local developer identity
+/.local-developer

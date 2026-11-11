@@ -18,6 +18,8 @@ public sealed partial class SkeletronLegendHead
         /// <summary>公转恢复开始的音乐绝对帧，从转场音乐开始累计。</summary>
         public const int OrbitRecoveryStartMusicTime = StarburstEndMusicTime
             + LegendaryNightStarburstParameters.StarburstDamageDuration + LegendaryNightStarburstParameters.StarburstFadeDuration;
+        /// <summary>第三次星爆后的组合攻击起点（1:28:15）。</summary>
+        public const int InterludeStartMusicTime = FourthStarburstMusicTime - 3 * Mechanic5Parameters.JudgmentInterval;
         /// <summary>雨幕结束的音乐绝对帧，从转场音乐开始累计。</summary>
         public const int RainEndMusicTime = FourthStarburstMusicTime - 30;
         /// <summary>机制五手部挥击收尾的音乐绝对帧；可跨过机制六开始帧，不作为转机制边界。</summary>
@@ -29,7 +31,12 @@ public sealed partial class SkeletronLegendHead
     public static class Mechanic5Parameters
     {
         /// <summary>雨幕间隔，单位为游戏帧。</summary>
-        public const int RainInterval = 30;
+        public const int RainInterval = 45;
+        public const int UmbrellaSlimeInterval = 45;
+        public const int JudgmentInterval = 190;
+        public const float SlimeWaveCoverage = 1.2f;
+        public const float UmbrellaSlimeSpawnMargin = 80f;
+        public const float SlimeWaveSpawnMargin = 200f;
         /// <summary>雨幕存活时间，单位为游戏帧。</summary>
         public const int RainLifetime = Mechanic1Parameters.ProjectileLifetime;
         /// <summary>星爆初始星体数量。</summary>
@@ -46,11 +53,11 @@ public sealed partial class SkeletronLegendHead
         /// <summary>手部拍击延迟，单位为游戏帧。</summary>
         public const int HandStrikeDelay = 47;
         /// <summary>手部蓄势持续时间，单位为游戏帧。</summary>
-        public const int HandWindupDuration = 24;
+        public const int HandWindupDuration = HandStrikeDelay;
         /// <summary>手部拍击持续时间，单位为游戏帧。</summary>
         public const int HandStrikeDuration = 32;
         /// <summary>手部回归持续时间，单位为游戏帧。</summary>
-        public const int HandReturnDuration = 36;
+        public const int HandReturnDuration = 60;
         /// <summary>手部蓄势距离，单位为世界像素。</summary>
         public const float HandWindupDistance = 80f;
         /// <summary>手部越界余量，单位为世界像素。</summary>
@@ -61,15 +68,23 @@ public sealed partial class SkeletronLegendHead
         public static int GetHandStrikeTime(int attack) => LegendaryNightStarburstTimeline.GetStarburstTime(4 + attack) + HandStrikeDelay;
 
         /// <summary>计算手部攻击索引。</summary>
-        public static int GetHandAttackIndex(int musicTime)
+        public static int GetHandAttackIndex(int musicTime, int handSide)
         {
-            for (int attack = 0; attack < HandAttackCount; attack++)
+            for (int attack = handSide < 0 ? 0 : 1; attack < HandAttackCount; attack += 2)
             {
                 int age = musicTime - GetHandStrikeTime(attack);
                 if (age is >= -HandWindupDuration and < HandStrikeDuration + HandReturnDuration)
                     return attack;
             }
             return -1;
+        }
+
+        public static int GetHandPrepareStartTime(int handSide)
+        {
+            int lastAttack = HandAttackCount - (handSide < 0 ? 2 : 1);
+            int recoveryEnd = GetHandStrikeTime(lastAttack) + HandStrikeDuration + HandReturnDuration;
+            // 最后一拍可把回收动作接入举球准备，预留至少 16 帧过渡。
+            return Math.Clamp(recoveryEnd, Mechanic6Timeline.HandPrepareStartMusicTime, Mechanic6Timeline.StartMusicTime - 16);
         }
 
         /// <summary>沿锁定玩家的方向挥到法阵外沿，并留出越过边缘的余量。</summary>
@@ -83,8 +98,44 @@ public sealed partial class SkeletronLegendHead
         }
     }
 
+    private const int Phase2FirstCoinShift = 4;
+
+    internal void RecordPhase1CoinJudgment(int coinType)
+    {
+        int history = AnomalyNPC.AnomalyAI32[0].I;
+        int updated = history | (1 << coinType);
+        if (history != updated)
+        {
+            AnomalyNPC.AnomalyAI32[0].I = updated;
+            AnomalyNPC.AIChanged32[0] = true;
+            NPC.netUpdate = true;
+        }
+    }
+
+    internal int SelectMechanic5JudgmentCoin(int round)
+    {
+        int history = AnomalyNPC.AnomalyAI32[0].I;
+        if (round == 2)
+            return (history >> Phase2FirstCoinShift) ^ 2;
+
+        int lowCoin = round;
+        int highCoin = lowCoin + 2;
+        bool usedLow = (history & (1 << lowCoin)) != 0;
+        bool usedHigh = (history & (1 << highCoin)) != 0;
+        int coin = usedLow == usedHigh ? lowCoin + 2 * Main.rand.Next(2) : usedLow ? highCoin : lowCoin;
+        if (round == 0)
+        {
+            AnomalyNPC.AnomalyAI32[0].I = (history & ((1 << Phase2FirstCoinShift) - 1)) | (coin << Phase2FirstCoinShift);
+            AnomalyNPC.AIChanged32[0] = true;
+            NPC.netUpdate = true;
+        }
+        return coin;
+    }
+
     private void Mechanic5AI()
     {
+        #region 步骤同步、主体定位与手部入场
+
         int time = Phase2MusicElapsedTime;
         // LocalPhase：0星星雨，1公转加速，2连续星爆及手部收尾，3结束待机。
         int localPhase = time switch
@@ -113,6 +164,11 @@ public sealed partial class SkeletronLegendHead
                 SkeletronLegendHand.RevealOwnedHands(NPC);
             }
         }
+
+        #endregion
+
+        #region 服务器攻击调度
+
         if (!TONetworkEnvironment.NotClient)
             return;
         if (time == Mechanic5Timeline.FifthStarburstMusicTime)
@@ -128,8 +184,32 @@ public sealed partial class SkeletronLegendHead
         {
             SpawnStarburstStars(starArena, starburst);
         }
-        if (time >= Mechanic5Timeline.StartMusicTime && time < Mechanic5Timeline.RainEndMusicTime
-            && (time - Mechanic5Timeline.StartMusicTime) % Mechanic5Parameters.RainInterval == 0)
+        int interludeAge = time - Mechanic5Timeline.InterludeStartMusicTime;
+        if (interludeAge >= 0 && time < Mechanic5Timeline.FourthStarburstMusicTime
+            && Phase2Arena is LegendaryNightPhase2Arena interludeArena)
+        {
+            if (interludeAge % Mechanic5Parameters.JudgmentInterval == 0)
+            {
+                SpawnSlimeMountWave(interludeArena, interludeAge / Mechanic5Parameters.JudgmentInterval);
+                Projectile.NewProjectileAction<CoinRoulette>(SourceAI, Target.Center, Vector2.Zero, 0, 0f, action: p =>
+                {
+                    p.ai[1] = -time; // 负数表示机制五轮盘，并存放该轮的起始音乐帧。
+                    p.ai[2] = Main.rand.Next(4);
+                    p.timeLeft = Mechanic5Parameters.JudgmentInterval + 1;
+                    p.GetModProjectile<CoinRoulette>().MasterIndex = NPC.whoAmI + 1;
+                });
+            }
+            if (interludeAge % Mechanic5Parameters.UmbrellaSlimeInterval == 0)
+            {
+                float halfWidth = interludeArena.Radius * Mechanic5Parameters.SlimeWaveCoverage;
+                Vector2 position = interludeArena.Projectile.Center + new Vector2(
+                    Main.rand.NextFloat(-halfWidth, halfWidth), -interludeArena.Radius - Mechanic5Parameters.UmbrellaSlimeSpawnMargin);
+                Projectile.NewProjectileAction<LegendUmbrellaSlime>(SourceAI, position,
+                    Vector2.UnitY * SlimeMount.FallAcceleration, SlimeMountDamage, 0f);
+            }
+        }
+        if (interludeAge >= 0 && time < Mechanic5Timeline.RainEndMusicTime
+            && interludeAge % Mechanic5Parameters.RainInterval == 0)
         {
             Projectile.NewProjectileAction<FallingStar>(SourceAI,
                 Target.Center + new Vector2(Main.rand.NextFloat(-1200f, 1200f), -1000f),
@@ -143,6 +223,29 @@ public sealed partial class SkeletronLegendHead
                     p.GetModProjectile<FallingStar>().TrailType = 1;
                     p.netUpdate = true;
                 });
+        }
+
+        #endregion
+
+        #region 坐骑波次与星爆弹幕
+
+        void SpawnSlimeMountWave(LegendaryNightPhase2Arena arena, int wave)
+        {
+            float spacing = 300f - wave * 50f;
+            float width = arena.Radius * 2f * Mechanic5Parameters.SlimeWaveCoverage;
+            int intervals = (int)MathF.Ceiling(width / spacing);
+            Vector2 origin = arena.Projectile.Center - new Vector2(intervals * spacing * 0.5f,
+                arena.Radius + Mechanic5Parameters.SlimeWaveSpawnMargin);
+            for (int i = 0; i <= intervals; i++)
+            {
+                Projectile.NewProjectileAction<SlimeMount>(SourceAI, origin + Vector2.UnitX * (i * spacing),
+                    Vector2.UnitY * SlimeMount.FallAcceleration, SlimeMountDamage, 0f, action: p =>
+                    {
+                        p.ai[1] = 1f;
+                        p.ai[2] = NPC.target + 1;
+                        p.GetModProjectile<SlimeMount>().MasterIndex = NPC.whoAmI + 1;
+                    });
+            }
         }
 
         void SpawnStarburstStars(LegendaryNightPhase2Arena arena, int starburstIndex)
@@ -169,5 +272,7 @@ public sealed partial class SkeletronLegendHead
                 });
             }
         }
+
+        #endregion
     }
 }

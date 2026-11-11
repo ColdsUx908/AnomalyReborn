@@ -4,6 +4,8 @@ namespace Anomalies.AnomalyMode;
 
 public sealed class AnomalyHandler : ModSystem
 {
+    public const bool EnableMultiplayerSupport = true;
+
     public const string LocalizationPrefix = AnomalySharedData.ModLocalizationPrefix + "AnomalyMode.";
 
     #region 资产
@@ -55,7 +57,7 @@ public sealed class AnomalyHandler : ModSystem
 
         if (AnomalySharedData.Anomaly)
         {
-            if (Main.netMode != NetmodeID.SinglePlayer) //暂不支持多人
+            if (Main.netMode != NetmodeID.SinglePlayer && !EnableMultiplayerSupport)
             {
                 TOLocalizationUtils.ChatLiteralText("Anomaly doe not support Multiplier.");
                 DisableAnomaly();

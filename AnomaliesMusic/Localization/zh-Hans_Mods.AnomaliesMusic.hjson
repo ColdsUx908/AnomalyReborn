@@ -1,0 +1,30 @@
+Configs: {
+	AnomaliesMusicConfig: {
+		DisplayName: 异象音乐设置
+
+		Headers: {
+			Theme: 主题
+			Environment: 环境
+		}
+
+		PathwaytoReverie: {
+			Label: 入梦之径
+			Tooltip: 作者：烙、被被子星
+		}
+
+		EchoesoftheAzure: {
+			Label: 深蓝回响
+			Tooltip: 作者：烙、被被子星
+		}
+
+		ForsakenBloodland: {
+			Label: 神唾血地
+			Tooltip: 作者：烙、被被子星
+		}
+
+		DivineLament: {
+			Label: 神叹魂泣
+			Tooltip: 作者：烙、被被子星
+		}
+	}
+}

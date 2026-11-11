@@ -77,6 +77,13 @@ public sealed partial class LegendEnergySphere : AnomalyModProjectile
     public override bool CanHitPlayer(Player target) => Head is SkeletronLegendHead { StellarMechanicsActive: true } head
         && head.CurrentBehavior != SkeletronLegendHead.Behavior.Despawn && SphereRadius > 0f;
 
+    public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
+    {
+        if (Head is SkeletronLegendHead head
+            && SkeletronLegendHead.Mechanic7Parameters.TransformationProgress(head.Phase2MusicElapsedTime) > 0f)
+            modifiers.SourceDamage *= SkeletronLegendHead.RedEnergySphereDamage / (float)SkeletronLegendHead.EnergySphereDamage;
+    }
+
     public override void OnHitPlayer(Player target, Player.HurtInfo info) =>
         target.AddBuff(ModContent.BuffType<AstralSuppression>(), 15 * 60);
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => SkeletronLegendHead.Mechanic7Parameters.StarDissipation(Head?.Phase2MusicElapsedTime ?? 0) < 1f

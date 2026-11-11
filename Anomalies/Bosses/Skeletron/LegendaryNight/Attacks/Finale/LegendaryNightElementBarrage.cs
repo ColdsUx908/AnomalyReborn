@@ -77,7 +77,7 @@ internal static class LegendaryNightElementBarrage
                         p.timeLeft = travelDuration;
                         p.tileCollide = false;
                         if (p.type == ProjectileID.Skull)
-                            p.ai[0] = 1f; // 跳过追踪和加速。
+                            Skull.InitializeFlight(p, Skull.Straight, Skull.UltraMaxSpeed, 1f);
                         else if (p.ModProjectile is SlimeMount mount)
                         {
                             p.ai[1] = 2f; // 直线匀速。

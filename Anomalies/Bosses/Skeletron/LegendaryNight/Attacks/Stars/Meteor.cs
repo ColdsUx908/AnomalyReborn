@@ -72,6 +72,7 @@ public sealed class Meteor : AnomalyModProjectile
         if (!Main.dedServ)
         {
             SoundEngine.PlaySound(ExplosionSound, Projectile.Center);
+            AnomalyCombatUtils.AddScreenshakeAt(Projectile.Center, 10f);
             for (int i = 0; i < 150; i++)
             {
                 Color color = Color.Lerp(new Color(255, 90, 10), LegendaryNightHandler.StarColor, Main.rand.NextFloat());

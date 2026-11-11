@@ -11,7 +11,7 @@ public sealed class RubyJewel : JewelNPC
 
     public int ShootCooldownTime => HasEnteredPhase2 ? (Aroma ? 240 : 150) : (Aroma ? 180 : 120);
 
-    private static readonly ProjectileDamageContainer _RubyJewelProjectileDamage = new(30, 52, 72, 84, 108, 132);
+    private static readonly ProjectileDamageContainer _RubyJewelProjectileDamage = new(30, 60, 72, 90, 90, 120);
     public static int RubyJewelProjectileDamage => _RubyJewelProjectileDamage.Value;
 
     public Behavior CurrentBehavior

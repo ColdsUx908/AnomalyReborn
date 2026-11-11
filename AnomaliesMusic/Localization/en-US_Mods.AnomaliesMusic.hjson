@@ -1,1 +1,30 @@
+Configs: {
+	AnomaliesMusicConfig: {
+		DisplayName: Anomalies Music Settings
 
+		Headers: {
+			Theme: Theme
+			Environment: Environment
+		}
+
+		PathwaytoReverie: {
+			Label: Pathway to Reverie
+			Tooltip: Author: 烙、被被子星
+		}
+
+		EchoesoftheAzure: {
+			Label: Echoes of the Azure
+			Tooltip: Author: 烙、被被子星
+		}
+
+		ForsakenBloodland: {
+			Label: Forsaken Bloodland
+			Tooltip: Author: 烙、被被子星
+		}
+
+		DivineLament: {
+			Label: Divine Lament
+			Tooltip: Author: 烙、被被子星
+		}
+	}
+}

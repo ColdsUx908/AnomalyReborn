@@ -12,8 +12,6 @@ public sealed class SkullWarning : AnomalyModProjectile
 {
     /// <summary>预警时刻。</summary>
     public const int WarningTime = 60;
-    /// <summary>头骨速度，以世界像素和游戏帧计量。</summary>
-    private const float SkullSpeed = 18f;
 
     // ai[0]：目标玩家索引 + 1；ai[1]：预警计时；ai[2]：所属骷髅王索引 + 1。
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
@@ -58,15 +56,7 @@ public sealed class SkullWarning : AnomalyModProjectile
         Projectile.ai[1]++;
         if (Projectile.ai[1] >= WarningTime && TONetworkEnvironment.NotClient)
         {
-            // ai[0] = 1 跳过 Skull 的追踪和加速分支，发射后保持直线匀速。
-            Projectile.NewProjectileAction(SourceAI, Projectile.Center,
-                Projectile.GetVelocityTowards(target, SkullSpeed), ProjectileID.Skull,
-                Projectile.damage, 0f, Projectile.owner, action: p =>
-                {
-                    p.ai[0] = 1f;
-                    p.timeLeft = 600;
-                    p.netUpdate = true;
-                });
+            Skull.FireFromWarning(Projectile, target);
             Projectile.Kill();
         }
     }

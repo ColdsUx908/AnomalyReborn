@@ -56,7 +56,11 @@ public sealed class LegendaryNightRitual : AnomalyModProjectile
 
         if (HasFinishedSummoning)
         {
-            if (!LegendaryNightHandler.IsLegendaryNightHead(SummonedSkeletronHeadIndex) && TONetworkEnvironment.NotClient)
+            NPC summonedHead = NPC.GetNPCFromIndex(SummonedSkeletronHeadIndex);
+            bool encounterActive = AnomalyBossChangeToggler.LegendaryNight
+                ? LegendaryNightHandler.IsLegendaryNightHead(summonedHead)
+                : summonedHead is { active: true, type: NPCID.SkeletronHead };
+            if (!encounterActive && TONetworkEnvironment.NotClient)
                 Projectile.Kill();
 
             Projectile.Center = RitualCenter + new Vector2(0f, 8f * MathF.Sin((Timer1 - RitualTime) / 60f)); //上下摆动
@@ -132,7 +136,7 @@ public sealed class LegendaryNightRitual : AnomalyModProjectile
 
         void SummonEncounter()
         {
-            IsSummoningSkeletron = true;
+            IsSummoningSkeletron = AnomalyBossChangeToggler.LegendaryNight;
             try
             {
                 SoundEngine.PlaySound(SoundID.ForceRoar);
@@ -142,13 +146,17 @@ public sealed class LegendaryNightRitual : AnomalyModProjectile
 
                 if (TONetworkEnvironment.NotClient)
                 {
-                    TOLocalizationUtils.ChatLocalizedText(AnomalySharedData.ModLocalizationPrefix + LocalizationCategory + ".Summon", LegendaryNightHandler.StarColor);
+                    if (AnomalyBossChangeToggler.LegendaryNight)
+                        TOLocalizationUtils.ChatLocalizedText(AnomalySharedData.ModLocalizationPrefix + LocalizationCategory + ".Summon", LegendaryNightHandler.StarColor);
 
                     NPC.NewNPCAction(new EntitySource_BossSpawn(Projectile.FindTargetWithinRange(2000f)), Projectile.Center, NPCID.SkeletronHead, action: n =>
                     {
                         n.Center = Projectile.Center;
                         n.netUpdate = true;
                         SummonedSkeletronHeadIndex = n.whoAmI;
+                        if (!AnomalyBossChangeToggler.LegendaryNight)
+                            return;
+
                         n.Anomaly.CustomAIType = 1;
                         Projectile.NewProjectileAction<LegendaryNightArena>(SourceAI, n.Center, Vector2.Zero, SkeletronLegendHead.ArenaDamage, 0f, action: p =>
                         {

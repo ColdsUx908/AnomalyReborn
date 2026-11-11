@@ -1,11 +1,16 @@
 using Transoceanic.Runtime.Reflection;
-namespace Anomalies.ModCompatibility;
+namespace Anomalies.ModIntegration;
 
 public sealed class AnomaliesMusicHandler : IContentLoader
 {
     public static int CurseoftheDungeon { get; private set; } = -1;
     public static int TornfromtheHeavens { get; private set; } = -1;
     public static int PathwaytoReverie { get; private set; } = -1;
+
+    // Older music packs return null and keep the theme enabled.
+    public static bool IsPathwaytoReverieEnabled => PathwaytoReverie > 0 &&
+        AnomalyModReferences.AnomaliesMusic.Mod is Mod musicMod &&
+        musicMod.Call("IsPathwaytoReverieEnabled") is not false;
 
     void IContentLoader.PostSetupContent()
     {

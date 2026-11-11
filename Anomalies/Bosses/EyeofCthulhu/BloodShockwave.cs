@@ -6,7 +6,7 @@ public sealed class BloodShockwave : BaseShockwaveProjectile
 {
     public override List<int> NPCTypesToHit => _NpcTypesToHit;
     public override int LifeTime => 150;
-    public override float FinalScale => 2.5f;
+    public override float FinalScale => 3.5f;
     public override bool UseHDTexture => true;
 
     private static readonly List<int> _NpcTypesToHit = [NPCID.ServantofCthulhu];

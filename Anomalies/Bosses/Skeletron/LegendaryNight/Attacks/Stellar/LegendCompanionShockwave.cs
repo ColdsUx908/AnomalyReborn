@@ -10,6 +10,9 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 /// </remarks>
 public sealed class LegendCompanionShockwave : LegendStellarShockwave
 {
+    private const int ShellDuration = 210;
+    private const int NebulaDuration = 270;
+
     // 吸收计数公式已给出结算伤害，不再叠加弹幕难度倍率。
     public override void SetStaticDefaults()
     {
@@ -21,7 +24,13 @@ public sealed class LegendCompanionShockwave : LegendStellarShockwave
     private bool _ImpactPlayed;
     private StellarDebrisSet _Particles;
     protected override bool YellowPalette => false;
-    protected override int Lifetime => 120;
+    protected override int Lifetime => NebulaDuration;
+    protected override string ExplosionPass => "SupernovaRemnant";
+    protected override float ShaderRadiusScale => 1.85f;
+    protected override float OuterExpansion(int age) => CoastingOuterExpansion(age);
+    protected override Vector4 RemnantState(int age) => NebulaRemnantState(age, ShellDuration);
+    protected override Vector3 InteriorState(int age) => NebulaInteriorState(age, Lifetime);
+
     private sealed class StellarDebrisSet : ParticleSet
     {
         public StellarDebrisSet() : base(0, 0f) => ParticleLimit = 1800;

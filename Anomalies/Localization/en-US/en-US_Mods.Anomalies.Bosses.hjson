@@ -55,6 +55,11 @@ QueenBee: {
 }
 
 Skeletron: {
+	Crossbone.DisplayName: Crossbone
+	BoneShockwave.DisplayName: Bone Shockwave
+	SkeletronPhase3Arena.DisplayName: Skeletron Arena
+	SkeletronSkullWarning.DisplayName: Skull Warning
+
 	LegendaryNight: {
 		SummonFailed: Legendary night has failed to begin. It requires an Ultramundane night.
 		Summon: The legendary night has begun!
@@ -83,9 +88,11 @@ Skeletron: {
 		LegendStarburst.DisplayName: Starburst
 		LegendBlueStar.DisplayName: Blue Companion Star
 		LegendCompanionShockwave.DisplayName: Stellar Impact
+		LegendTransitionShockwave.DisplayName: Golden Star Impact
 		Meteor.DisplayName: Meteor
 		PlatinumCoin.DisplayName: Platinum Coin
 		SkullWarning.DisplayName: Skull Warning
+		LegendUmbrellaSlime.DisplayName: Umbrella Slime
 		SlimeMount.DisplayName: Slime Mount
 
 		AncientBattlefieldAltarItem: {

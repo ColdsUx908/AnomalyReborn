@@ -5,204 +5,114 @@ public sealed partial class SkeletronHead
     public override bool PreAI()
     {
         using BossNetUpdateScope netUpdate = new(NPC);
+
         // Late joiners and predicted timers receive the same complete per-NPC snapshot.
-        if (Main.netMode != NetmodeID.MultiplayerClient && ++ResyncTimer >= 60f)
+        if (TONetworkEnvironment.NotClient && ++ResyncTimer >= 60f)
         {
             ResyncTimer = 0f;
             NPC.netUpdate = true;
         }
 
-        // Percent life remaining
-        float lifeRatio = NPC.life / (float)NPC.lifeMax;
-
-        // Set defense
         NPC.defense = NPC.defDefense;
         NPC.damage = NPC.defDamage;
+        NPC.reflectsProjectiles = false; //不反弹弹幕
 
-        NPC.reflectsProjectiles = false;
-
-        // Get a target
-        if (NPC.target < 0 || NPC.target >= Main.maxPlayers || Main.player[NPC.target].dead || !Main.player[NPC.target].active)
-            NPC.TargetClosest();
-        if (NPC.target < 0 || NPC.target >= Main.maxPlayers || !Main.player[NPC.target].active || Main.player[NPC.target].dead)
+        if (CurrentBehavior == Behavior.Despawn || !NPC.TargetClosestIfInvalid(true, DespawnDistance))
         {
-            NPC.velocity.Y += 0.1f;
-            NPC.EncourageDespawn(10);
+            if (TONetworkEnvironment.NotClient)
+                CurrentBehavior = Behavior.Despawn;
+            if (CurrentBehavior == Behavior.Despawn)
+                Despawn();
             return false;
         }
 
-        bool initialize = CurrentPhase == Phase.Initialize;
-        CurrentPhase = lifeRatio < Phase5LifeRatio ? Phase.Phase5
-            : lifeRatio < Phase4LifeRatio ? Phase.Phase4
-            : lifeRatio < RespawnHandsLifeRatio ? Phase.Phase3_2
-            : lifeRatio < Phase3LifeRatio ? Phase.Phase3
-            : lifeRatio < 1f ? Phase.Phase2 : Phase.Phase1;
+        if (NPC.timeLeft < 1800)
+            NPC.timeLeft = 1800;
 
-        // Spawn hands
-        if (Main.netMode != NetmodeID.MultiplayerClient)
+        if (CurrentPhase == Phase.Initialize)
         {
-            if (initialize)
-            {
-                SpawnHands();
-                NPC.netUpdate = true;
-            }
-
-            // Respawn hands
-            if (RespawnHands && AnomalyNPC.AnomalyAI32[0].F == 0f && Vector2.Distance(Main.player[NPC.target].Center, NPC.Center) > 160f)
-            {
-                AnomalyNPC.AnomalyAI32[0].F = 1f;
-                SoundEngine.PlaySound(SoundID.ForceRoar with { Pitch = SoundID.ForceRoar.Pitch - 0.25f }, NPC.Center);
-                SpawnHands();
-
-                NPC.netUpdate = true;
-            }
-
-            void SpawnHands()
+            if (TONetworkEnvironment.NotClient)
             {
                 SpawnHand(-1.3f, 0f, 0f);
                 SpawnHand(1.3f, 0f, 150f);
-                SpawnHand(-1.3f, -1f, RespawnHands ? -75f : 0f);
-                SpawnHand(1.3f, -1f, RespawnHands ? 75f : 150f);
-            }
+                SpawnHand(-1.3f, -1f, UpperHandNegativeSideInitialTimer);
+                SpawnHand(1.3f, -1f, UpperHandPositiveSideInitialTimer);
+                NPC.netUpdate = true;
 
-            void SpawnHand(float side, float verticalSide, float timer)
-            {
-                NPC.NewNPCAction(NPC.GetSource_FromAI(), NPC.Center, NPCID.SkeletronHand, NPC.whoAmI, hand =>
+                void SpawnHand(float side, float verticalSide, float timer)
                 {
-                    hand.ai[0] = side;
-                    hand.ai[1] = NPC.whoAmI;
-                    hand.ai[3] = timer;
-                    hand.target = NPC.target;
-                    hand.Anomaly.EnsureAICapacity(9, 1);
-                    hand.Anomaly.AnomalyAI32[0].F = verticalSide;
-                    hand.Anomaly.AnomalyAI32[2].F = timer;
-                    hand.netUpdate = true;
-                });
+                    NPC.NewNPCAction(SourceAI, NPC.Center, NPCID.SkeletronHand, NPC.whoAmI, hand =>
+                    {
+                        hand.ai[0] = side;
+                        hand.ai[1] = NPC.whoAmI;
+                        hand.ai[3] = timer;
+                        hand.target = NPC.target;
+                        hand.Anomaly.EnsureAICapacity(9, 1);
+                        hand.Anomaly.AnomalyAI32[0].F = verticalSide;
+                        hand.Anomaly.AnomalyAI32[2].F = timer;
+                        hand.netUpdate = true;
+                    });
+                }
             }
+
+            CurrentPhase = Phase.Phase1;
         }
 
-        // Despawn
-        if (CurrentBehavior != Behavior.Despawn)
+        int numHandsAlive = UpdateHandProtection();
+        bool handsDead = numHandsAlive == 0;
+
+        AnomalyNPC.DR = 0f;
+        AnomalyNPC.ExtraDR = 0f;
+        AnomalyNPC.BossBar_IncreasingDefenseOrDR = false;
+
+        if (TONetworkEnvironment.NotClient && handsDead && ShouldEnterPhase3)
         {
-            int despawnDistanceInTiles = 500;
-            if (Main.player[NPC.target].dead || Math.Abs(NPC.Center.X - Main.player[NPC.target].Center.X) / 16f > despawnDistanceInTiles)
-            {
-                NPC.TargetClosest();
-                if (Main.player[NPC.target].dead || Math.Abs(NPC.Center.X - Main.player[NPC.target].Center.X) / 16f > despawnDistanceInTiles)
-                    CurrentBehavior = Behavior.Despawn;
-            }
-            else if (NPC.timeLeft < 1800)
-                NPC.timeLeft = 1800;
+            Phase3HealStartLife = NPC.life;
+            CurrentPhase = Phase.PhaseChange_2To3;
+            CurrentBehavior = Behavior.PhaseChange_2To3;
+            CurrentLocalPhase = 0;
+            Timer = AttackTimer = ChargeReadiness = ChargeTelegraphTimer = 0f;
+            TeleportTimer = TeleportX = TeleportY = 0f;
+            CompletedCharges = 0;
         }
 
-        // Daytime enrage
-        if (Main.IsItDay() && CurrentBehavior != Behavior.Despawn && CurrentBehavior != Behavior.Enraged)
+        if (!IsEnteringPhase3 && !Phase3 && Main.IsItDay() && CurrentBehavior != Behavior.Enraged)
         {
             CurrentBehavior = Behavior.Enraged;
             SoundEngine.PlaySound(SoundID.ForceRoar, NPC.Center);
         }
 
-        // Hand count
-        int numHandsAlive = 0;
-        for (int i = 0; i < Main.maxNPCs; i++)
+        AnomalyNPC.BossBar_Enraged = CurrentBehavior == Behavior.Enraged;
+        switch (CurrentPhase)
         {
-            if (Main.npc[i].active && Main.npc[i].type == NPCID.SkeletronHand && Main.npc[i].ai[1] == NPC.whoAmI)
-                numHandsAlive++;
-        }
-
-        // Hand variables
-        bool handsDead = numHandsAlive == 0;
-        int numProj = Main.getGoodWorld ? 22 : 5;
-        float spread = Main.getGoodWorld ? 180 : 60;
-        float headSpinVelocityMult = Phase3 ? 12f : 4.5f;
-
-        switch (numHandsAlive)
-        {
-            case 0:
-                numProj = Main.getGoodWorld ? 36 : 9;
-                spread = Main.getGoodWorld ? 180 : 90;
-                headSpinVelocityMult = Phase3 ? 12f : 6f;
+            case Phase.PhaseChange_2To3:
+                PhaseChange_2To3AI();
                 break;
-
-            case 1:
-                numProj = Main.getGoodWorld ? 27 : 7;
-                spread = Main.getGoodWorld ? 150 : 76;
-                headSpinVelocityMult = Phase3 ? 11.5f : 5f;
+            case Phase.Phase3:
+                Phase3AI();
                 break;
-
-            case 2:
-                numProj = Main.getGoodWorld ? 18 : 6;
-                spread = Main.getGoodWorld ? 140 : 70;
-                headSpinVelocityMult = Phase3 ? 11f : 4.5f;
-                break;
-
-            case 3:
-                numProj = Main.getGoodWorld ? 15 : 5;
-                spread = Main.getGoodWorld ? 130 : 64;
-                headSpinVelocityMult = Phase3 ? 10.5f : 4f;
-                break;
-
-            case 4:
-                numProj = Main.getGoodWorld ? 12 : 4;
-                spread = Main.getGoodWorld ? 120 : 56;
-                headSpinVelocityMult = Phase3 ? 10f : 3.5f;
-                break;
-        }
-
-        headSpinVelocityMult *= 1.08f; // Very volatile value
-
-        // Velocity used to move Skeletron away from the target before charging
-        float moveAwayVelocity = headSpinVelocityMult;
-        if (!Phase3)
-            moveAwayVelocity *= 2f;
-
-        // Hand DR, scale DR up if the hands are still alive as Skeletron's HP lowers
-        NPC.chaseable = handsDead;
-        float minDR = 0f;
-        float maxDR = 0.9999f;
-        AnomalyNPC.DR = !handsDead ? (float)Math.Sqrt(MathHelper.Lerp(minDR, maxDR, RespawnHands ? (RespawnHandsLifeRatio - lifeRatio) / RespawnHandsLifeRatio : 2f - lifeRatio / RespawnHandsLifeRatio)) : minDR;
-        AnomalyNPC.ExtraDR = AnomalyNPC.DR;
-        AnomalyNPC.DR = 0f;
-        AnomalyNPC.BossBar_IncreasingDefenseOrDR = !handsDead;
-
-        // Value to start teleport dust
-        int teleportGateValue = Phase5 ? 180 : 300;
-
-        // Bool to disable skull firing after charging if teleport was recent or is about to happen
-        bool disableSkullsAfterCharge = TeleportTimer <= 60f || TeleportTimer > teleportGateValue + 60f;
-
-        UpdateTeleport();
-
-        ShootSkulls();
-
-        switch (CurrentBehavior)
-        {
-            case Behavior.Hover:
-                if (Hover())
-                    return false;
-                break;
-            case Behavior.SpinCharge:
-                SpinCharge();
-                break;
-            case Behavior.Enraged:
+            case Phase.Phase1 or Phase.Phase2 or Phase.Phase2_2 when CurrentBehavior == Behavior.Enraged:
                 Enraged();
                 break;
-            case Behavior.Despawn:
-                Despawn();
+            case Phase.Phase1:
+                Phase1AI();
+                break;
+            case Phase.Phase2 or Phase.Phase2_2:
+                Phase2AI();
                 break;
         }
 
         // Emit dust
-        if (CurrentBehavior != Behavior.Enraged && CurrentBehavior != Behavior.Despawn && numHandsAlive != 0)
+        if (CurrentBehavior != Behavior.Enraged && numHandsAlive != 0)
         {
             Dust.NewDustAction(new Vector2(NPC.Center.X - 15f - NPC.velocity.X * 5f, NPC.position.Y + NPC.height - 2f) + new Vector2(30 / 2f, 10 / 2f), 30, 10, DustID.Blood, new Vector2(-NPC.velocity.X * 0.2f, 3f), dust =>
             {
                 dust.alpha = 0;
                 dust.scale *= 2f;
                 dust.noGravity = true;
-                dust.velocity.X = dust.velocity.X * 1.3f;
-                dust.velocity.X = dust.velocity.X + NPC.velocity.X * 0.4f;
-                dust.velocity.Y = dust.velocity.Y + (2f + NPC.velocity.Y);
+                dust.velocity.X *= 1.3f;
+                dust.velocity.X += NPC.velocity.X * 0.4f;
+                dust.velocity.Y += (2f + NPC.velocity.Y);
             });
             for (int j = 0; j < 2; j++)
             {
@@ -212,346 +122,450 @@ public sealed partial class SkeletronHead
                     dust.scale *= 2f;
                     dust.noGravity = true;
                     dust.velocity -= NPC.velocity;
-                    dust.velocity.Y = dust.velocity.Y + 5f;
+                    dust.velocity.Y += 5f;
                 });
             }
         }
 
         return false;
 
-        void UpdateTeleport()
+        int UpdateHandProtection()
         {
-            // Teleport while not despawning
-            if (CurrentBehavior != Behavior.Despawn)
+            int count = CountLivingHands();
+            NPC.dontTakeDamage = count > 0;
+            NPC.chaseable = count == 0;
+            return count;
+        }
+
+        void Phase1AI()
+        {
+            switch (CurrentBehavior)
             {
-                int dustType = DustID.GemDiamond;
+                case Behavior.Hover:
+                    Hover();
+                    break;
+                case Behavior.Spin:
+                    Spin();
+                    break;
+            }
 
-                // Post-teleport
-                if (TeleportTimer == -60f)
+            void Hover()
+            {
+                if (TONetworkEnvironment.NotClient && handsDead && CurrentLocalPhase != 2)
                 {
-                    TeleportTimer = 0f;
+                    CurrentLocalPhase = 2;
+                    Timer = 0f;
+                    ChargeTelegraphTimer = 0f;
+                }
 
-                    SoundEngine.PlaySound(SoundID.Item66, NPC.Center);
-
-                    // Fire skulls after teleport
-                    if (Collision.CanHit(NPC.Center, 1, 1, Main.player[NPC.target].position, Main.player[NPC.target].width, Main.player[NPC.target].height))
-                    {
-                        if (Main.netMode != NetmodeID.MultiplayerClient)
+                if (CurrentLocalPhase != 2)
+                    AttackTimer++;
+                switch (CurrentLocalPhase)
+                {
+                    case 0 when AttackTimer <= 0f: //悬停静默期，等待攻击计时恢复
+                        break;
+                    case 0: //静默期结束，当帧开始普通射击
+                        CurrentLocalPhase = 1;
+                        goto case 1;
+                    case 1: //普通悬停射击并累积旋转蓄力
+                        FireHoverSkulls(SkullInterval);
+                        Timer += ChargeGateValue / WithHandsDuration;
+                        if (TONetworkEnvironment.NotClient && Timer >= ChargeGateValue)
                         {
-                            int type = ProjectileID.Skull;
+                            BeginSpin(Behavior.Spin, 0);
+                            return;
+                        }
+                        break;
+                    case 2: //双手被击败后静默蓄力，随后开始无手旋转
+                        Timer++;
+                        if (TONetworkEnvironment.NotClient && Timer >= HandsClearedHoverQuietDuration)
+                            BeginSpin(Behavior.Spin, 1);
+                        else
+                            MoveWhileHovering();
+                        return;
+                }
 
-                            // Inverse parabolic projectile spreads
-                            Vector2 baseVel = (Main.player[NPC.target].Center - NPC.Center).SafeNormalize(Vector2.UnitY) * 6f;
-                            Vector2 firingPos = NPC.Center + baseVel * 5f;
-                            float centralCount = 0.5f * (numProj - 1f);
-                            for (int i = 0; i < numProj; i++)
-                            {
-                                float offset = MathHelper.ToRadians(MathHelper.Lerp(-spread * 0.5f, spread * 0.5f, i / (numProj - 1f)));
-                                float velocityMult = MathHelper.Lerp(0.5f, 1.5f, MathF.Abs(centralCount - i) / centralCount);
-                                Projectile.NewProjectileAction(NPC.GetSource_FromAI(), firingPos, baseVel.RotatedBy(offset) * velocityMult, type, SkullDamage, 0f, Main.myPlayer, action: p =>
-                                {
-                                    p.ai[0] = Skull.AcceleratingCrossbone;
-                                    p.timeLeft = 600;
-                                });
-                            }
+                ChargeTelegraphTimer = Math.Min(Timer, ChargeGateValue);
+                MoveWhileHovering();
+            }
 
+            void Spin()
+            {
+                BeginSpinFrame(SoundID.ForceRoar);
+                FadeChargeTelegraph();
+
+                switch (CurrentLocalPhase)
+                {
+                    case 0 when TONetworkEnvironment.NotClient && handsDead: //旋转中双手被击败，切换到无手旋转计时
+                        float remaining = Math.Clamp(WithHandsDuration - Timer, HandsClearedMinSpinRemaining, HandsClearedSpinDuration);
+                        Timer = HandsClearedSpinDuration - remaining;
+                        CurrentLocalPhase = 1;
+                        goto case 1;
+                    case 0: //双手仍存活，沿用有手旋转时长
+                        TrackTarget(WithHandsDuration);
+                        break;
+                    case 1: //无手旋转，追踪玩家
+                        TrackTarget(HandsClearedSpinDuration);
+                        break;
+                }
+
+                void TrackTarget(float duration)
+                {
+                    if (TONetworkEnvironment.NotClient && Timer >= duration)
+                        FinishSpin();
+                    else
+                        SkeletronHandler.SpinMovement(NPC, Target, SpinSpeed, SkeletronHandler.GetSpinMoveSpeed(NPC.Distance(Target.Center)) * 0.8f);
+                }
+            }
+        }
+
+        void Phase2AI()
+        {
+            switch (CurrentBehavior)
+            {
+                case Behavior.Hover:
+                    Hover();
+                    break;
+                case Behavior.SkullWarningSpin:
+                    SkullWarningSpin();
+                    break;
+                case Behavior.ForwardSkullSpin:
+                    ForwardSkullSpin();
+                    break;
+                case Behavior.TripleSpinCharge:
+                    TripleSpinCharge();
+                    break;
+            }
+
+            void Hover()
+            {
+                int shockwaveTime = HasCompletedNormalHover ? 0
+                    : (int)MathF.Round(MathHelper.Lerp(MinNormalSkullDuration, MaxNormalSkullDuration, HoverLifeRatio));
+                AttackTimer++;
+                switch (CurrentLocalPhase)
+                {
+                    case 0 when AttackTimer <= 0f: //悬停静默期，等待攻击计时恢复
+                        break;
+                    case 0 when HasCompletedNormalHover: //后续轮次跳过普通射击与冲击波，直接开始快速射击
+                        CurrentLocalPhase = 2;
+                        goto case 2;
+                    case 0: //静默期结束，当帧开始普通射击
+                        CurrentLocalPhase = 1;
+                        goto case 1;
+                    case 1 when AttackTimer > shockwaveTime: //普通射击结束，切换到快速射击
+                        CurrentLocalPhase = 2;
+                        goto case 2;
+                    case 1: //普通射击，在指定帧释放冲击波
+                        bool releaseShockwave = AttackTimer == shockwaveTime && TONetworkEnvironment.NotClient;
+                        if (releaseShockwave)
+                        {
+                            RapidSkullDuration = (int)MathF.Round(MathHelper.Lerp(MinRapidSkullDuration, MaxRapidSkullDuration, NPC.LifeRatio));
                             NPC.netUpdate = true;
                         }
-                    }
 
-                    // Teleport dust
-                    for (int m = 0; m < 30; m++)
-                    {
-                        Dust.NewDustAction(NPC.position + new Vector2(NPC.width / 2f, NPC.height / 2f), NPC.width, NPC.height, dustType, new Vector2(0f, 0f), dust =>
-                        {
-                            dust.alpha = 100;
-                            dust.scale *= 3f;
-                            dust.noGravity = true;
-                            dust.velocity.X *= 2f;
-                        });
-                    }
+                        if (AttackTimer < shockwaveTime + RapidSkullDuration - QuietDuration)
+                            FireHoverSkulls(SkullInterval);
+
+                        if (releaseShockwave)
+                            Projectile.NewProjectileAction<BoneShockwave>(SourceAI, NPC.Center, Vector2.Zero, 0, 0f, action: p => p.scale = 0f);
+                        break;
+                    case 2: // 快速射击，收尾静默期停止发射
+                        if (AttackTimer < shockwaveTime + RapidSkullDuration - QuietDuration)
+                            FireHoverSkulls(EnhancedSkullInterval);
+                        break;
                 }
 
-                // Teleport after a certain time
-                // If hands are dead: 7 seconds
-                // If hands are not dead: 14 seconds
-                // If hands are dead in phase 2: 4.7 seconds
-                TeleportTimer += 1f + (((Phase2 && handsDead) || Phase4) ? 0.5f : 0f) - (handsDead ? 0f : 0.5f);
+                int hoverDuration = shockwaveTime + RapidSkullDuration;
+                if (AttackTimer > 0f)
+                    Timer = ChargeGateValue * AttackTimer / hoverDuration;
+                ChargeTelegraphTimer = Math.Min(Timer, ChargeGateValue);
 
-                // Dust to show teleport
-                int ai3 = (int)TeleportTimer; // 0 to 30, and -60
-
-                if (ChargeReadiness == 1f && TeleportX == 0f && TeleportY == 0f)
+                if (TONetworkEnvironment.NotClient && AttackTimer >= hoverDuration)
                 {
-                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                    AdvancePhase2Subphase();
+                    Behavior nextSpin = NextEnhancedSpin;
+                    BeginSpin(nextSpin, 0);
+                    NextEnhancedSpin = nextSpin switch
                     {
-                        Vector2 skullFaceDirection = NPC.Center + new Vector2(NPC.direction * 20, 6f);
-                        Vector2 skullTargetDirection = Main.player[NPC.target].Center - skullFaceDirection;
-                        Point skullTileCoords = NPC.Center.ToTileCoordinates();
-                        Point targetTileCoords = Main.player[NPC.target].Center.ToTileCoordinates();
-                        int randomTeleportOffset = 20 - (int)Math.Ceiling(MathHelper.Lerp(0f, 10f, 1f - lifeRatio));
-                        int skullPositionOffset = 4;
-                        int targetPositionOffset = randomTeleportOffset - 4;
-                        int teleportTries = 0;
+                        Behavior.SkullWarningSpin => Behavior.TripleSpinCharge,
+                        Behavior.TripleSpinCharge => Behavior.ForwardSkullSpin,
+                        _ => Behavior.SkullWarningSpin,
+                    };
+                    return;
+                }
 
-                        bool targetTooFar = false;
-                        if (skullTargetDirection.Length() > 2000f)
-                            targetTooFar = true;
+                MoveWhileHovering();
+            }
 
-                        while (!targetTooFar && teleportTries < 100)
+            void SkullWarningSpin() =>
+                UpdateWarningSpin(SkullWarningInterval, EnhancedSpinDuration, forwardSkullSpin: false);
+
+            void ForwardSkullSpin() =>
+                UpdateWarningSpin(ForwardSkullInterval, ForwardSkullSpinDuration, forwardSkullSpin: true);
+
+            void UpdateWarningSpin(int interval, int duration, bool forwardSkullSpin)
+            {
+                BeginSpinFrame(SoundID.ForceRoar);
+                switch (CurrentLocalPhase)
+                {
+                    case 0 when AttackTimer > duration - SkeletronSkullWarning.WarningTime: //预警窗口结束，切换到旋转收尾
+                        CurrentLocalPhase = 1;
+                        break;
+                    case 0: //旋转中按间隔生成骷髅预警
+                        if (TONetworkEnvironment.NotClient)
+                            SpawnSkullWarnings(forwardSkullSpin, interval);
+                        break;
+                    case 1: //旋转收尾，停止生成预警
+                        break;
+                }
+
+                FadeChargeTelegraph();
+
+                if (TONetworkEnvironment.NotClient && AttackTimer >= duration + WarningSpinQuietDuration)
+                    FinishSpin();
+                else
+                    SkeletronHandler.SpinMovement(NPC, Target, SpinSpeed, SkeletronHandler.GetSpinMoveSpeed(NPC.Distance(Target.Center)));
+
+                void SpawnSkullWarnings(bool forwardSkullSpin, int interval)
+                {
+                    if (AttackTimer % interval != 0f)
+                        return;
+
+                    Player warningTarget = Target;
+                    if (forwardSkullSpin)
+                    {
+                        Vector2 forward = warningTarget.velocity.SafeNormalize(new Vector2(warningTarget.direction, 0f));
+                        float arc = MathHelper.ToRadians(ForwardSkullArc);
+                        int count = ForwardSkullCount;
+                        for (int i = 0; i < count; i++)
                         {
-                            teleportTries++;
-                            int teleportTileX = Main.rand.Next(targetTileCoords.X - randomTeleportOffset, targetTileCoords.X + randomTeleportOffset + 1);
-                            int teleportTileY = Main.rand.Next(targetTileCoords.Y - randomTeleportOffset, targetTileCoords.Y + randomTeleportOffset + 1);
-                            if ((teleportTileY < targetTileCoords.Y - targetPositionOffset || teleportTileY > targetTileCoords.Y + targetPositionOffset || teleportTileX < targetTileCoords.X - targetPositionOffset || teleportTileX > targetTileCoords.X + targetPositionOffset) && (teleportTileY < skullTileCoords.Y - skullPositionOffset || teleportTileY > skullTileCoords.Y + skullPositionOffset || teleportTileX < skullTileCoords.X - skullPositionOffset || teleportTileX > skullTileCoords.X + skullPositionOffset) && WorldGen.InWorld(teleportTileX, teleportTileY, 10) && !Main.tile[teleportTileX, teleportTileY].HasUnactuatedTile)
-                            {
-                                // New location params
-                                TeleportX = teleportTileX * 16;
-                                TeleportY = teleportTileY * 16;
-                                NPC.netUpdate = true;
-                                break;
-                            }
+                            float angle = MathHelper.Lerp(-arc / 2f, arc / 2f, i / (float)(count - 1));
+                            Vector2 offset = forward.RotatedBy(angle) * ForwardSkullRadius;
+                            SpawnWarning(offset);
+                            if (Phase2_2)
+                                SpawnWarning(-offset);
                         }
                     }
-                }
-
-                // Teleport location telegraph
-                if (TeleportX != 0f && TeleportY != 0f)
-                {
-                    for (int m = 0; m < 5; m++)
+                    else
                     {
-                        Vector2 position = new Vector2(TeleportX, TeleportY);
-                        Dust.NewDustAction(position + new Vector2(NPC.width / 2f, NPC.height / 2f), NPC.width, NPC.height, dustType, new Vector2(0f, 0f), dust =>
+                        float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                        int count = Phase2_2 ? Phase22SkullWarningCount : SkullWarningCount;
+                        for (int i = 0; i < count; i++)
                         {
-                            dust.alpha = 100;
-                            dust.scale *= 2f;
-                            dust.noGravity = true;
-                        });
+                            Vector2 offset = new Vector2(Main.rand.NextFloat(800f, 1000f), 0f)
+                                .RotatedBy(angle + MathHelper.TwoPi * i / count);
+                            SpawnWarning(offset);
+                        }
                     }
-                }
 
-                // Teleport
-                if (Main.netMode != NetmodeID.MultiplayerClient && ChargeReadiness == 0f && CurrentBehavior != Behavior.SpinCharge && TeleportX != 0f && TeleportY != 0f)
-                {
-                    // Teleport dust
-                    for (int m = 0; m < 30; m++)
+                    void SpawnWarning(Vector2 offset)
                     {
-                        Dust.NewDustAction(NPC.position + new Vector2(NPC.width / 2f, NPC.height / 2f), NPC.width, NPC.height, dustType, new Vector2(0f, 0f), dust =>
-                        {
-                            dust.alpha = 100;
-                            dust.scale *= 3f;
-                            dust.noGravity = true;
-                            dust.velocity.X *= 2f;
-                        });
+                        Projectile.NewProjectileAction<SkeletronSkullWarning>(SourceAI,
+                            warningTarget.Center + offset, Vector2.Zero, SkullDamage, 0f, action: p =>
+                            {
+                                p.ai[0] = warningTarget.whoAmI + 1;
+                                p.ai[2] = SkeletronSkullWarning.EncodeSource(NPC.whoAmI, forwardSkullSpin);
+                            });
                     }
-
-                    // New location
-                    NPC.Center = new Vector2(TeleportX, TeleportY);
-                    foreach (NPC hand in Main.npc)
-                    {
-                        if (!hand.active || hand.type != NPCID.SkeletronHand || hand.ai[1] != NPC.whoAmI)
-                            continue;
-                        hand.Center = NPC.Center;
-                        hand.velocity = Vector2.Zero;
-                        hand.netUpdate = true;
-                    }
-                    NPC.velocity = Vector2.Zero;
-
-                    TeleportTimer = -60f;
-                    TeleportX = TeleportY = 0f;
-                    NPC.netUpdate = true;
                 }
             }
-        }
 
-        void ShootSkulls()
-        {
-            // Skull shooting
-            if (handsDead && CurrentBehavior == Behavior.Hover && !Phase4)
+            void TripleSpinCharge()
             {
-                float skullProjFrequency = Phase2 ? (48f - (10f * (1f - lifeRatio))) : 60f;
-                if (Main.getGoodWorld)
-                    skullProjFrequency *= 0.8f;
-                skullProjFrequency = (float)Math.Ceiling(skullProjFrequency);
-
-                if (Main.netMode != NetmodeID.MultiplayerClient && AttackTimer % skullProjFrequency == 0f && AttackTimer > 45f)
+                switch (CurrentLocalPhase)
                 {
-                    Vector2 skullFiringPos = NPC.Center;
-                    float skullProjTargetX = Main.player[NPC.target].Center.X - skullFiringPos.X;
-                    float skullProjTargetY = Main.player[NPC.target].Center.Y - skullFiringPos.Y;
-                    if (Collision.CanHit(skullFiringPos, 1, 1, Main.player[NPC.target].position, Main.player[NPC.target].width, Main.player[NPC.target].height))
-                    {
-                        float skullProjSpeed = Phase2 ? (5f + (1f * (1f - lifeRatio))) : 4f;
-                        int spread2 = 50;
-                        Vector2 skullProjDirection = new Vector2(skullProjTargetX + Main.rand.Next(-spread2, spread2 + 1) * 0.01f, skullProjTargetY + Main.rand.Next(-spread2, spread2 + 1) * 0.01f).SafeNormalize(Vector2.UnitY);
-                        skullProjDirection *= skullProjSpeed;
-                        skullProjDirection += NPC.velocity;
-                        skullFiringPos += skullProjDirection * 5f;
-
-                        int type = ProjectileID.Skull;
-
-                        Projectile.NewProjectileAction(NPC.GetSource_FromAI(), skullFiringPos, skullProjDirection, type, SkullDamage, 0f, Main.myPlayer, action: p =>
+                    case 0: //后撤并蓄力，为下一次冲锋拉开距离
+                        RetreatForCharge();
+                        return;
+                    case 1: //追踪玩家并准备锁定冲锋方向
+                    case 2: //锁定方向后继续冲锋，直到本次冲锋结束
+                        BeginSpinFrame(SoundID.ForceRoarPitched);
+                        FadeChargeTelegraph();
+                        if (TONetworkEnvironment.NotClient && Timer >= SpinChargeDuration) //冲锋结束
                         {
-                            p.ai[0] = Skull.Homing;
-                            p.timeLeft = 600;
-                        });
-                        if (handsDead)
-                        {
-                            skullProjDirection = new Vector2(skullProjTargetX, skullProjTargetY).SafeNormalize(Vector2.UnitY);
-                            skullProjDirection *= skullProjSpeed * 2f;
-                            Projectile.NewProjectileAction(NPC.GetSource_FromAI(), skullFiringPos, skullProjDirection, type, SkullDamage, 0f, Main.myPlayer, action: p =>
+                            //释放头骨弹幕
+
+                            FireChargeEndSkulls();
+                            if (++CompletedCharges < ChargesPerRound)
                             {
-                                p.ai[0] = Skull.AcceleratingCrossbone;
+                                Timer = AttackTimer = 0f;
+                                CurrentLocalPhase = 0;
+                                RetreatForCharge();
+                            }
+                            else
+                                FinishSpin();
+                            return;
+                        }
+                        break;
+                }
+
+                NPC.rotation += NPC.direction * SpinSpeed;
+                float trackingEndTime = SpinChargeDuration * 0.9f;
+                if (CurrentLocalPhase != 1 || Timer >= trackingEndTime)
+                    return;
+
+                Player target = Target;
+                float distance = NPC.Distance(target.Center);
+                if (distance > ChargeDistance || Timer == 1f)
+                {
+                    float speed = SkeletronHandler.GetSpinMoveSpeed(distance) * ChargeTrackingSpeedMultiplier;
+                    NPC.velocity = (target.Center - NPC.Center).SafeNormalize(Vector2.UnitY) * (speed + 2f);
+                }
+                else if (TONetworkEnvironment.NotClient)
+                {
+                    CurrentLocalPhase = 2;
+                    Timer = trackingEndTime;
+                }
+
+                void FireChargeEndSkulls()
+                {
+                    if (Phase2_2 && CompletedCharges == ChargesPerRound - 1)
+                    {
+                        int fanCount = FinalChargeFanCount;
+                        float halfAngle = MathHelper.ToRadians(FinalChargeFanHalfAngle);
+                        float speed = FinalChargeSkullSpeed;
+                        float maxSpeed = FinalChargeSkullMaxSpeed;
+                        Vector2 aim = (Target.Center - NPC.Center).SafeNormalize(Vector2.UnitY);
+
+                        //致敬灾厄的扇形头骨
+                        for (int i = 0; i <= fanCount; i++)
+                        {
+                            float angle = MathHelper.Lerp(-halfAngle, halfAngle, i / (fanCount - 1f));
+                            Vector2 direction = aim.RotatedBy(angle);
+                            Vector2 position = NPC.Center - direction * FinalChargeSpawnOffset;
+                            Vector2 velocity = direction * speed;
+                            FireSkullMode(Skull.Homing);
+                            FireSkullMode(Skull.Straight);
+
+                            void FireSkullMode(int mode) =>
+                                Projectile.NewProjectileAction(SourceAI, position, velocity, ProjectileID.Skull, SkullDamage, 0f, action: p =>
+                                {
+                                    Skull.InitializeFlight(p, mode, maxSpeed, Skull.RegularAcceleration);
+                                    Skull.SetSource(p, NPC);
+                                    p.timeLeft = 600;
+                                });
+                        }
+                    }
+                    else
+                    {
+                        float firstAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+                        float centerAngle = firstAngle + ChargeEndSkullSpacing * (ChargeEndSkullCount - 1) / 2f;
+                        Vector2 centerVelocity = centerAngle.ToRotationVector2() * ChargeEndSkullSpeed;
+                        Projectile.NewProjectilesArc(ChargeEndSkullCount, ChargeEndSkullSpacing, SourceAI, NPC.Center,
+                            centerVelocity, ProjectileID.Skull, SkullDamage, 0f, action: p =>
+                            {
+                                Skull.InitializeFlight(p, Skull.Homing, RadialSkullMaxSpeed, RadialSkullAcceleration,
+                                    homingStartFrame: RadialSkullHomingStartFrame, homingDuration: RadialSkullHomingDuration);
+                                Skull.SetSource(p, NPC);
                                 p.timeLeft = 600;
                             });
-                        }
+                    }
+                }
 
-                        NPC.netUpdate = true;
+                void RetreatForCharge()
+                {
+                    Timer++;
+                    Vector2 away = NPC.Center - Target.Center;
+                    float moveAwayVelocity = SpinBaseMoveSpeed * RetreatSpeedMultiplier;
+                    float speed = moveAwayVelocity * MathHelper.Lerp(0.35f, 1f, Math.Min(Timer / ChargeRetreatDuration, 1f));
+                    NPC.velocity = away.SafeNormalize(-Vector2.UnitY) * speed;
+                    NPC.rotation += NPC.direction * SpinSpeed;
+                    ChargeTelegraphTimer = MathHelper.Lerp(ChargeGateValue - ChargeTelegraphTime, ChargeGateValue,
+                        Math.Min(Timer / ChargeRetreatDuration, 1f));
+
+                    if (TONetworkEnvironment.NotClient && Timer >= ChargeRetreatDuration
+                        && (away.LengthSquared() >= ChargeDistance * ChargeDistance || Timer >= MaxChargeRetreatDuration))
+                    {
+                        Timer = 0f;
+                        CurrentLocalPhase = 1;
                     }
                 }
             }
         }
 
-        bool Hover()
+        void BeginSpin(Behavior behavior, int localPhase)
         {
-            AttackTimer += 1f;
-            float chargePhaseChangeRateBoost = Phase5 ? 24f : Phase4 ? 6f : (4.5f * ((1f - lifeRatio) / (1f - Phase4LifeRatio)));
+            Timer = AttackTimer = 0f;
+            CurrentBehavior = behavior;
+            CurrentLocalPhase = localPhase;
+            ChargeReadiness = 1f;
+            ChargeTelegraphTimer = ChargeGateValue;
+        }
+
+        void FireHoverSkulls(int interval)
+        {
+            if (!TONetworkEnvironment.NotClient)
+                return;
+
+            int age = (int)AttackTimer;
             if (!handsDead)
-                chargePhaseChangeRateBoost *= 0.25f;
+                interval *= 2;
+            if (age <= SkullInterval || age % interval != 0)
+                return;
 
-            float chargePhaseChangeRate = chargePhaseChangeRateBoost + 1f;
-            Timer += chargePhaseChangeRate;
-            ChargeTelegraphTimer += chargePhaseChangeRate;
-            float chargePhaseGateValue = ChargeGateValue;
-            if (ChargeTelegraphTimer > chargePhaseGateValue)
-                ChargeTelegraphTimer = chargePhaseGateValue;
-
-            float forcedMoveAwayTime = 30f;
-            float canChargeDistance = 320f; // 20 tile distance
-            bool hasMovedForcedDistance = RetreatTimer >= forcedMoveAwayTime;
-            bool canCharge = Vector2.Distance(Main.player[NPC.target].Center, NPC.Center) >= canChargeDistance;
-            bool charge = Timer >= chargePhaseGateValue && canCharge;
-            bool forceCharge = Timer > chargePhaseGateValue + 120f;
-            if (charge || forceCharge)
+            Player target = Target;
+            SkeletronHandler.FireSkull(NPC, target, HoverDoubleSkullChanceDenominator > 0 && Main.rand.NextBool(HoverDoubleSkullChanceDenominator) ? 2 : 1, TOMathUtils.PiOver10, HeadSkullSpeed,
+                SkullDamage, addNPCVelocity: false);
+            if (Phase2_2)
             {
-                RetreatTimer += 1f;
-                if ((hasMovedForcedDistance || !Phase3) && Main.netMode != NetmodeID.MultiplayerClient)
-                {
-                    Timer = 0f;
-                    CurrentBehavior = Behavior.SpinCharge;
-                    CurrentLocalPhase = 0;
-                    ChargeReadiness = 1f;
-                    ChargeTelegraphTimer = chargePhaseGateValue;
-                    RetreatTimer = 0f;
-                    AttackTimer = 0f;
-
-                    NPC.netUpdate = true;
-                }
+                float speed = HoverCrossboneSpeed;
+                Vector2 direction = (target.Center - NPC.Center).SafeNormalize(Vector2.UnitY);
+                Vector2 position = NPC.Center + direction * HeadSkullSpeed
+                    + new Vector2(0f, 25f * NPC.scale).RotatedBy(NPC.rotation);
+                Crossbone.Fire(NPC, position, direction * speed, SkullDamage,
+                    CrossboneMaxSpeed);
             }
+        }
 
-            float headYAcceleration = Main.getGoodWorld ? 0.07f : (0.06f + 0.04f * (1f - lifeRatio));
+        void MoveWhileHovering()
+        {
+            float headYAcceleration = HoverBaseAccelerationY + HoverLowHealthAccelerationY * (1f - (float)NPC.LifeRatio);
             float headYTopSpeed = headYAcceleration * 100f;
-            float headXAcceleration = Main.getGoodWorld ? 0.21f : (0.16f + 0.08f * (1f - lifeRatio));
+            float headXAcceleration = HoverBaseAccelerationX + HoverLowHealthAccelerationX * (1f - (float)NPC.LifeRatio);
             float headXTopSpeed = headXAcceleration * 100f;
-            float deceleration = Main.getGoodWorld ? 0.83f : 0.86f;
-
-            float moveAwayGateValue = chargePhaseGateValue - (5f + chargePhaseChangeRate);
-            bool moveAwayBeforeCharge = Timer >= moveAwayGateValue;
-            if (CurrentBehavior == Behavior.Hover)
-                CurrentLocalPhase = moveAwayBeforeCharge ? 1 : 0;
-            if (moveAwayBeforeCharge)
-            {
-                if (!canCharge || !hasMovedForcedDistance)
-                {
-                    float phase5Multiplier = 1.2f;
-                    float maxVelocity = (Timer - moveAwayGateValue) * (moveAwayVelocity * 0.002f);
-                    if (Phase5)
-                        maxVelocity *= phase5Multiplier;
-
-                    float maxVelocityCap = moveAwayVelocity;
-                    if (Phase5)
-                        maxVelocityCap *= phase5Multiplier;
-                    if (maxVelocity > maxVelocityCap)
-                        maxVelocity = maxVelocityCap;
-
-                    NPC.velocity = (Main.player[NPC.target].Center - NPC.Center).SafeNormalize(Vector2.UnitY) * -maxVelocity;
-                }
-
-                // New charge attack
-                if (Phase3)
-                {
-                    NPC.rotation += NPC.direction * 0.3f;
-
-                    if (ChargeReadiness == 0f)
-                    {
-                        ChargeReadiness = 1f;
-                        NPC.netUpdate = true;
-
-                        SoundEngine.PlaySound(SoundID.ForceRoar, NPC.Center);
-                    }
-                }
-                else
-                    NPC.rotation = NPC.velocity.X / 15f;
-
-                return true;
-            }
-
             float rotation = NPC.velocity.X / 15f;
-            NormalMovement(NPC, Main.player[NPC.target], headXTopSpeed, headYTopSpeed,
+            SkeletronHandler.NormalMovement(NPC, Target, headXTopSpeed, headYTopSpeed,
                 headXAcceleration, headYAcceleration, 250f);
             NPC.rotation = rotation;
-
-            return false;
         }
 
-        void SpinCharge()
+        void BeginSpinFrame(SoundStyle roar)
         {
-            if (Main.getGoodWorld)
-                NPC.reflectsProjectiles = true;
-            if (Aroma)
+            if (Aroma && TONetworkEnvironment.NotClient && Timer == 0f && CompletedCharges == 0)
             {
-                if (Main.netMode != NetmodeID.MultiplayerClient && Timer == 0f)
+                if (NPC.CountNPCS(NPCID.DarkCaster) < 6)
                 {
-                    if (NPC.CountNPCS(NPCID.DarkCaster) < 6)
+                    for (int i = 0; i < 1000; i++)
                     {
-                        for (int i = 0; i < 1000; i++)
+                        int headYAcceleration = (int)(NPC.Center.X / 16f) + Main.rand.Next(-50, 51);
+                        int headYTopSpeed;
+                        for (headYTopSpeed = (int)(NPC.Center.Y / 16f) + Main.rand.Next(-50, 51); headYTopSpeed < Main.maxTilesY - 10 && !WorldGen.SolidTile(headYAcceleration, headYTopSpeed); headYTopSpeed++)
+                            continue;
+
+                        headYTopSpeed--;
+                        if (!WorldGen.SolidTile(headYAcceleration, headYTopSpeed))
                         {
-                            int headYAcceleration = (int)(NPC.Center.X / 16f) + Main.rand.Next(-50, 51);
-                            int headYTopSpeed;
-                            for (headYTopSpeed = (int)(NPC.Center.Y / 16f) + Main.rand.Next(-50, 51); headYTopSpeed < Main.maxTilesY - 10 && !WorldGen.SolidTile(headYAcceleration, headYTopSpeed); headYTopSpeed++)
-                            {
-                            }
-
-                            headYTopSpeed--;
-                            if (!WorldGen.SolidTile(headYAcceleration, headYTopSpeed))
-                            {
-                                NPC.NewNPCAction(NPC.GetSource_FromAI(), new Vector2(headYAcceleration * 16 + 8, headYTopSpeed * 16), NPCID.DarkCaster);
-
-                                break;
-                            }
+                            NPC.NewNPCAction(SourceAI, new Vector2(headYAcceleration * 16 + 8, headYTopSpeed * 16), NPCID.DarkCaster);
+                            break;
                         }
                     }
+                }
 
-                    if (Aroma)
+                if (!NPC.AnyNPCs(NPCID.DiabolistWhite))
+                {
+                    for (int i = 0; i < 1000; i++)
                     {
-                        if (!NPC.AnyNPCs(NPCID.DiabolistWhite))
+                        int headYAcceleration = (int)(NPC.Center.X / 16f) + Main.rand.Next(-50, 51);
+                        int headYTopSpeed;
+                        for (headYTopSpeed = (int)(NPC.Center.Y / 16f) + Main.rand.Next(-50, 51); headYTopSpeed < Main.maxTilesY - 10 && !WorldGen.SolidTile(headYAcceleration, headYTopSpeed); headYTopSpeed++)
+                            continue;
+
+                        headYTopSpeed--;
+                        if (!WorldGen.SolidTile(headYAcceleration, headYTopSpeed))
                         {
-                            for (int i = 0; i < 1000; i++)
-                            {
-                                int headYAcceleration = (int)(NPC.Center.X / 16f) + Main.rand.Next(-50, 51);
-                                int headYTopSpeed;
-                                for (headYTopSpeed = (int)(NPC.Center.Y / 16f) + Main.rand.Next(-50, 51); headYTopSpeed < Main.maxTilesY - 10 && !WorldGen.SolidTile(headYAcceleration, headYTopSpeed); headYTopSpeed++)
-                                {
-                                }
+                            NPC.NewNPCAction(SourceAI, new Vector2(headYAcceleration * 16 + 8, headYTopSpeed * 16), NPCID.DiabolistWhite);
 
-                                headYTopSpeed--;
-                                if (!WorldGen.SolidTile(headYAcceleration, headYTopSpeed))
-                                {
-                                    NPC.NewNPCAction(NPC.GetSource_FromAI(), new Vector2(headYAcceleration * 16 + 8, headYTopSpeed * 16), NPCID.DiabolistWhite);
-
-                                    break;
-                                }
-                            }
+                            break;
                         }
                     }
                 }
@@ -560,13 +574,15 @@ public sealed partial class SkeletronHead
             NPC.defense = NPC.defDefense - 10;
             NPC.damage = (int)Math.Round(NPC.defDamage * SpinDamageMult);
 
-            float phaseChangeRateBoost = Phase3 ? 0f : 1f - (lifeRatio - Phase3LifeRatio) / (1f - Phase3LifeRatio);
-            Timer += 1f + phaseChangeRateBoost;
+            Timer++;
 
             AttackTimer += 1f;
             if (AttackTimer == 2f)
-                SoundEngine.PlaySound(Phase3 ? SoundID.ForceRoarPitched : SoundID.ForceRoar, NPC.Center);
+                SoundEngine.PlaySound(roar, NPC.Center);
+        }
 
+        void FadeChargeTelegraph()
+        {
             // Reset telegraph timer to create color fade
             if (ChargeTelegraphTimer > 0f)
             {
@@ -577,97 +593,172 @@ public sealed partial class SkeletronHead
                     NPC.netUpdate = true;
                 }
             }
+        }
 
-            bool dontGoMach10 = false;
-            float dashPhaseTime = 210f;
-            //Netmode check fixes issues where attack ends at different times for server vs clients
-            if (Timer >= dashPhaseTime && Main.netMode != NetmodeID.MultiplayerClient)
+        void FinishSpin()
+        {
+            if (Aroma)
             {
-                if (Aroma)
+                if (TONetworkEnvironment.NotClient && NPC.CountNPCS(NPCID.DarkCaster) < 6)
                 {
-                    if (Main.netMode != NetmodeID.MultiplayerClient && NPC.CountNPCS(NPCID.DarkCaster) < 6)
+                    for (int j = 0; j < 1000; j++)
                     {
-                        for (int j = 0; j < 1000; j++)
+                        int headYAcceleration = (int)(NPC.Center.X / 16f) + Main.rand.Next(-50, 51);
+                        int headYTopSpeed;
+                        for (headYTopSpeed = (int)(NPC.Center.Y / 16f) + Main.rand.Next(-50, 51); headYTopSpeed < Main.maxTilesY - 10 && !WorldGen.SolidTile(headYAcceleration, headYTopSpeed); headYTopSpeed++)
+                            continue;
+
+                        headYTopSpeed--;
+                        if (!WorldGen.SolidTile(headYAcceleration, headYTopSpeed))
                         {
-                            int headYAcceleration = (int)(NPC.Center.X / 16f) + Main.rand.Next(-50, 51);
-                            int headYTopSpeed;
-                            for (headYTopSpeed = (int)(NPC.Center.Y / 16f) + Main.rand.Next(-50, 51); headYTopSpeed < Main.maxTilesY - 10 && !WorldGen.SolidTile(headYAcceleration, headYTopSpeed); headYTopSpeed++)
-                            {
-                            }
-
-                            headYTopSpeed--;
-                            if (!WorldGen.SolidTile(headYAcceleration, headYTopSpeed))
-                            {
-                                NPC.NewNPCAction(NPC.GetSource_FromAI(), new Vector2(headYAcceleration * 16 + 8, headYTopSpeed * 16), NPCID.DarkCaster);
-
-                                break;
-                            }
+                            NPC.NewNPCAction(SourceAI, new Vector2(headYAcceleration * 16 + 8, headYTopSpeed * 16), NPCID.DarkCaster);
+                            break;
                         }
                     }
                 }
+            }
 
-                Timer = 0f;
-                CurrentBehavior = Behavior.Hover;
-                CurrentLocalPhase = 0;
-                ChargeReadiness = 0f;
-                ChargeTelegraphTimer = 0f;
-                AttackTimer = 0f;
+            // Start counting the alternating spins from the next complete hover round.
+            if (handsDead)
+            {
+                if (CurrentPhase == Phase.Phase1)
+                    CurrentPhase = Phase.Phase2;
+                AdvancePhase2Subphase();
+                HoverLifeRatio = MathHelper.Clamp((float)NPC.LifeRatio, 0f, 1f);
+                RapidSkullDuration = (int)MathF.Round(MathHelper.Lerp(MinRapidSkullDuration, MaxRapidSkullDuration, NPC.LifeRatio));
+            }
 
-                NPC.TargetClosest();
+            CompletedCharges = 0;
+            Timer = 0f;
+            CurrentBehavior = Behavior.Hover;
+            CurrentLocalPhase = 0;
+            ChargeReadiness = 0f;
+            ChargeTelegraphTimer = 0f;
+            AttackTimer = -PostSpinHoverQuietDuration;
+
+            NPC.TargetClosest();
+            NPC.netUpdate = true;
+            NPC.rotation += NPC.direction * SpinSpeed;
+        }
+
+        void AdvancePhase2Subphase()
+        {
+            if (ShouldEnterPhase2_2)
+                CurrentPhase = Phase.Phase2_2;
+        }
+
+        void PhaseChange_2To3AI()
+        {
+            NPC.damage = 0;
+            NPC.dontTakeDamage = true;
+            NPC.chaseable = false;
+            NPC.rotation = 0f;
+
+            switch (CurrentLocalPhase)
+            {
+                case 0: // 静止，随后开始向玩家上方移动。
+                    NPC.velocity = Vector2.Zero;
+                    if (++Timer >= Phase3StillDuration && TONetworkEnvironment.NotClient)
+                    {
+                        CurrentLocalPhase = 1;
+                        Timer = 0f;
+                    }
+                    break;
+                case 1: // 追踪玩家上方，刹停前由服务器锁定停靠点。
+                    Vector2 destination = Target.Center - Vector2.UnitY * Phase3ApproachHeight;
+                    Vector2 desiredVelocity = (destination - NPC.Center) * 0.2f;
+                    float speed = desiredVelocity.Length();
+                    if (speed > Phase3ApproachSpeed)
+                        desiredVelocity *= Phase3ApproachSpeed / speed;
+                    NPC.velocity = Vector2.Lerp(NPC.velocity, desiredVelocity, 0.3f);
+                    if (++Timer >= Phase3ApproachDuration && TONetworkEnvironment.NotClient)
+                    {
+                        SetBrakeVector(0, NPC.Center + NPC.velocity);
+                        SetBrakeVector(1, destination);
+                        SetBrakeVector(2, NPC.velocity);
+                        CurrentLocalPhase = 2;
+                        Timer = 0f;
+                    }
+                    break;
+                case 2: // 保留进入刹停的速度，抵达停靠点时切线归零。
+                    if (Timer < Phase3BrakeDuration)
+                    {
+                        Vector2 position = Vector2.Hermite(
+                            AnomalyNPC.AnomalyAI64[0].GetValue<Vector2>(),
+                            AnomalyNPC.AnomalyAI64[2].GetValue<Vector2>() * Phase3BrakeDuration,
+                            AnomalyNPC.AnomalyAI64[1].GetValue<Vector2>(), Vector2.Zero, ++Timer / Phase3BrakeDuration);
+                        NPC.velocity = position - NPC.Center;
+                        break;
+                    }
+
+                    NPC.velocity = Vector2.Zero;
+                    if (!TONetworkEnvironment.NotClient)
+                        break;
+
+                    Projectile.NewProjectileAction<SkeletronPhase3Arena>(SourceAI, Target.Center,
+                        Vector2.Zero, SkeletronBoneArena.BoundaryDamage, 0f, action: arena =>
+                        {
+                            SkeletronPhase3Arena field = arena.GetModProjectile<SkeletronPhase3Arena>();
+                            field.Master = NPC;
+                            field.IsActivated = true;
+                            CurrentLocalPhase = 3;
+                        });
+                    if (CurrentLocalPhase == 3)
+                        goto case 3;
+                    break;
+                case 3: // 竞技场已生成，释放冲击波后才开始回血。
+                    NPC.velocity = Vector2.Zero;
+                    if (TONetworkEnvironment.NotClient)
+                    {
+                        Projectile.NewProjectileAction<BoneShockwave>(SourceAI, NPC.Center, Vector2.Zero, 0, 0f, action: p =>
+                        {
+                            p.ai[0] = BoneShockwave.PhaseChangeVariant;
+                            p.timeLeft = p.GetModProjectile<BoneShockwave>().LifeTime;
+                            p.scale = 0f;
+                            CurrentLocalPhase = 4;
+                            Timer = 0f;
+                        });
+                    }
+                    break;
+                case 4: // 停留在玩家上方回血，完成后进入三阶段。
+                    NPC.velocity = Vector2.Zero;
+                    Timer++;
+                    if (!TONetworkEnvironment.NotClient)
+                        break;
+
+                    if (Timer % Phase3HealInterval == 0f || Timer >= Phase3HealDuration)
+                        HealDuringTransition();
+
+                    if (Timer >= Phase3HealDuration + 90)
+                    {
+                        CurrentPhase = Phase.Phase3;
+                        CurrentBehavior = Behavior.Phase3_NodeVolley;
+                        Phase3Cycle = 0;
+                        CurrentLocalPhase = 0;
+                        Timer = 0f;
+                    }
+                    break;
+            }
+
+            void HealDuringTransition()
+            {
+                int targetLife = (int)(NPC.lifeMax * Phase3HealLifeRatio);
+                float progress = MathHelper.Clamp(Timer / Phase3HealDuration, 0f, 1f);
+                int newLife = progress >= 1f ? targetLife : (int)MathHelper.Lerp(
+                    Phase3HealStartLife, targetLife, TOMathUtils.Interpolation.LogarithmicEaseOut(progress));
+                int increasedLife = newLife - NPC.life;
+                if (increasedLife <= 0)
+                    return;
+
+                NPC.life = newLife;
+                NPC.HealEffect(increasedLife, true);
                 NPC.netUpdate = true;
-
-                dontGoMach10 = true;
             }
 
-            NPC.rotation += NPC.direction * 0.3f;
-
-            Vector2 headSpinPos = NPC.Center;
-            float headSpinTargetX = Main.player[NPC.target].Center.X - headSpinPos.X;
-            float headSpinTargetY = Main.player[NPC.target].Center.Y - headSpinPos.Y;
-            float headSpinTargetDist = (float)Math.Sqrt(headSpinTargetX * headSpinTargetX + headSpinTargetY * headSpinTargetY);
-
-            // Increase speed while charging
-            if (!Phase3)
+            void SetBrakeVector(int slot, Vector2 value)
             {
-                float velocityBoost = MathHelper.Lerp(0f, 3f, (1f - lifeRatio) / (1f - Phase3LifeRatio));
-                if (handsDead)
-                    headSpinVelocityMult += velocityBoost;
-            }
-
-            float altDashStopDistance = 320f;
-            float headSpeedIncreaseDist = Phase3 ? altDashStopDistance : 160f;
-            if (headSpinTargetDist > headSpeedIncreaseDist)
-            {
-                float velocityMult = Phase3 ? 0.00075f : 0.0015f;
-                float baseDistanceVelocityMult = 1f + MathHelper.Clamp((headSpinTargetDist - headSpeedIncreaseDist) * 0.0015f, 0.05f, 2f);
-                headSpinVelocityMult *= baseDistanceVelocityMult;
-            }
-
-            if (Main.getGoodWorld)
-                headSpinVelocityMult *= 1.3f;
-
-            Vector2 headSpinVelocity = new Vector2(headSpinTargetX, headSpinTargetY).SafeNormalize(Vector2.UnitY) * headSpinVelocityMult;
-
-            if (!dontGoMach10)
-            {
-                if (Phase3)
-                {
-                    // Dash directly towards the target until within 15 tiles of the target, and then continue in the same direction
-                    float altDashPhaseTime = dashPhaseTime * 0.9f;
-                    if (CurrentLocalPhase == 0 && Timer < altDashPhaseTime)
-                    {
-                        if (NPC.Center.Distance(Main.player[NPC.target].Center) > altDashStopDistance || Timer == 1f + phaseChangeRateBoost)
-                            NPC.velocity = headSpinVelocity.SafeNormalize(Vector2.UnitY) * headSpinVelocityMult + NPC.Center.DirectionTo(Main.player[NPC.target].Center) * 2f;
-                        else if (Main.netMode != NetmodeID.MultiplayerClient)
-                        {
-                            CurrentLocalPhase = 1;
-                            Timer = altDashPhaseTime;
-                            NPC.netUpdate = true;
-                        }
-                    }
-                }
-                else
-                    NPC.velocity = headSpinVelocity;
+                AnomalyNPC.AnomalyAI64[slot].SetValue(value);
+                AnomalyNPC.AIChanged64[slot] = true;
             }
         }
 
@@ -677,14 +768,18 @@ public sealed partial class SkeletronHead
             AnomalyNPC.ExtraDR = 0.9999f;
             AnomalyNPC.DR = 0f;
 
-            AnomalyNPC.BossBar_Enraged = true;
             AnomalyNPC.BossBar_IncreasingDefenseOrDR = true;
-
-            RotatingMovement(NPC, Main.player[NPC.target], 0.3f, 8f);
+            SkeletronHandler.
+                        SpinMovement(NPC, Target, SpinSpeed, 8f);
         }
 
         void Despawn()
         {
+            UpdateHandProtection();
+            AnomalyNPC.DR = 0f;
+            AnomalyNPC.ExtraDR = 0f;
+            AnomalyNPC.BossBar_IncreasingDefenseOrDR = false;
+
             // Disable teleports
             if (TeleportTimer != 0f || TeleportX != 0f || TeleportY != 0f)
             {

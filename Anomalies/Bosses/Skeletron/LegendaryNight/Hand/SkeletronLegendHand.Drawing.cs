@@ -53,7 +53,9 @@ public sealed partial class SkeletronLegendHand
         int strike = SkeletronLegendHead.Mechanic2Parameters.GetStrikeIndex(head.Mechanic2Age);
         bool selected = head.Mechanic2HandPattern != 0 && -Math.Sign(NPC.ai[0]) == head.Mechanic2StrikeSide(strike);
         int relativeAge = head.Mechanic2Age - SkeletronLegendHead.Mechanic2Parameters.GetStrikeTime(strike);
-        float growth = SkeletronLegendHead.Mechanic2Parameters.HandRaiseProgress(relativeAge);
+        // 后撤时由透视缩小手掌，额外放大随出掌逐步增加。
+        float slam = SkeletronLegendHead.Mechanic2Parameters.HandSlamProgress(relativeAge);
+        float growth = slam * slam;
         float recovery = 1f - MathHelper.SmoothStep(0f, 1f,
             MathHelper.Clamp((head.Mechanic2Age - SkeletronLegendHead.Mechanic2Parameters.ReturnStartAge) / (float)SkeletronLegendHead.Mechanic2Parameters.ReturnDuration, 0f, 1f));
         return selected ? 1f + 4f * growth * recovery * SkeletronLegendHead.Mechanic2Parameters.HandAttackProgress(head.Mechanic2Age) : 1f;
@@ -88,16 +90,16 @@ public sealed partial class SkeletronLegendHand
                 return 0f;
             SkeletronLegendHead head = SkeletronLegendHead.GetInstance(master);
             if (head.StellarMechanicsActive || head.Mechanic5Active
-                && head.Phase2MusicElapsedTime >= SkeletronLegendHead.Mechanic6Timeline.HandPrepareStartMusicTime)
+                && head.Phase2MusicElapsedTime >= SkeletronLegendHead.Mechanic5Parameters.GetHandPrepareStartTime(HandSide))
                 return 0f;
             if (head.Mechanic5Active)
             {
-                int attack = SkeletronLegendHead.Mechanic5Parameters.GetHandAttackIndex(head.Phase2MusicElapsedTime);
+                int attack = SkeletronLegendHead.Mechanic5Parameters.GetHandAttackIndex(head.Phase2MusicElapsedTime, HandSide);
                 if (attack < 0)
                     return 0f;
                 int remaining = SkeletronLegendHead.Mechanic5Parameters.GetHandStrikeTime(attack) - head.Phase2MusicElapsedTime;
-                return remaining > 0 ? MathF.Pow(MathF.Sin(remaining * MathHelper.Pi
-                    / SkeletronLegendHead.Mechanic5Parameters.HandWindupDuration), 2f) : 0f;
+                return remaining > 0 ? MathHelper.SmoothStep(0.35f, 1f, 1f - remaining
+                    / (float)SkeletronLegendHead.Mechanic5Parameters.HandWindupDuration) : 0f;
             }
             if (head.Mechanic2Active)
             {
@@ -107,7 +109,7 @@ public sealed partial class SkeletronLegendHand
                     && remaining > 0 && remaining < 45 ? MathF.Sin(remaining * MathHelper.Pi / 45f) : 0f;
             }
             int timer = head.Timer1 % AttackCycleDuration;
-            if (!head.Phase2 || head.Mechanic1Rotating || timer < WindupStart || timer >= StrikeTime)
+            if (!head.Phase2 || head.Mechanic1Spinning || timer < WindupStart || timer >= StrikeTime)
                 return 0f;
             return MathF.Pow(MathF.Sin((timer - WindupStart) / (float)(StrikeTime - WindupStart) * MathHelper.Pi), 2f);
         }
@@ -128,11 +130,14 @@ public sealed partial class SkeletronLegendHand
 
         // 全亮环境下仍可见的叠加预警，不再依赖实体取色变亮。
         Vector2 position = GetAttachedHandDrawCenter(NPC) - screenPos;
-        Texture2D bloom = BloomParticle.BloomCircleLarge;
-        Color gold = (LegendaryNightHandler.StarColor with { A = 0 }) * (flash * NPC.Opacity);
         Color white = (Color.White with { A = 0 }) * (flash * NPC.Opacity);
         float size = NPC.scale * MathHelper.Lerp(90f, 170f, flash);
-        spriteBatch.DrawFromCenter(bloom, position, null, gold * 0.65f, 0f, size / bloom.Width);
+        if (!SkeletronLegendHead.GetInstance(Master).Mechanic2Active)
+        {
+            Texture2D bloom = BloomParticle.BloomCircleLarge;
+            Color gold = (LegendaryNightHandler.StarColor with { A = 0 }) * (flash * NPC.Opacity);
+            spriteBatch.DrawFromCenter(bloom, position, null, gold * 0.65f, 0f, size / bloom.Width);
+        }
 
         Texture2D rays = TextureAssets.Extra[ExtrasID.SharpTears].Value;
         Vector2 rayScale = new(14f * NPC.scale / rays.Width, size / rays.Height);

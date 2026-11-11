@@ -4,7 +4,7 @@ using CalamityMod.NPCs.ExoMechs.Apollo;
 using CalamityMod.NPCs.Ravager;
 using MonoMod.Utils;
 using Transoceanic.Game.Entities;
-using static global::Terraria.ModLoader.ModContent;
+using static Terraria.ModLoader.ModContent;
 
 namespace Anomalies.Visuals.BossBar;
 
@@ -329,7 +329,12 @@ public partial class BossHealthBar : ILocalizationPrefix
             if (HasOneToMany)
             {
                 foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(n => CustomOneToManyIndexes.Contains(n.type)))
-                    CustomOneToMany.TryAdd(npc.Identifier, npc);
+                {
+                    bool include = true;
+                    FilterSkeletronHand(NPC, npc, ref include);
+                    if (include)
+                        CustomOneToMany.TryAdd(npc.Identifier, npc);
+                }
             }
             UpdateNPCLife();
             UpdateMaxLife();
@@ -378,6 +383,7 @@ public partial class BossHealthBar : ILocalizationPrefix
     static partial void RegisterBrainLifeFunctions();
     static partial void AdjustBrainLifeContribution(NPC npc, ref int life);
     static partial void FilterBrainExtension(NPC npc, ref bool include);
+    static partial void FilterSkeletronHand(NPC boss, NPC npc, ref bool include);
 
     private static bool IncludeExtension(NPC npc)
     {

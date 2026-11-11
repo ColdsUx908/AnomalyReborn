@@ -1,6 +1,6 @@
 displayName = Anomalies
 author = ColdsUx
-version = 0.2
+version = 0.4
 hideResources = true
 modReferences = Transoceanic
 weakReferences = AnomaliesMusic, CalamityMod

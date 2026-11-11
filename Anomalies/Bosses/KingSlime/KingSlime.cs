@@ -57,7 +57,7 @@ public sealed partial class KingSlime : AnomalyNPCBehavior<KingSlime>, ILocaliza
     public static float Phase2LifeRatio => Ultra ? Phase2LifeRatioUltra : Phase2LifeRatioAnomaly;
     public static float Phase2_2LifeRatio => Ultra ? Phase22LifeRatioUltra : Phase22LifeRatioAnomaly;
 
-    private static readonly ProjectileDamageContainer _GelDamage = new(40, 60, 90, 120, 120, 150);
+    private static readonly ProjectileDamageContainer _GelDamage = new(30, 60, 72, 90, 90, 120);
     public static int GelDamage => _GelDamage.Value;
 
     public static int JumpDelay => Ultra ? 16 : 20;

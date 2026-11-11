@@ -1,3 +1,5 @@
+using Anomalies.Assets.Effects;
+
 namespace Anomalies.GameContents.Base;
 
 /// <summary>
@@ -124,12 +126,39 @@ public abstract class BaseShockwaveProjectile : AnomalyModProjectile
     /// <returns>始终返回 <see langword="false"/>，以阻止默认绘制流程。</returns>
     public override bool PreDraw(ref Color lightColor)
     {
+        Color color = GetAlpha(lightColor) ?? Color.White;
+        Effect effect = AnomalyClientConfig.Instance.EnableShaders ? AnomalyEffects.Overlays.Shockwave?.Asset.Value : null;
+        if (effect is not null)
+        {
+            DrawShader(effect, color);
+            return false;
+        }
+
         SpriteBatch spriteBatch = Main.spriteBatch;
         ParticleHandler.EnterDrawRegion_Additive(spriteBatch);
         Texture2D texture = UseHDTexture ? PulseRing.TextureHD : ParticleHandler.GetTexture<PulseRing>();
-        Color color = GetAlpha(lightColor) ?? Color.White;
         spriteBatch.DrawFromCenter(texture, Projectile.Center - Main.screenPosition, null, color * Projectile.Opacity, Projectile.rotation, Projectile.scale);
         TODrawUtils.ResetSpriteBatch(spriteBatch);
         return false;
+
+        void DrawShader(Effect effect, Color color)
+        {
+            float radius = (UseHDTexture ? PulseRing.TextureRadiusHD : PulseRing.TextureRadius) * Projectile.scale;
+            float drawRadius = radius + 240f;
+            SpriteBatch spriteBatch = Main.spriteBatch;
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, SamplerState.LinearClamp,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            effect.Parameters["uColor"].SetValue(color.ToVector3());
+            effect.Parameters["uTime"].SetValue(Timer1 / 60f);
+            effect.Parameters["uOpacity"].SetValue(Projectile.Opacity);
+            effect.Parameters["uRadius"].SetValue(radius);
+            effect.Parameters["uDrawRadius"].SetValue(drawRadius);
+            effect.CurrentTechnique.Passes["Pass0"].Apply();
+            Texture2D pixel = TOTextures.FillerTexture;
+            spriteBatch.DrawFromCenter_VectorScale(pixel, Projectile.Center - Main.screenPosition, null, Color.White,
+                0f, new Vector2(drawRadius * 2f) / pixel.Size());
+            TODrawUtils.ResetSpriteBatch(spriteBatch);
+        }
     }
 }

@@ -39,6 +39,9 @@ public sealed partial class SkeletronLegendHead
         public const int LightOrbEndMusicTime = 161 * 60;
         /// <summary>激光首次的音乐绝对帧，从转场音乐开始累计。</summary>
         public const int LaserFirstMusicTime = 118 * 60 + 20;
+        /// <summary>最后一波激光开始造成伤害的音乐绝对帧。</summary>
+        public const int LastLaserImpactMusicTime = LaserFirstMusicTime
+            + (Mechanic6Parameters.LaserWaveCount - 1) * Mechanic6Parameters.LaserInterval + Mechanic6Parameters.LaserWarningDuration;
     }
 
     /// <summary>机制 6 的攻击、运动和表现参数及纯计算；时长单位为游戏帧。</summary>
@@ -71,11 +74,11 @@ public sealed partial class SkeletronLegendHead
         /// <summary>光球间隔，单位为游戏帧。</summary>
         public const int LightOrbInterval = 95;
         /// <summary>光球数量。</summary>
-        public const int LightOrbCount = 16;
+        public const int LightOrbCount = 12;
         /// <summary>光球最小存活时间，单位为游戏帧。</summary>
         public const int LightOrbMinimumLifetime = 12 * 60;
         /// <summary>光球存活时间步长。</summary>
-        public const int LightOrbLifetimeStep = 25;
+        public const int LightOrbLifetimeStep = 30;
         /// <summary>光球存活时间窗口，单位为游戏帧。</summary>
         public const int LightOrbLifetimeWindow = 60;
         /// <summary>光球显现持续时间，单位为游戏帧。</summary>
@@ -146,11 +149,11 @@ public sealed partial class SkeletronLegendHead
         /// <summary>激光波次数量。</summary>
         public const int LaserWaveCount = 8;
         /// <summary>激光长度，单位为世界像素。</summary>
-        public const float LaserLength = 1800f;
+        public const float LaserLength = 2000f;
         /// <summary>激光宽度，单位为世界像素。</summary>
         public const float LaserWidth = 32f;
         /// <summary>各波次激光数量（按波次从零开始索引）。</summary>
-        public static ReadOnlySpan<int> LaserCounts => [3, 3, 4, 4, 6, 6, 8, 10];
+        public static ReadOnlySpan<int> LaserCounts => [3, 3, 4, 4, 5, 5, 6, 12];
         /// <summary>激光最大转角。</summary>
         public const float LaserMaxTurnAngle = MathHelper.Pi;
 
@@ -159,7 +162,7 @@ public sealed partial class SkeletronLegendHead
             && time <= Mechanic6Timeline.LaserFirstMusicTime + (LaserWaveCount - 1) * LaserInterval
             && (time - Mechanic6Timeline.LaserFirstMusicTime) % LaserInterval == 0;
 
-        // 从正上方开始均分扇区；相邻扇区各留一半最小夹角，连同首尾接缝保证90°/count。
+        // 从正上方开始均分扇区；相邻扇区各留一半最小夹角，连同首尾接缝保证90° / count。
         /// <summary>计算激光角度。</summary>
         public static float GetLaserAngle(int sector, int count, float sample)
         {
@@ -206,6 +209,8 @@ public sealed partial class SkeletronLegendHead
 
     private void Mechanic6AI()
     {
+        #region 举球定位与蓄力步骤同步
+
         int time = Phase2MusicElapsedTime;
         AnomalyNPC.Z = 0f;
         NPC.rotation = 0f;
@@ -215,6 +220,11 @@ public sealed partial class SkeletronLegendHead
         int localPhase = time >= Mechanic6Timeline.ChargeCompleteMusicTime ? 1 : 0;
         if (TONetworkEnvironment.NotClient && CurrentLocalPhase != localPhase)
             ChangePhase2State(CurrentPhase, localPhase);
+
+        #endregion
+
+        #region 恒星生成
+
         if (time == Mechanic6Timeline.StartMusicTime)
         {
             SoundEngine.PlaySound(SoundID.ForceRoar);
@@ -228,5 +238,7 @@ public sealed partial class SkeletronLegendHead
                         p.netUpdate = true;
                     });
         }
+
+        #endregion
     }
 }

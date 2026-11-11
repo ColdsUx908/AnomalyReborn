@@ -13,10 +13,12 @@ public sealed partial class LegendEnergySphere
         public int DamageStacks;
         public int RegenerationStacks;
         public bool ExpectsPlatinum;
+        // 仅服务器进行拦截判定，客户端只同步奖励和下次颜色。
+        public bool HasAcceptedOrb;
 
-        public bool ApplyCollision(int color, bool noRequiredColorRemains)
+        public bool ApplyCollision(int color)
         {
-            if (color == 1 != ExpectsPlatinum && !noRequiredColorRemains)
+            if (HasAcceptedOrb && (color == 1) != ExpectsPlatinum)
             {
                 DamageStacks--;
                 RegenerationStacks--;
@@ -26,7 +28,8 @@ public sealed partial class LegendEnergySphere
                 RegenerationStacks++;
             else
                 DamageStacks++;
-            ExpectsPlatinum = !ExpectsPlatinum;
+            HasAcceptedOrb = true;
+            ExpectsPlatinum = color == 0;
             return true;
         }
     }
@@ -67,21 +70,7 @@ public sealed partial class LegendEnergySphere
     {
         if (!TONetworkEnvironment.NotClient)
             return false;
-        int requiredColor = _PlayerBonuses[playerIndex].ExpectsPlatinum ? 1 : 0;
-        bool noRequiredColorRemains = _LightOrbsSpawned >= LightOrbCount;
-        if (noRequiredColorRemains)
-        {
-            foreach (Projectile projectile in Projectile.ActiveProjectiles)
-            {
-                if (projectile.ModProjectile is LegendLightOrb orb && orb.SphereProjectile == Projectile
-                    && orb.AvailableForInterception && (int)projectile.ai[0] == requiredColor)
-                {
-                    noRequiredColorRemains = false;
-                    break;
-                }
-            }
-        }
-        bool correct = _PlayerBonuses[playerIndex].ApplyCollision(color, noRequiredColorRemains);
+        bool correct = _PlayerBonuses[playerIndex].ApplyCollision(color);
         //if (!correct)
         //    SpawnLasers(PunishmentLaserCount, punishment: true);
         Projectile.netUpdate = true;
@@ -100,7 +89,7 @@ public sealed partial class LegendEnergySphere
             float angle = GetLaserAngle(sector, count, Main.rand.NextFloat()) + angleOffset;
             float turnAngle = GetLaserTurnAngle(Main.rand.NextFloat());
             Projectile.NewProjectileAction<LegendEnergyLaser>(SourceAI, arena.Projectile.Center,
-                Vector2.Zero, SkeletronLegendHead.FallingStarDamage, 0f, action: p =>
+                Vector2.Zero, SkeletronLegendHead.EnergyLaserDamage, 0f, action: p =>
                 {
                     p.ai[0] = Projectile.ai[0];
                     p.ai[1] = angle;

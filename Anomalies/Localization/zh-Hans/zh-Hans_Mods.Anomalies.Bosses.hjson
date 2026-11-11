@@ -55,6 +55,11 @@ QueenBee: {
 }
 
 Skeletron: {
+	Crossbone.DisplayName: 十字骨
+	BoneShockwave.DisplayName: 骨冲击波
+	SkeletronPhase3Arena.DisplayName: 骷髅王竞技场
+	SkeletronSkullWarning.DisplayName: 骷髅头预警
+
 	LegendaryNight: {
 		SummonFailed: 传说之夜未能开始。它需要一个超凡的夜晚。
 		Summon: 传说之夜开始了！
@@ -83,9 +88,11 @@ Skeletron: {
 		LegendStarburst.DisplayName: 星爆
 		LegendBlueStar.DisplayName: 蓝色伴星
 		LegendCompanionShockwave.DisplayName: 恒星撞击
+		LegendTransitionShockwave.DisplayName: 金星冲击波
 		Meteor.DisplayName: 陨石
 		PlatinumCoin.DisplayName: 铂金币
 		SkullWarning.DisplayName: 骷髅预警
+		LegendUmbrellaSlime.DisplayName: 雨伞史莱姆
 		SlimeMount.DisplayName: 史莱姆鞍
 
 		AncientBattlefieldAltarItem: {

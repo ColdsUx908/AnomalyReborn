@@ -76,6 +76,10 @@ public sealed partial class SkeletronLegendHead
         public const int HandSlamDuration = BodyRushDuration;
         /// <summary>手部恢复持续时间，单位为游戏帧。</summary>
         public const int HandRecoverDuration = 30;
+        private const int HandTurnHalfDuration = 5;
+        private const int HandImpactHoldDuration = 6;
+        private const float HandWindupDepthOffset = 650f;
+        internal const float HandImpactDepth = -450f;
         /// <summary>主体前冲持续时间，单位为游戏帧。</summary>
         public const int BodyRushDuration = 24;
         /// <summary>主体后撤提前量，单位为游戏帧。</summary>
@@ -153,17 +157,21 @@ public sealed partial class SkeletronLegendHead
             Vector2.Lerp(idleOffset, new Vector2(side * PassingHandHorizontalOffset, PassingHandVerticalOffset), HandAttackProgress(age));
 
         /// <summary>常态衔接前臂；拍击手抬起时朝上、前冲拍下时朝下，回收时恢复相对位置决定的朝向。</summary>
-        public static float GetHandRotation(int age, bool selected, float restingRotation)
+        public static float GetHandRotation(int relativeAge, int side, bool selected, float restingRotation)
         {
-            int relativeAge = age - GetStrikeTime(GetStrikeIndex(age));
             if (!selected || relativeAge < -HandRaiseLeadTime || relativeAge >= LaserDuration + HandRecoverDuration)
                 return restingRotation;
-            if (relativeAge < -BodyRushDuration)
-                return restingRotation + MathHelper.WrapAngle(MathHelper.Pi - restingRotation) * HandRaiseProgress(relativeAge);
-            if (relativeAge <= LaserDuration)
-                return 0f;
-            return restingRotation * MathHelper.SmoothStep(0f, 1f,
-                (relativeAge - LaserDuration) / (float)HandRecoverDuration);
+            float raisedRotation = -side * MathHelper.Pi;
+            int turnAge = relativeAge + BodyRushDuration;
+            if (turnAge < -HandTurnHalfDuration)
+            {
+                float raise = MathHelper.SmoothStep(0f, 1f, (relativeAge + HandRaiseLeadTime)
+                    / (float)(HandRaiseDuration - HandTurnHalfDuration));
+                return restingRotation + MathHelper.WrapAngle(raisedRotation - restingRotation) * raise;
+            }
+            // 左右手从朝上经过各自外侧，再转向下方。
+            float turn = MathHelper.SmoothStep(0f, 1f, (turnAge + HandTurnHalfDuration) / (2f * HandTurnHalfDuration));
+            return MathHelper.Lerp(raisedRotation, 0f, turn) + restingRotation * HandRecoveryProgress(relativeAge);
         }
 
         /// <summary>计算指定拍击相对机制二起点的帧数；strike 为从零开始的拍击编号。</summary>
@@ -262,21 +270,47 @@ public sealed partial class SkeletronLegendHead
         {
             int relativeAge = age - GetStrikeTime(GetStrikeIndex(age));
             float raise = HandRaiseProgress(relativeAge);
-            float recover = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp((relativeAge - LaserDuration) / (float)HandRecoverDuration, 0f, 1f));
-            return raise * (1f - recover);
+            return raise * (1f - HandRecoveryProgress(relativeAge));
         }
 
-        /// <summary>计算手部拍下进度。</summary>
-        public static float HandSlamProgress(int relativeAge) => MathF.Pow(
-            MathHelper.Clamp((relativeAge + HandSlamDuration) / (float)HandSlamDuration, 0f, 1f), 3f);
+        private static float HandRecoveryProgress(int relativeAge) =>
+            MathHelper.SmoothStep(0f, 1f, (relativeAge - LaserDuration) / (float)HandRecoverDuration);
 
-        /// <summary>在前一次拍击伤害窗口结束后提示半场，与抬手同步增强；拍击时转为白色冲击。</summary>
+        /// <summary>前冲初段留在头后，随后加速越过头部，并在触击深度收住。</summary>
+        public static float HandSlamProgress(int relativeAge)
+        {
+            float progress = MathHelper.Clamp((relativeAge + HandSlamDuration) / (float)HandSlamDuration, 0f, 1f);
+            return progress * progress * progress * (4f - 3f * progress);
+        }
+
+        internal static float HandExitProgress(int relativeAge) => MathHelper.SmoothStep(0f, 1f,
+            (relativeAge - HandImpactHoldDuration) / (float)(BodyFollowThroughDuration - HandImpactHoldDuration));
+
+        internal static float HandRejoinProgress(int relativeAge) => MathHelper.SmoothStep(0f, 1f,
+            (relativeAge - BodyFollowThroughDuration) / (float)(LaserDuration - BodyFollowThroughDuration));
+
+        internal static float GetStrikingHandDepth(int relativeAge, float bodyDepth, float slam, float exit, float rejoin)
+        {
+            if (relativeAge <= 0)
+            {
+                float windupDepth = bodyDepth + HandWindupDepthOffset * BodyRetreatProgress(relativeAge);
+                return MathHelper.Lerp(windupDepth, HandImpactDepth, slam);
+            }
+            return MathHelper.Lerp(MathHelper.Lerp(HandImpactDepth, BodyExitZ, exit), bodyDepth, rejoin);
+        }
+
+        internal const float HalfFieldMaxOpacity = 0.45f;
+        private const int HalfFieldFadeInDuration = 5;
+        private const int HalfFieldFadeOutDuration = 24;
+
+        /// <summary>计算半场火焰透明度，拍击伤害帧达到峰值。</summary>
         public static float HalfFieldOpacity(int relativeAge)
         {
-            if (relativeAge is < -HalfFieldWarningDuration or >= LaserDuration)
+            if (relativeAge < -HalfFieldFadeInDuration)
                 return 0f;
-            return relativeAge < 0 ? 0.08f + 0.14f * HandRaiseProgress(relativeAge)
-                : 0.45f * (1f - relativeAge / (float)LaserDuration);
+            float fadeIn = MathHelper.Clamp((relativeAge + HalfFieldFadeInDuration + 1f) / (HalfFieldFadeInDuration + 1f), 0f, 1f);
+            float fadeOut = MathHelper.Clamp(1f - relativeAge / (float)HalfFieldFadeOutDuration, 0f, 1f);
+            return HalfFieldMaxOpacity * fadeIn * fadeOut;
         }
 
         /// <summary>判断当前帧是否处于激光伤害窗口。</summary>
@@ -320,6 +354,8 @@ public sealed partial class SkeletronLegendHead
     // 顺序：服务器随机侧位图 → 本机单次伤害 → 回程/等待场地 → 主体轨迹 → 拍击攻击。
     private void Mechanic2AI()
     {
+        #region 侧位图等待与半场伤害
+
         int age = Mechanic2Age;
         LegendaryNightPhase2Arena arena = Phase2Arena;
         EnsureStrikePattern();
@@ -331,6 +367,11 @@ public sealed partial class SkeletronLegendHead
         }
         if (arena is not null)
             ApplyHalfFieldStrike(arena);
+
+        #endregion
+
+        #region 回程、法阵等待与拍击轨迹
+
         if (age >= Mechanic2Parameters.ReturnStartAge && arena is not null)
         {
             // 回程也依赖最后一次服务器锁定，不能把旧拍击或已清空的向量解释为回程起点。
@@ -358,6 +399,10 @@ public sealed partial class SkeletronLegendHead
         NPC.rotation *= 0.85f;
         NPC.Face(Target);
 
+        #endregion
+
+        #region 拍击帧攻击
+
         int impactStrike = Mechanic2Parameters.GetStrikeIndex(age);
         if (age == Mechanic2Parameters.GetStrikeTime(impactStrike))
         {
@@ -370,6 +415,10 @@ public sealed partial class SkeletronLegendHead
                 NPC.netUpdate = true;
             }
         }
+
+        #endregion
+
+        #region 伤害、同步锁定与主体轨迹
 
         void ApplyHalfFieldStrike(LegendaryNightPhase2Arena arena)
         {
@@ -387,6 +436,7 @@ public sealed partial class SkeletronLegendHead
             AnomalyNPC.Skeletron_LegendaryNightHalfFieldHits |= hitMask;
 
             Player player = Main.LocalPlayer;
+            player.SetScreenshake(10f);
             if (new Circle(arena.Projectile.Center, arena.Radius).Collides(player.Hitbox)
                 && (Mechanic2StrikeSide(strike) < 0 ? player.Hitbox.Left < arena.Projectile.Center.X : player.Hitbox.Right > arena.Projectile.Center.X))
                 LegendaryNightDamage.HurtLocalPlayer(arena.Projectile, SlapDamage, true);
@@ -440,6 +490,10 @@ public sealed partial class SkeletronLegendHead
             UpdateStrikeDrawAnchor(relativeAge, recovery);
         }
 
+        #endregion
+
+        #region 落星与回程辅助
+
         void SpawnLegendSlapStars(LegendaryNightPhase2Arena arena, int side, int strike)
         {
             const int Count = Mechanic2Parameters.StarCount;
@@ -448,7 +502,7 @@ public sealed partial class SkeletronLegendHead
             for (int i = 0; i < Count; i++)
             {
                 Vector2 position = arena.Projectile.Center + Mechanic2Parameters.GetStarSpawnOffset(i, radius, side);
-                Projectile.NewProjectileAction<LegendSlapStar>(SourceAI, position, Vector2.UnitY * Mechanic2Parameters.StarSpeed, FallingStarDamage, 0f, action: p =>
+                Projectile.NewProjectileAction<LegendSlapStar>(SourceAI, position, Vector2.UnitY * Mechanic2Parameters.StarSpeed, SlapStarDamage, 0f, action: p =>
                 {
                     p.ai[0] = strike;
                     p.ai[1] = side;
@@ -595,5 +649,7 @@ public sealed partial class SkeletronLegendHead
                 SpawnRadialStars(6f, 30, 12f * MathHelper.PiOver2 * 0.01f);
             }
         }
+
+        #endregion
     }
 }

@@ -1,5 +1,3 @@
-using Anomalies.GameContents.Base;
-
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 /// <summary>
@@ -11,74 +9,14 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 /// <para>ExtraAI：基类 Radius、OutofArenaTimer，随后 IsActivated、Intensity，顺序保持不变。</para>
 /// <para>客户端状态：_PreviousActivation 为同步变化检测；_VisualPolygon 与初始化标记保存淡出几何，不同步。</para>
 /// </remarks>
-public sealed class LegendaryNightArena : BaseRingArenaProjectile
+public sealed class LegendaryNightArena : SkeletronBoneArena
 {
-    public float Intensity;
-
-    // ai[0]：所属骷髅王的 NPC 索引（1-based）。
-    public NPC Master
-    {
-        get => NPC.GetNPCFromIndex((int)Projectile.ai[0] - 1);
-        set => Projectile.ai[0] = (value?.whoAmI ?? -1) + 1;
-    }
-
     private bool IsMasterValid => LegendaryNightHandler.IsLegendaryNightHead((int)Projectile.ai[0], oneBased: true) && Master.life > 0;
 
     public SkeletronLegendHead MasterBehavior => LegendaryNightHandler.TryGetLegendaryNightHead((int)Projectile.ai[0], out SkeletronLegendHead head, oneBased: true) && head.NPC.life > 0 ? head : null;
 
-    public bool IsActivated;
-
-    private bool _PreviousActivation;
-
-    protected override void SendAnomalyExtraAI(BinaryWriter writer)
-    {
-        base.SendAnomalyExtraAI(writer);
-        writer.Write(IsActivated);
-        writer.Write(Intensity);
-    }
-
-    protected override void ReceiveAnomalyExtraAI(BinaryReader reader)
-    {
-        base.ReceiveAnomalyExtraAI(reader);
-        IsActivated = reader.ReadBoolean();
-        Intensity = reader.ReadSingle();
-    }
-
-    public override void PostAI()
-    {
-        if (TONetworkEnvironment.NotClient && IsActivated != _PreviousActivation)
-            Projectile.netUpdate = true;
-        _PreviousActivation = IsActivated;
-    }
-
-    public override string Texture => TOTextures.InvisibleTexturePath;
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
-    public override float Radius { get; set; } = 1000f;
-    public override float Thickness => 40f;
-    public Hexadecagon ArenaPolygon => new(Projectile.Center, Radius);
-
-    // 视觉快照在激活期间跟随弹幕，淡出期间保留最后一次激活的位置和大小。
-    private Hexadecagon _VisualPolygon;
-    private bool _VisualPolygonInitialized;
-    public Hexadecagon VisualPolygon => _VisualPolygonInitialized ? _VisualPolygon : ArenaPolygon;
-
-    protected override Vector2 ClosestPointInArena(Vector2 point) => ArenaPolygon.ClosestPoint(point);
     public override Player Target => MasterBehavior?.Target;
-    public override int DustType => DustID.PlatinumCoin;
-    public override bool EnableMovementRestriction => IsActivated && Intensity == 1f;
-
-    public override void SetDefaults()
-    {
-        Projectile.netImportant = true;
-        Projectile.width = Projectile.height = 16;
-        Projectile.penetrate = -1;
-        Projectile.friendly = false;
-        Projectile.hostile = true;
-        Projectile.timeLeft = 100;
-        Projectile.tileCollide = false;
-        Projectile.ignoreWater = true;
-        Master = null;
-    }
 
     public override void AI()
     {
@@ -95,7 +33,7 @@ public sealed class LegendaryNightArena : BaseRingArenaProjectile
             {
                 bool created = false;
                 Projectile.NewProjectileAction<LegendaryNightPhase2Arena>(SourceAI, Master.Center,
-                    Vector2.Zero, SkeletronLegendHead.ArenaDamage * 4, 0f, action: p =>
+                    Vector2.Zero, SkeletronLegendHead.Phase2ArenaDamage, 0f, action: p =>
                     {
                         LegendaryNightPhase2Arena arena = p.GetModProjectile<LegendaryNightPhase2Arena>();
                         arena.Master = Master;
@@ -110,27 +48,6 @@ public sealed class LegendaryNightArena : BaseRingArenaProjectile
         }
 
         Projectile.Center = Master.Center;
-        Projectile.velocity = Vector2.Zero;
-        Projectile.timeLeft = 100;
-
-        if (IsActivated || Intensity <= 0f || !_VisualPolygonInitialized)
-        {
-            _VisualPolygon = ArenaPolygon;
-            _VisualPolygonInitialized = true;
-        }
-
-        Intensity = MathHelper.Clamp(Intensity + (IsActivated ? 1f : -1f) / 60f, 0f, 1f);
-
-        if (EnableMovementRestriction)
-            MovementRestriction();
-        else
-            OutofArenaTimer = 0;
+        UpdateBoundary();
     }
-
-    public override bool CanHitPlayer(Player target) => EnableMovementRestriction && base.CanHitPlayer(target);
-
-    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => EnableMovementRestriction
-        && ArenaPolygon.BoundaryCollides(targetHitbox, Thickness);
-
-    public override bool PreDraw(ref Color lightColor) => false;
 }

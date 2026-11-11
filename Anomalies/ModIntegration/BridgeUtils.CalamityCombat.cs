@@ -1,4 +1,4 @@
-namespace Anomalies.ModCompatibility;
+namespace Anomalies.ModIntegration;
 
 /// <summary>可选灾厄战斗接口；未加载灾厄时使用空操作或 false。</summary>
 public static partial class BridgeUtils

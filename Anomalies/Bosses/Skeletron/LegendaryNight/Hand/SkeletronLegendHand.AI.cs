@@ -50,7 +50,7 @@ public sealed partial class SkeletronLegendHand
         switch (head)
         {
             case { StellarMechanicsActive: true }:
-            case { Mechanic5Active: true } when head.Phase2MusicElapsedTime >= SkeletronLegendHead.Mechanic6Timeline.HandPrepareStartMusicTime:
+            case { Mechanic5Active: true } when head.Phase2MusicElapsedTime >= SkeletronLegendHead.Mechanic5Parameters.GetHandPrepareStartTime(HandSide):
                 Mechanic6HandAI(head);
                 break;
             case { Mechanic5Active: true }:
@@ -78,6 +78,7 @@ public sealed partial class SkeletronLegendHand
             float radius = SkeletronLegendHead.Mechanic6Parameters.Radius(time);
             Vector2 sphereOffset = SkeletronLegendHead.Mechanic6Parameters.SphereOffset(time);
             Vector2 offset = sphereOffset + new Vector2(side * (radius + 65f), radius * 0.25f);
+            float prepareProgress = 1f;
             if (time < SkeletronLegendHead.Mechanic6Timeline.StartMusicTime)
             {
                 if (CurrentScriptedAction != ScriptedAction.PrepareSphere && TONetworkEnvironment.NotClient)
@@ -91,11 +92,10 @@ public sealed partial class SkeletronLegendHand
                     NPC.velocity = Vector2.Zero;
                     return; // 等待服务器锁定的起点，避免读取上一轮挥击数据。
                 }
-                float progress = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(
-                    (time - SkeletronLegendHead.Mechanic6Timeline.HandPrepareStartMusicTime)
-                        / (float)(SkeletronLegendHead.Mechanic6Timeline.HandPrepareEndMusicTime
-                            - SkeletronLegendHead.Mechanic6Timeline.HandPrepareStartMusicTime), 0f, 1f));
-                offset = Vector2.Lerp(StellarPreparationOffset, offset, progress);
+                int prepareStart = SkeletronLegendHead.Mechanic5Parameters.GetHandPrepareStartTime(side);
+                prepareProgress = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(
+                    (time - prepareStart) / (float)(SkeletronLegendHead.Mechanic6Timeline.HandPrepareEndMusicTime - prepareStart), 0f, 1f));
+                offset = Vector2.Lerp(StellarPreparationOffset, offset, prepareProgress);
             }
             NPC.damage = 0;
             NPC.dontTakeDamage = true;
@@ -103,10 +103,14 @@ public sealed partial class SkeletronLegendHand
             // 收进球内而非普通待机位置，为原版向外伸出的两段骨节留出余量。
             Vector2 concealedOffset = (head.Phase2Arena?.Projectile.Center ?? master.Center + sphereOffset)
                 - master.Center + new Vector2(side * 40f, -40f);
-            offset = Vector2.Lerp(offset, concealedOffset,
-                SkeletronLegendHead.Mechanic6Parameters.HandLowerProgress(time));
+            float lower = SkeletronLegendHead.Mechanic6Parameters.HandLowerProgress(time);
+            offset = Vector2.Lerp(offset, concealedOffset, lower);
             NPC.velocity = master.Center + offset - NPC.Center;
-            NPC.rotation = GetPositionRotation(NPC.Center + NPC.velocity, master.Center, side);
+            const float Tilt = 0.12f;
+            float growth = radius / SkeletronLegendHead.Mechanic6Parameters.SphereRadius;
+            float chargeRotation = MathHelper.Pi + side * MathHelper.Lerp(-Tilt, Tilt, growth);
+            float armRotation = GetPositionRotation(NPC.Center + NPC.velocity, master.Center, side);
+            NPC.rotation = chargeRotation + MathHelper.WrapAngle(armRotation - chargeRotation) * (1f - prepareProgress * (1f - lower));
             NPC.Opacity = SkeletronLegendHead.Mechanic6Parameters.HandDepartureOpacity(time);
             if (NPC.Opacity <= 0f)
             {
@@ -133,7 +137,7 @@ public sealed partial class SkeletronLegendHand
             }
             else
             {
-                int attack = SkeletronLegendHead.Mechanic5Parameters.GetHandAttackIndex(time);
+                int attack = SkeletronLegendHead.Mechanic5Parameters.GetHandAttackIndex(time, side);
                 int age = attack < 0 ? int.MinValue : time - SkeletronLegendHead.Mechanic5Parameters.GetHandStrikeTime(attack);
                 if (attack < 0)
                 {
@@ -143,16 +147,23 @@ public sealed partial class SkeletronLegendHand
                 }
                 else if (age < 0)
                 {
-                    if (TONetworkEnvironment.NotClient)
+                    if (TONetworkEnvironment.NotClient && Mechanic5LockedAttack != attack + 1)
+                    {
+                        Mechanic5WindupDirection = (idle - head.Target.Center).SafeNormalize(-Vector2.UnitY);
+                        Mechanic5LockedAttack = attack + 1;
                         ChangeScriptedAction(ScriptedAction.Windup);
-                    Vector2 direction = (head.Target.Center - idle).SafeNormalize(Vector2.UnitY);
-                    float progress = MathHelper.SmoothStep(0f, 1f, (age + SkeletronLegendHead.Mechanic5Parameters.HandWindupDuration)
+                        NPC.netUpdate = true;
+                    }
+                    float progress = MathHelper.SmoothStep(0f, 1f, (age + SkeletronLegendHead.Mechanic5Parameters.HandWindupDuration + 1)
                         / (float)SkeletronLegendHead.Mechanic5Parameters.HandWindupDuration);
-                    NPC.velocity = idle - direction * (SkeletronLegendHead.Mechanic5Parameters.HandWindupDistance * progress) - NPC.Center;
+                    NPC.velocity = Mechanic5LockedAttack == attack + 1 && CurrentScriptedAction == ScriptedAction.Windup
+                        ? idle + Mechanic5WindupDirection * (SkeletronLegendHead.Mechanic5Parameters.HandWindupDistance * progress) - NPC.Center
+                        : Vector2.Zero;
                 }
                 else
                 {
-                    if (TONetworkEnvironment.NotClient && Mechanic5LockedAttack != attack + 1)
+                    if (TONetworkEnvironment.NotClient
+                        && (Mechanic5LockedAttack != attack + 1 || CurrentScriptedAction == ScriptedAction.Windup))
                     {
                         LegendaryNightPhase2Arena arena = head.Phase2Arena;
                         Vector2 center = arena?.Projectile.Center ?? master.Center;
@@ -161,15 +172,18 @@ public sealed partial class SkeletronLegendHand
                         StrikeDestination = SkeletronLegendHead.Mechanic5Parameters.GetHandStrikeDestination(
                             NPC.Center, head.Target.Center, center, radius);
                         Mechanic5LockedAttack = attack + 1;
+                        ChangeScriptedAction(age < SkeletronLegendHead.Mechanic5Parameters.HandStrikeDuration
+                            ? ScriptedAction.Strike : ScriptedAction.Return);
                         NPC.netUpdate = true;
                     }
-                    if (Mechanic5LockedAttack != attack + 1)
+                    if (Mechanic5LockedAttack != attack + 1
+                        || CurrentScriptedAction is not (ScriptedAction.Strike or ScriptedAction.Return))
                         NPC.velocity = Vector2.Zero; // 客户端等待本次锁定起终点，不能读取上一轮数据。
                     else if (age < SkeletronLegendHead.Mechanic5Parameters.HandStrikeDuration)
                     {
                         if (TONetworkEnvironment.NotClient)
                             ChangeScriptedAction(ScriptedAction.Strike);
-                        NPC.damage = NPC.defDamage;
+                        NPC.damage = SkeletronLegendHead.Phase2HandContactDamage;
                         float progress = (age + 1f) / SkeletronLegendHead.Mechanic5Parameters.HandStrikeDuration;
                         NPC.velocity = Vector2.Lerp(StrikeOrigin, StrikeDestination, progress) - NPC.Center;
                     }
@@ -199,7 +213,7 @@ public sealed partial class SkeletronLegendHand
         // 待机复用普通骷髅王手部；拍击保留传说之夜的主体时序和距离计时。
         void NormalHandAI(SkeletronLegendHead head)
         {
-            bool canAttack = head.Phase2 && !head.Mechanic1Rotating;
+            bool canAttack = head.Phase2 && !head.Mechanic1Spinning;
             float windupAcceleration = MathHelper.Lerp(0.2f, 0.4f, 1f - master.LifeRatio) * 1.5f;
             int timer = canAttack ? head.Timer1 % AttackCycleDuration : 0;
             NPC.ai[3] = timer;
@@ -221,7 +235,7 @@ public sealed partial class SkeletronLegendHand
                         float velocityMultiplier = MathHelper.Lerp(0.6f, 1f, lifeRatio) * 0.75f;
                         float velocityIncrement = MathHelper.Lerp(0.2f, 0.4f, 1f - lifeRatio) * 1.5f;
                         float deceleration = (Main.getGoodWorld ? 0.78f : 0.82f) * 0.75f;
-                        bool raised = head.CurrentBehavior == SkeletronLegendHead.Behavior.Rotate || head.Mechanic1Rotating;
+                        bool raised = head.CurrentBehavior == SkeletronLegendHead.Behavior.Spin || head.Mechanic1Spinning;
                         if (raised)
                         {
                             deceleration *= 0.75f;
@@ -284,7 +298,7 @@ public sealed partial class SkeletronLegendHand
 
             // 仅实际下拍和横扫造成接触伤害，蓄势与回收阶段保持无伤害。
             if (canAttack && CurrentNormalAction is NormalAction.Slam or NormalAction.Sweep)
-                NPC.damage = NPC.defDamage;
+                NPC.damage = SkeletronLegendHead.Phase2HandContactDamage;
         }
 
         void ChangeNormalAction(NormalAction action)
@@ -311,7 +325,7 @@ public sealed partial class SkeletronLegendHand
             int relativeAge = age - SkeletronLegendHead.Mechanic2Parameters.GetStrikeTime(strike);
             bool selected = head.Mechanic2HandPattern != 0 && side == head.Mechanic2StrikeSide(strike);
             Vector2 center = head.Phase2Arena?.Projectile.Center ?? Master.Center;
-            // 拍击手沿法阵轨迹抬起；另一只手保持下垂并留出横向骨节空间，从玩家侧旁掠过。
+            // 非拍击手保持下垂并留出横向骨节空间，从玩家侧旁掠过。
             Vector2 restingCenter = Master.Center + GetIdleOffset(side);
             if (!selected && head.Mechanic2HandPattern != 0 && age < SkeletronLegendHead.Mechanic2Parameters.ReturnStartAge)
             {
@@ -321,20 +335,18 @@ public sealed partial class SkeletronLegendHand
             float z = head.AnomalyNPC.Z;
             if (selected && relativeAge >= -SkeletronLegendHead.Mechanic2Parameters.HandRaiseLeadTime && age < SkeletronLegendHead.Mechanic2Parameters.ReturnStartAge)
             {
-                float attackProgress = SkeletronLegendHead.Mechanic2Parameters.HandAttackProgress(age);
+                float raise = SkeletronLegendHead.Mechanic2Parameters.HandRaiseProgress(relativeAge);
                 float slam = SkeletronLegendHead.Mechanic2Parameters.HandSlamProgress(relativeAge);
-                Vector2 raised = center + new Vector2(side * 540f, -700f);
-                Vector2 impact = center + new Vector2(side * 540f, 200f);
-                destination = Vector2.Lerp(destination, Vector2.Lerp(raised, impact, slam), attackProgress);
-                z = MathHelper.Lerp(head.AnomalyNPC.Z, 0f, slam * attackProgress);
-            }
-            // 最后一拍的手掌随本体穿过观察者平面，再在完全不可见时隐藏。
-            // 其他拍击仍保持手掌落在前景的原有表现。
-            if (selected && strike == SkeletronLegendHead.Mechanic2Parameters.StrikeCount - 1 && relativeAge > 0)
-            {
-                float exit = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(relativeAge
-                    / (float)SkeletronLegendHead.Mechanic2Parameters.BodyFollowThroughDuration, 0f, 1f));
-                z = MathHelper.Lerp(z, SkeletronLegendHead.Mechanic2Parameters.BodyExitZ, exit);
+                float exit = SkeletronLegendHead.Mechanic2Parameters.HandExitProgress(relativeAge);
+                Vector2 raised = Master.Center + new Vector2(side * 390f, -300f);
+                // 触击时的透视会放大侧向距离，收近世界坐标以让手掌留在画面内。
+                Vector2 impact = center + new Vector2(side * 350f, 130f);
+                Vector2 strikePosition = Vector2.Lerp(Vector2.Lerp(restingCenter, raised, raise), impact, slam)
+                    + new Vector2(side * 120f, 90f) * exit;
+                // 手掌穿过观察者后先在屏外并回头部侧边，再随本体重新入画。
+                float rejoin = SkeletronLegendHead.Mechanic2Parameters.HandRejoinProgress(relativeAge);
+                destination = Vector2.Lerp(strikePosition, restingCenter, rejoin);
+                z = SkeletronLegendHead.Mechanic2Parameters.GetStrikingHandDepth(relativeAge, z, slam, exit, rejoin);
             }
             // 固定入场起点和切线，不对逐帧变化的当前位置反复插值，避免把惯性偏移快速拉回。
             float entry = SkeletronLegendHead.Mechanic2Parameters.HandEntryProgress(age);
@@ -370,7 +382,7 @@ public sealed partial class SkeletronLegendHand
             // 始终以闲置位置计算基准，避免抬手时基准朝向随攻击位置变化。
             // 收拢只改变非拍击手的位置，朝向始终沿用标准下垂姿态。
             float restingRotation = GetRestingRotation(Master.Center + GetIdleOffset(side), Master.Center, side, NPC.height);
-            float destinationRotation = SkeletronLegendHead.Mechanic2Parameters.GetHandRotation(age, selected, restingRotation);
+            float destinationRotation = SkeletronLegendHead.Mechanic2Parameters.GetHandRotation(relativeAge, side, selected, restingRotation);
             NPC.rotation += MathHelper.WrapAngle(destinationRotation - NPC.rotation) * entry;
         }
 

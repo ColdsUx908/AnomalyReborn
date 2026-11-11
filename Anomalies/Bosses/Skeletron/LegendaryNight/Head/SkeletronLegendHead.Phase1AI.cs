@@ -1,7 +1,11 @@
+using CalamityMod.UI.DialogueDisplay.TextEffects;
+
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed partial class SkeletronLegendHead
 {
+    #region 行为分派与符卡抽选
+
     private void Phase1AI()
     {
         switch (CurrentBehavior)
@@ -13,8 +17,8 @@ public sealed partial class SkeletronLegendHead
             case Behavior.Normal:
                 Phase1NormalAI();
                 break;
-            case Behavior.Rotate:
-                Phase1RotationAI();
+            case Behavior.Spin:
+                Phase1SpinAI();
                 break;
         }
     }
@@ -31,7 +35,13 @@ public sealed partial class SkeletronLegendHead
             return;
 
         Union32 pool = AI_Union_2;
-        CurrentSpell = (Spell)DrawSpell((byte)CurrentSpell, ref pool.Byte0);
+        if (CurrentSpell == Spell.None)
+        {
+            CurrentSpell = Spell.PlatinumCoin;
+            pool.Byte0 = 0b011;
+        }
+        else
+            CurrentSpell = (Spell)DrawSpell((byte)CurrentSpell, ref pool.Byte0);
         AI_Union_2 = pool;
         NPC.netUpdate = true;
 
@@ -61,28 +71,32 @@ public sealed partial class SkeletronLegendHead
         }
     }
 
+    #endregion
+
     private void Phase1NormalAI()
     {
+        #region 常态攻击与移动
+
         bool shouldUseNormalMovement = true;
 
-        Timer1++;
+        const int ShockwaveTime = 300;
+        // 保留 Timer1 的累计帧数，供旋转结束后的钱币审判接续计时。
+        int normalTimer = ++Timer1 - (FirstSpellCycleCompleted ? SkeletronHead.PostSpinHoverQuietDuration : 0);
 
-        if (Timer1 % 30 == 0 && Timer1 is > 30 and <= 300)
-            SkeletronHead.FireSkull(NPC, Target, Main.rand.NextBool(3) ? 2 : 1, TOMathUtils.PiOver10, 20f, SkullDamage, addNPCVelocity: false);
+        if (normalTimer % 30 == 0 && normalTimer is > 30 and <= ShockwaveTime)
+            SkeletronHandler.FireSkull(NPC, Target, Main.rand.NextBool(3) ? 2 : 1, TOMathUtils.PiOver10, 20f, SkullDamage, addNPCVelocity: false);
 
-        if (Timer1 == 300)
+        if (normalTimer == ShockwaveTime)
         {
             SelectNextPhase1Spell();
 
             SoundEngine.PlaySound(SoundID.ForceRoar);
             ReleaseSpellShockwave();
-
-            SkeletronHead.FireSkull(NPC, Target, 12, TOMathUtils.PiOver6, 12f, SkullDamage, ai0: 1);
         }
 
-        if (Timer1 > 300)
+        if (normalTimer > ShockwaveTime)
         {
-            int adjustedTimer = Timer1 - 300;
+            int adjustedTimer = normalTimer - ShockwaveTime;
 
             switch (CurrentSpell)
             {
@@ -110,18 +124,31 @@ public sealed partial class SkeletronLegendHead
             float accelerationY = 0.08f;
             float targetDistanceAboveTarget = 300f;
             float rotationFactor = 20f;
-
-            SkeletronHead.NormalMovement(NPC, Target, maxSpeedX, maxSpeedY, accelerationX, accelerationY, targetDistanceAboveTarget, rotationFactor);
+            SkeletronHandler.NormalMovement(NPC, Target, maxSpeedX, maxSpeedY, accelerationX, accelerationY, targetDistanceAboveTarget, rotationFactor);
         }
+
+        #endregion
+
+        #region 常态符卡
 
         void NormalNoneSpell(int adjustedTimer)
         {
-            if (adjustedTimer % 10 == 0)
-                SkeletronHead.FireSkull(NPC, Target, Main.rand.NextBool(3) ? 2 : 1, TOMathUtils.PiOver10, 20f, SkullDamage, addNPCVelocity: false);
+            const int Duration = 300;
+            const int QuietDuration = 60;
+            if (adjustedTimer < Duration - QuietDuration && adjustedTimer % 10 == 0)
+                SkeletronHandler.FireSkull(NPC, Target, Main.rand.NextBool(3) ? 2 : 1, TOMathUtils.PiOver10, 20f, SkullDamage, addNPCVelocity: false);
 
-            if (adjustedTimer >= 300)
+            if (adjustedTimer >= Duration)
             {
-                BeginPhase1Rotation();
+                BeginPhase1Spin();
+                if (TONetworkEnvironment.NotClient)
+                    SkeletronHandler.FireAcceleratingSpread(NPC, Target, SkeletronHead.MaximumSpreadCount, SkeletronHead.MaximumSpreadDegrees,
+                        (position, velocity) => Projectile.NewProjectileAction(SourceAI, position, velocity, ProjectileID.Skull,
+                            SkullDamage, 0f, Main.myPlayer, action: p =>
+                            {
+                                Skull.InitializeFlight(p, Skull.Straight, Skull.UltraMaxSpeed, Skull.RegularAcceleration);
+                                p.timeLeft = 600;
+                            }));
             }
         }
 
@@ -148,10 +175,10 @@ public sealed partial class SkeletronLegendHead
                 if (TONetworkEnvironment.NotClient)
                 {
                     int delay = 30;
-                    float distance = 300f - num * 35f;
-                    int amount = 40;
+                    float distance = 280f - num * 60f;
+                    int amount = 50;
 
-                    float y = Math.Min(Target.Center.Y - NPC.Center.Y, 0f) - 160f + Target.velocity.Y * Utils.Remap(-Target.velocity.Y, 5f, 20f, 0f, delay * 1.2f);
+                    float y = Math.Min(Target.Center.Y - NPC.Center.Y, 0f) - 320f + Target.velocity.Y * Utils.Remap(-Target.velocity.Y, 5f, 20f, 0f, delay * 1.2f);
                     Vector2 left = new(-distance * ((amount - 1) / 2f), y);
                     Vector2 interval = new(distance, 0f);
                     for (int i = 0; i < amount; i++)
@@ -170,7 +197,7 @@ public sealed partial class SkeletronLegendHead
 
             if (adjustedTimer >= 300)
             {
-                ResumePhase1Rotation();
+                ResumePhase1Spin();
             }
         }
 
@@ -180,7 +207,7 @@ public sealed partial class SkeletronLegendHead
 
             if (adjustedTimer >= 560)
             {
-                ResumePhase1Rotation();
+                ResumePhase1Spin();
             }
         }
 
@@ -189,16 +216,18 @@ public sealed partial class SkeletronLegendHead
             const int BufferDuration = 60;
             // 只推迟竞技场和攻击时间轴；冲击波后的减速仍立即生效。
             adjustedTimer -= BufferDuration;
-            if (ArenaProjectileAlive)
-                ArenaModProjectile.IsActivated = adjustedTimer is >= 0 and < 510;
 
             const int RainStart = 60;
-            const int RainEnd = 480;
+            const int RainEnd = 420; // 安全区在此到达最后一个极值，转向后不再生成金币。
+            const int SpinDelay = 90;
             const int RainInterval = 12;
             const float FallSpeed = 16f;
             const float ColumnSpacing = 40f;
             const float SafeZoneSpacing = 640f;
             const float SafeZoneWidth = 240f;
+
+            if (ArenaProjectileAlive)
+                ArenaModProjectile.IsActivated = adjustedTimer is >= 0 and <= RainEnd;
 
             StopMovement();
             NPC.rotation *= 0.9f;
@@ -239,79 +268,129 @@ public sealed partial class SkeletronLegendHead
                     }
                 }
 
-                // 金币雨落到玩家附近后开始低频自机狙，最后以一圈散射收尾。
-                if (adjustedTimer >= 150 && adjustedTimer <= 420 && (adjustedTimer - 150) % 90 == 0)
-                    SkeletronHead.FireSkull(NPC, Target, 1, 0f, 15f, SkullDamage, addNPCVelocity: false);
+                // 金币雨落到玩家附近后开始自机狙
+                if (adjustedTimer >= 150 && adjustedTimer <= 420 && (adjustedTimer - 150) % 30 == 0)
+                    SkeletronHandler.FireSkull(NPC, Target, 5, MathHelper.TwoPi / 5f, 15f, SkullDamage, addNPCVelocity: false);
             }
 
-            if (adjustedTimer >= 510)
+            if (adjustedTimer >= RainEnd + SpinDelay)
             {
-                BeginPhase1Rotation();
+                BeginPhase1Spin();
             }
         }
+
+        #endregion
+
+        #region 切换至自转行为
+
+        // 史莱姆和落星常态符卡沿用已有局部步骤，仅重置行为计时。
+        void ResumePhase1Spin()
+        {
+            CurrentBehavior = Behavior.Spin;
+            Timer1 = 0;
+        }
+
+        void BeginPhase1Spin()
+        {
+            CurrentBehavior = Behavior.Spin;
+            CurrentLocalPhase = 0;
+            Timer1 = 0;
+            NPC.netUpdate = true;
+        }
+
+        #endregion
     }
 
-    private void Phase1RotationAI()
+    private void Phase1SpinAI()
     {
+        #region 自转入场与持续动作
+
         switch (CurrentLocalPhase)
         {
             case 0:
-                SoundEngine.PlaySound(SoundID.ForceRoar);
-                ReleaseSpellShockwave();
-                NPC.Face(Target);
-                Timer1 = 0;
-                if (CurrentSpell == Spell.Star && TONetworkEnvironment.NotClient)
-                {
-                    Projectile.NewProjectileAction<DemonShadow>(SourceAI, NPC.Center + new Vector2(180f * NPC.direction, -160f),
-                        Vector2.Zero, 0, 0f, action: p =>
-                        {
-                            p.ai[0] = NPC.target + 1;
-                            p.ai[2] = NPC.whoAmI + 1;
-                            p.netUpdate = true;
-                        });
-                }
-                CurrentLocalPhase = 1;
-                NPC.netUpdate = true;
+                BeginSpin();
                 break;
             case 1:
-                float rotationSpeed = 0.3f;
-                float moveSpeed = 9f;
-                SkeletronHead.RotatingMovement(NPC, Target, rotationSpeed, moveSpeed);
-
-                Timer1++;
-
-                // 各旋转符卡的额外攻击。
-                switch (CurrentSpell)
-                {
-                    case Spell.None:
-                        RotatingNoneSpell();
-                        break;
-                    case Spell.Slime:
-                        RotatingSlimeSpell();
-                        break;
-                    case Spell.Star:
-                        RotatingStarSpell();
-                        break;
-                    case Spell.PlatinumCoin:
-                        RotatingPlatinumCoinSpell();
-                        break;
-                }
+                UpdateSpin();
                 break;
         }
 
-        void ApplyAvatarOpacity(float targetOpacity) => NPC.Opacity = MathHelper.Lerp(1f, targetOpacity, MathHelper.Clamp(Timer1 / 10f, 0f, 1f));
-
-        void RotatingNoneSpell()
+        void BeginSpin()
         {
-            SummonRotatingSkullWarnings(Timer1);
-
-            if (Timer1 >= 420)
+            SoundEngine.PlaySound(SoundID.ForceRoar);
+            ReleaseSpellShockwave();
+            NPC.Face(Target);
+            Timer1 = 0;
+            if (CurrentSpell == Spell.Star && TONetworkEnvironment.NotClient)
             {
-                CompletePhase1Rotation();
+                Projectile.NewProjectileAction<DemonShadow>(SourceAI, NPC.Center + new Vector2(180f * NPC.direction, -160f),
+                    Vector2.Zero, 0, 0f, action: p =>
+                    {
+                        p.ai[0] = NPC.target + 1;
+                        p.ai[2] = NPC.whoAmI + 1;
+                        p.netUpdate = true;
+                    });
+            }
+            if (CurrentSpell == Spell.PlatinumCoin && TONetworkEnvironment.NotClient)
+            {
+                Projectile.NewProjectileAction<CoinRoulette>(SourceAI, Target.Center, Vector2.Zero, 0, 0f, action: p =>
+                {
+                    p.ai[0] = NPC.target + 1;
+                    p.ai[2] = Main.rand.Next(4);
+                    CoinRoulette roulette = p.GetModProjectile<CoinRoulette>();
+                    roulette.MasterIndex = NPC.whoAmI + 1;
+                    p.netUpdate = true;
+                });
+            }
+            CurrentLocalPhase = 1;
+            NPC.netUpdate = true;
+        }
+
+        void UpdateSpin()
+        {
+            float spinSpeed = 0.3f;
+            float distance = NPC.Distance(Target.Center);
+            float moveSpeed = SkeletronHandler.GetSpinMoveSpeed(distance);
+            SkeletronHandler.SpinMovement(NPC, Target, spinSpeed, moveSpeed);
+
+            Timer1++;
+
+            // 各自转符卡的额外攻击。
+            switch (CurrentSpell)
+            {
+                case Spell.None:
+                    SpinNoneSpell();
+                    break;
+                case Spell.Slime:
+                    SpinSlimeSpell();
+                    break;
+                case Spell.Star:
+                    SpinStarSpell();
+                    break;
+                case Spell.PlatinumCoin:
+                    SpinPlatinumCoinSpell();
+                    break;
             }
         }
 
-        void RotatingSlimeSpell()
+        #endregion
+
+        #region 自转符卡与收尾
+
+        void ApplyAvatarOpacity(float targetOpacity) => NPC.Opacity = MathHelper.Lerp(1f, targetOpacity, MathHelper.Clamp(Timer1 / 10f, 0f, 1f));
+
+        void SpinNoneSpell()
+        {
+            if (Timer1 % 60 == 0 && Timer1 <= 360)
+                SummonSpinSkullWarnings(6);
+
+            if (Timer1 >= SkeletronHead.EnhancedSpinDuration + SkeletronHead.WarningSpinQuietDuration)
+            {
+                CompletePhase1Spin();
+            }
+        }
+
+        void SpinSlimeSpell()
         {
             ApplyAvatarOpacity(0.5f);
 
@@ -320,7 +399,7 @@ public sealed partial class SkeletronLegendHead
                 // 每轮生成一个立即下落的坐骑，并同步绘制延伸预警。
                 if (Timer1 >= 30 && Timer1 <= 450 && (Timer1 - 30) % 20 == 0)
                 {
-                    Vector2 position = Target.Center + new Vector2(Main.rand.NextFloat(-1200f, 1200f), -1000f);
+                    Vector2 position = Target.Center + new Vector2(Main.rand.NextFloat(-1200f, 1200f), Main.rand.NextFloat(-1200f, -1000f));
                     Projectile.NewProjectileAction<SlimeMount>(SourceAI, position, Vector2.UnitY * 0.75f, SlimeMountDamage, 0f, action: p =>
                     {
                         p.ai[1] = 1f;
@@ -358,11 +437,11 @@ public sealed partial class SkeletronLegendHead
 
             if (Timer1 >= 540)
             {
-                CompletePhase1Rotation();
+                CompletePhase1Spin();
             }
         }
 
-        void RotatingStarSpell()
+        void SpinStarSpell()
         {
             ApplyAvatarOpacity(0.5f);
             const int AttackInterval = 120;
@@ -390,7 +469,7 @@ public sealed partial class SkeletronLegendHead
                             p.scale = 0.2f;
                             p.timeLeft = 480;
                             p.GetModProjectile<FallingStar>().TrailType = 2;
-                            p.GetModProjectile<FallingStar>().AccelerationStartTime = 240;
+                            p.GetModProjectile<FallingStar>().AccelerationStartTime = 150;
                             p.netUpdate = true;
                         });
                     }
@@ -399,11 +478,11 @@ public sealed partial class SkeletronLegendHead
 
             if (Timer1 >= 600)
             {
-                CompletePhase1Rotation();
+                CompletePhase1Spin();
             }
         }
 
-        void RotatingPlatinumCoinSpell()
+        void SpinPlatinumCoinSpell()
         {
             ApplyAvatarOpacity(0.5f);
             if (Timer1 <= 420 && Timer1 % 6 == 0 && !Main.dedServ)
@@ -426,49 +505,23 @@ public sealed partial class SkeletronLegendHead
                         });
                     }
                 }
-
-                if (Timer1 == 30)
-                {
-                    Projectile.NewProjectileAction<CoinRoulette>(SourceAI, Target.Center, Vector2.Zero, 0, 0f, action: p =>
-                    {
-                        p.ai[0] = NPC.target + 1;
-                        p.ai[2] = Main.rand.Next(4);
-                        CoinRoulette roulette = p.GetModProjectile<CoinRoulette>();
-                        roulette.MasterIndex = NPC.whoAmI + 1;
-                        roulette.LockTime = Main.rand.Next(5, 9) * CoinRoulette.CycleTime;
-                        p.netUpdate = true;
-                    });
-                }
             }
 
-            if (Timer1 >= 480)
+            if (Timer1 >= CoinRoulette.RotationDuration)
             {
-                CompletePhase1Rotation();
+                CompletePhase1Spin();
             }
         }
-    }
 
-    // 史莱姆和落星常态符卡沿用已有局部步骤，仅重置行为计时。
-    private void ResumePhase1Rotation()
-    {
-        CurrentBehavior = Behavior.Rotate;
-        Timer1 = 0;
-    }
+        void CompletePhase1Spin()
+        {
+            FirstSpellCycleCompleted = true;
+            CurrentBehavior = Behavior.Normal;
+            CurrentLocalPhase = 0;
+            Timer1 = 0;
+            NPC.netUpdate = true;
+        }
 
-    private void BeginPhase1Rotation()
-    {
-        CurrentBehavior = Behavior.Rotate;
-        CurrentLocalPhase = 0;
-        Timer1 = 0;
-        NPC.netUpdate = true;
-    }
-
-    private void CompletePhase1Rotation()
-    {
-        FirstSpellCycleCompleted = true;
-        CurrentBehavior = Behavior.Normal;
-        CurrentLocalPhase = 0;
-        Timer1 = 0;
-        NPC.netUpdate = true;
+        #endregion
     }
 }

@@ -1,7 +1,7 @@
 using CalamityMod.NPCs.SlimeGod;
 using Transoceanic.Runtime.Hooks;
 
-namespace Anomalies.ModCompatibility;
+namespace Anomalies.ModIntegration;
 
 [ExtendsFromMod(CalamityModName)]
 public sealed class TOHookHandler : ILoadable

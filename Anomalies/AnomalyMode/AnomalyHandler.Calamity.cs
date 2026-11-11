@@ -6,8 +6,8 @@ using CalamityMod.World;
 using Terraria.UI.Chat;
 using Transoceanic.Runtime.Detours;
 using static Anomalies.AnomalyMode.AnomalyHandler;
-using static Anomalies.ModCompatibility.DifficultyModeSystem_Publicizer;
-using static Anomalies.ModCompatibility.ModeIndicatorUI_Publicizer;
+using static Anomalies.ModIntegration.DifficultyModeSystem_Publicizer;
+using static Anomalies.ModIntegration.ModeIndicatorUI_Publicizer;
 using static CalamityMod.Systems.DifficultyModeSystem;
 using static CalamityMod.UI.ModeIndicator.ModeIndicatorUI;
 

@@ -6,7 +6,7 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 /// <remarks>
 /// <para>ai[0]：左右侧（-1/+1）；ai[1]：主体 NPC 的0-based索引（NPC.Master 同时通过 OceanAI32[3].I 保存主人）；ai[2]：常态动作或机制二/五/六脚本动作；ai[3]：常态周期帧，机制五复用为已锁定攻击序号 + 1。</para>
 /// <para>脚本 ai[2]：0待机、1蓄势、2前挥、3收手、4托球准备、6机制二入场（避开常态动作的0..5）；常态 ai[2]：0待机、1抬手、2拍击、3恢复、4横扫蓄势、5横扫。</para>
-/// <para>AnomalyAI64[0]：常态/机制五挥击起点，托球准备时复用为相对头部的起点，机制二入场时复用为相对头部的起点；[1]：常态/机制五锁定终点，机制二入场时复用为初速度。完整向量以一个 64 位槽同步。</para>
+/// <para>AnomalyAI64[0]：常态/机制五挥击起点，机制五蓄势时复用为后撤方向，托球准备及机制二入场时复用为相对头部的起点；[1]：常态/机制五锁定终点，机制二入场时复用为初速度。完整向量以一个 64 位槽同步。</para>
 /// <para>localAI、框架 Timer1..5、AnomalyAI32：本行为未使用；手部时序读取主体计时或音乐时钟。</para>
 /// <para>Skeletron_HandBloodDust 为统一 GlobalNPC 中的客户端视觉集合，克隆重置、不参与网络同步。</para>
 /// </remarks>
@@ -76,6 +76,13 @@ public sealed partial class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLe
         }
     }
 
+    /// <summary>星爆开始时锁定的后撤方向，挥击前复用 AI64[0]。</summary>
+    private Vector2 Mechanic5WindupDirection
+    {
+        get => StrikeOrigin;
+        set => StrikeOrigin = value;
+    }
+
     /// <summary>机制二入场的相对起点，复用 AI64[0]。</summary>
     private Vector2 Mechanic2EntryOffset
     {
@@ -126,12 +133,12 @@ public sealed partial class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLe
     internal static bool IsOwnedBy(NPC hand, NPC head) => hand.type == NPCID.SkeletronHand && (int)hand.ai[1] == head.whoAmI;
     public override int ApplyingType => NPCID.SkeletronHand;
 
-    public override decimal Priority => 10m;
+    public override decimal Priority => 110m;
     public override bool ShouldProcess
     {
         get
         {
-            if (!base.ShouldProcess)
+            if (!AnomalyBossChangeToggler.LegendaryNight || !base.ShouldProcess)
                 return false;
             if (AnomalyNPC.CustomAIType == 1)
                 return true;
@@ -155,9 +162,12 @@ public sealed partial class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLe
 
     public override void SetDefaultsFinal()
     {
-        NPC.lifeMax = 1500;
+        NPC.lifeMax = 2970; //3960
         NPC.defense = 9999;
     }
+
+    public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) =>
+        AnomalyUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
 
     public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
     {

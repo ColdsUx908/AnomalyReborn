@@ -75,7 +75,7 @@ public sealed partial class LegendEnergySphere
                 for (int i = 0; i < Main.maxPlayers; i++)
                 {
                     if (Main.player[i].active || (_PlayerBonuses[i].DamageStacks == 0
-                        && _PlayerBonuses[i].RegenerationStacks == 0 && !_PlayerBonuses[i].ExpectsPlatinum))
+                        && _PlayerBonuses[i].RegenerationStacks == 0 && !_PlayerBonuses[i].HasAcceptedOrb))
                         continue;
                     _PlayerBonuses[i] = default;
                     Projectile.netUpdate = true;

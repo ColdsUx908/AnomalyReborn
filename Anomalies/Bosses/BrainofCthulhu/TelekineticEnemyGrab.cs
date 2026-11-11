@@ -336,7 +336,7 @@ public class TelekineticEnemyGrab : AnomalyModProjectile
                 glowOpacity = Time / 15f;
             if (_Curve != null)
             {
-                Transoceanic.Graphics.Rendering.SpriteBatchSnapshot snapshot = Main.spriteBatch.ChangeState(blendState: BlendState.Additive);
+                SpriteBatchSnapshot snapshot = Main.spriteBatch.ChangeState(blendState: BlendState.Additive);
                 Texture2D ring = TextureAssets.Projectile[Type].Value;
                 List<Vector2> points = _Curve.GetPoints(pCount);
                 for (int i = 1; i < pCount; i++)

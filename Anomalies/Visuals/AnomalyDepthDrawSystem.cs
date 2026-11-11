@@ -241,7 +241,7 @@ public sealed partial class AnomalyDepthDrawSystem : ModSystem
     #region NPCCollision
     private static void LoadNPCCollision()
     {
-        System.Reflection.MethodInfo innerDamage = typeof(Projectile).GetMethod("Damage_PVE_Inner",
+        MethodInfo innerDamage = typeof(Projectile).GetMethod("Damage_PVE_Inner",
             BindingFlags.Instance | BindingFlags.NonPublic);
         if (innerDamage is not null)
             MonoModHooks.Modify(innerDamage, ProjectSplitProjectileNPCCollision);

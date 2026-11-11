@@ -48,6 +48,8 @@ public sealed partial class SkeletronLegendHead
 
         AnomalyNPC.BossBar_Immune = CurrentPhase == Phase.PhaseChange_1To2;
 
+        NPC.damage = Phase2 ? Phase2HeadContactDamage : NPC.defDamage;
+
         switch (CurrentPhase)
         {
             case Phase.Initialize:
@@ -69,6 +71,9 @@ public sealed partial class SkeletronLegendHead
                 Phase2AI();
                 break;
         }
+
+        if (CurrentPhase == Phase.Phase1)
+            NPC.damage = CurrentBehavior == Behavior.Spin ? SpinContactDamage : Phase1ContactDamage;
 
         if (!Main.dedServ && Phase2GlowOpacity > 0f)
             Lighting.AddLight(NPC.Center, LegendaryNightHandler.StarColor.ToVector3() * Phase2GlowOpacity);
@@ -136,23 +141,22 @@ public sealed partial class SkeletronLegendHead
         }
     }
 
-    private void SummonRotatingSkullWarnings(int timer)
+    private void SummonSpinSkullWarnings(int count = 4)
     {
-        if (TONetworkEnvironment.NotClient && timer % 75 == 0 && timer <= 300)
+        if (!TONetworkEnvironment.NotClient)
+            return;
+
+        float offset = Main.rand.NextFloat(MathHelper.TwoPi);
+        for (int i = 0; i < count; i++)
         {
-            const int SkullCount = 4;
-            float offset = Main.rand.NextFloat(MathHelper.TwoPi);
-            for (int i = 0; i < SkullCount; i++)
+            Vector2 position = Target.Center + new Vector2(Main.rand.NextFloat(800f, 1000f), 0f)
+                .RotatedBy(offset + MathHelper.TwoPi * i / count);
+            Projectile.NewProjectileAction<SkullWarning>(SourceAI, position, Vector2.Zero, SkullDamage, 0f, action: p =>
             {
-                Vector2 position = Target.Center + new Vector2(Main.rand.NextFloat(800f, 1000f), 0f)
-                    .RotatedBy(offset + MathHelper.TwoPi * i / SkullCount);
-                Projectile.NewProjectileAction<SkullWarning>(SourceAI, position, Vector2.Zero, SkullDamage, 0f, action: p =>
-                {
-                    p.ai[0] = NPC.target + 1;
-                    p.ai[2] = NPC.whoAmI + 1;
-                    p.netUpdate = true;
-                });
-            }
+                p.ai[0] = NPC.target + 1;
+                p.ai[2] = NPC.whoAmI + 1;
+                p.netUpdate = true;
+            });
         }
     }
 

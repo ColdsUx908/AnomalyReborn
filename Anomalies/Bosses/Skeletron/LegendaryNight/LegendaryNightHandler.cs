@@ -6,7 +6,7 @@ public static class LegendaryNightHandler
     /// <summary>传说之夜资源根路径。</summary>
     public const string LegendaryNightPath = AnomalySharedData.ModPath + "Bosses/Skeletron/LegendaryNight/";
     /// <summary>机制七元素弹幕标记。</summary>
-    public const float Mechanic7ElementProjectileMarker = -7f;
+    public const float Mechanic7ElementProjectileMarker = Skull.SuppressDeathEffectsMarker;
 
     /// <summary>本地化分类路径。</summary>
     public const string LocalizationCategory = "Bosses.Skeletron.LegendaryNight";
@@ -22,7 +22,8 @@ public static class LegendaryNightHandler
     /// <summary>
     /// 检查 NPC 是否为有效的传说之夜骷髅王头部，排除无效索引返回的哑元。
     /// </summary>
-    public static bool IsLegendaryNightHead(NPC npc) => npc is { active: true, type: NPCID.SkeletronHead }
+    public static bool IsLegendaryNightHead(NPC npc) => AnomalyBossChangeToggler.LegendaryNight
+        && npc is { active: true, type: NPCID.SkeletronHead }
         && npc.whoAmI >= 0 && npc.whoAmI < Main.maxNPCs && npc.Anomaly?.CustomAIType == 1;
 
     /// <summary>

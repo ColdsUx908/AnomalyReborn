@@ -13,6 +13,8 @@ public static class AnomalyBossChangeToggler
         false;
 #endif
 
+    //按首字母排序
+
     public static bool BrainofCthulhu { get; private set; } = EnableUnfinishedBossChange;
 
     public static bool DukeFishron { get; private set; } = EnableUnfinishedBossChange;
@@ -24,6 +26,8 @@ public static class AnomalyBossChangeToggler
     public static bool EyeofCthulhu { get; private set; } = true;
 
     public static bool KingSlime { get; private set; } = true;
+
+    public static bool LegendaryNight { get; private set; } = EnableUnfinishedBossChange;
 
     public static bool QueenBee { get; private set; } = true;
 

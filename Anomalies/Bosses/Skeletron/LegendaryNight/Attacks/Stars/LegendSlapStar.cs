@@ -19,6 +19,7 @@ public sealed class LegendSlapStar : AnomalyModProjectile
     {
         ProjectileID.Sets.TrailCacheLength[Type] = SkeletronLegendHead.Mechanic2Parameters.StarTrailLength;
         ProjectileID.Sets.TrailingMode[Type] = 2;
+        ProjectileID.Sets.PlayerHurtDamageIgnoresDifficultyScaling[Type] = true;
     }
 
     public override void SetDefaults()
@@ -61,6 +62,7 @@ public sealed class LegendSlapStar : AnomalyModProjectile
             return;
         }
         Projectile.rotation += 0.14f;
+        FallingStar.SpawnFlightSparkle(Projectile);
         if (!Main.dedServ)
         {
             Player player = Main.LocalPlayer;
@@ -74,7 +76,7 @@ public sealed class LegendSlapStar : AnomalyModProjectile
                 if (_Hit || !Main.LocalPlayer.active || Main.LocalPlayer.dead || Main.LocalPlayer.ghost)
                     return;
                 _Hit = true;
-                LegendaryNightDamage.HurtLocalPlayer(Projectile, Projectile.damage, false);
+                LegendaryNightDamage.HurtLocalPlayer(Projectile, Projectile.damage, false, ignoreAllImmunity: true);
             }
         }
     }

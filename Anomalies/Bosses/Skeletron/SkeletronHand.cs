@@ -82,11 +82,20 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
 
     public ref float Timer => ref NPC.ai[3];
 
+    public override void SetDefaultsFinal()
+    {
+        NPC.lifeMax = CalamityEnabled ? 1350 : 1125;
+        BridgeUtils.ApplyCalamityHealthBoost(NPC);
+    }
+
+    public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) =>
+        AnomalyUtils.ApplyAnomalyBossDifficultyAndPlayerScaling(NPC, bossAdjustment);
+
     // NPC.ai[0..1]: side/owner; AI32[0..3]: vertical side, age, telegraph, readiness.
     // AI32[7]: packed phase/behavior; AI32[8]: periodic resync timer.
     public override bool PreAI()
     {
-        using Anomalies.DataStructures.BossNetUpdateScope netUpdate = new(NPC);
+        using BossNetUpdateScope netUpdate = new(NPC);
         // Late joiners and predicted timers receive the same complete per-NPC snapshot.
         if (Main.netMode != NetmodeID.MultiplayerClient && ++ResyncTimer >= 60f)
         {
@@ -138,22 +147,17 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
         }
         float skeletronLifeRatio = Main.npc[headIndex].life / (float)Main.npc[headIndex].lifeMax;
 
-        // This bool exists for fairness so the hands don't slap when Skeletron is in phase 3 and getting ready to do the new charge
         SkeletronHead head = SkeletronHead.GetInstance(Main.npc[headIndex]);
-        bool cancelSlap = head.Timer >= ChargeGateValue;
+        bool cancelSlap = head.CurrentBehavior != SkeletronHead.Behavior.Hover || head.Timer >= ChargeGateValue;
 
-        // Fire skulls from hands at the end of each slap phase (master mode only)
-        CurrentPhase = skeletronLifeRatio < 0.3f ? Phase.Phase3
-            : skeletronLifeRatio < 0.5f ? Phase.Phase2 : Phase.Phase1;
-
-
-        // Attack far more often if still alive
-
+        // Ultra starts with the former second wave's faster slaps and escalates as hands fall.
+        const int CrossboneHandCount = 2;
+        CurrentPhase = Ultra ? (head.CountLivingHands() <= CrossboneHandCount ? Phase.Phase3 : Phase.Phase2) : Phase.Phase1;
 
         float velocityMultiplier = MathHelper.Lerp(0.6f, 1f, skeletronLifeRatio);
         float velocityIncrement = MathHelper.Lerp(0.2f, 0.4f, 1f - skeletronLifeRatio);
         float handSwipeVelocity = MathHelper.Lerp(16f, 24f, 1f - skeletronLifeRatio);
-        float deceleration = Main.getGoodWorld ? 0.78f : 0.82f;
+        float deceleration = Ultra ? 0.78f : 0.82f;
 
         velocityMultiplier *= 0.75f;
         velocityIncrement *= 1.5f;
@@ -168,6 +172,13 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
             slapTimerIncrement *= 2.5f;
         else if (Phase2)
             slapTimerIncrement *= 2f;
+
+        if (cancelSlap && CurrentBehavior != Behavior.Idle && CurrentLocalPhase == 0
+            && Main.netMode != NetmodeID.MultiplayerClient)
+        {
+            CurrentLocalPhase = CurrentBehavior == Behavior.HorizontalSlap ? 1 : 0;
+            CurrentBehavior = Behavior.Idle;
+        }
 
         switch (CurrentBehavior)
         {
@@ -195,13 +206,23 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
             if (head.CurrentBehavior == SkeletronHead.Behavior.Despawn && NPC.timeLeft > 10)
                 NPC.timeLeft = 10;
 
-            if (head.CurrentBehavior != SkeletronHead.Behavior.Hover || cancelSlap)
+            if (cancelSlap)
             {
+                if (Timer != 0f)
+                {
+                    Timer = 0f;
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                        NPC.netUpdate = true;
+                }
+                FadeSlapTelegraph();
+
                 deceleration *= 0.75f;
                 velocityIncrement *= 1.5f;
 
-                Vector2 destination = Main.npc[headIndex].Center + GetIdleOffset(-Math.Sign(NPC.ai[0]), NPC.height, Main.npc[headIndex].height, yMultiplier, raised: true);
-                UpdateIdleMovement(NPC, destination, velocityIncrement, velocityMultiplier, deceleration);
+                NPC master = Main.npc[headIndex];
+                Vector2 destination = master.Center + GetIdleOffset(-Math.Sign(NPC.ai[0]), NPC.height, master.height, yMultiplier, raised: true);
+                UpdateIdleMovement(NPC, destination, velocityIncrement, velocityMultiplier, deceleration,
+                    followVelocity: head.IsSpinning ? master.velocity : null);
             }
             else
             {
@@ -221,13 +242,7 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
                 }
                 else
                 {
-                    SlapTelegraphTimer -= slapTimerIncrement * 2f;
-                    if (SlapTelegraphTimer <= 0f)
-                    {
-                        SlapTelegraphTimer = 0f;
-                        SlapReadiness = 1f;
-                        NPC.netUpdate = true;
-                    }
+                    FadeSlapTelegraph();
                 }
 
                 Vector2 destination = Main.npc[headIndex].Center + GetIdleOffset(-Math.Sign(NPC.ai[0]), NPC.height, Main.npc[headIndex].height, yMultiplier, raised: false);
@@ -237,6 +252,17 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
             UpdateIdleRotation(NPC, Main.npc[headIndex]);
 
             return;
+        }
+
+        void FadeSlapTelegraph()
+        {
+            if (SlapTelegraphTimer == 0f && SlapReadiness == 1f)
+                return;
+
+            SlapTelegraphTimer = Math.Max(0f, SlapTelegraphTimer - slapTimerIncrement * 2f);
+            SlapReadiness = SlapTelegraphTimer == 0f ? 1f : 0f;
+            if (SlapReadiness == 1f && Main.netMode != NetmodeID.MultiplayerClient)
+                NPC.netUpdate = true;
         }
 
         void VerticalDrawback()
@@ -268,24 +294,7 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
                 Timer = 0f;
                 NPC.netUpdate = true;
 
-                // Spawn projectiles
-                if (Collision.CanHit(NPC.Center, 1, 1, Main.player[NPC.target].position, Main.player[NPC.target].width, Main.player[NPC.target].height) && !cancelSlap)
-                {
-                    if (Main.netMode != NetmodeID.MultiplayerClient)
-                    {
-                        if (Phase2 && Vector2.Distance(Main.player[NPC.target].Center, NPC.Center) > 160f)
-                        {
-                            float skullProjSpeed = handSwipeVelocity * (Phase3 ? 0.6f : 0.2f);
-                            Vector2 initialProjectileVelocity = NPC.Center.DirectionTo(Main.player[NPC.target].Center) * skullProjSpeed;
-                            int type = ProjectileID.Skull;
-                            Projectile.NewProjectileAction(NPC.GetSource_FromAI(), NPC.Center, initialProjectileVelocity, type, SkullDamage, 0f, Main.myPlayer, action: p =>
-                            {
-                                p.ai[0] = Phase3 ? Skull.AcceleratingCrossbone : Skull.Homing;
-                                p.timeLeft = 600;
-                            });
-                        }
-                    }
-                }
+                FireSwipeProjectile();
             }
         }
 
@@ -318,25 +327,28 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
                 Timer = 0f;
                 NPC.netUpdate = true;
 
-                // Spawn projectiles
-                if (Collision.CanHit(NPC.Center, 1, 1, Main.player[NPC.target].position, Main.player[NPC.target].width, Main.player[NPC.target].height) && !cancelSlap)
-                {
-                    if (Main.netMode != NetmodeID.MultiplayerClient)
-                    {
-                        if (Phase2 && Vector2.Distance(Main.player[NPC.target].Center, NPC.Center) > 160f)
-                        {
-                            float skullProjSpeed = handSwipeVelocity * (Phase3 ? 0.6f : 0.2f);
-                            Vector2 initialProjectileVelocity = NPC.Center.DirectionTo(Main.player[NPC.target].Center) * skullProjSpeed;
-                            int type = ProjectileID.Skull;
-                            Projectile.NewProjectileAction(NPC.GetSource_FromAI(), NPC.Center, initialProjectileVelocity, type, SkullDamage, 0f, Main.myPlayer, action: p =>
-                            {
-                                p.ai[0] = Phase3 ? Skull.AcceleratingCrossbone : Skull.Homing;
-                                p.timeLeft = 600;
-                            });
-                        }
-                    }
-                }
+                FireSwipeProjectile();
             }
+        }
+
+        void FireSwipeProjectile()
+        {
+            Player target = Main.player[NPC.target];
+            if (!Phase2 || cancelSlap || Vector2.Distance(target.Center, NPC.Center) <= 160f
+                || !Collision.CanHit(NPC.Center, 1, 1, target.position, target.width, target.height))
+                return;
+
+            float speed = handSwipeVelocity * (Phase3 ? 0.6f : 0.2f);
+            Vector2 velocity = NPC.Center.DirectionTo(target.Center) * speed;
+            if (Phase3)
+                Crossbone.Fire(NPC, NPC.Center, velocity, SkullDamage, Skull.UltraMaxSpeed);
+            else
+                Projectile.NewProjectileAction(SourceAI, NPC.Center, velocity, ProjectileID.Skull, SkullDamage, 0f, Main.myPlayer, action: p =>
+                {
+                    Skull.InitializeFlight(p, Skull.Homing, Skull.MaxSpeed, Skull.Acceleration);
+                    Skull.SetSource(p, NPC);
+                    p.timeLeft = 600;
+                });
         }
     }
 
@@ -352,8 +364,8 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
     internal static void UpdateIdleMovement(NPC hand, Vector2 destination, float velocityIncrement, float velocityMultiplier, float deceleration,
         Vector2? followVelocity = null)
     {
-        // 传说之夜接近待机点后改为相对头部的阻尼收敛，避免固定加速度反复跨越目标。
-        // 此分支直接替代逐轴加速，不在同一帧叠加两套归位；普通手部沿用原有分支。
+        // 启用跟随时，接近待机点后改为相对头部的阻尼收敛，避免固定加速度反复跨越目标。
+        // 此分支直接替代逐轴加速，不在同一帧叠加两套归位。
         if (followVelocity is Vector2 ownerVelocity)
         {
             const float SettlingRadius = 48f;

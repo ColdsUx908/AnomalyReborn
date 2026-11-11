@@ -11,7 +11,7 @@ public sealed class EmeraldJewel : JewelNPC
     public static int ChargeTime => 60;
     public float ChargeSpeed => Ultra ? (HasEnteredPhase2 ? 24f : 28f) : (HasEnteredPhase2 ? 18f : 22f);
 
-    private static readonly ProjectileDamageContainer _EmeraldJewelShadowDamage = new(30, 60, 90, 120, 120, 180);
+    private static readonly ProjectileDamageContainer _EmeraldJewelShadowDamage = new(30, 60, 90, 120, 120, 150);
     public static int EmeraldJewelShadowDamage => _EmeraldJewelShadowDamage.Value;
 
     public Behavior CurrentBehavior

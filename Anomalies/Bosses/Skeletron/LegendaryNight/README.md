@@ -26,11 +26,19 @@
 
 ## 攻击和场地边界
 
+机制六从开始蓄力起执行四次步进星爆，每次由中心圆和外侧三环依次起爆，前四次共十六层连续间隔 95 帧。第二至第四次的中心圆分别与第 1、3、5 波激光的伤害起始帧重合，第五次的中心圆与最后一波 12 发激光同时开始造成伤害。只有第一次的中心圆有淡红色预警，从第十二次普通星爆开始淡入。各层在起爆前 6 帧播放普通星爆音效。以竞技场半径为 R，分界半径依次为 R/2、R/√2、√3R/2、R，每层各占场地四分之一。伤害按玩家中心判定，公共边界归内侧。每层金色火焰沿用普通星爆的时序，淡入 10 帧，维持并造成伤害 24 帧，再淡出 18 帧。
+
+普通星爆和钱币审判的金色火焰在伤害生效前淡入 10 帧。普通星爆在整个 24 帧伤害窗口内维持峰值，钱币审判在单帧结算时达到峰值，并沿用 24 帧的火焰维持时间。
+
 Head 保持阶段与音乐时钟的所有权。`Mechanic3/4/5Timeline` 持有各星爆音乐节点，`LegendaryNightStarburstTimeline` 提供共享节拍查询，`LegendaryNightStarburstParameters` 提供相对窗口、音效和颜色，`Arena.Orbits` 提供连续公转及爆点预测，服务器通过 `LegendStarburst.EnsureAttack` 确保当前窗口存在一枚星爆；星爆自己的 AI 负责音效、伤害与淡出。法阵蓄光通过时序查询计算，不依赖星爆实体是否已经出现。
+
+二阶段法阵在拉回目标前判定本机目标是否越界。场外时间每帧加一，回到场内每帧减一。越界时立即结算并以 30 帧为间隔重复，伤害随越界时间从 30 线性增加，在 120 帧达到上限 396。越界结算沿用错色光球的直接伤害入口并绕过受击无敌帧。
 
 机制二的半场拍击伤害在 Head 中结算。`LegendaryNightElementBarrage` 由机制七调度，负责八元素载体补建、发射、声音与出现粒子；Arena 只提供圆的位置、半径与旋转。
 
-中心黄色光球及膨胀后的恒星共用 `SphereRadius` 圆形接触判定，预设伤害为396，命中施加15秒群星威压；完全消散后停止碰撞。错色拦截的250伤害与蓝星撞击按吸收数量计算的伤害均为直接结算值，使用 `PlayerHurtDamageIgnoresDifficultyScaling` 避免 `Player.Hurt` 按弹幕来源再次乘难度倍率；防御、减伤和原有免疫规则继续由受击流程处理。其他使用 `ProjectileDamageContainer` 的攻击继续沿用原有难度换算。
+机制五在 1:28:15 开始稀疏落星和雨伞史莱姆。三波坐骑按一阶段常态符卡的对应间距从场地上方直接下落，同时启动玩家头顶的轮盘。轮盘在每轮第 90 帧锁币，锁定币种继续显示在玩家头顶直至结算，复制币和蓝圈出现在法阵中心，第 190、380、570 帧各结算一次审判。连续星爆期间，左右手各自处理蓄势、挥击和回收，最后一拍回收接入举球动作。
+
+中心黄色光球及膨胀后的恒星共用 `SphereRadius` 圆形接触判定，黄色阶段伤害为300，开始变红后为450，命中施加15秒群星威压；完全消散后停止碰撞。错色拦截的180伤害与蓝星撞击按吸收数量计算的伤害均为直接结算值，使用 `PlayerHurtDamageIgnoresDifficultyScaling` 避免 `Player.Hurt` 按弹幕来源再次乘难度倍率；防御、减伤和原有免疫规则继续由受击流程处理。其他使用 `ProjectileDamageContainer` 的攻击继续沿用原有难度换算。
 
 恒星系统的三个主要弹幕职责：
 
@@ -38,9 +46,9 @@ Head 保持阶段与音乐时钟的所有权。`Mechanic3/4/5Timeline` 持有各
 - `LegendBlueStar`：蓝星公转、透视投影、物质转移和吸积流缓存；通过 owner + identity 引用中心星，服务器生成撞击冲击波。
 - `LegendCompanionShockwave`：独立持有爆发半径、伤害、单次命中标记和爆裂粒子。
 
-`Attacks/Stellar/LegendStellarShockwave.cs` 定义扩张与绘制基类；蓝星结算实现位于同目录 `LegendCompanionShockwave.cs`，终幕实现位于 `Attacks/Finale/LegendFinalShockwave.cs`。两者保留各自伤害规则。普通符卡的 `LegendShockwave` 继续使用原有通用基类。
+`Attacks/Stellar/LegendStellarShockwave.cs` 定义扩张与绘制基类；蓝星结算实现位于同目录 `LegendCompanionShockwave.cs`，终幕实现位于 `Attacks/Finale/LegendFinalShockwave.cs`。两者保留各自伤害规则。普通符卡的 `LegendShockwave` 通过 `BaseShockwaveProjectile` 使用通用的 `Shockwave` 着色器绘制波前、余波与火花。关闭着色器时回退到纹理光环。
 
-Overlay 在原层次调用中心星的完整绘制入口，由中心星组合蓝星后层、星体、光球、核心、蓝星前层。终幕冲击波使用自身的普通弹幕绘制入口，由终幕陨星在落点生成并独立计时。主体被成功击杀后，陨星同步记录成功标记，仍在终幕生成无伤害的淡金色光环：半径为失败版本的55%，亮度为45%，并减弱爆炸音量和震屏；失败版本保留原秒杀判定。成功版本使用共享着色器的 CurtainCall Pass 绘制，包含淡金色层叠光环、柔光薄雾和十六枚渐显星芒，随后缓缓消散；关闭着色器时保留柔和光环回退。
+Overlay 在原层次调用中心星的完整绘制入口，由中心星组合蓝星后层、星体、光球、核心、蓝星前层。终幕冲击波使用自身的普通弹幕绘制入口，由终幕陨星在落点生成并独立计时。主体被成功击杀后，陨星同步记录成功标记，仍在终幕生成无伤害的淡金色光环：外圈与失败版本使用相同的最大半径与扩张曲线，并减弱爆炸音量和震屏；失败版本保留原秒杀判定。成功版本使用共享着色器的 CurtainCall Pass 绘制，包含浓金色光环和十六枚符文星芒，中心圆角五角星展开后接续两轮烟花；关闭着色器时使用光环回退，并继续绘制烟花。
 
 ## 着色器命名与职责
 
@@ -48,7 +56,9 @@ Overlay 在原层次调用中心星的完整绘制入口，由中心星组合蓝
 
 | 分类 | 名称 | 职责 |
 | --- | --- | --- |
-| Overlays | LegendStellarExplosion | 蓝星撞击、终幕失败爆炸及成功谢幕；Pass0 为爆炸，CurtainCall 为柔和谢幕 |
+| Overlays | LegendImpactFlame | 钱币审判、二阶段拍击与星爆共用的金色火焰。橙色边缘沿危险区并集绘制，亮度逐像素取覆盖该位置的攻击中的最大值 |
+| Overlays | Shockwave | 通用扩张冲击波 |
+| Overlays | LegendStellarExplosion | Pass0 为基础爆炸，CurtainCall 为成功谢幕，SupernovaRemnant 为伴星撞击与终幕失败的星云，GoldenImpact 为转阶段落星 |
 | Overlays | LegendStellarSphere | 星体基础球面、星野和 Core 星核层 |
 | Overlays | LegendStellarPhotosphere | 恒星光球层、日冕与消散 |
 | Primitives | LegendStellarAccretion | 星体间的物质吸积流 |
@@ -60,6 +70,12 @@ Overlay 在原层次调用中心星的完整绘制入口，由中心星组合蓝
 | Texts | LegendaryNightGold | 名称与提示的金色文字 |
 | BossBars | Skeletron | 骷髅王血条，包含传说之夜表现 |
 
+一阶段转二阶段的落星由 `LegendTransitionShockwave` 独立绘制。它展开双层金色外圈，向外抛出星屑，并留下带金色星芒的短时星云。
+
+终幕两种冲击波的内外圈独立消散。成功时外圈符文星芒逐渐消散，内圈五角星炸成两轮带尾迹的金色火花，受重力下坠并逐颗熄灭。失败时外壳缓慢变稀，内侧抛射物则扩散成更持久的冷色残云。
+
+两种终幕冲击波的外圈先沿原扩张曲线推进，第 36 帧起连续减速并继续越过初始半径，直至消散。内圈和失败判定沿用各自的时间与半径。
+
 ## 实体数据槽位查阅
 
 每个实体主声明统一使用 XML `<summary>` 描述用途，`<remarks>` 内的 `<para>` 依次列出原版 `ai`、`localAI`、框架 Timer、额外同步载荷和客户端状态。未使用的槽位明确说明；继承的有效槽位也列在具体实体中。
@@ -70,9 +86,9 @@ Overlay 在原层次调用中心星的完整绘制入口，由中心星组合蓝
 
 ## 当前验证入口
 
-独立资料包入口为 `Tests/LegendaryNight.Round7/Verify.ps1`。它检查当前源码/资源组织、原有生产计算指纹、真实 AI 的延迟同步与恢复、完整快照往返，并执行 Boss 隔离、16种模块组合和 Release 构建。旧轮次入口只用于历史追溯，不代表当前源码已通过对应旧断言。
+独立资料包入口为 `Tests/LegendaryNight/Verify.ps1`。它检查当前源码/资源组织、生产计算指纹、各机制回归、真实 AI 的延迟同步与恢复、完整快照往返，并执行 Boss 隔离、16种模块组合和 Release 构建。旧轮次入口只用于历史追溯，不代表当前源码已通过对应旧断言。
 
-Release 测试包由 `Tests/LegendaryNight.Round7/Build-Release.ps1` 在仓库内独立打包、核对 DLL 与资源后生成，包含 Anomalies、Transoceanic、AnomaliesMusic。附带校验和及测试说明。默认模块全部开启，Release 不包含 DEBUG 测试物品。
+历轮验证包、离线渲染预览和迁移脚本集中保存在独立资料包的 `Tests/LegendaryNight/History/`。当前验证日志与汇总写入 `Tests/LegendaryNight/Results/`。
 
 离线验证不代替游戏内战斗、音乐节拍、特殊分辨率与着色器关闭时的视觉验收。异象模式现有多人禁用策略保持不变；网络验证使用实际生产 AI 和序列化的离线环境，不表示本版本已开放多人测试。
 
@@ -82,7 +98,7 @@ Release 测试包由 `Tests/LegendaryNight.Round7/Build-Release.ps1` 在仓库�
 - `Head/SkeletronLegendHead.cs`：Behavior 身份、默认属性、受击与死亡规则。
 - `Head/SkeletronLegendHead.State.cs`：枚举、同步槽位映射、竞技场引用、阶段和表现查询；所有伤害容器、直接结算伤害、伤害公式和增减伤倍率集中在“伤害数据”region。
 - `Head/SkeletronLegendHead.AI.cs`：目标选择、退场、阶段分派及跨阶段攻击辅助。
-- `Head/SkeletronLegendHead.Phase1AI.cs`：常态/旋转与符卡组合，符卡池与行为切换。
+- `Head/SkeletronLegendHead.Phase1AI.cs`：常态/自转（Spin）与符卡组合，符卡池与行为切换。
 - `Head/SkeletronLegendHead.PhaseChangeAI.cs`：转场开始、旧攻击清理、回血、召手、祝福和进入二阶段。
 - `Head/SkeletronLegendHead.Avatar.cs`：化身选择、切换、计时、朝向和切换粒子。
 - `Head/SkeletronLegendHead.Drawing.cs`：主体、化身、拖尾、光晕、图标和血条着色。
@@ -94,7 +110,7 @@ Release 测试包由 `Tests/LegendaryNight.Round7/Build-Release.ps1` 在仓库�
 
 ## 状态与时间
 
-`Phase` 是战斗阶段，`Behavior` 是一阶段常态/旋转等行为，`Spell` 是独立符卡选择，`CurrentLocalPhase` 是当前行为内部步骤。阶段和行为分别保留在原版 AI 联合体的 Byte0、Byte1，符卡保留在 Byte2。
+`Phase` 是战斗阶段，`Behavior` 是一阶段常态/自转（Spin）等行为，`Spell` 是独立符卡选择，`CurrentLocalPhase` 是当前行为内部步骤。阶段和行为分别保留在原版 AI 联合体的 Byte0、Byte1，符卡保留在 Byte2。
 
 | 时间 | 用途 | 重置边界 |
 | --- | --- | --- |
@@ -111,6 +127,7 @@ Release 测试包由 `Tests/LegendaryNight.Round7/Build-Release.ps1` 在仓库�
 | 数据 | 当前同步位置 |
 | --- | --- |
 | 竞技场引用 | `AnomalyAI64[1]` 的 owner + identity |
+| 一阶段审判币种位图、机制五首轮审判币种 | `AnomalyAI32[0]` 的低四位和高位 |
 | 化身、化身计时、化身旋转 | `AnomalyAI32[1]`、`[2]`、`[3]` |
 | 生存时间、正在召手、拍击左右位图、机制 2 音乐起点 | `AnomalyAI32[4]` 至 `[7]` |
 | 停靠起点/终点/初速度 | `AnomalyAI64[2]`、`[3]`、`[4]`，仅停靠期间有效 |
@@ -137,7 +154,7 @@ Release 测试包由 `Tests/LegendaryNight.Round7/Build-Release.ps1` 在仓库�
 
 三次拍击的随机左右位图及每次起点/目标由服务器锁定。客户端缺少位图、当前拍击锁定或最后一次回程锁定时停速等待，不自行使用本机目标位置补写同步槽。完整快照到达后按音乐年龄恢复轨迹。主体暂缺有效目标时，客户端等待服务器状态，不自行决定退场；一阶段血量触发转场也由服务器决定。
 
-`GetStrikeIndex` 查询手部动作所属的拍击，`GetBodyStrikeIndex` 查询主体后撤至回收的有效窗口；两者结束边界不同，不可互相替换。半场预警仍逐拍绘制，以保留可能重叠的预警和余光。半场伤害只在确切拍击帧执行，并用统一 GlobalNPC 中的本地位图防止音乐回拨重复结算；该位图不进入快照，初始化及克隆重置。错过伤害帧不补算历史伤害。
+`GetStrikeIndex` 查询手部动作所属的拍击，`GetBodyStrikeIndex` 查询主体后撤至回收的有效窗口；两者结束边界不同，不可互相替换。拍击前以手部动作为提示，半场金色火焰在命中前淡入五帧，在命中帧达到峰值，随后淡出。半场伤害只在确切拍击帧执行，并用统一 GlobalNPC 中的本地位图防止音乐回拨重复结算；该位图不进入快照，初始化及克隆重置。错过伤害帧不补算历史伤害。
 
 拍击落星先于主体、阶段或场地引用到达客户端时等待，依赖恢复后继续执行；服务器负责确认退场。所有参数、三次拍击音乐帧、弹幕生成顺序及同步载荷布局保留。
 

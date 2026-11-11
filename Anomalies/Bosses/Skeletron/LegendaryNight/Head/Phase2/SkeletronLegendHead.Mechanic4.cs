@@ -1,3 +1,5 @@
+using static Anomalies.Bosses.Skeletron.LegendaryNight.SkeletronLegendHead;
+
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 public sealed partial class SkeletronLegendHead
@@ -34,6 +36,8 @@ public sealed partial class SkeletronLegendHead
         public const float RetreatSpeed = 12f;
         /// <summary>蓄力速度，以世界像素和游戏帧计量。</summary>
         public const float ChargeSpeed = 32f;
+        public const int CoinRingCount = 12;
+        public const float CoinRingSpeed = 10f;
         /// <summary>计算指定冲刺的音乐绝对帧；index 为从零开始的冲刺编号。</summary>
         public static int GetChargeTime(int index) => Mechanic4Timeline.FirstChargeMusicTime + index * ChargeInterval;
         /// <summary>计算蓄力速度系数。</summary>
@@ -77,6 +81,8 @@ public sealed partial class SkeletronLegendHead
 
     private void Mechanic4AI()
     {
+        #region 场地准备与音乐步骤同步
+
         int time = Phase2MusicElapsedTime;
         LegendaryNightPhase2Arena arena = Phase2Arena;
         HideHands();
@@ -107,9 +113,31 @@ public sealed partial class SkeletronLegendHead
         {
             ChangePhase2LocalPhase(localPhase);
         }
+
+        #endregion
+
+        #region 冲刺结束音效与移动分派
+
         if (time == Mechanic4Parameters.GetChargeTime(charge) + Mechanic4Parameters.ChargeDuration)
             SoundEngine.PlaySound(SoundID.Item14);
-        if (time >= Mechanic4Timeline.ReturnStartMusicTime)
+        switch (time)
+        {
+            case >= Mechanic4Timeline.ReturnStartMusicTime:
+                ReturnToCenter();
+                break;
+            case int _ when age is >= 0 and < Mechanic4Parameters.ChargeDuration:
+                Charge();
+                break;
+            default:
+                Retreat();
+                break;
+        }
+
+        #endregion
+
+        #region 回中、冲刺与后撤
+
+        void ReturnToCenter()
         {
             // AI64[2]：回中起点；AI64[3]：冲刺锁定速度。复用已结束的史莱姆跳跃槽。
             if (time == Mechanic4Timeline.ReturnStartMusicTime && TONetworkEnvironment.NotClient)
@@ -121,10 +149,11 @@ public sealed partial class SkeletronLegendHead
             float progress = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(
                 (time - Mechanic4Timeline.ReturnStartMusicTime + 1f) / (Mechanic4Timeline.EndMusicTime - Mechanic4Timeline.ReturnStartMusicTime), 0f, 1f));
             NPC.velocity = Vector2.Lerp(origin, arena.Projectile.Center, progress) - NPC.Center;
-            return;
         }
-        if (age is >= 0 and < Mechanic4Parameters.ChargeDuration)
+
+        void Charge()
         {
+            NPC.damage = SpinContactDamage;
             if (age == 0)
             {
                 SoundEngine.PlaySound(SoundID.ForceRoar);
@@ -132,6 +161,15 @@ public sealed partial class SkeletronLegendHead
                 {
                     Vector2 velocity = NPC.GetVelocityTowards(Target, Mechanic4Parameters.ChargeSpeed);
                     Mechanic4ChargeVelocity = velocity;
+                    float aimAngle = velocity.ToRotation();
+                    Projectile.NewProjectilesArc<PlatinumCoin>(Mechanic4Parameters.CoinRingCount, MathHelper.TwoPi / Mechanic4Parameters.CoinRingCount, SourceAI, NPC.Center,
+                        velocity / Mechanic4Parameters.ChargeSpeed * Mechanic4Parameters.CoinRingSpeed, _LargePlatinumCoinDamage.Value, 0f, action: p =>
+                        {
+                            p.scale = 2f;
+                            p.ai[0] = NPC.target + 1;
+                            p.ai[2] = NPC.whoAmI + 1;
+                            p.timeLeft = 600;
+                        });
                     NPC.netUpdate = true;
                 }
             }
@@ -139,12 +177,15 @@ public sealed partial class SkeletronLegendHead
             float speedFactor = Mechanic4Parameters.ChargeSpeedFactor(age);
             NPC.velocity = chargeVelocity * speedFactor;
         }
-        else
+
+        void Retreat()
         {
             int retreatStart = time < Mechanic4Timeline.FirstChargeMusicTime ? Mechanic4Timeline.FirstRetreatStartMusicTime
                 : Mechanic4Parameters.GetChargeTime(charge) + Mechanic4Parameters.ChargeDuration;
             float speed = Mechanic4Parameters.RetreatSpeed * MathHelper.Clamp((time - retreatStart + 1f) / 12f, 0f, 1f);
             NPC.velocity = -NPC.GetVelocityTowards(Target, speed);
         }
+
+        #endregion
     }
 }

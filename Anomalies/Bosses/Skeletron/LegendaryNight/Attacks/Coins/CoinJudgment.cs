@@ -1,45 +1,41 @@
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
-// ai[0]：铜/银/金/铂；ai[1]：预警计时；ai[2]：所属骷髅王（1-based）。
 /// <summary>
 /// 按金币种类产生不同形状的审判攻击。
 /// </summary>
 /// <remarks>
-/// <para>ai[0]：金币种类，0铜、1银、2金、3铂金；ai[1]：预警/结算累计帧；ai[2]：主体 NPC 索引 + 1。</para>
+/// <para>ai[0]：金币种类，0铜、1银、2金、3铂金；ai[1]：锁定时的主体自转帧，机制五存放负的锁定音乐帧；ai[2]：主体 NPC 索引 + 1。</para>
 /// <para>localAI：未使用；框架 Timer1..5：未使用；无实体专属 ExtraAI。</para>
 /// </remarks>
 public sealed class CoinJudgment : AnomalyModProjectile
 {
     /// <summary>预警持续时间，单位为游戏帧。</summary>
-    public const int WarningDuration = 180;
+    public const int WarningDuration = 150;
     /// <summary>危险预警持续时间，单位为游戏帧。</summary>
-    public const int DangerWarningDuration = 60;
+    public const int DangerWarningDuration = 20;
+    private const int BoundaryWarningDuration = 30;
     /// <summary>危险预警淡入持续时间，单位为游戏帧。</summary>
     private const int DangerWarningFadeInDuration = 6;
     /// <summary>危险预警最大透明度。</summary>
     private const float DangerWarningMaxOpacity = 0.22f;
-    /// <summary>遮罩淡入持续时间，单位为游戏帧。</summary>
-    public const int OverlayFadeInDuration = 8;
+    private const int OverlayFadeInDuration = 10;
     /// <summary>遮罩保持持续时间，单位为游戏帧。</summary>
-    public const int OverlayHoldDuration = 8;
+    public const int OverlayHoldDuration = LegendaryNightStarburstParameters.StarburstDamageDuration;
     /// <summary>遮罩淡出持续时间，单位为游戏帧。</summary>
-    public const int OverlayFadeOutDuration = 24;
+    public const int OverlayFadeOutDuration = LegendaryNightStarburstParameters.StarburstFadeDuration;
     /// <summary>遮罩最大透明度。</summary>
     public const float OverlayMaxOpacity = 0.9f;
-    /// <summary>环形淡入持续时间，单位为游戏帧。</summary>
-    private const int RingFadeInDuration = 12;
+    private const int BoundaryFadeInDuration = 12;
     /// <summary>环形最大半径，单位为世界像素。</summary>
     private const float RingMaxRadius = 320f;
-    /// <summary>铜半径，单位为世界像素。</summary>
-    public const float CopperRadius = 960f;
-    /// <summary>银半宽，单位为世界像素。</summary>
-    public const float SilverHalfWidth = 320f;
-    /// <summary>金币内层半径，单位为世界像素。</summary>
-    public const float GoldInnerRadius = 960f;
+    /// <summary>圆半径，单位为世界像素。</summary>
+    public const float NormalCircleRadius = 960f;
+    /// <summary>十字半宽，单位为世界像素。</summary>
+    public const float NormalCrossHalfWidth = 320f;
+    private const float Phase2CrossHalfWidth = 240f;
     /// <summary>金币外层半径，单位为世界像素。</summary>
     public const float GoldOuterRadius = 3200f;
-    /// <summary>铂金币安全区域半宽，单位为世界像素。</summary>
-    public const float PlatinumSafeHalfWidth = 160f;
+    internal static float CrossRotation(int coinType) => coinType == 3 ? MathHelper.PiOver4 : 0f;
 
     /// <summary>爆炸音效。</summary>
     public static readonly SoundStyle ExplosionSound = new(LegendaryNightHandler.LegendaryNightPath + "Attacks/Coins/CoinJudgmentExplosion") { Volume = 1.5f };
@@ -48,26 +44,38 @@ public sealed class CoinJudgment : AnomalyModProjectile
 
     private bool _Judged;
     private bool _WarningSoundPlayed;
-    public float OverlayOpacity => GetOverlayOpacity(Projectile.ai[1]);
-    public float WarningOverlayOpacity => GetWarningOverlayOpacity(Projectile.ai[1]);
-    public float BoundaryOpacity => Projectile.ai[1] < WarningDuration
-        ? MathHelper.Clamp(Projectile.ai[1] / RingFadeInDuration, 0f, 1f)
+    private int _Age = -1;
+    private bool IsMechanic5 => Projectile.ai[1] < 0f;
+    private int ImpactAge => IsMechanic5
+        ? SkeletronLegendHead.Mechanic5Parameters.JudgmentInterval - CoinRoulette.FirstLockFrame
+        : WarningDuration;
+
+    private float? ArenaInnerRadius => IsMechanic5
+        && LegendaryNightHandler.TryGetLegendaryNightHead((int)Projectile.ai[2], out SkeletronLegendHead head, oneBased: true)
+        ? head.Phase2Arena?.MainCircleRadius : null;
+    internal float CrossHalfWidth => IsMechanic5 ? Phase2CrossHalfWidth : NormalCrossHalfWidth;
+    internal float EffectiveCopperRadius => ArenaInnerRadius ?? NormalCircleRadius;
+    internal float EffectiveGoldInnerRadius => ArenaInnerRadius ?? NormalCircleRadius;
+    public float OverlayOpacity => GetOverlayOpacity(_Age - ImpactAge + WarningDuration);
+    public float WarningOverlayOpacity => IsMechanic5 || _Age >= ImpactAge - OverlayFadeInDuration
+        ? 0f : GetWarningOverlayOpacity(_Age - (WarningDuration - DangerWarningDuration), DangerWarningDuration);
+    public float BoundaryOpacity => IsMechanic5 ? 0f : _Age < WarningDuration
+        ? MathHelper.Clamp((_Age - (WarningDuration - BoundaryWarningDuration)) / (float)BoundaryFadeInDuration, 0f, 1f)
         : OverlayOpacity / OverlayMaxOpacity;
-    public static float GetWarningOverlayOpacity(float timer)
+    public static float GetWarningOverlayOpacity(float age, int duration)
     {
-        float age = timer - (WarningDuration - DangerWarningDuration);
-        if (age < 0f || timer >= WarningDuration)
+        if (age < 0f || age >= duration)
             return 0f;
         return DangerWarningMaxOpacity * MathHelper.Clamp(age / DangerWarningFadeInDuration, 0f, 1f);
     }
     public static float GetOverlayOpacity(float timer)
     {
         float age = timer - WarningDuration;
-        if (age < 0f)
-            return OverlayMaxOpacity * MathHelper.Clamp((age + OverlayFadeInDuration) / OverlayFadeInDuration, 0f, 1f);
-        if (age <= OverlayHoldDuration)
-            return OverlayMaxOpacity;
-        return OverlayMaxOpacity * MathHelper.Clamp(1f - (age - OverlayHoldDuration) / OverlayFadeOutDuration, 0f, 1f);
+        if (age < -OverlayFadeInDuration)
+            return 0f;
+        float fadeIn = MathHelper.Clamp((age + OverlayFadeInDuration + 1f) / (OverlayFadeInDuration + 1f), 0f, 1f);
+        float fadeOut = MathHelper.Clamp((OverlayHoldDuration + OverlayFadeOutDuration - age) / OverlayFadeOutDuration, 0f, 1f);
+        return OverlayMaxOpacity * fadeIn * fadeOut;
     }
 
     public override string Texture => TOTextures.InvisibleTexturePath;
@@ -80,7 +88,7 @@ public sealed class CoinJudgment : AnomalyModProjectile
         Projectile.ignoreWater = true;
         Projectile.penetrate = -1;
         Projectile.netImportant = true;
-        Projectile.timeLeft = WarningDuration + OverlayHoldDuration + OverlayFadeOutDuration + 1;
+        Projectile.timeLeft = WarningDuration + OverlayHoldDuration + OverlayFadeOutDuration + 2;
     }
 
     // 伤害由本机玩家的 Hurt 路径结算，避免常规敌对弹幕检测提前被无敌帧拦截或重复命中。
@@ -88,17 +96,15 @@ public sealed class CoinJudgment : AnomalyModProjectile
     public override bool ShouldUpdatePosition() => false;
     public override bool PreDraw(ref Color lightColor)
     {
-        // 蓝圈和白色遮罩共用判定弹幕的计时，避免独立弹幕更新顺序或同步造成错位。
-        float timer = Projectile.ai[1];
-        float ringDuration = WarningDuration - OverlayFadeInDuration;
-        float progress = MathHelper.Clamp(timer / ringDuration, 0f, 1f);
-        if (timer < ringDuration)
+        // 蓝圈与复制币固定在锁定位置，共用审判计时。
+        if (_Age >= 0 && _Age < ImpactAge)
         {
-            float radiusFactor = 1f - progress;
-            float opacity = MathHelper.Clamp(timer / RingFadeInDuration, 0f, 1f);
+            float radiusFactor = 1f - _Age / (float)ImpactAge;
+            Vector2 center = Projectile.Center - Main.screenPosition;
             Texture2D ring = ParticleHandler.GetTexture<PulseRing>();
-            Main.spriteBatch.DrawFromCenter(ring, Projectile.Center - Main.screenPosition, null,
-                new Color(70, 150, 255, 0) * opacity, 0f, RingMaxRadius * radiusFactor / PulseRing.TextureRadius);
+            Main.spriteBatch.DrawFromCenter(ring, center, null,
+                new Color(70, 150, 255, 0), scale: RingMaxRadius * radiusFactor / PulseRing.TextureRadius);
+            CoinRoulette.DrawCoin(center, (int)Projectile.ai[0], 0, 1f, 0.8f);
         }
         return false;
     }
@@ -106,55 +112,66 @@ public sealed class CoinJudgment : AnomalyModProjectile
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
     {
         Vector2 center = Projectile.Center;
-        // 在待测碰撞箱的纵/横跨度上截取无限条带，避免人为添加远处的外边界。
-        FloatRectangle vertical = new(center.X - SilverHalfWidth, targetHitbox.Top - 1f, SilverHalfWidth * 2f, targetHitbox.Height + 2f);
-        FloatRectangle horizontal = new(targetHitbox.Left - 1f, center.Y - SilverHalfWidth, targetHitbox.Width + 2f, SilverHalfWidth * 2f);
-        FloatRectangle platinumSafe = new(center.X - PlatinumSafeHalfWidth, targetHitbox.Top - 1f, PlatinumSafeHalfWidth * 2f, targetHitbox.Height + 2f);
-        return (int)Projectile.ai[0] switch
+        int coinType = (int)Projectile.ai[0];
+        return coinType switch
         {
-            0 => new Circle(center, CopperRadius).Collides(targetHitbox),
-            1 => vertical.Collides(targetHitbox) || horizontal.Collides(targetHitbox),
-            2 => new Annulus(center, GoldInnerRadius, GoldOuterRadius).Collides(targetHitbox),
-            // 铂金币没有外侧安全区：整个玩家碰撞箱必须位于无限延伸的竖直安全带内。
-            3 => !platinumSafe.Contains(targetHitbox.TopLeft()) || !platinumSafe.Contains(targetHitbox.BottomRight()),
+            0 => new Circle(center, EffectiveCopperRadius).Collides(targetHitbox),
+            1 or 3 => CrossCollides(),
+            2 => new Annulus(center, EffectiveGoldInnerRadius, GoldOuterRadius).Collides(targetHitbox),
             _ => false
         };
+
+        bool CrossCollides()
+        {
+            // 将条带延伸至目标碰撞箱之外，检测时等价于无限延伸的十字。
+            Vector2 offset = new Vector2(targetHitbox.Center.X, targetHitbox.Center.Y) - center;
+            float reach = offset.Length() + targetHitbox.Width + targetHitbox.Height + 1f;
+            Vector2 axis = Vector2.UnitX.RotatedBy(CrossRotation(coinType)) * reach;
+            Vector2 perpendicular = new(-axis.Y, axis.X);
+            return RotatedRectangle.FromLineSegment(center - axis, center + axis, CrossHalfWidth * 2f).Collides(targetHitbox)
+                || RotatedRectangle.FromLineSegment(center - perpendicular, center + perpendicular, CrossHalfWidth * 2f).Collides(targetHitbox);
+        }
     }
 
     public override void AI()
     {
         if (!LegendaryNightHandler.TryGetLegendaryNightHead((int)Projectile.ai[2], out SkeletronLegendHead head, oneBased: true)
-            || head.CurrentAvatar != SkeletronLegendHead.Avatar.PlatinumCoin)
+            || (IsMechanic5 ? !head.Mechanic5Active : head.CurrentPhase != SkeletronLegendHead.Phase.Phase1
+                || head.CurrentSpell != SkeletronLegendHead.Spell.PlatinumCoin))
         {
+            _Age = -1;
             if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();
             return;
         }
 
-        int timer = (int)Projectile.ai[1] + 1;
-        Projectile.ai[1] = timer;
-        if (!_WarningSoundPlayed && timer >= WarningDuration - DangerWarningDuration && timer < WarningDuration && !Main.dedServ)
+        // 第二次结算所在帧已切回常态；从常态计时接续冲击余光。
+        int spinTime = head.CurrentBehavior == SkeletronLegendHead.Behavior.Spin
+            ? head.Timer1
+            : CoinRoulette.RotationDuration + head.Timer1;
+        int timer = IsMechanic5 ? head.Phase2MusicElapsedTime + (int)Projectile.ai[1] : spinTime - (int)Projectile.ai[1];
+        _Age = timer;
+        if (!IsMechanic5 && !_WarningSoundPlayed && timer >= WarningDuration - BoundaryWarningDuration && timer < WarningDuration && !Main.dedServ)
         {
             _WarningSoundPlayed = true;
             SoundEngine.PlaySound(WarningSound);
         }
 
-        if (timer == WarningDuration - 5)
-            SoundEngine.PlaySound(ExplosionSound);
-
-        if (timer < WarningDuration)
+        if (timer != ImpactAge || _Judged)
             return;
 
-        if (_Judged)
-            return;
         _Judged = true;
+        if (!IsMechanic5 && TONetworkEnvironment.NotClient)
+            head.RecordPhase1CoinJudgment((int)Projectile.ai[0]);
         if (Main.dedServ)
             return;
+
+        SoundEngine.PlaySound(ExplosionSound);
 
         Player player = Main.LocalPlayer;
         if (!player.active || player.dead || player.ghost || Colliding(Projectile.Hitbox, player.Hitbox) != true)
             return;
 
-        LegendaryNightDamage.HurtLocalPlayer(Projectile, Projectile.damage, false, knockback: 4.5f);
+        LegendaryNightDamage.HurtLocalPlayer(Projectile, Projectile.damage, true, knockback: 4.5f);
     }
 }
