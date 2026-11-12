@@ -55,6 +55,7 @@ QueenBee: {
 }
 
 Skeletron: {
+	SkeletronHand.DisplayName: Skeletron Hand
 	Crossbone.DisplayName: Crossbone
 	BoneShockwave.DisplayName: Bone Shockwave
 	SkeletronPhase3Arena.DisplayName: Skeletron Arena

@@ -131,7 +131,7 @@ public sealed partial class SkeletronLegendHead
 
         if (time < Mechanic3Timeline.JumpMusicTime)
         {
-            SkeletronHandler.NormalMovement(NPC, Target, 20f, 8f, 0.2f, 0.08f, 300f, 20f);
+            SkeletronKinematics.NormalMovement(NPC, Target, 20f, 8f, 0.2f, 0.08f, 300f, 20f);
             Charge(Mechanic3Timeline.FanMusicTime);
             Charge(Mechanic3Timeline.FirstRingMusicTime);
             Charge(Mechanic3Timeline.SecondRingMusicTime);

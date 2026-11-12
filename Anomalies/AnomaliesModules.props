@@ -4,7 +4,7 @@
     <AnomaliesEnableAnomalyMode Condition="'$(AnomaliesEnableAnomalyMode)' == ''">true</AnomaliesEnableAnomalyMode>
     <AnomaliesEnableTweak Condition="'$(AnomaliesEnableTweak)' == ''">true</AnomaliesEnableTweak>
     <AnomaliesEnableGameContents Condition="'$(AnomaliesEnableGameContents)' == ''">true</AnomaliesEnableGameContents>
-    <AnomaliesEnableSpecialContents Condition="'$(AnomaliesEnableSpecialContents)' == ''">true</AnomaliesEnableSpecialContents>
+    <AnomaliesEnableSpecialContents Condition="'$(AnomaliesEnableSpecialContents)' == ''">false</AnomaliesEnableSpecialContents>
   </PropertyGroup>
   <!-- 模块常量 -->
   <PropertyGroup Condition="'$(AnomaliesEnableAnomalyMode)' == 'true'">

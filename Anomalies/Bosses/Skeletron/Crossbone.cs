@@ -20,10 +20,11 @@ public sealed class Crossbone : AnomalyModProjectile
     public override void AI()
     {
         int headIndex = (int)Projectile.ai[1] - 1;
-        if (headIndex >= 0 && ((uint)headIndex >= Main.maxNPCs
-            || Main.npc[headIndex] is not { active: true, type: NPCID.SkeletronHead }
-            || SkeletronHead.GetInstance(Main.npc[headIndex]) is not { ShouldProcess: true } head
-            || head.CurrentBehavior == SkeletronHead.Behavior.Despawn))
+        // 主体死亡后继续飞行，仅在仍存活的主体主动退场时清理。
+        if ((uint)headIndex < Main.maxNPCs
+            && Main.npc[headIndex] is { active: true, type: NPCID.SkeletronHead }
+            && SkeletronHead.GetInstance(Main.npc[headIndex]) is
+                { ShouldProcess: true, CurrentBehavior: SkeletronHead.Behavior.Despawn })
         {
             if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();
@@ -103,7 +104,4 @@ public sealed class Crossbone : AnomalyModProjectile
                     p.ai[1] = head.whoAmI + 1;
             });
 
-    internal static void FireSpread(NPC source, Player target, int count, float spreadDegrees, int damage, float maxSpeed) =>
-SkeletronHandler.FireAcceleratingSpread(source, target, count, spreadDegrees,
-            (position, velocity) => Fire(source, position, velocity, damage, maxSpeed));
 }

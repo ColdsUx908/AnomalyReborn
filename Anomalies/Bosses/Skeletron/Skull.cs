@@ -3,18 +3,21 @@ namespace Anomalies.Bosses.Skeletron;
 public sealed partial class Skull : AnomalyProjectileBehavior<Skull>
 {
     // ai[0]：飞行模式；ai[1]：追踪计时；ai[2]：死亡效果标记。
-    public const int Homing = 0;
-    public const int Straight = 2;
+    public enum Behavior : byte
+    {
+        Homing = 0,
+        Straight = 2,
+    }
+
+    // 保留生成入口使用的模式值及原有 ai 协议。
+    public const int Homing = (int)Behavior.Homing;
+    public const int Straight = (int)Behavior.Straight;
 
     internal const int DefaultHomingStartFrame = 31;
     internal const int DefaultHomingDuration = 79;
 
-    internal const float RegularMaxSpeed = 15f;
-    internal const float UltraMaxSpeed = 18f;
-    internal const float RegularAcceleration = 1.015f;
-    internal const float UltraAcceleration = 1.02f;
-    public static float MaxSpeed => Ultra ? UltraMaxSpeed : RegularMaxSpeed;
-    public static float Acceleration => Ultra ? UltraAcceleration : RegularAcceleration;
+    public static float MaxSpeed => Ultra ? 18f : 15f;
+    public static float Acceleration => Ultra ? 1.02f : 1.015f;
 
     internal const float SuppressDeathEffectsMarker = -7f;
 
@@ -24,7 +27,7 @@ public sealed partial class Skull : AnomalyProjectileBehavior<Skull>
     private const int HomingDurationSlot = 3;
     private const int TrailTypeSlot = 4;
     private const int SourceHeadSlot = 5;
-    private const int Phase3SourceSlot = 6;
+    // AI32[6] reserved; keep the seven-slot snapshot layout.
     private const int FlightDataCapacity = 7;
     private const int WarningSkullLifetime = 600;
     private const float WarningSkullSpeed = 15f;
@@ -100,126 +103,13 @@ public sealed partial class Skull : AnomalyProjectileBehavior<Skull>
         AnomalyGlobalProjectile data = projectile.Anomaly;
         data.EnsureAICapacity(FlightDataCapacity, 1);
         data.AnomalyAI32[SourceHeadSlot].I = head.whoAmI + 1;
-        data.AnomalyAI32[Phase3SourceSlot].I = SkeletronHead.GetInstance(head).CurrentPhase == SkeletronHead.Phase.Phase3 ? 1 : 0;
-        data.AIChanged32[SourceHeadSlot] = data.AIChanged32[Phase3SourceSlot] = true;
+        data.AIChanged32[SourceHeadSlot] = true;
     }
+
+    public Behavior CurrentBehavior => (Behavior)(int)Projectile.ai[0];
 
     private bool HasBeamTrail => AnomalyProjectile.AnomalyAI32[TrailTypeSlot].I == (int)TrailType.Beam;
 
-    public override bool PreAI()
-    {
-        int headIndex = AnomalyProjectile.AnomalyAI32[SourceHeadSlot].I - 1;
-        if (headIndex >= 0 && ((uint)headIndex >= Main.maxNPCs
-            || Main.npc[headIndex] is not { active: true, type: NPCID.SkeletronHead }
-            || SkeletronHead.GetInstance(Main.npc[headIndex]) is not { ShouldProcess: true } head
-            || head.CurrentBehavior == SkeletronHead.Behavior.Despawn))
-        {
-            if (TONetworkEnvironment.NotClient)
-            {
-                Projectile.ai[2] = SuppressDeathEffectsMarker;
-                Projectile.Kill();
-            }
-            return false;
-        }
-        if (Projectile.numUpdates == -1)
-            Projectile.frame = (Projectile.frame + 1) % 3;
-        Projectile.alpha = 0;
-
-        bool homing = Projectile.ai[0] == Homing;
-        if (homing || Projectile.ai[0] == Straight)
-        {
-            SpawnEffects(Projectile.position);
-            if (homing)
-                UpdateHoming();
-
-            AnomalyGlobalProjectile data = AnomalyProjectile;
-            float maxSpeed = data.AnomalyAI32[MaxSpeedSlot].F;
-            float acceleration = data.AnomalyAI32[AccelerationSlot].F;
-            // 原版生成的头骨没有额外飞行参数，沿用默认追踪弹的加速。
-            if (homing && acceleration == 0f)
-            {
-                maxSpeed = UltraMaxSpeed;
-                acceleration = UltraAcceleration;
-            }
-
-            float speed = Projectile.velocity.Length();
-            if (acceleration > 1f && speed > 0f && speed < maxSpeed)
-                Projectile.velocity *= Math.Min(speed * acceleration, maxSpeed) / speed;
-        }
-
-        if (!Main.dedServ)
-        {
-            if (HasBeamTrail)
-                Projectile.localAI[1] = Math.Min(TrailLength, Projectile.localAI[1] + Projectile.velocity.Length());
-            else
-                EmitTrail();
-        }
-        Projectile.spriteDirection = Projectile.direction;
-        Projectile.rotation = (Projectile.velocity * (Projectile.direction < 0 ? -1f : 1f)).ToRotation();
-        return false;
-
-        void UpdateHoming()
-        {
-            AnomalyGlobalProjectile data = AnomalyProjectile;
-            int duration = data.AnomalyAI32[HomingDurationSlot].I;
-            // Vanilla skulls have no explicit homing window.
-            int startFrame = duration > 0 ? data.AnomalyAI32[HomingStartFrameSlot].I : DefaultHomingStartFrame;
-            int endTime = startFrame + (duration > 0 ? duration : DefaultHomingDuration);
-            if (Projectile.ai[1] >= endTime || ++Projectile.ai[1] >= endTime)
-                return;
-
-            Player target = Main.player[Player.FindClosest(Projectile.Center, 1, 1)];
-            const float StopDistance = 96f;
-            if (Projectile.Distance(target.Center) < StopDistance)
-            {
-                Projectile.ai[1] = endTime;
-                if (TONetworkEnvironment.NotClient)
-                    Projectile.netUpdate = true;
-                return;
-            }
-            if (Projectile.ai[1] < startFrame)
-                return;
-
-            const float Inertia = 25f;
-            float speed = Projectile.velocity.Length();
-            Vector2 direction = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
-            Vector2 velocity = (Projectile.velocity * (Inertia - 1f) + direction * speed) / Inertia;
-            Projectile.velocity = velocity.SafeNormalize(direction) * speed;
-        }
-
-        void SpawnEffects(Vector2 soundPosition)
-        {
-            if (Projectile.localAI[0] != 0f)
-                return;
-            Projectile.localAI[0] = 1f;
-            SoundEngine.PlaySound(SoundID.Item8, soundPosition);
-            for (int i = 0; i < 10; i++)
-            {
-                Dust.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, DustID.Blood, Projectile.velocity, dust =>
-                {
-                    dust.scale *= 2f;
-                    dust.noGravity = true;
-                    dust.velocity = (Projectile.Center - dust.position).SafeNormalize(Vector2.UnitY) * -5f + Projectile.velocity / 2f;
-                });
-            }
-        }
-
-        void EmitTrail()
-        {
-            for (int i = 0; i < 2; i++)
-            {
-                Dust.NewDustAction(Projectile.Center, Projectile.width - 8, Projectile.height - 8, DustID.Blood, Projectile.velocity * 0.2f, dust =>
-                {
-                    dust.alpha = 100;
-                    dust.scale *= 1.5f;
-                    dust.position -= Projectile.velocity;
-                    dust.noGravity = true;
-                    dust.velocity *= 0.3f;
-                });
-            }
-        }
-    }
-
-    // 机制 7 的头骨到达场心即被吸收，不触发原版死亡音效和爆散。
+    // LegendaryNight and owner cleanup share this death-effect suppression marker.
     public override bool PreKill(int timeLeft) => Projectile.ai[2] != SuppressDeathEffectsMarker;
 }

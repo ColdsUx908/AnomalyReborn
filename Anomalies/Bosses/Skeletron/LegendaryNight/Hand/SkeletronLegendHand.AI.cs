@@ -241,14 +241,14 @@ public sealed partial class SkeletronLegendHand
                             deceleration *= 0.75f;
                             velocityIncrement *= 1.5f;
                         }
-                        Vector2 destination = master.Center + SkeletronHand.GetIdleOffset(HandSide, NPC.height, master.height, raised: raised);
-                        SkeletronHand.UpdateIdleMovement(NPC, destination, velocityIncrement, velocityMultiplier, deceleration, master.velocity);
-                        SkeletronHand.UpdateIdleRotation(NPC, master);
+                        Vector2 destination = master.Center + SkeletronKinematics.GetIdleOffset(HandSide, NPC.height, master.height, raised: raised);
+                        SkeletronKinematics.UpdateIdleMovement(NPC, destination, velocityIncrement, velocityMultiplier, deceleration, master.velocity);
+                        SkeletronKinematics.UpdateIdleRotation(NPC, master);
                         return;
                     }
                 case NormalAction.Raise:
                     {
-                        SkeletronHand.UpdateVerticalDrawbackMovement(NPC, windupAcceleration);
+                        SkeletronKinematics.UpdateVerticalDrawbackMovement(NPC, windupAcceleration);
 
                         if (head.Timer1 % AttackCycleDuration == StrikeTime)
                         {
@@ -263,7 +263,7 @@ public sealed partial class SkeletronLegendHand
                     }
                 case NormalAction.SweepWindup:
                     {
-                        SkeletronHand.UpdateHorizontalDrawbackMovement(NPC, windupAcceleration);
+                        SkeletronKinematics.UpdateHorizontalDrawbackMovement(NPC, windupAcceleration);
 
                         if (head.Timer1 % AttackCycleDuration == StrikeTime)
                         {

@@ -27,11 +27,11 @@ public static class AnomalyBossChangeToggler
 
     public static bool KingSlime { get; private set; } = true;
 
-    public static bool LegendaryNight { get; private set; } = EnableUnfinishedBossChange;
+    public static bool LegendaryNight { get; private set; } = true;
 
     public static bool QueenBee { get; private set; } = true;
 
     public static bool QueenSlime { get; private set; } = EnableUnfinishedBossChange;
 
-    public static bool Skeletron { get; private set; } = EnableUnfinishedBossChange;
+    public static bool Skeletron { get; private set; } = true;
 }

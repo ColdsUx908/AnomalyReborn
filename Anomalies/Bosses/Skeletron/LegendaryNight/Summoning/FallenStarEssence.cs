@@ -14,6 +14,8 @@ public sealed class FallenStarEssence : AnomalyModItem
 
     public override string LocalizationCategory => LegendaryNightHandler.LocalizationCategory;
 
+    public override void SetStaticDefaults() => ItemID.Sets.ItemNoGravity[Type] = true;
+
     public override void SetDefaults()
     {
         Item.width = 40;
@@ -24,10 +26,4 @@ public sealed class FallenStarEssence : AnomalyModItem
     }
 
     public override void ModifyResearchSorting(ref ContentSamples.CreativeHelper.ItemGroup itemGroup) => itemGroup = ContentSamples.CreativeHelper.ItemGroup.Material;
-
-    public override void Update(ref float gravity, ref float maxFallSpeed)
-    {
-        gravity = 0f;
-        maxFallSpeed = 0f;
-    }
 }

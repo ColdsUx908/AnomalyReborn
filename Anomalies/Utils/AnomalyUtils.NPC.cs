@@ -7,6 +7,6 @@ public static partial class AnomalyUtils
     {
         //TODO: 升级 tML 时须复核原版难度缩放时机与倍率。
         float vanillaExpertLifeMultiplier = TONPCUtils.GetVanillaExpertLifeMultiplier(npc.type);
-        npc.lifeMax = (int)MathF.Round(npc.lifeMax / (vanillaExpertLifeMultiplier * 1.5f) / bossAdjustment / 10f) * 10;
+        npc.lifeMax = (int)MathF.Round(npc.lifeMax / (vanillaExpertLifeMultiplier * 1.5f) / bossAdjustment / 5f) * 5;
     }
 }

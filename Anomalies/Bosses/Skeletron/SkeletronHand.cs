@@ -1,3 +1,4 @@
+using Anomalies.Visuals.BossBar;
 using static Anomalies.Bosses.Skeletron.SkeletronHead;
 
 namespace Anomalies.Bosses.Skeletron;
@@ -16,6 +17,10 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
         _ => true,
     };
 
+    internal const float SlapGateValue = 300f;
+    internal const float SlapTelegraphTime = 120f;
+    internal const float SwipeDistance = 1280f;
+
     public enum Phase : byte
     {
         Phase1,
@@ -29,7 +34,6 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
         VerticalSlap,
         HorizontalSlap,
     }
-
 
     public Phase CurrentPhase
     {
@@ -71,6 +75,9 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
         }
     }
 
+    private float HorizontalSide => NPC.ai[0];
+    private int OwnerIndex => (int)NPC.ai[1];
+
     private ref float VerticalSide => ref AnomalyNPC.AnomalyAI32[0].F;
     private ref float SpawnTimer => ref AnomalyNPC.AnomalyAI32[1].F;
     private ref float SlapTelegraphTimer => ref AnomalyNPC.AnomalyAI32[2].F;
@@ -84,7 +91,7 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
 
     public override void SetDefaultsFinal()
     {
-        NPC.lifeMax = CalamityEnabled ? 1350 : 1125;
+        NPC.lifeMax = CalamityEnabled ? 900 : 600;
         BridgeUtils.ApplyCalamityHealthBoost(NPC);
     }
 
@@ -95,6 +102,10 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
     // AI32[7]: packed phase/behavior; AI32[8]: periodic resync timer.
     public override bool PreAI()
     {
+        NPC.damage = 0;
+        NPC.GivenName = string.Empty;
+        AnomalyNPC.BossBar_Enabled = true;
+        AnomalyNPC.BossBar_IsSmall = true;
         using BossNetUpdateScope netUpdate = new(NPC);
         // Late joiners and predicted timers receive the same complete per-NPC snapshot.
         if (Main.netMode != NetmodeID.MultiplayerClient && ++ResyncTimer >= 60f)
@@ -118,22 +129,19 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
             yMultiplier = VerticalSide;
         yMultiplier *= 1.3f;
 
-        // Inflict 0 damage for 3 seconds after spawning
+        // Inflict 0 damage for 3 seconds after spawning.
+        bool spawnProtectionEnded = SpawnTimer >= 180f;
         if (SpawnTimer < 180f)
         {
             SpawnTimer += 1f;
             if (SpawnTimer % 15f == 0f)
                 NPC.netUpdate = true;
-
-            NPC.damage = 0;
         }
-        else
-            NPC.damage = NPC.defDamage;
 
-        NPC.spriteDirection = -Math.Sign(NPC.ai[0]);
+        NPC.spriteDirection = -Math.Sign(HorizontalSide);
 
         // Validate the owner before any array access; clients wait for the server's despawn.
-        int headIndex = (int)NPC.ai[1];
+        int headIndex = OwnerIndex;
         if (headIndex < 0 || headIndex >= Main.maxNPCs || !Main.npc[headIndex].active
             || Main.npc[headIndex].type != NPCID.SkeletronHead
             || Main.npc[headIndex].Anomaly.CustomAIType == 1)
@@ -145,9 +153,10 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
             }
             return false;
         }
-        float skeletronLifeRatio = Main.npc[headIndex].life / (float)Main.npc[headIndex].lifeMax;
+        NPC master = Main.npc[headIndex];
+        float skeletronLifeRatio = master.life / (float)master.lifeMax;
 
-        SkeletronHead head = SkeletronHead.GetInstance(Main.npc[headIndex]);
+        SkeletronHead head = SkeletronHead.GetInstance(master);
         bool cancelSlap = head.CurrentBehavior != SkeletronHead.Behavior.Hover || head.Timer >= ChargeGateValue;
 
         // Ultra starts with the former second wave's faster slaps and escalates as hands fall.
@@ -163,9 +172,9 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
         velocityIncrement *= 1.5f;
         handSwipeVelocity *= 1.35f;
         deceleration *= 0.75f;
-        float handSwipeDistance = HandSwipeDistanceMaster;
+        float handSwipeDistance = SwipeDistance;
         float handSwipeDuration = handSwipeDistance / handSwipeVelocity;
-        float slapGateValue = HandSlapGateValue;
+        float slapGateValue = SlapGateValue;
 
         float slapTimerIncrement = MathHelper.Lerp(1.5f, 3f, 1f - skeletronLifeRatio);
         if (Phase3)
@@ -189,15 +198,19 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
                 if (CurrentLocalPhase == 0)
                     VerticalDrawback();
                 else
-                    VerticalSwipe();
+                    Swipe(nextIdleStep: 1);
                 break;
             case Behavior.HorizontalSlap:
                 if (CurrentLocalPhase == 0)
                     HorizontalDrawback();
                 else
-                    HorizontalSwipe();
+                    Swipe(nextIdleStep: 0);
                 break;
         }
+
+        // Only the forward slap can deal contact damage; windup and idle are harmless.
+        if (spawnProtectionEnded && CurrentBehavior is Behavior.VerticalSlap or Behavior.HorizontalSlap && CurrentLocalPhase == 1)
+            NPC.damage = NPC.defDamage;
 
         return false;
 
@@ -219,9 +232,8 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
                 deceleration *= 0.75f;
                 velocityIncrement *= 1.5f;
 
-                NPC master = Main.npc[headIndex];
-                Vector2 destination = master.Center + GetIdleOffset(-Math.Sign(NPC.ai[0]), NPC.height, master.height, yMultiplier, raised: true);
-                UpdateIdleMovement(NPC, destination, velocityIncrement, velocityMultiplier, deceleration,
+                Vector2 destination = master.Center + SkeletronKinematics.GetIdleOffset(-Math.Sign(HorizontalSide), NPC.height, master.height, yMultiplier, raised: true);
+                SkeletronKinematics.UpdateIdleMovement(NPC, destination, velocityIncrement, velocityMultiplier, deceleration,
                     followVelocity: head.IsSpinning ? master.velocity : null);
             }
             else
@@ -232,7 +244,7 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
                     Timer += slapTimerIncrement;
                     if (Main.netMode != NetmodeID.MultiplayerClient && (Timer >= slapGateValue))
                     {
-                        NPC.target = Main.npc[(int)NPC.ai[1]].target;
+                        NPC.target = master.target;
                         CurrentBehavior = CurrentLocalPhase == 0 ? Behavior.VerticalSlap : Behavior.HorizontalSlap;
                         CurrentLocalPhase = 0;
                         Timer = SlapTelegraphTimer = slapGateValue;
@@ -245,13 +257,12 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
                     FadeSlapTelegraph();
                 }
 
-                Vector2 destination = Main.npc[headIndex].Center + GetIdleOffset(-Math.Sign(NPC.ai[0]), NPC.height, Main.npc[headIndex].height, yMultiplier, raised: false);
-                UpdateIdleMovement(NPC, destination, velocityIncrement, velocityMultiplier, deceleration);
+                Vector2 destination = master.Center + SkeletronKinematics.GetIdleOffset(-Math.Sign(HorizontalSide), NPC.height, master.height, yMultiplier, raised: false);
+                SkeletronKinematics.UpdateIdleMovement(NPC, destination, velocityIncrement, velocityMultiplier, deceleration);
             }
 
-            UpdateIdleRotation(NPC, Main.npc[headIndex]);
+            SkeletronKinematics.UpdateIdleRotation(NPC, Main.npc[headIndex]);
 
-            return;
         }
 
         void FadeSlapTelegraph()
@@ -267,14 +278,10 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
 
         void VerticalDrawback()
         {
-            Vector2 handCurrentPosition = NPC.Center;
-            float handDrawbackXPos = Main.npc[(int)NPC.ai[1]].Center.X - 200f * NPC.ai[0] - handCurrentPosition.X;
-            float handDrawbackYPos = Main.npc[(int)NPC.ai[1]].Top.Y + 230f - handCurrentPosition.Y;
-            float handDrawbackDist = (float)Math.Sqrt(handDrawbackXPos * handDrawbackXPos + handDrawbackYPos * handDrawbackYPos);
-            NPC.rotation = (float)Math.Atan2(handDrawbackYPos, handDrawbackXPos) + MathHelper.PiOver2;
-            UpdateVerticalDrawbackMovement(NPC, velocityIncrement);
+            SkeletronKinematics.UpdateIdleRotation(NPC, master);
+            SkeletronKinematics.UpdateVerticalDrawbackMovement(NPC, velocityIncrement);
 
-            if (Main.netMode != NetmodeID.MultiplayerClient && (NPC.Top.Y < Main.npc[(int)NPC.ai[1]].Top.Y - 200f))
+            if (Main.netMode != NetmodeID.MultiplayerClient && (NPC.Top.Y < master.Top.Y - 200f))
             {
                 CurrentBehavior = Behavior.VerticalSlap;
                 CurrentLocalPhase = 1;
@@ -284,13 +291,13 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
             }
         }
 
-        void VerticalSwipe()
+        void Swipe(int nextIdleStep)
         {
             Timer += 1f;
-            if (Main.netMode != NetmodeID.MultiplayerClient && (Timer >= handSwipeDuration || Vector2.Distance(Main.npc[(int)NPC.ai[1]].Center, NPC.Center) > handSwipeDistance || cancelSlap))
+            if (Main.netMode != NetmodeID.MultiplayerClient && (Timer >= handSwipeDuration || Vector2.Distance(master.Center, NPC.Center) > handSwipeDistance || cancelSlap))
             {
                 CurrentBehavior = Behavior.Idle;
-                CurrentLocalPhase = 1;
+                CurrentLocalPhase = nextIdleStep;
                 Timer = 0f;
                 NPC.netUpdate = true;
 
@@ -300,34 +307,16 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
 
         void HorizontalDrawback()
         {
-            Vector2 handStrikeCurrentPos = NPC.Center;
-            float handStrikeXPos = Main.npc[(int)NPC.ai[1]].Center.X - 200f * NPC.ai[0] - handStrikeCurrentPos.X;
-            float handStrikeYPos = Main.npc[(int)NPC.ai[1]].Top.Y + 230f - handStrikeCurrentPos.Y;
-            float handStrikeDist = (float)Math.Sqrt(handStrikeXPos * handStrikeXPos + handStrikeYPos * handStrikeYPos);
-            NPC.rotation = (float)Math.Atan2(handStrikeYPos, handStrikeXPos) + MathHelper.PiOver2;
-            UpdateHorizontalDrawbackMovement(NPC, velocityIncrement);
+            SkeletronKinematics.UpdateIdleRotation(NPC, master);
+            SkeletronKinematics.UpdateHorizontalDrawbackMovement(NPC, velocityIncrement);
 
-            if (Main.netMode != NetmodeID.MultiplayerClient && (NPC.Center.X < Main.npc[(int)NPC.ai[1]].Center.X - 500f || NPC.Center.X > Main.npc[(int)NPC.ai[1]].Center.X + 500f))
+            if (Main.netMode != NetmodeID.MultiplayerClient && (NPC.Center.X < master.Center.X - 500f || NPC.Center.X > master.Center.X + 500f))
             {
                 CurrentBehavior = Behavior.HorizontalSlap;
                 CurrentLocalPhase = 1;
                 Timer = 0f;
                 NPC.velocity = (Main.player[NPC.target].Center - NPC.Center).SafeNormalize(Vector2.UnitY) * handSwipeVelocity;
                 NPC.netUpdate = true;
-            }
-        }
-
-        void HorizontalSwipe()
-        {
-            Timer += 1f;
-            if (Main.netMode != NetmodeID.MultiplayerClient && (Timer >= handSwipeDuration || Vector2.Distance(Main.npc[(int)NPC.ai[1]].Center, NPC.Center) > handSwipeDistance || cancelSlap))
-            {
-                CurrentBehavior = Behavior.Idle;
-                CurrentLocalPhase = 0;
-                Timer = 0f;
-                NPC.netUpdate = true;
-
-                FireSwipeProjectile();
             }
         }
 
@@ -341,125 +330,26 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
             float speed = handSwipeVelocity * (Phase3 ? 0.6f : 0.2f);
             Vector2 velocity = NPC.Center.DirectionTo(target.Center) * speed;
             if (Phase3)
-                Crossbone.Fire(NPC, NPC.Center, velocity, SkullDamage, Skull.UltraMaxSpeed);
-            else
-                Projectile.NewProjectileAction(SourceAI, NPC.Center, velocity, ProjectileID.Skull, SkullDamage, 0f, Main.myPlayer, action: p =>
-                {
-                    Skull.InitializeFlight(p, Skull.Homing, Skull.MaxSpeed, Skull.Acceleration);
-                    Skull.SetSource(p, NPC);
-                    p.timeLeft = 600;
-                });
-        }
-    }
-
-    /// <summary>
-    /// 普通手部的待机位置；保留原版以实体顶部计算高度的语义。
-    /// </summary>
-    internal static Vector2 GetIdleOffset(int side, int handHeight, int headHeight, float yMultiplier = 1.3f, bool raised = false) =>
-        new(side * (raised ? 120f : 200f), (raised ? -100f : 230f) * yMultiplier + (handHeight - headHeight) * 0.5f);
-
-    /// <summary>
-    /// 普通与传说之夜手部共用的逐轴待机加速、反向制动和速度限制。
-    /// </summary>
-    internal static void UpdateIdleMovement(NPC hand, Vector2 destination, float velocityIncrement, float velocityMultiplier, float deceleration,
-        Vector2? followVelocity = null)
-    {
-        // 启用跟随时，接近待机点后改为相对头部的阻尼收敛，避免固定加速度反复跨越目标。
-        // 此分支直接替代逐轴加速，不在同一帧叠加两套归位。
-        if (followVelocity is Vector2 ownerVelocity)
-        {
-            const float SettlingRadius = 48f;
-            const float SettlingSpeed = 6f;
-            const float VelocityDamping = 0.65f;
-            const float PositionResponse = 0.035f;
-            Vector2 relativeOffset = hand.Center - destination + ownerVelocity;
-            Vector2 relativeVelocity = hand.velocity - ownerVelocity;
-            if (relativeOffset.LengthSquared() <= SettlingRadius * SettlingRadius
-                && relativeVelocity.LengthSquared() <= SettlingSpeed * SettlingSpeed)
+                Crossbone.Fire(NPC, NPC.Center, velocity, SkullDamage, Skull.MaxSpeed);
+            Projectile.NewProjectileAction(SourceAI, NPC.Center, velocity, ProjectileID.Skull, SkullDamage, 0f, Main.myPlayer, action: p =>
             {
-                Vector2 nextVelocity = relativeVelocity * VelocityDamping - relativeOffset * PositionResponse;
-                hand.velocity = ownerVelocity + nextVelocity;
-                return;
-            }
-        }
-
-        float maxX = velocityIncrement * 100f * velocityMultiplier;
-        float maxY = velocityIncrement * 100f * velocityMultiplier;
-
-        if (hand.Center.Y > destination.Y)
-        {
-            if (hand.velocity.Y > 0f)
-                hand.velocity.Y *= deceleration;
-            hand.velocity.Y -= velocityIncrement;
-            if (hand.velocity.Y > maxY)
-                hand.velocity.Y = maxY;
-        }
-        else if (hand.Center.Y < destination.Y)
-        {
-            if (hand.velocity.Y < 0f)
-                hand.velocity.Y *= deceleration;
-            hand.velocity.Y += velocityIncrement;
-            if (hand.velocity.Y < -maxY)
-                hand.velocity.Y = -maxY;
-        }
-
-        if (hand.Center.X > destination.X)
-        {
-            if (hand.velocity.X > 0f)
-                hand.velocity.X *= deceleration;
-            hand.velocity.X -= velocityIncrement;
-            if (hand.velocity.X > maxX)
-                hand.velocity.X = maxX;
-        }
-
-        if (hand.Center.X < destination.X)
-        {
-            if (hand.velocity.X < 0f)
-                hand.velocity.X *= deceleration;
-            hand.velocity.X += velocityIncrement;
-            if (hand.velocity.X < -maxX)
-                hand.velocity.X = -maxX;
+                Skull.InitializeFlight(p, Skull.Homing, Skull.MaxSpeed, Skull.Acceleration);
+                Skull.SetSource(p, NPC);
+                p.timeLeft = 600;
+            });
         }
     }
 
-    /// <summary>普通与传说之夜待机手部共用的朝向，使用当前位置和原有头部参考点。</summary>
-    internal static void UpdateIdleRotation(NPC hand, NPC master)
-    {
-        Vector2 handCenter = hand.Center;
-        float offsetX = master.Center.X - 200f * hand.ai[0] - handCenter.X;
-        float offsetY = master.Top.Y + 230f - handCenter.Y;
-        hand.rotation = (float)Math.Atan2(offsetY, offsetX) + MathHelper.PiOver2;
-    }
-
-    /// <summary>普通与传说之夜下拍前的抬手运动。</summary>
-    internal static void UpdateVerticalDrawbackMovement(NPC hand, float velocityIncrement)
-    {
-        hand.velocity.X *= 0.95f;
-        hand.velocity.Y -= velocityIncrement;
-        if (hand.velocity.Y < -14f)
-            hand.velocity.Y = -14f;
-        else if (hand.velocity.Y > 10f)
-            hand.velocity.Y = 10f;
-    }
-
-    /// <summary>普通与传说之夜横扫前的侧向蓄势运动。</summary>
-    internal static void UpdateHorizontalDrawbackMovement(NPC hand, float velocityIncrement)
-    {
-        hand.velocity.Y *= 0.95f;
-        hand.velocity.X += velocityIncrement * -hand.ai[0];
-        if (hand.velocity.X < -10f)
-            hand.velocity.X = -10f;
-        else if (hand.velocity.X > 14f)
-            hand.velocity.X = 14f;
-    }
+    public override void ApplyCustomMainBossBarShader(BossHealthBar newBar, SpriteBatch spriteBatch, Rectangle destinationRectangle) =>
+        ApplyBossBarShader(destinationRectangle);
 
     public override void PostDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        float beginTelegraphGateValue = HandSlapGateValue - HandSlapTelegraphTime;
+        float beginTelegraphGateValue = SlapGateValue - SlapTelegraphTime;
         if (SlapTelegraphTimer > beginTelegraphGateValue)
         {
-            float colorScale = MathHelper.Clamp((SlapTelegraphTimer - beginTelegraphGateValue) / HandSlapTelegraphTime, 0f, 1f);
-            Color drawColor2 = new Color(150, 150, 150, 0) * colorScale;
+            float colorScale = MathHelper.Clamp((SlapTelegraphTimer - beginTelegraphGateValue) / SlapTelegraphTime, 0f, 1f);
+            Color telegraphColor = new Color(150, 150, 150, 0) * colorScale;
             Vector2 halfSize = NPC.frame.Size() / 2;
             SpriteEffects spriteEffects = SpriteEffects.None;
             if (NPC.spriteDirection == 1)
@@ -469,9 +359,21 @@ public sealed class SkeletronHand : AnomalyNPCBehavior<SkeletronHand>
             for (int i = 0; i < 2; i++)
             {
                 spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, NPC.Center - screenPos + new Vector2(0, NPC.gfxOffY) - glowOffset, NPC.frame,
-                    drawColor2, NPC.rotation, halfSize, NPC.scale, spriteEffects, 0f);
+                    telegraphColor, NPC.rotation, halfSize, NPC.scale, spriteEffects, 0f);
             }
         }
     }
 
+}
+
+// ModifyTypeName 未接入 Behavior 调度，使用无实例数据的 GlobalNPC 覆盖类型名。
+public sealed class SkeletronHandName : GlobalNPC
+{
+    public override bool AppliesToEntity(NPC entity, bool lateInstantiation) => entity.type == NPCID.SkeletronHand;
+
+    public override void ModifyTypeName(NPC npc, ref string typeName)
+    {
+        if (SkeletronHand.GetInstance(npc).ShouldProcess)
+            typeName = Language.GetTextValue("Mods.Anomalies.Bosses.Skeletron.SkeletronHand.DisplayName");
+    }
 }

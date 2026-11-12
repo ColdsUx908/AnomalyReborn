@@ -7,7 +7,7 @@ public abstract class SkeletronBoneArena : BaseRingArenaProjectile
     private static readonly ProjectileDamageContainer _BoundaryDamage = new(120);
     internal static int BoundaryDamage => _BoundaryDamage.Value;
 
-    public float Intensity;
+    public float Intensity { get; set; }
 
     // ai[0]：所属骷髅王的 NPC 索引（1-based）。
     public NPC Master
@@ -16,7 +16,7 @@ public abstract class SkeletronBoneArena : BaseRingArenaProjectile
         set => Projectile.ai[0] = (value?.whoAmI ?? -1) + 1;
     }
 
-    public bool IsActivated;
+    public bool IsActivated { get; set; }
 
     private bool _PreviousActivation;
 

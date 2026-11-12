@@ -55,6 +55,7 @@ QueenBee: {
 }
 
 Skeletron: {
+	SkeletronHand.DisplayName: 骷髅王之手
 	Crossbone.DisplayName: 十字骨
 	BoneShockwave.DisplayName: 骨冲击波
 	SkeletronPhase3Arena.DisplayName: 骷髅王竞技场

@@ -7,6 +7,13 @@ public sealed class SkeletronSkullWarning : AnomalyModProjectile
 
     // ai[0]: target player + 1, ai[1]: age, abs(ai[2]): head index + 1. Negative ai[2] selects fast flight.
     internal static int EncodeSource(int headIndex, bool fast) => (headIndex + 1) * (fast ? -1 : 1);
+    private const int FadeDuration = 30;
+    private const float FadeInDuration = 10f;
+    private int SourceHeadIndex => Math.Abs((int)Projectile.ai[2]) - 1;
+    private int TargetPlayerIndex => (int)Projectile.ai[0] - 1;
+    private bool FastFlight => Projectile.ai[2] < 0f;
+    private ref float Age => ref Projectile.ai[1];
+
     public override string LocalizationCategory => "Bosses.Skeletron";
     public override string Texture => TOTextures.InvisibleTexturePath;
 
@@ -39,34 +46,52 @@ public sealed class SkeletronSkullWarning : AnomalyModProjectile
 
     public override void AI()
     {
-        int headIndex = Math.Abs((int)Projectile.ai[2]) - 1;
+        int headIndex = SourceHeadIndex;
         if ((uint)headIndex >= Main.maxNPCs || Main.npc[headIndex] is not { active: true, type: NPCID.SkeletronHead }
             || SkeletronHead.GetInstance(Main.npc[headIndex]) is not
-                { ShouldProcess: true, CurrentBehavior: not SkeletronHead.Behavior.Despawn }
-            || !Player.TryGetPlayerFromIndex((int)Projectile.ai[0] - 1, out Player target) || !target.active || target.dead)
+                { ShouldProcess: true, CurrentBehavior: not SkeletronHead.Behavior.Despawn } head
+            || !Player.TryGetPlayerFromIndex(TargetPlayerIndex, out Player target) || !target.active || target.dead)
         {
             if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();
             return;
         }
 
-        if (StopTrackingTime <= 0 || Projectile.ai[1] < StopTrackingTime)
+        if (head.IsFinalStage || Age < 0f)
+        {
+            if (Age >= 0f)
+            {
+                Projectile.Opacity = MathHelper.Clamp(Age / FadeInDuration, 0f, 1f);
+                Age = -1f;
+                if (TONetworkEnvironment.NotClient)
+                    Projectile.netUpdate = true;
+            }
+            int fadeAge = Math.Min(FadeDuration, (int)-Age);
+            Projectile.Opacity *= (FadeDuration - fadeAge) / (float)(FadeDuration + 1 - fadeAge);
+            Projectile.timeLeft = Math.Max(Projectile.timeLeft, 2);
+            Age--;
+            if (fadeAge >= FadeDuration && TONetworkEnvironment.NotClient)
+                Projectile.Kill();
+            return;
+        }
+
+        if (StopTrackingTime <= 0 || Age < StopTrackingTime)
             Projectile.rotation = Projectile.GetVelocityTowards(target).ToRotation();
-        if (StopTrackingTime > 0 && Projectile.ai[1] == StopTrackingTime && TONetworkEnvironment.NotClient)
+        if (StopTrackingTime > 0 && Age == StopTrackingTime && TONetworkEnvironment.NotClient)
             Projectile.netUpdate = true;
         if (Projectile.localAI[0] == 0f && !Main.dedServ)
         {
             Projectile.localAI[0] = 1f;
-            int remainingTime = Math.Max(1, WarningTime - (int)Projectile.ai[1]);
+            int remainingTime = Math.Max(1, WarningTime - (int)Age);
             ParticleHandler.SpawnParticle(new BloomParticle(Projectile.Center, Vector2.Zero,
                 Color.White, 0.1f, 0.5f, remainingTime, 0.85f));
         }
 
-        Projectile.ai[1]++;
-        if (Projectile.ai[1] >= WarningTime && TONetworkEnvironment.NotClient)
+        Age++;
+        if (Age >= WarningTime && TONetworkEnvironment.NotClient)
         {
-            Skull.FireFromWarning(Projectile, target, fast: Projectile.ai[2] < 0f,
-                direction: StopTrackingTime > 0 && Projectile.ai[1] >= StopTrackingTime
+            Skull.FireFromWarning(Projectile, target, fast: FastFlight,
+                direction: StopTrackingTime > 0 && Age >= StopTrackingTime
                     ? Projectile.rotation.ToRotationVector2() : null);
             Projectile.Kill();
         }
@@ -74,13 +99,13 @@ public sealed class SkeletronSkullWarning : AnomalyModProjectile
 
     public override bool PreDraw(ref Color lightColor)
     {
-        if (!Player.TryGetPlayerFromIndex((int)Projectile.ai[0] - 1, out Player target) || !target.active || target.dead)
+        if (!Player.TryGetPlayerFromIndex(TargetPlayerIndex, out Player target) || !target.active || target.dead)
             return false;
 
         float length = Vector2.Distance(Projectile.Center, target.Center) * 1.5f;
-        float opacity = MathHelper.Clamp(Projectile.ai[1] / 10f, 0f, 1f);
+        float opacity = Age < 0f ? Projectile.Opacity : MathHelper.Clamp(Age / FadeInDuration, 0f, 1f);
         AnomalyDrawUtils.DrawLayeredWarning(Main.spriteBatch, Projectile.Center, Projectile.rotation,
-            length, 10f, SkeletronHandler.BoneColor, Color.White, opacity);
+            length, 10f, SkeletronCombatVisuals.BoneColor, Color.White, opacity);
         return false;
     }
 }

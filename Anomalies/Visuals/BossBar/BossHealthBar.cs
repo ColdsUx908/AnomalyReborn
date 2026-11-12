@@ -990,12 +990,12 @@ public partial class BossHealthBar : ILocalizationPrefix
                 return false;
             });
 
-            // 保留原始生命值文本，仅拦截传说之夜骷髅王的剩余手部数量。
+            // 保留骷髅王的原始生命值文本，不显示剩余手部数量。
             SmallTextFunctions.Add((b, out text, out disableOrig) =>
             {
                 text = "";
                 disableOrig = false;
-                return b.NPC.type == NPCID.SkeletronHead && b.NPC.Anomaly.CustomAIType == 1;
+                return b.NPC.type == NPCID.SkeletronHead;
             });
 
             RegisterBrainLifeFunctions();

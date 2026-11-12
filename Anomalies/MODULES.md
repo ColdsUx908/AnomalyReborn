@@ -5,7 +5,7 @@
 | 标签 | 构建属性 | 内容 |
 | --- | --- | --- |
 | `ANOMALY_MODE` | `AnomaliesEnableAnomalyMode` | 异象难度、裂天金冕、Boss 修改及其专属实体、难度兼容、故事/极限模式、相关模式机制 |
-| `TWEAK` | `AnomaliesEnableTweak` | `Tweaks/` 下的武器修改和修改标识（目前为太空枪），以及玩家基础属性配置和对应行为 |
+| `TWEAK` | `AnomaliesEnableTweak` | `Tweaks/` 下的武器修改和修改标识（太空枪、蜂膝弓、蜜蜂枪、蜜蜂手雷和养蜂人），以及玩家基础属性配置和对应行为 |
 | `GAME_CONTENTS` | `AnomaliesEnableGameContents` | `GameContents/` 的具体内容及旅行商店接入；共享基类除外 |
 | `SPECIAL_CONTENTS` | `AnomaliesEnableSpecialContents` | `SpecialContents/` 的内容及其出生物品、玩家同步接入 |
 

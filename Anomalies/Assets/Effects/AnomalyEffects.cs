@@ -47,6 +47,8 @@ public sealed class AnomalyEffects : ILoadable
         public static MiscShaderContainer LegendStellarSphere;
         public static MiscShaderContainer Shockwave;
         public static MiscShaderContainer SkeletronArenaExterior;
+        public static MiscShaderContainer SkeletronFinalCharge;
+        public static MiscShaderContainer SkeletronPhase3Warning;
         public static MiscShaderContainer SolidColor;
         public static MiscShaderContainer SolidColorMask;
     }

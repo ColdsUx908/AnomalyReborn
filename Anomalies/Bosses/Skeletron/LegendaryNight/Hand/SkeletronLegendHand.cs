@@ -224,7 +224,7 @@ public sealed partial class SkeletronLegendHand : AnomalyNPCBehavior<SkeletronLe
     }
 
     /// <summary>复用普通骷髅王手部的待机位置。</summary>
-    private Vector2 GetIdleOffset(int side) => SkeletronHand.GetIdleOffset(side, NPC.height, Master.height);
+    private Vector2 GetIdleOffset(int side) => SkeletronKinematics.GetIdleOffset(side, NPC.height, Master.height);
 
     /// <summary>手掌沿第一段骨节连接轴自然下垂。</summary>
     private static float GetRestingRotation(Vector2 handCenter, Vector2 headCenter, int side, int handHeight)

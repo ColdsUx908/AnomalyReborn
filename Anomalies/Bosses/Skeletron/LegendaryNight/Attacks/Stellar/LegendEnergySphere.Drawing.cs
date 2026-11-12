@@ -140,11 +140,14 @@ public sealed partial class LegendEnergySphere
     {
         LegendBlueStar blue = null;
         foreach (LegendBlueStar candidate in blueStars)
+        {
             if (candidate.PrimaryProjectile == Projectile)
             {
                 blue = candidate;
                 break;
             }
+        }
+
         blue?.DrawCompanionMatter(spriteBatch, behind: true);
         blue?.DrawBlueCompanion(spriteBatch, behind: true);
         DrawBody(spriteBatch);

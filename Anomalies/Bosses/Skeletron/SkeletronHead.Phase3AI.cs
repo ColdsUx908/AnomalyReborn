@@ -2,24 +2,13 @@ namespace Anomalies.Bosses.Skeletron;
 
 public sealed partial class SkeletronHead
 {
-    private const int Phase3VolleyDuration = 480;
-    private const int Phase3PreparationTime = 60;
-    private const int Phase3VolleyInterval = 16;
-    private const int Phase3OppositeInterval = 36;
+    internal int Phase3PatternDirection => (Phase3Cycle & 1) == 0 ? 1 : -1;
+    internal float Phase3PatternStartAngle => Phase3Cycle * 3 * Hexadecagon.VertexAngle;
 
     // LocalPhase：0 准备、1 发射、2 收尾。
     private void Phase3AI()
     {
-        SkeletronPhase3Arena arena = null;
-        foreach (Projectile projectile in Projectile.ActiveProjectiles)
-        {
-            if (projectile.ModProjectile is SkeletronPhase3Arena candidate && candidate.Master == NPC && candidate.IsActivated)
-            {
-                arena = candidate;
-                break;
-            }
-        }
-
+        SkeletronPhase3Arena arena = FindActivePhase3Arena();
         // 等待竞技场网络包；服务器不在缺少竞技场时继续执行不可见的攻击。
         NPC.damage = 0;
         if (arena is null || arena.Intensity < 1f)
@@ -29,19 +18,22 @@ public sealed partial class SkeletronHead
         }
 
         Hexadecagon polygon = arena.ArenaPolygon;
-        int direction = (Phase3Cycle & 1) == 0 ? 1 : -1;
-        int startNode = Phase3Cycle * 3 % Hexadecagon.VertexCount;
+        int direction = Phase3PatternDirection;
+        float startAngle = Phase3PatternStartAngle;
         int age = (int)Timer++;
         switch (CurrentBehavior)
         {
-            case Behavior.Phase3_NodeVolley:
-                NodeVolley();
+            case Behavior.Phase3_GuardianPatrol:
+                GuardianPatrol();
+                break;
+            case Behavior.Phase3_BoneTide:
+                BoneTide();
                 break;
             case Behavior.Phase3_GuardianRain:
                 GuardianRain();
                 break;
             default:
-                BeginBehavior(Behavior.Phase3_NodeVolley);
+                BeginBehavior(Behavior.Phase3_GuardianRain);
                 break;
         }
 
@@ -66,95 +58,128 @@ public sealed partial class SkeletronHead
                 CurrentLocalPhase = localPhase;
         }
 
-        void NodeVolley()
-        {
-            Hover();
-            int shotAge = age - Phase3PreparationTime;
-            if (shotAge >= 0 && shotAge % Phase3VolleyInterval == 0 && shotAge / Phase3VolleyInterval < Hexadecagon.VertexCount
-                && TONetworkEnvironment.NotClient)
-            {
-                int node = startNode + direction * 5 * (shotAge / Phase3VolleyInterval);
-                Vector2 position = polygon.GetVertex(node);
-                Projectile.NewProjectileAction<SkeletronSkullWarning>(SourceAI, position, Vector2.Zero, SkullDamage, 0f,
-                    action: p =>
-                    {
-                        p.ai[0] = Target.whoAmI + 1;
-                        // 使用既有 60 帧预警，从年龄 12 开始：跟踪 36 帧，再固定 12 帧。
-                        p.ai[1] = 12f;
-                        p.ai[2] = SkeletronSkullWarning.EncodeSource(NPC.whoAmI, false);
-                        p.rotation = (Target.Center - position).ToRotation();
-                        p.GetModProjectile<SkeletronSkullWarning>().StopTrackingTime = 48;
-                    });
-            }
-            int pairAge = age - Phase3PreparationTime;
-            if (pairAge >= 0 && pairAge % Phase3OppositeInterval == 0 && pairAge / Phase3OppositeInterval < 8
-                && TONetworkEnvironment.NotClient)
-            {
-                int node = startNode + direction * (pairAge / Phase3OppositeInterval);
-                SpawnGuardian(polygon.GetVertex(node), polygon.GetVertex(node + 8));
-                SpawnGuardian(polygon.GetVertex(node + 8), polygon.GetVertex(node));
-            }
-            SetLocalPhase(age < Phase3PreparationTime ? 0 : age < 360 ? 1 : 2);
-            if (age >= Phase3VolleyDuration - 1)
-                BeginBehavior(Behavior.Phase3_GuardianRain);
-        }
-
         void GuardianRain()
         {
             Hover();
-            const int RainStart = 60;
-            const int RainEnd = 420;
-            const int RecoveryTime = 150;
-            const int RainInterval = 5;
-            const float ColumnSpacing = 75f;
-            const float SafeZoneSpacing = 640f;
-            const float SafeZoneWidth = 288f;
-            const float MinFallSpeed = 15f;
-            const float MaxFallSpeed = 20f;
-            if (age >= RainStart && age <= RainEnd && age % RainInterval == 0 && TONetworkEnvironment.NotClient)
+            if (age >= Phase3Patterns.RainStart && age <= Phase3Patterns.RainEnd && age % Phase3Patterns.RainInterval == 0 && TONetworkEnvironment.NotClient)
             {
                 // 参考突变体史莱姆雨：每个区间独立随机位置与速度，打散横排及左右镜像。
-                float offset = 250f * MathF.Sin(MathHelper.TwoPi * (age - RainStart) / 480f);
+                float offset = 250f * MathF.Sin(MathHelper.TwoPi * (age - Phase3Patterns.RainStart) / 480f);
                 float horizontalRange = polygon.CircumRadius * 1.2f;
-                for (float columnX = -horizontalRange; columnX < horizontalRange; columnX += ColumnSpacing)
+                for (float columnX = -horizontalRange; columnX < horizontalRange; columnX += Phase3Patterns.RainColumnSpacing)
                 {
-                    float x = Main.rand.NextFloat(columnX, Math.Min(columnX + ColumnSpacing, horizontalRange));
+                    float x = Main.rand.NextFloat(columnX, Math.Min(columnX + Phase3Patterns.RainColumnSpacing, horizontalRange));
                     // 只镜像安全通道的位置，左右两侧弹幕各自取样。
-                    float distanceToSafeZone = Math.Abs(MathF.IEEERemainder(-Math.Abs(x) - offset, SafeZoneSpacing));
-                    if (distanceToSafeZone < SafeZoneWidth * 0.5f)
+                    float distanceToSafeZone = Math.Abs(MathF.IEEERemainder(-Math.Abs(x) - offset, Phase3Patterns.RainSafeZoneSpacing));
+                    if (distanceToSafeZone < Phase3Patterns.RainSafeZoneWidth * 0.5f)
                         continue;
                     SpawnRain(x);
                 }
             }
-            if (age >= 150 && age <= RainEnd && (age - 150) % 30 == 0 && TONetworkEnvironment.NotClient)
-                SkeletronHandler.FireSkull(NPC, Target, 5, MathHelper.TwoPi / 5f, 15f, SkullDamage, addNPCVelocity: false);
-            SetLocalPhase(age < RainStart ? 0 : age <= RainEnd ? 1 : 2);
-            if (age >= RainEnd + RecoveryTime - 1 && TONetworkEnvironment.NotClient)
+            if (age >= Phase3Patterns.SkullStart && age <= Phase3Patterns.RainEnd && (age - Phase3Patterns.SkullStart) % Phase3Patterns.SkullInterval == 0 && TONetworkEnvironment.NotClient)
+                FirePatternSkulls();
+            SetLocalPhase(age < Phase3Patterns.RainStart ? 0 : age <= Phase3Patterns.RainEnd ? 1 : 2);
+            if (age >= Phase3Patterns.RainEnd + Phase3Patterns.RainRecoveryTime - 1 && TONetworkEnvironment.NotClient)
             {
-                Phase3Cycle = (Phase3Cycle + 1) % 32;
-                BeginBehavior(Behavior.Phase3_NodeVolley);
+                BeginBehavior(Behavior.Phase3_GuardianPatrol);
             }
 
             void SpawnRain(float horizontalOffset)
             {
                 Vector2 position = polygon.Center + new Vector2(horizontalOffset, -polygon.CircumRadius - 120f);
-                Projectile.NewProjectileAction<SkeletronPhase3Guardian>(SourceAI, position, Vector2.UnitY * Main.rand.NextFloat(MinFallSpeed, MaxFallSpeed), SkullDamage, 0f,
+                Projectile.NewProjectileAction<SkeletronPhase3Guardian>(SourceAI, position, Vector2.UnitY * Main.rand.NextFloat(Phase3Patterns.RainMinFallSpeed, Phase3Patterns.RainMaxFallSpeed), SkullDamage, 0f,
                     action: p =>
                     {
                         p.ai[0] = NPC.whoAmI + 1;
-                        p.ai[2] = 2f;
-                        p.timeLeft = 150;
+                        p.ai[2] = SkeletronPhase3Guardian.Rain;
+                        p.timeLeft = (int)MathF.Ceiling((polygon.CircumRadius * 2f + 360f) / Phase3Patterns.RainMinFallSpeed);
                     });
             }
         }
 
-        void SpawnGuardian(Vector2 position, Vector2 destination)
+        void GuardianPatrol()
         {
-            Projectile.NewProjectileAction<SkeletronPhase3Guardian>(SourceAI, position, Vector2.Zero, SkullDamage, 0f,
+            Hover();
+            const int PreparationTime = Phase3Patterns.PreparationTime;
+            const int PatrolTime = Phase3Patterns.PatrolTime;
+            // 相同偶数采样数和相同初始缺口，保证整圈/半圈相差后弹幕与双缺口均对齐。
+            if (age == 0 && TONetworkEnvironment.NotClient)
+            {
+                for (int layer = 0; layer < Phase3Patterns.PatrolLayers; layer++)
+                {
+                    float radius = polygon.CircumRadius * Phase3Patterns.PatrolRadiusFactor(layer);
+                    const int Count = Phase3Patterns.PatrolCount;
+                    float angularSpeed = direction * Phase3Patterns.PatrolSpeed(layer);
+                    for (int i = 0; i < Count; i++)
+                    {
+                        float relativeAngle = MathHelper.TwoPi * i / Count;
+                        // 入场始终向左右留空；每圈的总转角均为半圈整数倍，离场也朝左右。
+                        float angle = relativeAngle;
+                        if (Phase3Patterns.IsPatrolGap(relativeAngle))
+                            continue;
+                        SpawnPattern(SkeletronPhase3Guardian.Patrol, radius, angle, angularSpeed);
+                    }
+                }
+            }
+            // 与雨幕一致：从第 150 帧起每 30 帧释放五向骷髅头。
+            if (Phase3Patterns.ShouldFireSkull(age) && TONetworkEnvironment.NotClient)
+                FirePatternSkulls();
+            SetLocalPhase(age < PreparationTime ? 0 : age < PreparationTime + PatrolTime ? 1 : 2);
+            if (age >= Phase3Patterns.PatternDuration - 1)
+                BeginBehavior(Behavior.Phase3_BoneTide);
+        }
+
+        void BoneTide()
+        {
+            Hover();
+            const int WaveInterval = Phase3Patterns.TideInterval;
+            const int WaveCount = Phase3Patterns.TideWaves;
+            const int PreparationTime = Phase3Patterns.PreparationTime;
+            const int GuardiansPerWave = Phase3Patterns.GuardiansPerTideWave;
+            int wave = age / WaveInterval;
+            if (age % WaveInterval == 0 && wave < WaveCount && TONetworkEnvironment.NotClient)
+            {
+                float gapAngle = startAngle + direction * wave * Phase3Patterns.TideGapStep;
+                for (int i = 0; i < GuardiansPerWave; i++)
+                {
+                    float angle = MathHelper.TwoPi * i / GuardiansPerWave;
+                    if (Phase3Patterns.IsTideGap(angle - gapAngle))
+                        continue;
+                    // 从实际十六边形边界外侧入场，不在场内突然生成。
+                    float sectorAngle = MathF.IEEERemainder(angle - polygon.Rotation - Hexadecagon.VertexAngle * 0.5f, Hexadecagon.VertexAngle);
+                    float radius = polygon.Apothem / MathF.Cos(sectorAngle) + 80f;
+                    SpawnPattern(SkeletronPhase3Guardian.Tide, radius, angle, direction * Phase3Patterns.TideAngularSpeed);
+                }
+            }
+            int lastRelease = (WaveCount - 1) * WaveInterval + PreparationTime;
+            if (Phase3Patterns.ShouldFireSkull(age) && TONetworkEnvironment.NotClient)
+                FirePatternSkulls();
+            SetLocalPhase(age < PreparationTime ? 0 : age < lastRelease ? 1 : 2);
+            if (age >= Phase3Patterns.PatternDuration - 1 && TONetworkEnvironment.NotClient)
+            {
+                Phase3Cycle = (Phase3Cycle + 1) % 32;
+                BeginBehavior(Behavior.Phase3_GuardianRain);
+            }
+        }
+
+        void FirePatternSkulls() =>
+            SkeletronCombat.FireSkull(NPC, Target, Phase3Patterns.SkullCount,
+                MathHelper.TwoPi / Phase3Patterns.SkullCount, Phase3Patterns.SkullSpeed, SkullDamage, addNPCVelocity: false);
+
+        void SpawnPattern(int mode, float radius, float angle, float angularSpeed)
+        {
+            Vector2 offset = angle.ToRotationVector2() * radius;
+            Projectile.NewProjectileAction<SkeletronPhase3Guardian>(SourceAI, polygon.Center + offset, Vector2.Zero, SkullDamage, 0f,
                 action: p =>
                 {
                     p.ai[0] = NPC.whoAmI + 1;
-                    p.GetModProjectile<SkeletronPhase3Guardian>().Destination = destination;
+                    p.ai[2] = mode;
+                    p.timeLeft = 720;
+                    SkeletronPhase3Guardian guardian = p.GetModProjectile<SkeletronPhase3Guardian>();
+                    guardian.Destination = polygon.Center;
+                    guardian.InitialOffset = offset;
+                    guardian.AngularSpeed = angularSpeed;
+                    guardian.ArenaRadius = polygon.CircumRadius;
                 });
         }
     }

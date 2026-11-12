@@ -250,6 +250,11 @@ public abstract class AnomalyProjectileBehavior : SingleProjectileBehavior, IAno
     public virtual bool AllowCalamityLogic(CalamityLogicType_ProjectileBehavior type) => true;
 
     /// <summary>
+    /// 设置弹幕基本属性，在 <see cref="Projectile.SetDefaults(int)"/> 完成原版、ModProjectile 和全部 GlobalProjectile 默认属性设置后调用。
+    /// </summary>
+    public virtual void SetDefaultsFinal() { }
+
+    /// <summary>
     /// 编辑受击NPC的DR。
     /// </summary>
     /// <param name="baseDR">由灾厄方法计算出的基础DR。</param>
@@ -307,19 +312,6 @@ public abstract class AnomalyItemBehavior : SingleItemBehavior, IAnomalyTweak
     public virtual void ModifyHitNPC_DR(NPC target, Player player, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 
     void IAnomalyTweak.RegisterTweak() => AnomalySharedData.TweakedItems[ApplyingType] = true;
-
-    /// <summary>在每个实际注册的物品行为加载时安装末尾属性钩子，保留既有注册次数。</summary>
-    public override void Load() => On_Item.SetDefaults_int_bool_ItemVariant += On_Item_SetDefaults_int_bool_ItemVariant;
-
-    private static void On_Item_SetDefaults_int_bool_ItemVariant(On_Item.orig_SetDefaults_int_bool_ItemVariant orig, Item self, int Type, bool noMatCheck, Terraria.GameContent.Items.ItemVariant variant)
-    {
-        orig(self, Type, noMatCheck, variant);
-        if (self.TryGetBehavior(out AnomalyItemBehavior itemBehavior, nameof(SetDefaultsFinal)))
-        {
-            using EntityLock entityLock = itemBehavior.LockEntity();
-            itemBehavior.SetDefaultsFinal();
-        }
-    }
 }
 
 public abstract class AnomalyItemBehavior<TBehavior> : AnomalyItemBehavior where TBehavior : AnomalyItemBehavior<TBehavior>, new()
@@ -350,6 +342,19 @@ public sealed class AnomalySingleProjectileBehaviorHandler : SingleProjectileBeh
     public override decimal Priority => 50m;
 
     protected override SingleEntityBehaviorSet<Projectile, AnomalyProjectileBehavior> BehaviorSet => AnomalyEntityChangeHelper.ProjectileBehaviors;
+
+    /// <summary>由公共弹幕处理器统一安装末尾属性钩子，避免多个弹幕行为重复注册同一委托。</summary>
+    public override void Load() => On_Projectile.SetDefaults += On_Projectile_SetDefaults;
+
+    private static void On_Projectile_SetDefaults(On_Projectile.orig_SetDefaults orig, Projectile self, int type)
+    {
+        orig(self, type);
+        if (self.TryGetBehavior(out AnomalyProjectileBehavior projectileBehavior, nameof(AnomalyProjectileBehavior.SetDefaultsFinal)))
+        {
+            using EntityBehavior<Projectile>.EntityLock entityLock = projectileBehavior.LockEntity();
+            projectileBehavior.SetDefaultsFinal();
+        }
+    }
 }
 
 public sealed class AnomalySingleItemBehaviorHandler : SingleItemBehaviorHandler<AnomalyItemBehavior>
@@ -357,6 +362,19 @@ public sealed class AnomalySingleItemBehaviorHandler : SingleItemBehaviorHandler
     public override decimal Priority => 50m;
 
     protected override SingleEntityBehaviorSet<Item, AnomalyItemBehavior> BehaviorSet => AnomalyEntityChangeHelper.ItemBehaviors;
+
+    /// <summary>由公共物品处理器统一安装末尾属性钩子，避免多个物品行为重复注册同一委托。</summary>
+    public override void Load() => On_Item.SetDefaults_int_bool_ItemVariant += On_Item_SetDefaults_int_bool_ItemVariant;
+
+    private static void On_Item_SetDefaults_int_bool_ItemVariant(On_Item.orig_SetDefaults_int_bool_ItemVariant orig, Item self, int type, bool noMatCheck, Terraria.GameContent.Items.ItemVariant variant)
+    {
+        orig(self, type, noMatCheck, variant);
+        if (self.TryGetBehavior(out AnomalyItemBehavior itemBehavior, nameof(AnomalyItemBehavior.SetDefaultsFinal)))
+        {
+            using EntityBehavior<Item>.EntityLock entityLock = itemBehavior.LockEntity();
+            itemBehavior.SetDefaultsFinal();
+        }
+    }
 }
 
 public sealed class AnomalyEntityChangeHelper : IContentLoader

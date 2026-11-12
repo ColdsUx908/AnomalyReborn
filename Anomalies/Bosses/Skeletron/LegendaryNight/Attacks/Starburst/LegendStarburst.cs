@@ -74,7 +74,7 @@ public sealed class LegendStarburst : AnomalyModProjectile
     private Vector2 GetRadii(LegendaryNightPhase2Arena arena)
     {
         if (!IsStepped)
-            return new Vector2(arena.Radius * (IsRing ? 2.175f : 1.45f), IsRing ? arena.Radius * 0.625f : 0f);
+            return new Vector2(arena.Radius * (IsRing ? 2.25f : 1.5f), IsRing ? arena.Radius * 0.6f : 0f);
 
         // 面积与半径平方成正比，每层增加整个竞技场面积的四分之一。
         return arena.Radius * new Vector2(MathF.Sqrt(Step / (float)StepCount), MathF.Sqrt((Step - 1f) / StepCount));

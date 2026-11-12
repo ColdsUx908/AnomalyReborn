@@ -85,7 +85,7 @@ public sealed partial class SkeletronLegendHead
             float spinSpeed = 0.3f;
             float distance = NPC.Distance(Target.Center);
             float moveSpeed = distance < 240f ? Utils.Remap(distance, 120f, 240f, 7.5f, 10f) : Utils.Remap(distance, 480f, 1920f, 10f, 40f);
-            SkeletronHandler.SpinMovement(NPC, Target, spinSpeed, moveSpeed);
+            SkeletronKinematics.SpinMovement(NPC, Target, spinSpeed, moveSpeed);
             if (Timer1 % 75 == 0 && Timer1 <= 300)
                 SummonSpinSkullWarnings(4);
             SummonStarMeteors(Timer1, reducedStarCount: true);

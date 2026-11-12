@@ -29,12 +29,12 @@ namespace Anomalies.Visuals.BossBar;
 public partial class BossBarHandler : IContentLoader
 {
     /// <summary>
-    /// 最大可同时存在的血条记录数量。
+    /// 最大可同时存在的血条记录槽位数，小血条占用半个槽位。
     /// </summary>
     public static int MaxBars = 6;
 
     /// <summary>
-    /// 最大同时显示的活动 NPC 的血条数量。
+    /// 最大同时显示的活跃血条槽位数，小血条占用半个槽位。
     /// </summary>
     public static int MaxActiveBars = 4;
 
@@ -64,15 +64,18 @@ public partial class BossBarHandler : IContentLoader
     public static void Update()
     {
         CurrentValidIdentifiers.Clear();
+        float recordedSlots = CurrentBars.Values.Sum(bar => bar.IsSmall ? 0.5f : 1f);
         foreach (NPC npc in NPC.ActiveNPCs)
         {
             long npcIdentifier = npc.Identifier;
+            float slotCost = npc.Anomaly.BossBar_IsSmall ? 0.5f : 1f;
             if (CurrentBars.ContainsKey(npcIdentifier))
                 CurrentValidIdentifiers.Add(npcIdentifier);
             // 毁灭者等蠕虫的头部也可能将 realLife 指向自身，仅过滤指向其他 NPC 的体节。
-            else if (CurrentBars.Count < MaxBars && (npc.realLife < 0 || npc.realLife == npc.whoAmI) && ((npc.IsBossEnemy && !ExclusionList.Contains(npc.type)) || Minibosses.Contains(npc.type) || npc.Anomaly.BossBar_Enabled))
+            else if (recordedSlots + slotCost <= MaxBars && (npc.realLife < 0 || npc.realLife == npc.whoAmI) && ((npc.IsBossEnemy && !ExclusionList.Contains(npc.type)) || Minibosses.Contains(npc.type) || npc.Anomaly.BossBar_Enabled))
             {
                 CurrentBars.Add(npcIdentifier, new BossHealthBar(npc));
+                recordedSlots += slotCost;
                 CurrentValidIdentifiers.Add(npcIdentifier);
             }
         }
@@ -100,7 +103,7 @@ public partial class BossBarHandler : IContentLoader
 
         int y = Main.screenHeight - 16;
 
-        int activeCount = 0;
+        float activeSlots = 0f;
 
         foreach (BossHealthBar bar in
             from pair in CurrentBars
@@ -108,12 +111,13 @@ public partial class BossBarHandler : IContentLoader
             orderby bar.Valid descending, pair.Key ascending
             select bar)
         {
-            y -= bar.GetHeight(isFancy) + 4;
-            if (activeCount >= MaxActiveBars && bar.Valid)
+            float slotCost = bar.IsSmall ? 0.5f : 1f;
+            if (bar.Valid && activeSlots + slotCost > MaxActiveBars)
                 continue;
+            y -= bar.GetHeight(isFancy) + 4;
             bar.Draw(spriteBatch, ref x, ref y, isFancy);
             if (bar.Valid)
-                activeCount++;
+                activeSlots += slotCost;
         }
     }
 

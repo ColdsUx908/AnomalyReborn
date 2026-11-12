@@ -84,7 +84,7 @@ public sealed partial class SkeletronLegendHead
         int normalTimer = ++Timer1 - (FirstSpellCycleCompleted ? SkeletronHead.PostSpinHoverQuietDuration : 0);
 
         if (normalTimer % 30 == 0 && normalTimer is > 30 and <= ShockwaveTime)
-            SkeletronHandler.FireSkull(NPC, Target, Main.rand.NextBool(3) ? 2 : 1, TOMathUtils.PiOver10, 20f, SkullDamage, addNPCVelocity: false);
+            SkeletronCombat.FireSkull(NPC, Target, Main.rand.NextBool(3) ? 2 : 1, TOMathUtils.PiOver10, 20f, SkullDamage, addNPCVelocity: false);
 
         if (normalTimer == ShockwaveTime)
         {
@@ -124,7 +124,7 @@ public sealed partial class SkeletronLegendHead
             float accelerationY = 0.08f;
             float targetDistanceAboveTarget = 300f;
             float rotationFactor = 20f;
-            SkeletronHandler.NormalMovement(NPC, Target, maxSpeedX, maxSpeedY, accelerationX, accelerationY, targetDistanceAboveTarget, rotationFactor);
+            SkeletronKinematics.NormalMovement(NPC, Target, maxSpeedX, maxSpeedY, accelerationX, accelerationY, targetDistanceAboveTarget, rotationFactor);
         }
 
         #endregion
@@ -136,17 +136,17 @@ public sealed partial class SkeletronLegendHead
             const int Duration = 300;
             const int QuietDuration = 60;
             if (adjustedTimer < Duration - QuietDuration && adjustedTimer % 10 == 0)
-                SkeletronHandler.FireSkull(NPC, Target, Main.rand.NextBool(3) ? 2 : 1, TOMathUtils.PiOver10, 20f, SkullDamage, addNPCVelocity: false);
+                SkeletronCombat.FireSkull(NPC, Target, Main.rand.NextBool(3) ? 2 : 1, TOMathUtils.PiOver10, 20f, SkullDamage, addNPCVelocity: false);
 
             if (adjustedTimer >= Duration)
             {
                 BeginPhase1Spin();
                 if (TONetworkEnvironment.NotClient)
-                    SkeletronHandler.FireAcceleratingSpread(NPC, Target, SkeletronHead.MaximumSpreadCount, SkeletronHead.MaximumSpreadDegrees,
+                    SkeletronCombat.FireAcceleratingSpread(NPC, Target, SkeletronHead.MaximumSpreadCount, SkeletronHead.MaximumSpreadDegrees,
                         (position, velocity) => Projectile.NewProjectileAction(SourceAI, position, velocity, ProjectileID.Skull,
                             SkullDamage, 0f, Main.myPlayer, action: p =>
                             {
-                                Skull.InitializeFlight(p, Skull.Straight, Skull.UltraMaxSpeed, Skull.RegularAcceleration);
+                                Skull.InitializeFlight(p, Skull.Straight, Skull.MaxSpeed, Skull.Acceleration);
                                 p.timeLeft = 600;
                             }));
             }
@@ -270,7 +270,7 @@ public sealed partial class SkeletronLegendHead
 
                 // 金币雨落到玩家附近后开始自机狙
                 if (adjustedTimer >= 150 && adjustedTimer <= 420 && (adjustedTimer - 150) % 30 == 0)
-                    SkeletronHandler.FireSkull(NPC, Target, 5, MathHelper.TwoPi / 5f, 15f, SkullDamage, addNPCVelocity: false);
+                    SkeletronCombat.FireSkull(NPC, Target, 5, MathHelper.TwoPi / 5f, 15f, SkullDamage, addNPCVelocity: false);
             }
 
             if (adjustedTimer >= RainEnd + SpinDelay)
@@ -350,8 +350,8 @@ public sealed partial class SkeletronLegendHead
         {
             float spinSpeed = 0.3f;
             float distance = NPC.Distance(Target.Center);
-            float moveSpeed = SkeletronHandler.GetSpinMoveSpeed(distance);
-            SkeletronHandler.SpinMovement(NPC, Target, spinSpeed, moveSpeed);
+            float moveSpeed = SkeletronKinematics.GetSpinMoveSpeed(distance);
+            SkeletronKinematics.SpinMovement(NPC, Target, spinSpeed, moveSpeed);
 
             Timer1++;
 
