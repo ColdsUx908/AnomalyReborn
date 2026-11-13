@@ -1,5 +1,45 @@
-[h1]Transoceanic[/h1]
+[h1]大洋彼岸 / Transoceanic[/h1]
 
-Transoceanic is a comprehensive foundational modding framework for Terraria that extends the game's base functionality through various respects, which serves as core infrastructure for other mods to build upon to implement gameplay modifications and enhancements.
+[h2]中文[/h2]
 
-Notice that the mod is NoSync side.
+大洋彼岸（Transoceanic）是一个面向泰拉瑞亚模组加载器的通用开发框架。
+框架为其他模组提供可复用的基础设施，帮助开发者组织实体行为、处理数据同步，并实现粒子与绘制效果。
+框架不依赖特定内容模组。
+
+[h3]框架的主要功能包括：[/h3]
+[list]
+[*] 实体行为的组织、调度与查询
+[*] 可选的额外人工智能数据同步与网络工具
+[*] 几何、数学、集合、计时与物理工具
+[*] 实体检索、寻敌与战斗辅助
+[*] 粒子系统、渲染目标管理与绘制工具
+[*] 资源加载、加载生命周期与可选模组接入
+[*] 运行时扩展、命令、本地化与界面支持
+[/list]
+
+普通玩家按所使用模组的前置要求安装即可。
+开发者可参考框架自带的说明文档、接入指南与接口文档。
+
+本框架不强制联机各端安装；若依赖它的模组启用了网络同步，参与同步的各端仍需使用相同构建。
+
+[h2]English[/h2]
+
+Transoceanic is a general-purpose development framework for tModLoader and a required dependency for Anomalies.
+It provides reusable infrastructure to help other mod developers organize entity behaviors, handle data synchronization, and implement particle and rendering effects.
+The framework does not depend on any specific content mod.
+
+[h3]The framework's main features include:[/h3]
+[list]
+[*] Entity behavior organization, dispatch, and queries
+[*] Optional ExtraAI synchronization and networking utilities
+[*] Geometry, mathematics, collections, timing, and physics utilities
+[*] Entity queries, targeting, and combat helpers
+[*] Particle systems, render target management, and drawing utilities
+[*] Asset loading, loading lifecycle management, and optional mod integration
+[*] Runtime extensions, commands, localization, and UI support
+[/list]
+
+Players can install this framework as required by the mods they use.
+Developers can refer to the included documentation, getting-started guide, and API documentation.
+
+This framework does not require installation on every multiplayer peer. However, if a dependent mod enables network synchronization, all peers participating in that synchronization must use the same build.

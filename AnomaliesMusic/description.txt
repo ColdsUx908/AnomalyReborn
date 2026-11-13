@@ -1,1 +1,25 @@
-Modify this file with a description of your mod.
+异象音乐（AnomaliesMusic）是异象（Anomalies）模组的配套音乐模组，为泰拉瑞亚的探索与战斗增添新的旋律。
+模组收录主题曲与环境音乐，并为海洋、腐化之地和猩红之地提供可配置的背景音乐替换。
+
+模组的主要内容包括：
+- 配合异象模组使用的主题曲音乐
+- 海洋、腐化之地与猩红之地的环境音乐替换
+- 可分别开启或关闭的主题曲与环境音乐选项
+
+环境音乐可独立使用。
+本模组仅在客户端运行。
+
+感谢烙、被被子星创作的《入梦之径》《深蓝回响》《神唾血地》与《神叹魂泣》。
+
+AnomaliesMusic is the companion music mod for Anomalies, bringing new melodies to exploration and combat in Terraria.
+It includes theme music and ambient tracks, with configurable background music replacements for the Ocean, Corruption, and Crimson.
+
+The mod's main features include:
+- Theme music for use with Anomalies
+- Ambient music replacements for the Ocean, Corruption, and Crimson
+- Individual toggles for theme music and ambient tracks
+
+The ambient music can be used independently.
+This mod runs only on the client.
+
+Special thanks to 烙 and 被被子星 for creating "Pathway to Reverie", "Echoes of the Azure", "Forsaken Bloodland", and "Divine Lament".

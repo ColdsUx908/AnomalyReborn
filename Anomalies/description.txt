@@ -1,1 +1,39 @@
-Modify this file with a description of your mod.
+异象（Anomalies）是一个以战斗体验为核心的泰拉瑞亚内容模组。
+模组引入了异象模式，为部分原版 Boss 重新设计攻击方式与阶段转换，赋予熟悉的战斗全新面貌。
+此外，模组还加入了新物品，调整了部分原版武器，并提供可配置的玩家移动与建造速度提升。
+
+使用裂天金冕开启或关闭异象模式，在大师难度下迎接新的挑战。
+对于渴望更高难度的玩家，传奇难度下还可开启异象超凡模式，在严苛的挑战中突破极限。
+
+模组的主要内容包括：
+- 部分原版 Boss 的战斗重制，包含新的攻击方式、弹幕与战斗机制
+- 异象模式，异象超凡模式
+- 自定义 Boss 血条、主菜单等视觉效果
+- 一系列新物品与开发者专属物品
+- 对部分原版武器的调整
+- 可配置的玩家基础属性提升
+- 与灾厄模组的可选联动
+
+本模组需要安装大洋彼岸（Transoceanic）框架作为前置。
+推荐搭配音乐模组（AnomaliesMusic）。
+灾厄模组为可选搭配。
+
+Anomalies is a combat-focused content mod for Terraria.
+It introduces Anomaly mode and redesigns attacks and phase transitions for selected vanilla bosses, bringing a fresh experience to familiar battles.
+The mod also adds new items, adjusts selected vanilla weapons, and offers configurable improvements to player movement and building speed.
+
+Use the Heavenrend Crown to enable or disable Anomaly mode and face new challenges in Master difficulty.
+For players seeking an even greater challenge, enable Anomaly Ultramundane in Legendary difficulty and push your limits through demanding battles.
+
+The mod's main features include:
+- Reworked encounters for selected vanilla bosses, featuring new attacks, projectiles, and combat mechanics
+- Anomaly mode and Anomaly Ultramundane mode
+- Custom boss bars, a custom main menu, and other visual effects
+- A variety of new items and special developer items
+- Adjustments to selected vanilla weapons
+- Configurable boosts to player base stats
+- Optional integration with the Calamity Mod
+
+This mod requires the Transoceanic framework.
+The companion music mod, AnomaliesMusic, is recommended.
+The Calamity Mod is optional.

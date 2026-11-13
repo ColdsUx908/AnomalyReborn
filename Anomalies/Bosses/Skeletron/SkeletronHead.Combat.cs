@@ -53,9 +53,8 @@ public sealed partial class SkeletronHead
         if (Aroma && TONetworkEnvironment.NotClient && Timer == 0f && CompletedCharges == 0)
         {
             if (NPC.CountNPCS(NPCID.DarkCaster) < 6)
-                TrySpawnCaster(NPCID.DarkCaster);
-            if (!NPC.AnyNPCs(NPCID.DiabolistWhite))
-                TrySpawnCaster(NPCID.DiabolistWhite);
+                TrySpawnGroundEnemy(NPCID.DarkCaster);
+            SummonAromaDungeonEnemies();
         }
 
         NPC.defense = NPC.defDefense - 10;
@@ -66,6 +65,42 @@ public sealed partial class SkeletronHead
         AttackTimer += 1f;
         if (AttackTimer == 2f)
             SoundEngine.PlaySound(roar, NPC.Center);
+
+        void SummonAromaDungeonEnemies()
+        {
+            // All groups run in the same frame; each flying enemy rolls independently.
+            if (Main.rand.NextBool())
+            {
+                TrySpawnGroundEnemy(Main.rand.NextFromList(NPCID.BlueArmoredBones, NPCID.BlueArmoredBonesMace, NPCID.BlueArmoredBonesNoPants, NPCID.BlueArmoredBonesSword));
+                TrySpawnGroundEnemy(Main.rand.NextFromList(NPCID.RustyArmoredBonesAxe, NPCID.RustyArmoredBonesFlail, NPCID.RustyArmoredBonesSword, NPCID.RustyArmoredBonesSwordNoArmor));
+                TrySpawnGroundEnemy(Main.rand.NextFromList(NPCID.HellArmoredBones, NPCID.HellArmoredBonesMace, NPCID.HellArmoredBonesSpikeShield, NPCID.HellArmoredBonesSword));
+            }
+            else
+            {
+                int casterType = Main.rand.Next(3) switch
+                {
+                    0 => Main.rand.NextFromList(NPCID.Necromancer, NPCID.NecromancerArmored),
+                    1 => Main.rand.NextFromList(NPCID.RaggedCaster, NPCID.RaggedCasterOpenCoat),
+                    _ => Main.rand.NextFromList(NPCID.DiabolistRed, NPCID.DiabolistWhite),
+                };
+                TrySpawnGroundEnemy(casterType);
+                TrySpawnGroundEnemy(Main.rand.NextFromList(NPCID.SkeletonCommando, NPCID.SkeletonSniper, NPCID.TacticalSkeleton));
+                TrySpawnGroundEnemy(NPCID.BoneLee);
+            }
+
+            if (Main.rand.NextBool())
+                SpawnFlyingEnemy(NPCID.GiantCursedSkull);
+            if (Main.rand.NextBool())
+                SpawnFlyingEnemy(NPCID.DungeonSpirit);
+            if (Main.rand.NextBool(20))
+                TrySpawnGroundEnemy(NPCID.Paladin);
+
+            void SpawnFlyingEnemy(int type) => NPC.NewNPCAction(SourceAI, NPC.Center, type, action: npc =>
+            {
+                npc.Center = NPC.Center;
+                npc.target = NPC.target;
+            });
+        }
     }
 
     private void FadeChargeTelegraph()
@@ -84,9 +119,6 @@ public sealed partial class SkeletronHead
 
     private void FinishSpin(bool handsDead)
     {
-        if (Aroma && TONetworkEnvironment.NotClient && NPC.CountNPCS(NPCID.DarkCaster) < 6)
-            TrySpawnCaster(NPCID.DarkCaster);
-
         // Start counting the alternating spins from the next complete hover round.
         if (handsDead)
         {
@@ -121,20 +153,28 @@ public sealed partial class SkeletronHead
             CurrentPhase = Phase.Phase2_2;
     }
 
-    private void TrySpawnCaster(int npcType)
+    private void TrySpawnGroundEnemy(int npcType)
     {
         const int MaxAttempts = 1000;
         const int SearchRadius = 50;
         for (int attempt = 0; attempt < MaxAttempts; attempt++)
         {
-            int tileX = (int)(NPC.Center.X / 16f) + Main.rand.Next(-SearchRadius, SearchRadius + 1);
-            int tileY = (int)(NPC.Center.Y / 16f) + Main.rand.Next(-SearchRadius, SearchRadius + 1);
+            int tileX = Math.Clamp((int)(NPC.Center.X / 16f) + Main.rand.Next(-SearchRadius, SearchRadius + 1), 10, Main.maxTilesX - 11);
+            int tileY = Math.Clamp((int)(NPC.Center.Y / 16f) + Main.rand.Next(-SearchRadius, SearchRadius + 1), 10, Main.maxTilesY - 11);
             for (; tileY < Main.maxTilesY - 10 && !WorldGen.SolidTile(tileX, tileY); tileY++)
                 continue;
-            tileY--;
-            if (WorldGen.SolidTile(tileX, tileY))
+            if (tileY >= Main.maxTilesY - 10)
                 continue;
-            NPC.NewNPCAction(SourceAI, new Vector2(tileX * 16 + 8, tileY * 16), npcType);
+            NPC sample = ContentSamples.NpcsByNetId[npcType];
+            Vector2 bottom = new(tileX * 16 + 8, tileY * 16);
+            Vector2 topLeft = bottom - new Vector2(sample.width * 0.5f, sample.height);
+            if (Collision.SolidCollision(topLeft, sample.width, sample.height))
+                continue;
+            NPC.NewNPCAction(SourceAI, bottom, npcType, action: npc =>
+            {
+                npc.Bottom = bottom;
+                npc.target = NPC.target;
+            });
             break;
         }
     }
