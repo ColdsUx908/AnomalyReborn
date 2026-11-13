@@ -16,7 +16,7 @@ internal sealed class GoreLoader : IContentLoader
         {
             foreach ((FieldInfo field, LoadGoreAttribute attribute) in TOReflectionUtils.GetMembersWithAttribute<FieldInfo, LoadGoreAttribute>(mod))
             {
-                if (field.IsStatic && field.FieldType == typeof(ModGore) && !field.IsInitOnly && !field.IsLiteral)
+                if (TOReflectionUtils.IsContentLoadingEnabled(field.DeclaringType) && field.IsStatic && field.FieldType == typeof(ModGore) && !field.IsInitOnly && !field.IsLiteral)
                     field.SetValue(null, mod.Find<ModGore>(attribute.TextureName));
             }
         }

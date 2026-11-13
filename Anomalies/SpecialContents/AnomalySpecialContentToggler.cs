@@ -1,15 +1,23 @@
 namespace Anomalies.SpecialContents;
 
-/// <summary>
-/// 特殊内容的常量开关；修改后需要重新构建并打包模组。
-/// 关闭时不加载对应物品及其专属弹幕、Buff。测试物品仍仅由 DEBUG 控制。
-/// </summary>
 public static class AnomalySpecialContentToggler
 {
-    // 按首字母排序。
-    public const bool EventideReunion = true;
+    /// <summary>
+    /// 是否启用未完成的特殊内容。
+    /// <br/>在Release模式中，玩家只能体验到已经完成的特殊内容。
+    /// </summary>
+    public const bool EnableUnfinishedContents =
+#if DEBUG
+        true;
+#else
+        false;
+#endif
 
-    public const bool ImmaculateWhite = true;
+    //按首字母排序
 
-    public const bool VacuousBlack = true;
+    public static bool EventideReunion { get; private set; } = EnableUnfinishedContents;
+
+    public static bool ImmaculateWhite { get; private set; } = true;
+
+    public static bool VacuousBlack { get; private set; } = true;
 }

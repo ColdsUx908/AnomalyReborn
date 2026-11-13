@@ -43,17 +43,21 @@ public sealed partial class TODetourHandler : IContentLoader
         Detours.Clear();
 
         foreach ((Type type, DetourClassToAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<DetourClassToAttribute>())
-            ApplyAllStaticMethodDetoursOfType(type, attribute.SourceType);
+            if (TOReflectionUtils.IsContentLoadingEnabled(type))
+                ApplyAllStaticMethodDetoursOfType(type, attribute.SourceType);
 
         foreach ((Type type, DetourClassTo_MultiSourceAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<DetourClassTo_MultiSourceAttribute>())
         {
+            if (!TOReflectionUtils.IsContentLoadingEnabled(type))
+                continue;
             Type[] sourceTypes = attribute.SourceTypes;
             foreach (MethodInfo detour in type.GetRealMethods(TOReflectionUtils.StaticBindingFlags))
                 ApplyTypedStaticMethodDetour(detour, sourceTypes);
         }
 
         foreach ((MethodInfo detour, DetourMethodToAttribute attribute) in TOReflectionUtils.GetMethodsWithAttribute<DetourMethodToAttribute>())
-            ApplyStaticMethodDetour(detour, attribute.SourceType, attribute.ParamOffset < 0 ? null : attribute.ParamOffset);
+            if (TOReflectionUtils.IsContentLoadingEnabled(detour.DeclaringType))
+                ApplyStaticMethodDetour(detour, attribute.SourceType, attribute.ParamOffset < 0 ? null : attribute.ParamOffset);
 
         foreach (ITODetourProvider detourProvider in TOLoaderHandler.GetLoaderInstances<ITODetourProvider>().OrderByDescending(d => d.LoadPriority))
             detourProvider.ApplyDetour();

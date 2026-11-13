@@ -101,6 +101,8 @@ public sealed class EventideReunionSunExplosion : AnomalyModProjectile
 
 public sealed class EventideReunionSunFlash : CustomOverlay
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override void Draw(SpriteBatch batch, RenderLayers layer, bool beginSpriteBatch)
     {
         if (Main.dedServ || Main.gameMenu || layer != RenderLayers.All)

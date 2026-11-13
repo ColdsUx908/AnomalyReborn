@@ -6,6 +6,8 @@ namespace Anomalies.SpecialContents.Developer.EventideReunion;
 // 独立屏幕边缘遮罩，不写入通用的全屏 Visual_DarknessIntensity。
 public sealed class EventideReunionDeathVignette : CustomOverlay
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override void Draw(SpriteBatch spriteBatch, RenderLayers layer, bool beginSpriteBatch)
     {
         if (Main.dedServ || Main.gameMenu || layer != RenderLayers.All)

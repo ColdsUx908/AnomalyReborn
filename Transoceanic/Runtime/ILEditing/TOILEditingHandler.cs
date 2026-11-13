@@ -39,6 +39,8 @@ public sealed partial class TOILEditingHandler : IContentLoader
 
         foreach ((MethodInfo manipulator, ILEditingMethodToAttribute attribute) in TOReflectionUtils.GetMethodsWithAttribute<ILEditingMethodToAttribute>())
         {
+            if (!TOReflectionUtils.IsContentLoadingEnabled(manipulator.DeclaringType))
+                continue;
             Type sourceType = attribute.SourceType;
             if (EvaluateManipulatorName(manipulator, out string sourceName))
                 Modify(sourceType, GetMarkedSourceName(manipulator, sourceName), manipulator);

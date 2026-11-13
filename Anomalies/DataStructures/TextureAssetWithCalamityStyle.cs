@@ -40,7 +40,7 @@ public sealed class TextureAssetWithCalamityStyleLoader : IContentLoader
     {
         foreach ((FieldInfo field, LoadTextureWithCalamityStyleAttribute attribute) in TOReflectionUtils.GetMembersWithAttribute<FieldInfo, LoadTextureWithCalamityStyleAttribute>())
         {
-            if (field.IsStatic && field.FieldType == typeof(TextureAssetWithCalamityStyle) && !field.IsInitOnly && !field.IsLiteral)
+            if (TOReflectionUtils.IsContentLoadingEnabled(field.DeclaringType) && field.IsStatic && field.FieldType == typeof(TextureAssetWithCalamityStyle) && !field.IsInitOnly && !field.IsLiteral)
                 field.SetValue(null, new TextureAssetWithCalamityStyle(attribute.TexturePathWithoutSuffix));
         }
     }

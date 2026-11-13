@@ -87,6 +87,24 @@ public static class TOReflectionUtils
     ];
 
     /// <summary>
+    /// 判断自动加载特性所属类型及其外层内容类型是否已实际注册，避免绕过 IsLoadingEnabled。
+    /// </summary>
+    /// <param name="type">特性所属类型；成员特性应传入其 DeclaringType。</param>
+    /// <returns>普通工具类型和抽象基类返回 true；具体 ILoadable 类型及其外层内容类型须已注册。</returns>
+    /// <remarks>在内容设置完成后调用，不构造实例或重复调用 IsLoadingEnabled；禁用与未自动加载的内容均跳过。</remarks>
+    public static bool IsContentLoadingEnabled(Type type)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        for (Type current = type; current is not null; current = current.DeclaringType)
+        {
+            if (!current.IsAbstract && typeof(ILoadable).IsAssignableFrom(current)
+                && !GetAllSupportedMods().SelectMany(mod => mod.GetContent()).Any(content => content.GetType() == current))
+                return false;
+        }
+        return true;
+    }
+
+    /// <summary>
     /// 执行无参构造函数创建实例；构造失败时抛出原有反射异常，不返回半初始化对象。
     /// </summary>
     /// <param name="type">待实例化的具体类型；抽象类、接口和开放泛型返回 null。</param>

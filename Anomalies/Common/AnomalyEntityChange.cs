@@ -2,7 +2,6 @@ using Anomalies.Visuals.BossBar;
 using CalamityMod.NPCs;
 using CalamityMod.Projectiles;
 using Transoceanic.Runtime.Detours;
-using Transoceanic.Runtime.Reflection;
 
 namespace Anomalies.Common;
 
@@ -392,7 +391,7 @@ public sealed class AnomalyEntityChangeHelper : IContentLoader
         ProjectileBehaviors.FillSet(assembly);
         ItemBehaviors.FillSet(assembly);
 
-        foreach (IAnomalyTweak tweak in TOReflectionUtils.GetTypeInstancesDerivedFrom<IAnomalyTweak>(AnomalySharedData.Assembly))
+        foreach (IAnomalyTweak tweak in AnomalyMain.Instance.GetContent().OfType<IAnomalyTweak>())
             tweak.RegisterTweak();
     }
 

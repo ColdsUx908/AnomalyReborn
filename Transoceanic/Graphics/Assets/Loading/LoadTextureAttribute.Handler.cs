@@ -14,7 +14,7 @@ internal sealed class AssetLoader : IContentLoader
     {
         foreach ((FieldInfo field, LoadTextureAttribute attribute) in TOReflectionUtils.GetMembersWithAttribute<FieldInfo, LoadTextureAttribute>())
         {
-            if (field.IsStatic && field.FieldType == typeof(Asset<Texture2D>) && !field.IsInitOnly && !field.IsLiteral)
+            if (TOReflectionUtils.IsContentLoadingEnabled(field.DeclaringType) && field.IsStatic && field.FieldType == typeof(Asset<Texture2D>) && !field.IsInitOnly && !field.IsLiteral)
                 field.SetValue(null, ModContent.Request<Texture2D>(attribute.TexturePath));
         }
     }

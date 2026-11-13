@@ -37,3 +37,10 @@ TOGlobalNPC、TOGameTime、TOBossChallenge 使用原生 Load；TOWorldState 通�
 迁移后的自有引用在分配或订阅前登记 TOCleanup；普通服务仍须实现 tML 要求的 ILoadable.Unload，空实现仅用于满足原生契约，不承担重复释放职责。普通自定义事件的订阅由 TOCleanup 解除；tML 管理的 On/IL 钩子不手动退订。
 
 Behavior/命令/DOT 汇总、跨模组资源扫描、粒子缓存、依赖粒子纹理的效果以及有序兼容扩展继续使用现有后置接口。ITOLoader、IContentLoader 及其调度入口本轮保留，不作整套接口删除。
+## 内容开关与自动特性
+
+`IsLoadingEnabled(Mod)` 是内容注册阶段的判定，不是逐帧过滤器。内容集合和额外注册必须读取 Mod.GetContent 中的实际注册实例，不能通过反射重新构造已禁用或未自动加载的 ILoadable 类型，也不应重新调用该判定来代替注册状态。
+
+自动 Detour、IL 编辑、LoadTexture 和 LoadGore 特性在内容设置完成后使用 `TOReflectionUtils.IsContentLoadingEnabled(type)` 检查声明类型与外层类型。具体 ILoadable 类型只有实际注册后才参与处理；其嵌套辅助类也受相同约束。普通静态工具类和抽象基类上的全局特性继续生效。资源卸载仍清空已持有引用，不根据当时的加载条件跳过清理。
+
+通用反射发现和实例创建 API 不自动过滤内容，它们也服务于普通工具和离线用途；消费方不能将其直接用作已加载内容的注册入口。独立静态资源容器没有所属内容类型的隐式开关，不能仅根据命名空间推断归属。

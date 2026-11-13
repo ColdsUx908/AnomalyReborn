@@ -1,15 +1,16 @@
 using Terraria.Graphics.Effects;
+using Transoceanic.Core.ModIntegration;
 using Transoceanic.Runtime.Reflection;
 
 namespace Anomalies.Visuals.Overlays;
 
-public abstract class CustomOverlay
+public abstract class CustomOverlay : RegisteredContent<CustomOverlay>
 {
     public virtual void Update() { }
     public abstract void Draw(SpriteBatch spriteBatch, RenderLayers layer, bool beginSpriteBatch);
 }
 
-public abstract class PostTilesOverlay
+public abstract class PostTilesOverlay : RegisteredContent<PostTilesOverlay>
 {
     public virtual void Update() { }
     public abstract void Draw(SpriteBatch spriteBatch);
@@ -44,8 +45,8 @@ public sealed class CustomOverlayManager : ModSystem, IContentLoader
 
     void IContentLoader.PostSetupContent()
     {
-        _Overlays.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<CustomOverlay>());
-        _PostTilesOverlays.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<PostTilesOverlay>(true));
+        _Overlays.AddRange(TOReflectionUtils.GetAllSupportedMods().SelectMany(mod => mod.GetContent<CustomOverlay>()));
+        _PostTilesOverlays.AddRange(TOReflectionUtils.GetAllSupportedMods().SelectMany(mod => mod.GetContent<PostTilesOverlay>()));
         On_OverlayManager.Draw += On_OverlayManager_Draw;
     }
 
