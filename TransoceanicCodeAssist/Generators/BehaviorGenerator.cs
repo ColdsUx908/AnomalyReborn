@@ -190,6 +190,13 @@ public sealed class BehaviorGenerator : IIncrementalGenerator
                     }
                 string returnType = method.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                 string fallback = "base." + Escape(method.Name) + generic + "(" + args + ")";
+                string dispatchField = "_DispatchGroup" + count;
+                if (!single)
+                {
+                    IFieldSymbol behaviorSet = handler.GetMembers("_BehaviorSet").OfType<IFieldSymbol>().Single();
+                    code.Append("    private static ").Append(behaviorSet.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
+                        .Append(".DispatchGroup? ").Append(dispatchField).Append(";\n");
+                }
                 code.Append("    ").Append(GeneratedCodeMarker).Append("\n    public override ")
                     .Append(method.ToDisplayString(SignatureFormat)).Append("\n    {\n");
                 if (single)
@@ -202,7 +209,7 @@ public sealed class BehaviorGenerator : IIncrementalGenerator
                 }
                 else
                 {
-                    string enumeration = player ? "_BehaviorSet.Enumerate(Player)" : "_BehaviorSet.Enumerate()";
+                    string enumeration = "(" + dispatchField + " ??= _BehaviorSet.GetDispatch(\"" + method.Name + "\")).Enumerate(" + (player ? "Player" : "") + ")";
                     if (method.ReturnsVoid)
                         code.Append("        foreach (").Append(behaviorType).Append(" __behavior in ").Append(enumeration).Append(")\n            ").Append(call).Append(";\n");
                     else if (method.ReturnType.SpecialType == SpecialType.System_Boolean)

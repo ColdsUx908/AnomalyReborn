@@ -3,6 +3,11 @@ namespace Anomalies.Common.SingleBehaviors;
 
 public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior
 {
+    private static readonly Transoceanic.Behaviors.Collections.SimpleEntityBehaviorSet<Item, GlobalItemBehavior>.DispatchGroup _ItemDRDispatch =
+        BehaviorQueries.GetItemDispatch(nameof(AnomalyGlobalItemBehavior.ModifyHitNPC_DR));
+    private static readonly Transoceanic.Behaviors.Collections.SimpleEntityBehaviorSet<Projectile, GlobalProjectileBehavior>.DispatchGroup _ProjectileDRDispatch =
+        BehaviorQueries.GetProjectileDispatch(nameof(AnomalyGlobalProjectileBehavior.ModifyHitNPC_DR));
+
     public override decimal Priority => 100m;
 
     public override void PostAI(NPC npc) => npc.Anomaly.DamageReduction_DynamicHandler?.Update(npc);
@@ -15,7 +20,7 @@ public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior
         StatModifier standardDRModifier = new();
         StatModifier timedDRModifier = new();
 
-        foreach (AnomalyGlobalItemBehavior behavior in BehaviorQueries.EnumerateItem<AnomalyGlobalItemBehavior>(nameof(AnomalyGlobalItemBehavior.ModifyHitNPC_DR)))
+        foreach (AnomalyGlobalItemBehavior behavior in _ItemDRDispatch.Enumerate<AnomalyGlobalItemBehavior>())
             behavior.ModifyHitNPC_DR(item, npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (item.TryGetBehavior(out AnomalyItemBehavior itemBehavior, nameof(AnomalyItemBehavior.ModifyHitNPC_DR)))
         {
@@ -40,7 +45,7 @@ public sealed class AnomalyNPCDR : AnomalyGlobalNPCBehavior
         StatModifier standardDRModifier = new();
         StatModifier timedDRModifier = new();
 
-        foreach (AnomalyGlobalProjectileBehavior behavior in BehaviorQueries.EnumerateProjectile<AnomalyGlobalProjectileBehavior>(nameof(AnomalyGlobalProjectileBehavior.ModifyHitNPC_DR)))
+        foreach (AnomalyGlobalProjectileBehavior behavior in _ProjectileDRDispatch.Enumerate<AnomalyGlobalProjectileBehavior>())
             behavior.ModifyHitNPC_DR(projectile, npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (projectile.TryGetBehavior(out AnomalyProjectileBehavior projectileBehavior, nameof(AnomalyProjectileBehavior.ModifyHitNPC_DR)))
         {

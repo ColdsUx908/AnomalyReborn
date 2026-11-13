@@ -18,6 +18,10 @@ public class SingleEntityBehaviorSet<TEntity, TBehavior>
     /// </summary>
     private readonly Dictionary<int, SimpleEntityBehaviorSet<TEntity, TBehavior>> _Data = [];
 
+    private int _LastType;
+    private SimpleEntityBehaviorSet<TEntity, TBehavior> _LastSet;
+    private bool _HasLastType;
+
     internal IEnumerable<SimpleEntityBehaviorSet<TEntity, TBehavior>> Sets => _Data.Values;
 
     /// <summary>
@@ -28,8 +32,22 @@ public class SingleEntityBehaviorSet<TEntity, TBehavior>
     /// <param name="methodName">要查找的方法名称。</param>
     /// <param name="behavior">当此方法返回 <see langword="true"/> 时，包含找到的行为实例；否则为 <see langword="null"/>。</param>
     /// <returns>如果找到满足条件的行为，则为 <see langword="true"/>；否则为 <see langword="false"/>。</returns>
-    public bool TryGetBehavior(TEntity entity, string methodName, [NotNullWhen(true)] out TBehavior behavior) =>
-        (behavior = entity is not null && _Data.TryGetValue(entity.EntityType, out SimpleEntityBehaviorSet<TEntity, TBehavior> set) ? set.GetFirstOrDefault(entity, methodName) : null) is not null;
+    public bool TryGetBehavior(TEntity entity, string methodName, [NotNullWhen(true)] out TBehavior behavior)
+    {
+        behavior = null;
+        if (entity is null)
+            return false;
+        int type = entity.EntityType;
+        if (!_HasLastType || _LastType != type)
+        {
+            _Data.TryGetValue(type, out _LastSet);
+            _LastType = type;
+            _HasLastType = true;
+        }
+        // 只缓存类型分组，实体绑定和 ShouldProcess 每次查询仍重新执行。
+        SimpleEntityBehaviorSet<TEntity, TBehavior> set = _LastSet;
+        return (behavior = set?.GetFirstOrDefault(entity, methodName)) is not null;
+    }
 
     /// <summary>
     /// 通过反射自动发现并填充所有派生自 <typeparamref name="TBehavior"/> 的类型实例。
@@ -55,6 +73,8 @@ public class SingleEntityBehaviorSet<TEntity, TBehavior>
     /// <param name="behaviors">要初始化的行为实例集合。</param>
     internal void Initialize(IEnumerable<TBehavior> behaviors)
     {
+        _HasLastType = false;
+        _LastSet = null;
         foreach (IGrouping<int, TBehavior> group in behaviors.GroupBy(b => b.ApplyingType))
         {
             _Data[group.Key] = new();
@@ -67,6 +87,8 @@ public class SingleEntityBehaviorSet<TEntity, TBehavior>
     /// </summary>
     public void Clear()
     {
+        _HasLastType = false;
+        _LastSet = null;
         foreach (SimpleEntityBehaviorSet<TEntity, TBehavior> set in _Data.Values)
             set.Clear();
         _Data.Clear();

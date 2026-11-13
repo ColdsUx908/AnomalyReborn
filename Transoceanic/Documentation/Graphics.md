@@ -12,7 +12,7 @@ ParticleHandler.TrySpawnParticle 返回是否成功提交：容量不足、专�
 
 世界退出清空全局活动和缓冲列表；卸载释放类型缓存。不要把同一个可变粒子实例交给不同管理者。
 
-绘制检查使用 Main.Camera 的缩放后世界视野，以屏幕中心为基准扩大到两倍宽高，再向四周添加粒子实例的 DrawScreenCheckFluff（世界像素，默认零）。该字段类似原版弹幕的同名屏外绘制边距；大粒子应设置覆盖自身绘制范围的边距，正无穷可禁用剔除。PulseRing 按实际纹理、缩放、双轴形变和旋转包围半径自动更新边距。剔除发生在 PreDraw/PostDraw 前，仅跳过绘制，不停止更新或光照更新。ParticleSet 的 basePosition 参与检查；实体自行绘制的残影仍沿用所属实体的绘制路径。
+绘制检查使用 Main.Camera 的缩放后世界视野，以屏幕中心为基准扩大到两倍宽高，再向四周添加粒子实例的 DrawScreenCheckFluff（世界像素，默认零）。该字段类似原版弹幕的同名屏外绘制边距；大粒子应设置覆盖自身绘制范围的边距，正无穷可禁用剔除。PulseRing 按实际纹理、缩放、双轴形变和旋转包围半径自动更新边距。剔除发生在 PreDraw/PostDraw 前，仅跳过绘制，不停止更新或光照更新。ParticleSet 的 basePosition 参与检查；实体自行绘制的残影仍沿用所属实体的绘制路径。全局粒子分类和每个 ParticleSet.DrawSet 在本批开始时读取一次摄像机范围；绘制回调对摄像机的修改从下一批生效。
 
 ## 局部 ParticleSet
 
@@ -39,6 +39,10 @@ Clear 清空两个列表和占用记录，不重置 LocalTimer；世界退出不
 ## 实体残影
 
 NPC、弹幕默认不分配残影列表。显式访问 Ocean.Afterimages 或调用 SpawnAfterimage 才启用；框架的更新和绘制仅查询已经启用的列表。DisableAfterimages 清空并关闭；Clone 不继承视觉缓存。残影不进入网络状态，接受寿命和颜色参数的 SpawnAfterimage 在服务器上于纹理读取和对象构造前退出；接受已有粒子的重载也只跳过服务器提交，允许调用方先构造粒子；定义仍须已完成初始化。
+
+默认 AfterimageParticle.Draw 在光照查询和精灵提交前进行保守屏外检查；边距覆盖帧尺寸、缩放（含负值）、任意旋转及 DrawOffset，另叠加实例 DrawScreenCheckFluff 的更大边距，正无穷可禁用剔除。NPC 和弹幕各自的默认残影绘制批次共用一次视野快照。残影更新时序、寿命边界和提交顺序保持不变，自定义绘制仍由调用方管理。
+
+ParticleSet 为死亡清理复用构造时创建的谓词，避免逐次更新创建绑定委托；仍先更新全部粒子再清理，允许后续粒子改变先前粒子的死亡状态。
 
 ## 渲染目标与 SpriteBatch
 

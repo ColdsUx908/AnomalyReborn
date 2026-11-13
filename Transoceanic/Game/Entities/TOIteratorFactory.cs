@@ -59,7 +59,7 @@ public static class TOIteratorFactory
     /// </summary>
     /// <param name="match">附加的筛选谓词，将在 NPC 活动状态检查后应用。</param>
     /// <returns>一个 <see cref="TOIterator{NPC}"/> 实例，可迭代活动且满足条件的 NPC。</returns>
-    public static TOIterator<NPC> NewActiveNPCIterator(Func<NPC, bool> match) => new(NPCSpan, n => n.active && match(n));
+    public static TOIterator<NPC> NewActiveNPCIterator(Func<NPC, bool> match) => new(NPCSpan, IteratorMatches.NPCIsActive, match);
 
     /// <summary>
     /// 创建一个带排除列表的活动 NPC 迭代器，允许自定义筛选条件并排除指定实例。
@@ -67,7 +67,7 @@ public static class TOIteratorFactory
     /// <param name="match">附加的筛选谓词，将在 NPC 活动状态检查后应用。</param>
     /// <param name="exclusions">应被忽略的 NPC 实例的哈希集合。</param>
     /// <returns>一个 <see cref="TOExclusiveIterator{NPC}"/> 实例，可迭代活动、满足条件且未被排除的 NPC。</returns>
-    public static TOExclusiveIterator<NPC> NewActiveNPCIterator(Func<NPC, bool> match, params HashSet<NPC> exclusions) => new(NPCSpan, n => n.active && match(n), exclusions);
+    public static TOExclusiveIterator<NPC> NewActiveNPCIterator(Func<NPC, bool> match, params HashSet<NPC> exclusions) => new(NPCSpan, IteratorMatches.NPCIsActive, match, exclusions);
 
     /// <summary>
     /// 创建一个新的射弹迭代器，允许自定义筛选条件。
@@ -89,7 +89,7 @@ public static class TOIteratorFactory
     /// </summary>
     /// <param name="match">附加的筛选谓词，将在射弹活动状态检查后应用。</param>
     /// <returns>一个 <see cref="TOIterator{Projectile}"/> 实例，可迭代活动且满足条件的射弹。</returns>
-    public static TOIterator<Projectile> NewActiveProjectileIterator(Func<Projectile, bool> match) => new(ProjectileSpan, p => p.active && match(p));
+    public static TOIterator<Projectile> NewActiveProjectileIterator(Func<Projectile, bool> match) => new(ProjectileSpan, IteratorMatches.ProjectileIsActive, match);
 
     /// <summary>
     /// 创建一个带排除列表的活动射弹迭代器，允许自定义筛选条件并排除指定实例。
@@ -97,7 +97,7 @@ public static class TOIteratorFactory
     /// <param name="match">附加的筛选谓词，将在射弹活动状态检查后应用。</param>
     /// <param name="exclusions">应被忽略的射弹实例的哈希集合。</param>
     /// <returns>一个 <see cref="TOExclusiveIterator{Projectile}"/> 实例，可迭代活动、满足条件且未被排除的射弹。</returns>
-    public static TOExclusiveIterator<Projectile> NewActiveProjectileIterator(Func<Projectile, bool> match, params HashSet<Projectile> exclusions) => new(ProjectileSpan, p => p.active && match(p), exclusions);
+    public static TOExclusiveIterator<Projectile> NewActiveProjectileIterator(Func<Projectile, bool> match, params HashSet<Projectile> exclusions) => new(ProjectileSpan, IteratorMatches.ProjectileIsActive, match, exclusions);
 
     /// <summary>
     /// 创建一个新的玩家迭代器，允许自定义筛选条件。
@@ -119,7 +119,7 @@ public static class TOIteratorFactory
     /// </summary>
     /// <param name="match">附加的筛选谓词，将在玩家活动状态检查后应用。</param>
     /// <returns>一个 <see cref="TOIterator{Player}"/> 实例，可迭代活动且满足条件的玩家。</returns>
-    public static TOIterator<Player> NewActivePlayerIterator(Func<Player, bool> match) => new(PlayerSpan, p => p.active && match(p));
+    public static TOIterator<Player> NewActivePlayerIterator(Func<Player, bool> match) => new(PlayerSpan, IteratorMatches.PlayerIsActive, match);
 
     /// <summary>
     /// 创建一个带排除列表的活动玩家迭代器，允许自定义筛选条件并排除指定实例。
@@ -127,7 +127,7 @@ public static class TOIteratorFactory
     /// <param name="match">附加的筛选谓词，将在玩家活动状态检查后应用。</param>
     /// <param name="exclusions">应被忽略的玩家实例的哈希集合。</param>
     /// <returns>一个 <see cref="TOExclusiveIterator{Player}"/> 实例，可迭代活动、满足条件且未被排除的玩家。</returns>
-    public static TOExclusiveIterator<Player> NewActivePlayerIterator(Func<Player, bool> match, params HashSet<Player> exclusions) => new(PlayerSpan, p => p.active && match(p), exclusions);
+    public static TOExclusiveIterator<Player> NewActivePlayerIterator(Func<Player, bool> match, params HashSet<Player> exclusions) => new(PlayerSpan, IteratorMatches.PlayerIsActive, match, exclusions);
 
     /// <summary>
     /// 创建一个新的尘埃粒子迭代器，允许自定义筛选条件。
@@ -164,7 +164,7 @@ public static class TOIteratorFactory
     /// </summary>
     /// <param name="match">附加的筛选谓词，将在物品活动状态检查后应用。</param>
     /// <returns>一个 <see cref="TOIterator{Item}"/> 实例，可迭代活动且满足条件的物品。</returns>
-    public static TOIterator<Item> NewActiveItemIterator(Func<Item, bool> match) => new(ItemSpan, i => i.active && match(i));
+    public static TOIterator<Item> NewActiveItemIterator(Func<Item, bool> match) => new(ItemSpan, IteratorMatches.ItemIsActive, match);
 
     /// <summary>
     /// 创建一个带排除列表的活动物品迭代器，允许自定义筛选条件并排除指定实例。
@@ -172,6 +172,6 @@ public static class TOIteratorFactory
     /// <param name="match">附加的筛选谓词，将在物品活动状态检查后应用。</param>
     /// <param name="exclusions">应被忽略的物品实例的哈希集合。</param>
     /// <returns>一个 <see cref="TOExclusiveIterator{Item}"/> 实例，可迭代活动、满足条件且未被排除的物品。</returns>
-    public static TOExclusiveIterator<Item> NewActiveItemIterator(Func<Item, bool> match, params HashSet<Item> exclusions) => new(ItemSpan, i => i.active && match(i), exclusions);
+    public static TOExclusiveIterator<Item> NewActiveItemIterator(Func<Item, bool> match, params HashSet<Item> exclusions) => new(ItemSpan, IteratorMatches.ItemIsActive, match, exclusions);
 }
 

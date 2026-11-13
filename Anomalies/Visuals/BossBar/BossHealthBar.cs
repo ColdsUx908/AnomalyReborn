@@ -13,6 +13,18 @@ namespace Anomalies.Visuals.BossBar;
 /// </summary>
 public partial class BossHealthBar : ILocalizationPrefix
 {
+    private static readonly Transoceanic.Behaviors.Collections.SimpleEntityBehaviorSet<NPC, GlobalNPCBehavior>.DispatchGroup _PreUpdateCalBossBarDispatch =
+        BehaviorQueries.GetNPCDispatch(nameof(AnomalyGlobalNPCBehavior.PreUpdateCalBossBar));
+
+    private static readonly Transoceanic.Behaviors.Collections.SimpleEntityBehaviorSet<NPC, GlobalNPCBehavior>.DispatchGroup _PostUpdateCalBossBarDispatch =
+        BehaviorQueries.GetNPCDispatch(nameof(AnomalyGlobalNPCBehavior.PostUpdateCalBossBar));
+
+    private static readonly Transoceanic.Behaviors.Collections.SimpleEntityBehaviorSet<NPC, GlobalNPCBehavior>.DispatchGroup _PreDrawCalBossBarDispatch =
+        BehaviorQueries.GetNPCDispatch(nameof(AnomalyGlobalNPCBehavior.PreDrawCalBossBar));
+
+    private static readonly Transoceanic.Behaviors.Collections.SimpleEntityBehaviorSet<NPC, GlobalNPCBehavior>.DispatchGroup _PostDrawCalBossBarDispatch =
+        BehaviorQueries.GetNPCDispatch(nameof(AnomalyGlobalNPCBehavior.PostDrawCalBossBar));
+
     /// <summary>
     /// 用于描述 Boss 附属实体扩展信息的结构。
     /// </summary>
@@ -478,7 +490,7 @@ public partial class BossHealthBar : ILocalizationPrefix
             result &= npcBehavior.PreUpdateBossBar(this);
             hasSingle = true;
         }
-        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PreUpdateCalBossBar)))
+        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in _PreUpdateCalBossBarDispatch.Enumerate<AnomalyGlobalNPCBehavior>())
             result &= anomalyGNPCBehavior.PreUpdateCalBossBar(NPC, this, hasSingle);
         return result;
     }
@@ -500,7 +512,7 @@ public partial class BossHealthBar : ILocalizationPrefix
             npcBehavior.PostUpdateBossBar(this);
             hasSingle = true;
         }
-        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PostUpdateCalBossBar)))
+        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in _PostUpdateCalBossBarDispatch.Enumerate<AnomalyGlobalNPCBehavior>())
             anomalyGNPCBehavior.PostUpdateCalBossBar(NPC, this, hasSingle);
     }
 
@@ -609,7 +621,7 @@ public partial class BossHealthBar : ILocalizationPrefix
             result &= npcBehavior.PreDrawBossBar(this, spriteBatch, ref x, ref y);
             hasSingle = true;
         }
-        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PreDrawCalBossBar)))
+        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in _PreDrawCalBossBarDispatch.Enumerate<AnomalyGlobalNPCBehavior>())
             result &= anomalyGNPCBehavior.PreDrawCalBossBar(NPC, this, spriteBatch, ref x, ref y, hasSingle);
         return result;
     }
@@ -631,7 +643,7 @@ public partial class BossHealthBar : ILocalizationPrefix
             npcBehavior.PostDrawBossBar(this, spriteBatch, x, y);
             hasSingle = true;
         }
-        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in BehaviorQueries.EnumerateNPC<AnomalyGlobalNPCBehavior>(nameof(AnomalyGlobalNPCBehavior.PostDrawCalBossBar)))
+        foreach (AnomalyGlobalNPCBehavior anomalyGNPCBehavior in _PostDrawCalBossBarDispatch.Enumerate<AnomalyGlobalNPCBehavior>())
             anomalyGNPCBehavior.PostDrawCalBossBar(NPC, this, spriteBatch, x, y, hasSingle);
     }
 

@@ -174,7 +174,14 @@ public static class TONetUtils
         int dataLength = GetDataLength(array.Length, tailCount, 32);
         const int groupSize = 32; // 每个 BitArray32 固定管理 32 个数据槽
 
-        List<(int index, int value)> toSend = [];
+        int capacity = 0;
+        for (int i = 0; i < dataLength; i++)
+            if (array[dataLength + i / groupSize].Bits[i % groupSize])
+                capacity++;
+        Span<(int index, int value)> toSend = capacity <= StackSnapshotByteLimit / 8
+            ? stackalloc (int, int)[capacity]
+            : new (int, int)[capacity];
+        int count = 0;
 
         for (int g = 0; g < tailCount; g++)
         {
@@ -188,13 +195,13 @@ public static class TONetUtils
             for (int i = 0; i < actualCount; i++)
             {
                 if (changedBits[i])
-                    toSend.Add((baseIndex + i, array[baseIndex + i].I));
+                    toSend[count++] = (baseIndex + i, array[baseIndex + i].I);
             }
         }
 
         // 先写入所有待同步数据
-        writer.Write(toSend.Count);
-        foreach ((int index, int value) in toSend)
+        writer.Write(count);
+        foreach ((int index, int value) in toSend[..count])
         {
             writer.Write(index);
             writer.Write(value);
@@ -242,7 +249,14 @@ public static class TONetUtils
         int dataLength = GetDataLength(array.Length, tailCount, 64);
         const int groupSize = 64; // 每个 BitArray64 固定管理 64 个数据槽
 
-        List<(int index, long value)> toSend = [];
+        int capacity = 0;
+        for (int i = 0; i < dataLength; i++)
+            if (array[dataLength + i / groupSize].Bits[i % groupSize])
+                capacity++;
+        Span<(int index, long value)> toSend = capacity <= StackSnapshotByteLimit / 16
+            ? stackalloc (int, long)[capacity]
+            : new (int, long)[capacity];
+        int count = 0;
 
         for (int g = 0; g < tailCount; g++)
         {
@@ -255,13 +269,13 @@ public static class TONetUtils
             for (int i = 0; i < actualCount; i++)
             {
                 if (changedBits[i])
-                    toSend.Add((baseIndex + i, array[baseIndex + i].L));
+                    toSend[count++] = (baseIndex + i, array[baseIndex + i].L);
             }
         }
 
         // 先写入所有待同步数据
-        writer.Write(toSend.Count);
-        foreach ((int index, long value) in toSend)
+        writer.Write(count);
+        foreach ((int index, long value) in toSend[..count])
         {
             writer.Write(index);
             writer.Write(value);
@@ -301,17 +315,24 @@ public static class TONetUtils
         int count = reader.ReadInt32();
         if ((uint)count > (uint)length)
             throw new InvalidDataException("Invalid AI32 delta count.");
-        Union32[] updated = (Union32[])array.Clone();
-        HashSet<int> indices = [];
+        Span<Union32> updated = array.Length <= StackSnapshotByteLimit / sizeof(int)
+            ? stackalloc Union32[array.Length]
+            : new Union32[array.Length];
+        array.AsSpan().CopyTo(updated);
+        Span<bool> indices = length <= StackSnapshotByteLimit ? stackalloc bool[length] : [];
+        HashSet<int> largeIndices = length > StackSnapshotByteLimit ? [] : null;
+        indices.Clear();
         for (int i = 0; i < count; i++)
         {
             int index = reader.ReadInt32();
-            if ((uint)index >= (uint)length || !indices.Add(index))
+            if ((uint)index >= (uint)length || (largeIndices is null ? indices[index] : !largeIndices.Add(index)))
                 throw new InvalidDataException("Invalid AI32 delta index.");
+            if (largeIndices is null)
+                indices[index] = true;
             int value = reader.ReadInt32();
             updated[index].I = value;
         }
-        Array.Copy(updated, array, array.Length);
+        updated.CopyTo(array);
     }
 
     /// <summary>
@@ -339,16 +360,23 @@ public static class TONetUtils
         int count = reader.ReadInt32();
         if ((uint)count > (uint)length)
             throw new InvalidDataException("Invalid AI64 delta count.");
-        Union64[] updated = (Union64[])array.Clone();
-        HashSet<int> indices = [];
+        Span<Union64> updated = array.Length <= StackSnapshotByteLimit / sizeof(long)
+            ? stackalloc Union64[array.Length]
+            : new Union64[array.Length];
+        array.AsSpan().CopyTo(updated);
+        Span<bool> indices = length <= StackSnapshotByteLimit ? stackalloc bool[length] : [];
+        HashSet<int> largeIndices = length > StackSnapshotByteLimit ? [] : null;
+        indices.Clear();
         for (int i = 0; i < count; i++)
         {
             int index = reader.ReadInt32();
-            if ((uint)index >= (uint)length || !indices.Add(index))
+            if ((uint)index >= (uint)length || (largeIndices is null ? indices[index] : !largeIndices.Add(index)))
                 throw new InvalidDataException("Invalid AI64 delta index.");
+            if (largeIndices is null)
+                indices[index] = true;
             long value = reader.ReadInt64();
             updated[index].L = value;
         }
-        Array.Copy(updated, array, array.Length);
+        updated.CopyTo(array);
     }
 }

@@ -10,6 +10,8 @@
 - Behavior 是按类型共享的 ModType 内容；实体数据存于实体、Global 实例或 ModPlayer。禁止缓存绑定后单例或在锁定回调中将同一实例改绑到另一实体。实际调度、克隆与清理约定见 [加载生命周期](../Core/Loading/README.md)。
 - 独立验证资料包中 ReleaseReadiness/PublicApi-1.3.txt 记录当前候选的公共/受保护 API。普通验证只比较，显式 --update-api 才更新；更新前必须审查差异及迁移说明。候选发布后的基线不得为了消除失败而自动重写。
 
+新增 BehaviorQueries.Get*Dispatch 和只读用途的 DispatchGroup 方法分组句柄；既有 Enumerate、TryGetBehavior 签名和执行顺序保持。生成器产生的方法分组缓存字段为实现细节，不作为调用接口。默认残影的保守剔除与批次视野快照见[图形说明](Graphics.md)。
+
 ## 网络
 
 Transoceanic 保持 side = NoSync。不需要 Ocean 同步的单端数学/视觉消费方不启用同步。需要同步的消费方必须为 Both、正式强依赖框架，并在各端原生 Load 中无条件调用 EnableSync(Mod)。各端框架和消费方必须使用相同构建；没有远端握手或协议协商，版本号相同不保证未发布构建可混用。完整约束见 [网络约定](../Game/Networking/README.md)。
