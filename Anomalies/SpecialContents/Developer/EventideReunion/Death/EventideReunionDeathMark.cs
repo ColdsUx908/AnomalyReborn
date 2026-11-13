@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 internal static class EventideReunionDeathMark
@@ -37,6 +36,8 @@ internal static class EventideReunionDeathMark
 
 public sealed class EventideReunionDeathMarkBehavior : AnomalyGlobalNPCBehavior
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     private const int TransitionDuration = 12;
     public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter writer)
         => writer.Write((ushort)npc.Anomaly.EventideReunion_DeathMarkTime);
@@ -131,6 +132,8 @@ public sealed class EventideReunionDeathMarkBehavior : AnomalyGlobalNPCBehavior
 // 每游戏帧递减一次，不受 NPC AI 更新频率或 Buff 免疫影响。
 public sealed class EventideReunionDeathMarkSystem : ModSystem
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override void PostUpdateNPCs()
     {
         foreach (NPC npc in Main.ActiveNPCs)
@@ -146,4 +149,3 @@ public sealed class EventideReunionDeathMarkSystem : ModSystem
         }
     }
 }
-#endif

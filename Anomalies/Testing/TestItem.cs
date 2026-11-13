@@ -1,6 +1,6 @@
 #if DEBUG
 
-namespace Anomalies.SpecialContents.Developer;
+namespace Anomalies.Testing;
 
 /// <summary>
 /// Anomaly测试物品。

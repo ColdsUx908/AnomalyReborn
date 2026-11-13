@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // NPC 死亡后的纯本地标记退场，不生成伤害实体，也不重新生成星芒。
@@ -29,4 +28,3 @@ public sealed class EventideReunionDeathMarkFade : Particle
         return false;
     }
 }
-#endif

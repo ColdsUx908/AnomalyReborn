@@ -150,7 +150,7 @@
 | --- | --- | --- |
 | `ANOMALY_MODE` | `AnomaliesEnableAnomalyMode` | 异象难度及开启物品、故事/极限等相关机制、全部异象 Boss 修改与专属实体、难度兼容 |
 | `TWEAK` | `AnomaliesEnableTweak` | 武器修改、修改标识、玩家基础属性配置及其对应行为（移速、跳跃、下落、攀绳、放置速度等） |
-| `GAME_CONTENTS` | `AnomaliesEnableGameContents` | GameContents 下的具体内容及其商店等接入；共享基类除外 |
+| `GAME_CONTENTS` | `AnomaliesEnableGameContents` | GameContents 下的具体内容及其商店等接入 |
 | `SPECIAL_CONTENTS` | `AnomaliesEnableSpecialContents` | SpecialContents 下的内容及出生物品、同步等接入 |
 
 - 菜单、星空和血条是项目所有者明确指定的默认开启内容，不受上述开关控制，也不为它们另设模块。除这三类默认内容及测试物品之外，所有额外内容（包括物品、NPC、弹幕、Buff、行为修改、配置所对应的功能和独立视觉效果）必须明确归属现有模块；不能因代码放在 Common、Visuals 或兼容层而绕过模块开关。测试物品是明确例外，只要求 DEBUG 标签，不叠加功能模块开关；其对可关闭模块的测试操作仍须安全处理依赖。
@@ -159,7 +159,7 @@
 - 四个模块必须能够独立开关，所有 16 种组合均应编译并加载。全关时保留上述默认内容及必要的公共支持，但除 DEBUG 测试物品外，不得引入新增物品、NPC、弹幕或实体行为修改。默认视觉内容不能成为附带游戏机制的入口。
 - 跨模块内容分别控制“是否存在”与“是否接入”。例如 HoneyedWildbloom 物品、Buff 和宠物弹幕归 GAME_CONTENTS；其蜂后掉落同时要求 GAME_CONTENTS、ANOMALY_MODE，并保留世界开启异象模式的条件。仅关闭 ANOMALY_MODE 时物品仍存在，已持有物品仍可使用，但不注册掉落。
 - 公共入口不得无条件请求已关闭模块的内容 ID、资源或处理器。关闭 ANOMALY_MODE 后世界模式查询恒为 false，存档、网络和 Mod.Call 不得重新激活难度；关闭模块时公共网络入口仍按原顺序消费固定消息载荷，不顺带修改协议。
-- `AnomaliesModules.props` 只处理特定目录下的全部文件，不列举单个文件或单文件例外；单文件归属、跨模块接入和 DEBUG 测试物品例外统一使用源码中的 `#if`。
+- `AnomaliesModules.props` 只处理特定目录下的全部文件，不列举单个文件或单文件例外；单文件归属和跨模块接入使用源码中的 `#if`。受模块条件编译控制的目录必须只包含该模块的内容，关闭时整目录排除，不通过 Include 恢复子目录或文件；共享抽象基类放在 `Anomalies/BaseContents/`，测试物品放在 `Anomalies/Testing/` 并仅使用 `#if DEBUG`。SpecialContents 普通内容文件不再逐个添加模块标签。
 - 新增或修改内容时同步维护模块归属及公共接入；共享基础设施和具体内容分开组织，保留既有命名空间与资源路径。实现与使用方式见 `Anomalies/MODULES.md`。模块改动须验证全部 16 种组合、实际输出程序集的内容边界，以及配置与行为的一致开关；验证脚本放在 Tests 并随独立资料包交付。编译和元数据检查不能替代真实游戏加载、战斗及联机验收。
 
 ## 3. 着色器规范

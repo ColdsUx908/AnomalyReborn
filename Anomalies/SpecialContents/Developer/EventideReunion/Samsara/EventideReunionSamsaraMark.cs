@@ -1,9 +1,10 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 标记使用独立状态而非可被免疫/清除的 Buff；服务器拥有记录和结算。
 public sealed class EventideReunionSamsaraMarkBehavior : AnomalyGlobalNPCBehavior
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     internal static NPC Root(NPC npc)
     {
         if (npc.realLife >= 0 && npc.realLife < Main.maxNPCs)
@@ -35,6 +36,8 @@ public sealed class EventideReunionSamsaraMarkBehavior : AnomalyGlobalNPCBehavio
 
 public sealed class EventideReunionSamsaraSystem : ModSystem
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override void Load()
     {
         On_NPC.StrikeNPC_HitInfo_bool_bool += RecordStrike;
@@ -128,4 +131,3 @@ public sealed class EventideReunionSamsaraSystem : ModSystem
         }
     }
 }
-#endif

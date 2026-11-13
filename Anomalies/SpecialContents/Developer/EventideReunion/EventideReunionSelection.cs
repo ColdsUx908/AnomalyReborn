@@ -1,9 +1,10 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 独立读取按下沿，攻击 Holdout 占用 itemTime 时也能进入选择。
 public sealed class EventideReunionSelectionPlayer : AnomalyPlayerBehavior
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override void PostUpdate()
     {
         if (Player.whoAmI != Main.myPlayer || Main.dedServ)
@@ -34,6 +35,8 @@ public sealed class EventideReunionSelectionPlayer : AnomalyPlayerBehavior
 
 public sealed class EventideReunionSelection : AnomalyModProjectile
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override string LocalizationCategory => EventideReunion.LocalizationCategoryForEventideReunion;
     public override string Texture => EventideReunionRuneAssets.SunPath;
     private const float OuterRadius = 432f;
@@ -279,4 +282,3 @@ public sealed class EventideReunionSelection : AnomalyModProjectile
         return false;
     }
 }
-#endif

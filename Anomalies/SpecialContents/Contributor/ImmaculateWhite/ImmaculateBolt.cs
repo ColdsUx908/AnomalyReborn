@@ -1,8 +1,9 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Contributor.ImmaculateWhite;
 
 public sealed class ImmaculateBolt : AnomalyModProjectile
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.ImmaculateWhite;
+
     public const int LifeTime = 2400;
 
     public override string Texture => $"Terraria/Images/Extra_{ExtrasID.ThePerfectGlow}";
@@ -349,4 +350,3 @@ public sealed class ImmaculateBolt : AnomalyModProjectile
         }
     }
 }
-#endif

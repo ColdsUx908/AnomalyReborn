@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 internal static class EventideReunionSamsaraVisualGeometry
@@ -194,4 +193,3 @@ internal sealed class EventideReunionSamsaraTrail
         _Reach = reach;
     }
 }
-#endif

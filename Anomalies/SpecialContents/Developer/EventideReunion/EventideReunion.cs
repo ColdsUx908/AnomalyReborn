@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 using Anomalies.GameContents;
 using Terraria.Utilities;
 
@@ -6,6 +5,8 @@ namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunion : AnomalyModItem, IDeveloperItem, ILocalizationPrefix
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     private static readonly UnifiedRandom _TooltipSparkleRandom = new(1);
 
     public const string LocalizationCategoryForEventideReunion = "SpecialContents.Developer.EventideReunion";
@@ -133,4 +134,3 @@ public sealed partial class EventideReunion : AnomalyModItem, IDeveloperItem, IL
         return false;
     }
 }
-#endif

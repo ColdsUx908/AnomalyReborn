@@ -1,8 +1,9 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed class EventideReunionSunPlayer : AnomalyPlayerBehavior
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override void ResetEffects()
     {
         if (AnomalyPlayer.EventideReunion_SunFallProtection > 0
@@ -56,4 +57,3 @@ public sealed class EventideReunionSunPlayer : AnomalyPlayerBehavior
         }
     }
 }
-#endif

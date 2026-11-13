@@ -1,9 +1,10 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 每次刺击仅一个服务器代理，刺击完成后按全部实际命中结果选取一个标记目标。
 public sealed class EventideReunionSamsaraStrike : AnomalyModProjectile
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override string LocalizationCategory => EventideReunion.LocalizationCategoryForEventideReunion;
     public override string Texture => EventideReunionAssets.SpearTrailPath;
     public override LocalizedText DisplayName => ModContent.GetModItem<EventideReunion>().DisplayName;
@@ -76,4 +77,3 @@ public sealed class EventideReunionSamsaraStrike : AnomalyModProjectile
     }
     public override bool PreDraw(ref Color lightColor) => false;
 }
-#endif

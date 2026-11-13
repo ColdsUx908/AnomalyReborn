@@ -1,10 +1,11 @@
-#if SPECIAL_CONTENTS
 using Anomalies.GameContents;
 
 namespace Anomalies.SpecialContents.Contributor.VacuousBlack;
 
 public sealed class VacuousBlack : AnomalyModItem, ILegendaryItem, ILocalizationPrefix
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.VacuousBlack;
+
     #region 传奇
     public int Phase = 1;
     public int SubPhase = 1;
@@ -109,4 +110,3 @@ public sealed class VacuousBlack : AnomalyModItem, ILegendaryItem, ILocalization
             .Register();
     }
 }
-#endif

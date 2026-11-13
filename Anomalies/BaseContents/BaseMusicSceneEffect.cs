@@ -1,4 +1,4 @@
-namespace Anomalies.GameContents.Base;
+namespace Anomalies.BaseContents;
 
 /// <summary>
 /// 用于实现模组 NPC 的音乐切换。

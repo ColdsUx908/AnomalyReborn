@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public enum EventideReunionAspect
@@ -10,4 +9,3 @@ public enum EventideReunionAspect
     Sacredness,
     Star
 }
-#endif

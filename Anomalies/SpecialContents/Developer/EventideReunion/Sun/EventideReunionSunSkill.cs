@@ -1,8 +1,9 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunionSunSkill : AnomalyModProjectile
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override string LocalizationCategory => EventideReunion.LocalizationCategoryForEventideReunion;
     public const int Cooldown = 10 * 60;
     public const float BlastRadius = 8f * 16f;
@@ -406,4 +407,3 @@ public sealed partial class EventideReunionSunSkill : AnomalyModProjectile
         ownerPlayer.Anomaly.EventideReunion_SunFallProtection = 30;
     }
 }
-#endif

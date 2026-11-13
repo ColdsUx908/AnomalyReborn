@@ -1,10 +1,11 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 持有弹幕的 PreDraw 会嵌套在 PlayerDrawLayers.RenderAllLayers 中。
 // 原版玩家渲染器的 DrawData 和 Main.spriteBuffer 均不支持重入，残影必须先独立绘制。
 public sealed class EventideReunionAfterimageSystem : ModSystem
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override void PostDrawTiles()
     {
         if (Main.dedServ)
@@ -44,4 +45,3 @@ public sealed class EventideReunionAfterimageSystem : ModSystem
         }
     }
 }
-#endif

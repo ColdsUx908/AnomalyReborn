@@ -1,8 +1,9 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunionDeathWave : AnomalyModProjectile
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override string LocalizationCategory => EventideReunion.LocalizationCategoryForEventideReunion;
     public override string Texture => EventideReunionAssets.SpearTrailPath;
     private const int Lifetime = EventideReunionDeathGeometry.WaveLifetime;
@@ -70,4 +71,3 @@ public sealed partial class EventideReunionDeathWave : AnomalyModProjectile
     }
     public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) => EventideReunionDeathMark.CompleteHit(target);
 }
-#endif

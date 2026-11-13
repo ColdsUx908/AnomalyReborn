@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public static class EventideReunionAssets
@@ -23,4 +22,3 @@ public static class EventideReunionAssets
     private static Asset<Texture2D> _SpearTrail;
     public static Texture2D SpearTrail => _SpearTrail.Value;
 }
-#endif

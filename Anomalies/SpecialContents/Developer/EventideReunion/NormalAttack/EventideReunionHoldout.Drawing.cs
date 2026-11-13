@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunionHoldout
@@ -83,4 +82,3 @@ public sealed partial class EventideReunionHoldout
         }
     }
 }
-#endif

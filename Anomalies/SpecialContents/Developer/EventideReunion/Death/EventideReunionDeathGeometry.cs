@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 internal static class EventideReunionDeathGeometry
@@ -63,4 +62,3 @@ internal static class EventideReunionDeathGeometry
     public static Vector2 SlashTarget(Rectangle target, Vector2 origin) =>
         new(Math.Clamp(origin.X, target.Left, target.Right), Math.Clamp(origin.Y, target.Top, target.Bottom));
 }
-#endif

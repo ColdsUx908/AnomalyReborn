@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public static class EventideReunionNormalAttackAssets
@@ -9,4 +8,3 @@ public static class EventideReunionNormalAttackAssets
     public static readonly SoundStyle SweepUpward = new(AssetPath + "SweepUpward") { MaxInstances = 0 };
     public static readonly SoundStyle DownwardSlash = new(AssetPath + "DownwardSlash") { MaxInstances = 0 };
 }
-#endif

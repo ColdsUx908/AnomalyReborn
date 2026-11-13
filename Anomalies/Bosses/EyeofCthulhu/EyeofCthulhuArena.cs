@@ -1,4 +1,4 @@
-using Anomalies.GameContents.Base;
+using Anomalies.BaseContents;
 using Anomalies.Visuals.Overlays;
 using Transoceanic.Game.Entities;
 

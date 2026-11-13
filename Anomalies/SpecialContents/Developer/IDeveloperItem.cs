@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer;
 
 public interface IDeveloperItem
@@ -7,4 +6,3 @@ public interface IDeveloperItem
 
     public static void AddDeveloperItemOwnerIdentifier(Mod mod, List<TooltipLine> tooltips, int index, string ownerName) => tooltips.Insert(index, new TooltipLine(mod, "Tooltip_DeveloperItemOwnerIdentifier", Language.GetTextValue(AnomalySharedData.ModLocalizationPrefix + "SpecialContents.DeveloperItemOwnerIdentifier", ownerName)) { OverrideColor = AnomalySharedData.AnomalyUltramundaneColor });
 }
-#endif

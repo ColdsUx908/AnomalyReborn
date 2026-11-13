@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public static class EventideReunionSunAssets
@@ -9,4 +8,3 @@ public static class EventideReunionSunAssets
     public static readonly SoundStyle SunDashHit = new(AssetPath + "SunDashHit") { MaxInstances = 0 };
     public static readonly SoundStyle SunFollowUpSlash = new(AssetPath + "SunFollowUpSlash") { MaxInstances = 0 };
 }
-#endif

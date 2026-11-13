@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 internal static class EventideReunionRuneAssets
@@ -30,4 +29,3 @@ internal static class EventideReunionRuneAssets
         _ => throw new ArgumentOutOfRangeException(nameof(aspect), aspect, null)
     }).Value;
 }
-#endif

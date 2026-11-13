@@ -23,8 +23,10 @@ public sealed class AnomalyStartingItems : AnomalyPlayerBehavior
 #if SPECIAL_CONTENTS
         if (Player.name == "人间小天使")
         {
-            result.Add(Item.CreateItem<ImmaculateWhite>()); //纯白
-            result.Add(Item.CreateItem<VacuousBlack>()); //纯黑
+            if (ModContent.GetModItem<ImmaculateWhite>() is not null)
+                result.Add(Item.CreateItem<ImmaculateWhite>()); //纯白
+            if (ModContent.GetModItem<VacuousBlack>() is not null)
+                result.Add(Item.CreateItem<VacuousBlack>()); //纯黑
         }
 
 #endif

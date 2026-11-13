@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 仅在一次残影绘制调用内有效的图形上下文，不是玩家实例状态。
@@ -31,6 +30,8 @@ internal static class EventideReunionDeathAfterimageDrawing
 
 public sealed class EventideReunionDeathAfterimageGlow : AnomalyPlayerBehavior
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override void TransformDrawData(ref PlayerDrawSet drawInfo)
     {
         if (EventideReunionDeathAfterimageDrawing.CurrentPlayer != Player)
@@ -63,4 +64,3 @@ public sealed class EventideReunionDeathAfterimageGlow : AnomalyPlayerBehavior
         cache.InsertRange(0, glow);
     }
 }
-#endif

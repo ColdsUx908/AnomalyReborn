@@ -1,8 +1,9 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunionHoldout : AnomalyModProjectile
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override string LocalizationCategory => EventideReunion.LocalizationCategoryForEventideReunion;
     public override LocalizedText DisplayName => ModContent.GetModItem<EventideReunion>()?.DisplayName;
     public override string Texture => EventideReunionAssets.WeaponPath;
@@ -308,4 +309,3 @@ public sealed partial class EventideReunionHoldout : AnomalyModProjectile
 
     private Vector2 GetThrustTip(float currentProgress) => GetWeaponTip(GetThrustCenter(currentProgress), Projectile.velocity);
 }
-#endif

@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 不依赖实体的计账规则，便于单独验证取整、治疗和标记生命周期。
@@ -52,4 +51,3 @@ public sealed class EventideReunionSamsaraRecord
         => bestIndex < 0 || boss && !bestBoss || boss == bestBoss
             && (lifeMax > bestLifeMax || lifeMax == bestLifeMax && index < bestIndex);
 }
-#endif

@@ -29,9 +29,10 @@
     </ItemGroup>
     <ItemGroup Condition="'$(AnomaliesEnableGameContents)' != 'true'">
       <Compile Remove="GameContents\**\*.cs" />
-      <Compile Include="GameContents\Base\**\*.cs" />
     </ItemGroup>
-    <!-- SpecialContents 包含仅受 DEBUG 控制的测试物品，按各源码的 #if 筛选。 -->
+    <ItemGroup Condition="'$(AnomaliesEnableSpecialContents)' != 'true'">
+      <Compile Remove="SpecialContents\**\*.cs" />
+    </ItemGroup>
   </Target>
   <Target Name="ValidateAnomaliesModules" BeforeTargets="CoreCompile">
     <Error Condition="'$(AnomaliesEnableAnomalyMode)' != 'true' and '$(AnomaliesEnableAnomalyMode)' != 'false'" Text="AnomaliesEnableAnomalyMode must be true or false." />

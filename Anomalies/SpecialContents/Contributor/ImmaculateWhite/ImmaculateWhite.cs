@@ -1,10 +1,11 @@
-#if SPECIAL_CONTENTS
 using Anomalies.GameContents;
 
 namespace Anomalies.SpecialContents.Contributor.ImmaculateWhite;
 
 public sealed class ImmaculateWhite : AnomalyModItem, ILegendaryItem, ILocalizationPrefix
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.ImmaculateWhite;
+
     public const int OriginalUseTime = 30;
 
     #region 传奇
@@ -192,4 +193,3 @@ public sealed class ImmaculateWhite : AnomalyModItem, ILegendaryItem, ILocalizat
             .Register();
     }
 }
-#endif

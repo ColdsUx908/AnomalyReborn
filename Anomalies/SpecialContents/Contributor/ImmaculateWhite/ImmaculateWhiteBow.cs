@@ -1,8 +1,9 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Contributor.ImmaculateWhite;
 
 public sealed class ImmaculateWhiteBow : AnomalyModProjectile
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.ImmaculateWhite;
+
     public bool CanShootSplitBolt
     {
         get => AI_Union_0.Bits[0];
@@ -151,4 +152,3 @@ public sealed class ImmaculateWhiteBow : AnomalyModProjectile
     public override bool? CanHitNPC(NPC target) => false;
     public override bool CanHitPvp(Player target) => false;
 }
-#endif

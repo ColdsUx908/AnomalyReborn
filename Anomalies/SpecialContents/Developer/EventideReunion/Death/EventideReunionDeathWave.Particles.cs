@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunionDeathWave
@@ -41,4 +40,3 @@ public sealed partial class EventideReunionDeathWave
         }
     }
 }
-#endif

@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 using Anomalies.Assets.Effects;
 
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
@@ -6,6 +5,8 @@ namespace Anomalies.SpecialContents.Developer.EventideReunion;
 // 两枚标记统一排序与尺寸，避免 GlobalNPC 钩子顺序改变叠色结果。
 public sealed class EventideReunionMarkDrawing : AnomalyGlobalNPCBehavior
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     internal static float SamsaraRadius(NPC npc)
         => MathHelper.Clamp(Math.Max(npc.width, npc.height) * 0.55f, 38f, 88f);
 
@@ -102,4 +103,3 @@ public sealed class EventideReunionMarkDrawing : AnomalyGlobalNPCBehavior
         }
     }
 }
-#endif

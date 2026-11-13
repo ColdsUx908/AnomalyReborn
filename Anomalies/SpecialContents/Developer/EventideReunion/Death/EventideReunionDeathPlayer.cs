@@ -1,8 +1,9 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed class EventideReunionDeathPlayer : AnomalyPlayerBehavior
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override bool ImmuneTo(PlayerDeathReason damageSource, int cooldownCounter, bool dodgeable) =>
         AnomalyPlayer.EventideReunion_DeathProtection > 0 || IsDashing();
 
@@ -51,4 +52,3 @@ public sealed class EventideReunionDeathPlayer : AnomalyPlayerBehavior
         }
     }
 }
-#endif

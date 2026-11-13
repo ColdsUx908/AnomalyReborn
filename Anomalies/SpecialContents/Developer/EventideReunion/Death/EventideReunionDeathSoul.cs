@@ -1,9 +1,10 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 // 独立治疗逻辑，保留幽魂套的灵魂粒子表现。
 public sealed class EventideReunionDeathSoul : AnomalyModProjectile
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override string LocalizationCategory => EventideReunion.LocalizationCategoryForEventideReunion;
     public override string Texture => TOAssetUtils.FormatVanillaProjectileTexturePath(ProjectileID.SpiritHeal);
     public override void SetDefaults()
@@ -54,4 +55,3 @@ public sealed class EventideReunionDeathSoul : AnomalyModProjectile
         Projectile.Kill();
     }
 }
-#endif

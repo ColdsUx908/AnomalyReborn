@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 using Anomalies.Assets.Effects;
 
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
@@ -93,4 +92,3 @@ internal static class EventideReunionSamsaraThreadDrawing
         }
     }
 }
-#endif

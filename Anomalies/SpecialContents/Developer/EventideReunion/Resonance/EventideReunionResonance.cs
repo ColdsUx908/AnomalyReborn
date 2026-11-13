@@ -1,8 +1,9 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed class EventideReunionResonancePlayer : AnomalyPlayerBehavior
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     // 与现有技能冷却一致，由持有者在成功生成技能时登记，服务器转发快照。
     public static int Release(Player player, EventideReunionAspect aspect, int baseCooldown)
     {
@@ -78,6 +79,8 @@ public sealed class EventideReunionResonancePlayer : AnomalyPlayerBehavior
 
 public sealed class EventideReunionResonance : ModBuff
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override string Texture => EventideReunionAssets.AssetPath + "Resonance/SamsaraResonance";
     public override string LocalizationCategory => EventideReunion.LocalizationCategoryForEventideReunion;
 
@@ -94,4 +97,3 @@ public sealed class EventideReunionResonance : ModBuff
         buffName += $" ({count}/6)";
     }
 }
-#endif

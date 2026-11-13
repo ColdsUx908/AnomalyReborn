@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunionDeathSkill
@@ -69,4 +68,3 @@ public sealed partial class EventideReunionDeathSkill
         }
     }
 }
-#endif

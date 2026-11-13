@@ -1,8 +1,9 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunionSamsaraSkill : AnomalyModProjectile
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override string LocalizationCategory => EventideReunion.LocalizationCategoryForEventideReunion;
     public override string Texture => EventideReunionAssets.WeaponPath;
     public override LocalizedText DisplayName => ModContent.GetModItem<EventideReunion>().DisplayName;
@@ -180,4 +181,3 @@ public sealed partial class EventideReunionSamsaraSkill : AnomalyModProjectile
             Projectile.netUpdate = true;
     }
 }
-#endif

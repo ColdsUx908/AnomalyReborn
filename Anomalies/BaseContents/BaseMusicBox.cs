@@ -3,7 +3,7 @@ using Terraria.GameContent.ObjectInteractions;
 using Terraria.ObjectData;
 using Terraria.Utilities;
 
-namespace Anomalies.GameContents.Base;
+namespace Anomalies.BaseContents;
 
 public abstract class BaseMusicBox<TTile> : AnomalyModItem where TTile : BaseMusicBoxTile
 {

@@ -1,8 +1,9 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed class EventideReunionSamsaraPlayer : AnomalyPlayerBehavior
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override void PostUpdate()
     {
         if (AnomalyPlayer.EventideReunion_SamsaraCooldown > 0)
@@ -25,4 +26,3 @@ public sealed class EventideReunionSamsaraPlayer : AnomalyPlayerBehavior
             Player.controlUseItem = Player.controlUseTile = false;
     }
 }
-#endif

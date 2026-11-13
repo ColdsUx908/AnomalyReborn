@@ -1,8 +1,9 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Contributor.VacuousBlack;
 
 public sealed class VacuousBlackMinion : AnomalyModProjectile
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.VacuousBlack;
+
     public int Phase;
     public int SubPhase;
 
@@ -103,4 +104,3 @@ public sealed class VacuousBlackMinion : AnomalyModProjectile
         target.velocity = Owner.GetVelocityTowards(target.Center, GetInterpolation(10f, 1.35f));
     }
 }
-#endif

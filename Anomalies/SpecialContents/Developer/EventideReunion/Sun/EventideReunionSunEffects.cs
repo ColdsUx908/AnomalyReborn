@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 using Anomalies.Visuals.Overlays;
 using Terraria.Graphics.Effects;
 
@@ -6,6 +5,8 @@ namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed class EventideReunionSunExplosion : AnomalyModProjectile
 {
+    public override bool IsLoadingEnabled(Mod mod) => AnomalySpecialContentToggler.EventideReunion;
+
     public override string LocalizationCategory => EventideReunion.LocalizationCategoryForEventideReunion;
     private const int Duration = 32;
     public float FlashOpacity => Math.Max(0f, 1f - Age / 10f) * 0.2f;
@@ -118,4 +119,3 @@ public sealed class EventideReunionSunFlash : CustomOverlay
         batch.End();
     }
 }
-#endif

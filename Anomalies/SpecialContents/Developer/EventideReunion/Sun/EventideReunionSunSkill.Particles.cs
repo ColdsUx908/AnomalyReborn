@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 public sealed partial class EventideReunionSunSkill
@@ -97,4 +96,3 @@ public sealed partial class EventideReunionSunSkill
             0.1f, 0.45f, 16, lifeEndRatio: 0.1f));
     }
 }
-#endif

@@ -1,4 +1,4 @@
-using Anomalies.GameContents.Base;
+using Anomalies.BaseContents;
 
 namespace Anomalies.Bosses.KingSlime;
 

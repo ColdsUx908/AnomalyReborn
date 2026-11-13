@@ -34,12 +34,12 @@
 ## Anomalies 功能模块
 
 - 修改 Anomalies 前遵循设计规范 2.9 及 `Anomalies/MODULES.md`。模块通过 `Anomalies/AnomaliesModules.props` 管理，使用构建时布尔属性和条件编译标签，默认全部开启。
-- 仅有四个模块：`ANOMALY_MODE`（异象难度、开启物品、全部异象 Boss 修改及相关机制）、`TWEAK`（武器修改、玩家基础属性配置及对应行为）、`GAME_CONTENTS`（GameContents 具体内容，不含共享基类）、`SPECIAL_CONTENTS`（SpecialContents 内容及接入）。
+- 仅有四个模块：`ANOMALY_MODE`（异象难度、开启物品、全部异象 Boss 修改及相关机制）、`TWEAK`（武器修改、玩家基础属性配置及对应行为）、`GAME_CONTENTS`（GameContents 具体内容；共享基类位于 BaseContents）、`SPECIAL_CONTENTS`（SpecialContents 内容及接入）。
 - 菜单、星空和血条是默认开启内容，不随四个模块关闭，也不另设默认模块。除这三类默认内容及测试物品之外，所有额外内容（物品、NPC、弹幕、Buff、行为修改、配置对应功能、独立视觉等）必须归属现有模块；目录位置不能作为不受模块控制的理由。测试物品只要求 DEBUG 标签，不叠加模块标签；测试操作仍须安全处理被关闭的依赖。
 - 公共层原则上只提供无独立可见副作用的通用支持。玩家移速、跳跃、下落、攀绳与放置速度等配置和行为统一由 TWEAK 控制，不得留在默认公共行为中。
 - **不得私自新增模块。新增模块只能由项目所有者 ColdsUx 最终决定并提交，代理不得自行决定或代为提交。** 不得通过新标签、属性或隐式分组绕过此约束。
 - 四个模块独立开关；全关时除 DEBUG 测试物品外，不得增加物品、NPC、弹幕或实体行为修改。保留默认菜单、星空、血条和必要公共支持。跨模块分别控制内容存在与获取入口：HoneyedWildbloom 的存在由 GAME_CONTENTS 控制，蜂后掉落同时要求 GAME_CONTENTS、ANOMALY_MODE 及世界开启异象模式。
-- `AnomaliesModules.props` 只按目录处理全部文件，不处理单个文件；单文件归属和例外使用源码 `#if`。
+- `AnomaliesModules.props` 只按目录处理全部文件，不处理单个文件；单文件归属和跨模块接入使用源码 `#if`。受模块筛选的目录只容纳该模块内容，不使用 Include 恢复例外；共享抽象基类位于 `Anomalies/BaseContents/`，DEBUG 测试物品位于 `Anomalies/Testing/`。
 - 修改模块归属或公共接入后，运行独立资料包的 `pwsh -NoProfile -File Validation/Tests/Anomalies/Integration/Modules/Verify.ps1`，检查 16 种组合、实际程序集内容及配置/行为边界；仍需区分构建检查和游戏内验收。
 
 ## Tools 与离线资源流程

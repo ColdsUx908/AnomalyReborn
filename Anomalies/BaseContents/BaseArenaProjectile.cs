@@ -1,4 +1,4 @@
-namespace Anomalies.GameContents.Base;
+namespace Anomalies.BaseContents;
 
 public abstract class BaseArenaProjectile : AnomalyModProjectile
 {

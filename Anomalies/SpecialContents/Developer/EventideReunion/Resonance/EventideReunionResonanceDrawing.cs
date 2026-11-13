@@ -1,4 +1,3 @@
-#if SPECIAL_CONTENTS
 namespace Anomalies.SpecialContents.Developer.EventideReunion;
 
 internal static class EventideReunionResonanceDrawing
@@ -47,4 +46,3 @@ internal static class EventideReunionResonanceDrawing
         }
     }
 }
-#endif

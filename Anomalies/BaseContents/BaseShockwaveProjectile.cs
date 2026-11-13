@@ -1,6 +1,6 @@
 using Anomalies.Assets.Effects;
 
-namespace Anomalies.GameContents.Base;
+namespace Anomalies.BaseContents;
 
 /// <summary>
 /// 冲击波弹幕的抽象基类。
