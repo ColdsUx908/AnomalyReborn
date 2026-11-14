@@ -26,16 +26,6 @@ Ultra 与普通 Anomaly 使用同一套 AI，旧 AI 已移除。`Phase1` 在共�
 - 主头统一调度头部运动和攻击，服务器负责步骤推进、重组与弹幕生成。客户端从同步的主头关系恢复头部列表，不依赖服务器本地 AllSegments。
 - `EaterofWorldsTopology` 生成局部链，转换前验证体节数量、所属关系和顺序。转换复用 NPC，保留共享生命，同时更新 type 和 netID、清理轨迹缓存。传送步骤为 0 撤离、1 入口隐去与出口蓄力、3 出场；Timer1 由服务器在边界归零。死亡先清理子体节，让原版掉落和击杀记录只结算一次；退场直接清理，不触发奖励。
 
-## 验证
+## 验证资料
 
-自动验证命令：
-
-- `dotnet build Anomalies/Anomalies.csproj --no-restore -m:1 -p:BuildMod=false`
-- `dotnet run --project Validation/Tests/Anomalies/Bosses/EaterofWorlds.Topology/EaterofWorlds.Topology.csproj`
-- `dotnet run --project Validation/Tests/Anomalies/Bosses/EaterofWorlds.Portals/EaterofWorlds.Portals.csproj`
-- `pwsh -NoProfile -File Validation/Tests/Anomalies/Bosses/BossIsolation/Verify.ps1`
-- `python Validation/Tests/Anomalies/Bosses/BossIsolation/verify_dependencies.py`
-
-拓扑测试覆盖 60/90 节反复分合、局部链双向一致性、不重复/不遗漏体节、非法分裂请求。传送测试调用实际编译出的裂隙类型，覆盖蓄力快照、中途加入、爆裂淡出、重复快照不累加裂纹缩放，以及绘制缓存不进入额外同步载荷。
-
-仍需游戏内验证：普通/Ultra 完整两轮循环、低机动装备躲避空间、50% 阈值、地表/地下/平台/狭窄场地、两次同时召唤、死亡/退场奖励、客户端中途加入、分合时延迟，以及有/无灾厄时的实际伤害和资源加载。静态编译与拓扑测试不能代替这些检查。
+自动化测试、覆盖记录和游戏内复核计划随仓库外独立验证资料包提供；不放入产品源码目录。

@@ -89,15 +89,15 @@ public static partial class TOMathUtils
         public static bool RotatedRectangleVFloatRectangleCollision(RotatedRectangle a, FloatRectangle b)
         {
             //包围盒检测
-            (float sinA, float cosA) = MathF.SinCos(a.Rotation);
-            FloatRectangle bounds = a.GetAABB(sinA, cosA);
+            FloatRectangle bounds = a.AABB;
             if (bounds.Right < b.Left || bounds.Left > b.Right || bounds.Bottom < b.Top || bounds.Top > b.Bottom)
                 return false;
 
-            (Vector2 aPoint1, Vector2 aPoint2, Vector2 aPoint3, Vector2 aPoint4) = a.GetVertices(sinA, cosA);
+            (Vector2 aPoint1, Vector2 aPoint2, Vector2 aPoint3, Vector2 aPoint4) = a.Vertices;
             ReadOnlySpan<Vector2> aPoints = [aPoint1, aPoint2, aPoint3, aPoint4];
             ReadOnlySpan<Vector2> bPoints = [b.TopLeft, b.TopRight, b.BottomLeft, b.BottomRight];
 
+            (float sinA, float cosA) = MathF.SinCos(a.Rotation);
             if (!Geometry.OverlapOnAxis(new Vector2(cosA, sinA), aPoints, bPoints))
                 return false;
             if (!Geometry.OverlapOnAxis(new Vector2(-sinA, cosA), aPoints, bPoints))

@@ -50,4 +50,4 @@ Aroma 每轮旋转开始时保留暗黑法师召唤（场上少于 6 只时补 1
 
 保留同帧 `goto case`、三连冲锋结束时立即开始下一次后撤、先/后递增时钟及扇形末端原有采样边界。战斗平衡修改应与结构整理分别评估。
 
-验证资料由独立 `Validation/` 资料包提供：普通骷髅王运行时回归入口为 `Validation/Tests/Anomalies/Bosses/Skeletron.Phase3/`；模块依赖与排除构建入口为 `Validation/Tests/Anomalies/Bosses/BossIsolation/`。编译及模拟宿主不能替代实际游戏的战斗、动态资源、视觉和联机验收。
+自动化测试与复核记录由仓库外独立验证资料包提供；不编入产品项目。

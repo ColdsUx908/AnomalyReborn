@@ -338,15 +338,12 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
         }
     }
 
-    private sealed class Entry(long estimatedBytes)
+    private sealed class Entry
     {
         /// <summary>
         /// 此缓存键下可再次租出的渲染目标栈。
         /// </summary>
         public Stack<RenderTarget2D> Targets { get; } = [];
-
-        /// <summary>同一键的尺寸和描述符不变，复用首次计算的显存估算。</summary>
-        public long EstimatedBytes { get; } = estimatedBytes;
 
         /// <summary>
         /// 该缓存键最近租出或归还目标时的 UTC 时间，用于过期清理。
@@ -381,7 +378,7 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
             Key key = new(device, width, height, descriptor);
             if (!_Cache.TryGetValue(key, out Entry entry))
             {
-                _Cache[key] = entry = new Entry(EstimateBytes(key.Width, key.Height, key.Descriptor));
+                _Cache[key] = entry = new Entry();
             }
             else
             {
@@ -393,13 +390,13 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
             {
                 entry.Targets.Pop();
                 _TotalCached--;
-                CachedBytes -= entry.EstimatedBytes;
+                CachedBytes -= EstimateBytes(width, height, descriptor);
             }
             if (entry.Targets.Count > 0)
             {
                 target = entry.Targets.Pop();
                 _TotalCached--;
-                CachedBytes -= entry.EstimatedBytes;
+                CachedBytes -= EstimateBytes(width, height, descriptor);
             }
             else
             {
@@ -430,7 +427,7 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
         Key key = Key.From(target);
         if (!_Cache.TryGetValue(key, out Entry entry))
         {
-            _Cache[key] = entry = new Entry(EstimateBytes(key.Width, key.Height, key.Descriptor));
+            _Cache[key] = entry = new Entry();
         }
         else
         {
@@ -441,7 +438,7 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
 
         if (entry.Targets.Count < MaxPerKey)
         {
-            long bytes = entry.EstimatedBytes;
+            long bytes = EstimateBytes(target.Width, target.Height, key.Descriptor);
             if (_TotalCached >= MaxTotalTargets || bytes > MaxCachedBytes - CachedBytes)
             {
                 target.Dispose();
@@ -482,7 +479,7 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
             while (entry.Targets.Count > 0)
             {
                 RenderTarget2D target = entry.Targets.Pop();
-                CachedBytes -= entry.EstimatedBytes;
+                CachedBytes -= EstimateBytes(target.Width, target.Height, RenderTargetDescriptor.From(target));
                 target.Dispose();
                 _TotalCached--;
             }
@@ -512,7 +509,7 @@ internal sealed class SharedRenderTargetPool : RenderTargetPool
             while (entry.Targets.Count > 0)
             {
                 RenderTarget2D target = entry.Targets.Pop();
-                CachedBytes -= entry.EstimatedBytes;
+                CachedBytes -= EstimateBytes(target.Width, target.Height, key.Descriptor);
                 target.Dispose();
                 _TotalCached--;
             }

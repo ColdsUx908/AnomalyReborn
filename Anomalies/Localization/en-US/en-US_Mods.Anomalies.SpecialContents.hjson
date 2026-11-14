@@ -45,6 +45,24 @@ Developer: {
 }
 
 Contributor: {
+	MeguminExplosion: {
+		DisplayName: Megumin's Staff
+		Tooltip:
+			'''
+			Chant in the name of the Crimson Demons, and let crimson-gold light pierce heaven and earth
+			Hold to cast Explosion; move the mouse to guide the beam and layered magic circles
+			My name is Megumin! Explosion!
+			'''
+	}
+
+	MeguminCasting.DisplayName: Explosion Chant
+	MeguminBlast.DisplayName: Explosion
+
+	MeguminExhaustion: {
+		DisplayName: Mana Exhaustion
+		Description: Explosion has drained your strength; movement is slowed and you cannot cast it again yet
+	}
+
 	ImmaculateWhite: {
 		DisplayName: Immaculate White
 		Tooltip: Shoot immaculate light that rapidly tracks enemies

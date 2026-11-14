@@ -4,10 +4,6 @@
 
 ## 性能与绘制约定更新
 
-新增 LightweightBloom、BloomSettings 和可避免捕获委托的 IBloomLayer 图层入口，原有 Action/显式 Effect 签名保留。Draw 现在在无滤波回退和异常路径也恢复约定内的设备状态，并在租约归还前解除捕获目标绑定；零尺寸视口不调用图层。已经 Begin 的 SpriteBatch、跨设备/已释放资源和 Composite 的目标别名会提前报错。低层 Blur/Composite 仍不保存设备状态。调用方须使用有效的当前设备资源并自行管理其他纹理槽及顶点/索引绑定，详见[图形约定](Graphics.md)。
-
-新增 WorldView2D、SpriteDrawing 和 Mulberry32Random，不依赖 Anomalies。Mulberry32 的状态与序列固定，NextSingle 浮点舍入可能为 1，不能当作严格小于 1 的数组索引采样器。框架现有 API 与网络载荷没有因本次提取而移除或改序。
-
 NewProjectileAction（含泛型和弧形生成入口）在恢复调用方速度、完成初始化回调后，由弹幕所有端立即补发 SyncProjectile。原版 NewProjectile 会在返回前发送经过速度修正、尚未执行回调的首包；仅设置 netUpdate 会让远端先使用这份状态。此修正不改变生成权限或网络载荷布局，但每次联网生成会增加一次同步发送。
 
 TOBossChallenge.BossList 现在是缓存的实时只读视图，持有该视图会看到后续帧的列表更新和世界退出清空，不是某一帧的快照。
@@ -70,7 +66,7 @@ NPCTargetingParameters 的相等和哈希现在包含排除玩家集合，按内
 
 ## 验证与剩余限制
 
-从仓库根运行 `pwsh -File Validation/Tests/Transoceanic/Verify.ps1 -IncludeConsumers`。Behavior 测试覆盖 internal Handler 的生成与执行，并读取实际框架程序集检查类型边界与独立消费程序集的访问限制；单独运行该测试前须先构建 Transoceanic。
+维护验证入口与覆盖记录由仓库外独立资料包提供；构建与资料交付约定见 [构建与交付](BuildAndDelivery.md)。
 
 本版本还包含实体 AI 容量调整：Ocean ExtraAI 仅保留 AI32 稀疏完整快照，NPC 12 数据槽、弹幕 7 数据槽；删除 OceanAI64 段并重排计时器槽位。这是网络协议变化，各端必须一起升级为相同构建。通用 Union64 和 AI64 编解码工具仍保留给消费方使用。真实 tML 自动加载、卸载、多人连接和绘制仍需宿主验证；仓库外第三方需要按上述规则迁移。
 

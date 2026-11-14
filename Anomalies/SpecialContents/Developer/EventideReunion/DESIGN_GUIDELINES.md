@@ -142,7 +142,7 @@ Anomalies 不强依赖灾厄等可选模组。技能所需的外部贴图必须�
 2. 使用 `EventideReunion<技能名>...` 命名类型和代码文件，继续采用根命名空间。按逻辑规模拆分 AI、绘制、粒子、几何等职责，无需为尚不存在的职责创建空文件。
 3. 在物品入口与选择模块中接入技能，专属战斗细节仍放在技能目录；通用选择、普通攻击和共享渲染不随技能迁移。
 4. 为受目录与命名空间差异影响的内容类显式指定材质，并核对专属音效和共享资源的路径。
-5. 检查外部引用和测试工程的源文件链接。Sun 几何测试位于仓库的 `Validation/Tests/Anomalies/EventideReunion/Sun/`，移动其被引用源文件时同步更新项目路径。
+5. 检查外部引用和仓库外测试工程的源文件链接。测试工程由独立验证资料包提供，移动被引用的产品源码时同步维护其配置。
 
 调整文件组织后同步维护本文，确保目录树和职责说明与实际代码一致。
 
@@ -169,19 +169,17 @@ Anomalies 不强依赖灾厄等可选模组。技能所需的外部贴图必须�
 
 突进边缘暗屏使用 `Assets/Effects/Overlays/EventideDeathVignette.fx/.xnb` 的解析遮罩，屏幕中心透明，四边按屏幕高度统一尺度平滑变暗，进出阶段平滑淡入淡出；不再写入通用全屏 `DarknessIntensity`。
 
-`Validation/Tests/Anomalies/EventideReunion/Death/` 验证薄目标扫描、宽目标延长穿身、迟命中、空挥距离、地形阻挡、安全退回、96 像素间距、目标后方判定、残影回收顺序与加速缩小、扩大近圆弧与投影旋转一致性，以及静止和高速玩家、远距离传送后的灵魂追踪、治疗上限与月噬限制。
 
 
 ## Samsara 技能
 
-- 最新行为依据 `Design/落日遗逢EventideReunion.docx` 的轮回相八条规则及动作参考图。保留现有右键轮盘松键释放入口；基础冷却 900 帧，不提供击杀冷却返还。原有共鸣系统的设计不在此技能内重写或移除；共鸣由 Resonance/ 目录的 EventideReunionResonance / EventideReunionResonanceRules 模块实现。
+- 最新行为依据仓库外设计参考资料中的落日遗逢轮回相文档 的轮回相八条规则及动作参考图。保留现有右键轮盘松键释放入口；基础冷却 900 帧，不提供击杀冷却返还。原有共鸣系统的设计不在此技能内重写或移除；共鸣由 Resonance/ 目录的 EventideReunionResonance / EventideReunionResonanceRules 模块实现。
 - 动作分为起手 24、旋身 36、快速转身 6、后撤 5、刺击 12、收招 30 帧。旋身结束、转身首帧由持有者读取光标并锁定方向，其他端等待方向同步。刺击只伸出武器，不改玩家位置或速度；收招先收矛立矛，因果线回到矛尖后解锁操作。刺击伤害暂设为武器伤害的 4 倍，集中于 `ThrustDamageMultiplier`；时长与距离同样可调。
 - 六道残影只复用玩家当前身体、手臂和装备姿态，不绘制手持物品或武器，不生成伤害。人物绘制期间修改的 heldProj、itemAnimation、itemTime 在 finally 中恢复。青紫钟表齿轮和六束交织因果线用像素坐标程序绘制，无屏幕比例拉伸；复用公共符文、武器材质、普通刺击音效与 Transoceanic 的 GenericSparkle。低鸣使用原版 Item35 降调，不依赖可选模组。
 - 只有单人端/服务器创建伤害代理，命中集合在服务器保存 NPC 实例引用。刺击结束后把 `realLife` 部件映射至共享生命本体，排除死亡/消失/已有标记目标；优先 Boss，再按 lifeMax 降序，同级按实体索引稳定排序。独立生命部件不合并。每次仅标记一个目标；本次刺击全部结束后才初始化生命快照和五秒计时。
 - 标记是 NPC 自身的独立状态，不使用可能被 Buff 免疫或净化的减益作为权威计时器。所有实例数据保存在 AnomalyGlobalNPC，行为不自行存储实例数据。服务器的 StrikeNPC 与 UpdateNPC_BuffApplyDOTs 钩子在原逻辑前后观察共享生命本体，帧末补采直接扣血；同一生命变化只能记录一次，治疗只更新基线、不抵消累计伤害。不会逐个部件叠加 damageDone。累计使用 long，结算以整数运算计算 ceil(累计 × 35 / 100)，实际 NPC 伤害上限为 int.MaxValue。
 - 标记五秒计时由 ModSystem 驱动，不依赖 NPC 是否执行 AI，也不依赖施放者存活、在线或维持动作；目标死亡/消失不结算。服务端先清理标记，再直接修改生命并执行 checkDead，跳过防御、减伤、伤害浮动、dontTakeDamage 以及玩家/弹幕命中附加效果；正常保留死亡、掉落和 Boss 转阶段钩子。在线施放者获得 lastInteraction 和 playerInteraction 归属；离线仍按时结算。
 - 同步只传标记剩余帧数供客户端绘制，不同步累计账本或客户端视觉容器；中途加入通过 NPC 快照得到标记。结束时同步生命与清除状态，独立无伤害 Echo 弹幕同步结算钟声、光环和数字。结算数字使用额外 AI 的 int，避免 float AI 槽位丢失大整数精度。
-- `Validation/Tests/Anomalies/EventideReunion/Samsara/` 验证标记前伤害排除、重复标记不刷新、全来源累计、治疗后伤害、重复观察不重复计数、300 帧边界、再次标记、无伤害不结算、小额向上取整、long 累计与最终溢出保护、Boss/生命上限优先级及稳定排序。
 
 ## 轮回共鸣
 
@@ -193,7 +191,7 @@ Anomalies 不强依赖灾厄等可选模组。技能所需的外部贴图必须�
 - 新相位授予一枚印记并刷新 1800 帧。重复相位先移除自身，再等概率移除一个剩余印记，不刷新时间；没有印记时立即结束。到期或死亡清空，不随存档保存。
 - 每层近战伤害独立乘以 1.08；技能冷却按本次印记变化后的层数减少每层 5%，重复施放额外乘以 1.2，最终向上取整。冷却在释放时固定，不追溯修改已运行的冷却。本次技能伤害使用更新后的层数。
 - 共鸣 Buff 显示剩余时间和层数，轮盘已使用相位持续产生金色星光。持有者计算释放结果并发送快照，服务器验证发送者归属及掩码/时间范围后转发；中途加入通过 AnomalyPlayer.SyncPlayer 同步，持续时间各端自行递减。
-- Validation/Tests/Anomalies/EventideReunion/Resonance 穷举重复相位的全部印记组合和随机候选，并验证六层上限、乘算伤害、冷却组合与 1800 帧到期边界。终极技动作与其余三相技能另行实现。
+- 终极技动作与其余三相技能另行实现。
 
 ### 轮回 / 死亡标记协同绘制
 
@@ -201,20 +199,17 @@ Anomalies 不强依赖灾厄等可选模组。技能所需的外部贴图必须�
 - 轮回标记使用 `Assets/Effects/Primitives/EventideSamsaraMark.fx/.xnb`：十八枚平顶圆角轮齿、蓝紫/冷蓝刃缘、深靛齿体、反向交织因果线和从十二点钟顺时针消退的五秒计时内圈。圆心透明，不使用任何 Buff 图标；`SamsaraResonance.png` 仅供轮回共鸣 Buff 使用，结算特效也不引用此图标。
 - 两枚标记单独出现时保持各自尺寸；共存强度由平滑入退场计算，外齿轮最多扩大 15%，死亡星体最多缩小 20%，以形成外齿轮、内四角星的同心布局。两 shader 通过 `CompanionPresence` 收敛交叠光晕，死亡星体保持水平/竖直对称。死亡后的退场粒子接续共存时的实际尺寸和光晕参数。
 - 绘制参数每次调用显式重设，包括无伴随标记时的零值；GraphicsDevice 状态与 SpriteBatch 在 finally 中恢复。使用世界像素正方形网格和相同相机矩阵，长宽比变化不会压扁齿轮。shader 使用统一的 `Main / ps_3_0 / Technique1 / Pass0`，已生成对应 XNB。
-- `Validation/Tests/History/Eventide.MarkShaders/` 保存旧的隔离编译配置与 XNA 产物。当前预览通过 Validation/Tests/Anomalies/EventideReunion/ShaderRendering/Verify.ps1 加载部署的 XNB，比较不同时间、明暗背景下的轮回单标记、死亡单标记和共存效果。
 
 
 ### 人物残影与绘制重入
 
 - 轮回和死亡的人物残影统一由 `EventideReunionAfterimageSystem.PostDrawTiles` 绘制。此阶段位于地形批次结束后、持有弹幕/主角色绘制之前，自己开始并在 finally 结束 SpriteBatch。技能原有的姿态暂存和 finally 恢复逻辑继续保留。
 - 禁止从持有弹幕的 PreDraw 或人物绘制图层中直接/间接调用 Main.PlayerRenderer.DrawPlayer。持有弹幕在 PlayerDrawLayers.DrawPlayer_RenderAllLayers 中绘制，而 LegacyPlayerRenderer 每次调用会清空自身 DrawData 缓存，同时使用全局 Main.spriteBuffer；嵌套调用会破坏外层尚未消费的绘制缓存，造成索引越界。仅改为另一个 LegacyPlayerRenderer 实例仍无法隔离全局 spriteBuffer，因此必须拆开绘制阶段。
-- `Validation/Tests/Anomalies/EventideReunion/Rendering/` 检查实际生产程序集的调用图：两技能的 PreDraw 均不能到达玩家渲染器，独立世界阶段必须保留两种人物残影；在内存中重新插入旧调用边时，检查必须能识别该回归。
 
 
 ### 像素线段的材质采样
 
 - `EventideReunionSamsaraDrawing.Line` 的缩放单位是世界像素长度/宽度，必须显式设置源矩形 `(0, 0, 1, 1)`，不能用 null 采样整张 MagicPixel。否则贴图的原始宽高会再次乘上线段尺寸，使齿轮和因果线变为满屏放射光线。直接绘制与人物 DrawData 缓存共用此规则。
-- `Validation/Tests/History/Eventide.MarkShaders/LineRegression.cs` 保存当时的 Line 方法副本及其 XNA 验证，覆盖不同贴图尺寸、线段方向和两种绘制路径下，输出长度/宽度始终为指定像素尺寸。
 
 
 ### 轮回施法齿轮、紧凑残影与累积因果线
@@ -222,7 +217,6 @@ Anomalies 不强依赖灾厄等可选模组。技能所需的外部贴图必须�
 - 施法身后齿轮的完整半径为 156 像素（原为 78），提高显示强度并增加低亮宽光晕，采用更饱和的冷蓝与紫色；NPC 的标记齿轮保持独立尺寸。
 - 六道人物残影采用紧凑椭圆布局，中心距离由玩家实际身体宽高和残影缩放计算。正上/正下残影与玩家的身体边缘保持 9 像素间隙；入场/退场缩放变化时重新计算间隙，不靠重叠身体表现归位，而是在近身位置缩小淡出。
 - 因果线使用每个技能弹幕独立的客户端 EventideReunionSamsaraTrail 保存世界坐标历史。在 AI 更新采样而非 Draw 中累积，按矛角度、手持中心和伸出距离插值补点，旋身、转向和刺击期间只追加、不滑动删除旧尾迹。六束线沿同一完整路径交织，不再根据当前角度每帧重新生成一段固定短弧。进入 Recovery 才冻结轨迹，按累计弧长从最旧端逐段消去，仅插值裁剪当前端点；尚未回收到的轨迹位置、形状及亮度保持不变，不再整体向矛尖收缩；历史无需网络同步。
-- `Validation/Tests/Anomalies/EventideReunion/SamsaraVisuals/` 验证不同身高/缩放下的残影边缘间距及互不重叠、完整圆周轨迹长度、旧采样保留、静止不重复采样、刺击追加、收招冻结、按弧长连续裁剪及未触及轨迹保持不变。
 
 
 ### 轮回齿轮定位与快速回身投影
@@ -237,14 +231,12 @@ Anomalies 不强依赖灾厄等可选模组。技能所需的外部贴图必须�
 - 转矛与快速 3D 横抽复用公共 `EventideReunionBladeTrail.DrawArc`，其 96 点弧面采样、0.23 内缘比例、径向 UV、渐隐和 `SpearTrail / EventideSweep` 材质与太阳相完全共用；太阳相原有私有 DrawBlade 已迁入公共模块，保持原有采样和参数。
 - 轮回只通过 `SamsaraPalette` 将同一 shader 改为青色至淡紫色；不改变遮罩、流纹、刀刃、前锋或亮芯的计算。公共入口每次同时重设 `DeathPalette` 和 `SamsaraPalette`，其他技能继续使用原有配色。对应 EventideSweep.xnb 已重新编译。
 - 刀光与矛共享 SpinVector / TurnVector 几何，回身时同步使用投影方向和长度。旋身末尾刀光在回身期间淡出，横抽余光在刺击前 6 帧淡出，因果线仍按原规则独立保存及回收。沿挥动切线补发青色至淡紫色 PointingParticle 与冷白 GenericSparkle，替换此阶段原有的定点星芒。
-- `Validation/Tests/Anomalies/EventideReunion/ShaderRendering/` 的 GPU 配色回归使用实际 SpearTrail 贴图及编译后的 XNB，逐像素验证默认、轮回、死亡三种配色的刀光 alpha 遮罩一致，以及连续切换后默认配色恢复。
 
 
 ### 横抽因果线与矛尖一致性
 
 - TurnVector 在一次横抽中固定投影平面倾角，不再用 sin(阶段进度) 改变倾角；由起手方向反投影得到初始圆周角及半径，保证起手/结束矛尖与相邻动作一致。挥动方向接续旋身方向，避免线束折返和法线翻转。
 - 横抽时长为 6 帧。生产轨迹采样改用 AppendCurve，直接调用武器/刀光共用的 SpinVector、TurnVector 和刺击伸出函数，每阶段按 512 个子帧间隔补点，计时推进后也同步记录当前矛尖；禁止将 3D 投影后的屏幕角度和长度重新作二维极坐标插值。玩家平移单独插值，不改变武器轨迹几何。收招冻结与逐段裁剪规则保持不变。
-- 几何测试覆盖双向挥动、正反重力下每一横抽帧的精确矛尖终点、全部子帧点与 3D 函数一致，以及冻结后轨迹不被追加修改。
 
 
 ### 因果线顶点带及连接点
@@ -252,7 +244,7 @@ Anomalies 不强依赖灾厄等可选模组。技能所需的外部贴图必须�
 - 因果线使用 `EventideReunionSamsaraThreadDrawing` 和 `Assets/Effects/Primitives/EventideSamsaraThread.fx/.xnb` 绘制连续顶点带，约 2.5 像素亮芯和轻微柔光；六线从实际矛尖汇合，沿后方约 220 像素逐渐展开，完整线束的基准间距为 8 像素。
 - 参数细分采样后，末段小于 2 像素时合并到活动端点，保留精确矛尖而不积累近重合顶点。线束偏移法线使用前后各 6 像素弧长邻域，顶点带边缘法线使用前后各 3 像素邻域，不再直接依赖帧边界的两个近邻顶点。冻结后不再合并；回收只裁剪端点，尚未涉及的轨迹与边缘保持原样。
 - shader 使用导数抗锯齿、圆形端帽及沿端点衰减的外光，避免裸露四边形截面形成方块。StartDistance / EndDistance 每次显式设置为可见轨迹弧长边界，不用全局渐隐改变剩余轨迹。
-- TurnDuration 为 6 帧；以独立 512 子采样解析真实矛尖函数，无需额外推进 AI、伤害或标记计时。测试覆盖六帧终点精度、微短段合并、圆轨迹跨帧切线连续性和 shader 实际 GPU 亮芯/外光/透明边缘。
+- TurnDuration 为 6 帧；以独立 512 子采样解析真实矛尖函数，无需额外推进 AI、伤害或标记计时。
 
 
 ### 轮回齿轮锐利边缘与无穷链内圈
@@ -277,7 +269,7 @@ Anomalies 不强依赖灾厄等可选模组。技能所需的外部贴图必须�
 - 玩家身后齿轮也统一调用 DrawSamsara，与标记及结算共用新版 shader。PostDrawTiles 在残影和玩家之前绘制，位置为玩家中心加 gfxOffY；保留蓄力/收招缩放淡入淡出并补偿 shader 网格留白以保持原有外径。移除旧线段绘制器及 GearLayer，避免重复齿轮和玩家缓存重入。
 
 
-- 刺击矛光在 PreDraw 中紧随实体矛提交同一 SpriteBatch，移除原有 PostDraw 顶点带路径。运行时生成并缓存 512×128 的连续柔边矛形纹理，卸载时在主线程释放；刃根到远端尖点为一体，最大延伸仍为 280 像素。GPU 测试直接提取生产纹理生成方法，验证实际 SpriteBatch 绘制的刃身覆盖、前向延伸和透明边界。
+- 刺击矛光在 PreDraw 中紧随实体矛提交同一 SpriteBatch，移除原有 PostDraw 顶点带路径。运行时生成并缓存 512×128 的连续柔边矛形纹理，卸载时在主线程释放；刃根到远端尖点为一体，最大延伸仍为 280 像素。
 
 
 - 死亡突进逐步检测地形；任一步位移被截断时强制结束突进，不能因与 NPC 重叠而继续冲墙；有安全位置时先退回安全位置，随后回斩并保持原有保护帧。

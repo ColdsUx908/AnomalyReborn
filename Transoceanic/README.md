@@ -13,7 +13,7 @@
 - [粒子与绘制资源](Documentation/Graphics.md)。
 - [1.3 兼容性契约](Documentation/Compatibility-1.3.md)。
 - [1.3 迁移说明](Documentation/Migration-1.3.md)。
-- [构建、文档和验证资料](Documentation/Validation.md)。
+- [构建与交付](Documentation/BuildAndDelivery.md)。
 
 ## 构建要求
 

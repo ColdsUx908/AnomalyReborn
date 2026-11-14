@@ -38,7 +38,6 @@ public readonly ref struct TOIterator<T> where T : class
 
     private readonly ReadOnlySpan<T> _Span;
     private readonly Func<T, bool> _Match;
-    private readonly Func<T, bool> _FurtherMatch;
 
     /// <summary>
     /// 使用指定的源范围与筛选条件初始化 <see cref="TOIterator{T}"/> 的新实例。
@@ -49,16 +48,6 @@ public readonly ref struct TOIterator<T> where T : class
     {
         _Span = span;
         _Match = match;
-        _FurtherMatch = null;
-    }
-
-    // 分开保存筛选条件，避免工厂组合谓词时分配捕获闭包。
-    internal TOIterator(ReadOnlySpan<T> span, Func<T, bool> match, Func<T, bool> furtherMatch)
-    {
-        _Span = span;
-        _Match = match;
-        // 保留空附加条件在主条件通过后才抛错的延迟语义。
-        _FurtherMatch = furtherMatch ?? (static _ => throw new NullReferenceException());
     }
 
     /// <summary>
@@ -74,7 +63,6 @@ public readonly ref struct TOIterator<T> where T : class
     {
         private ReadOnlySpan<T>.Enumerator _Enumerator;
         private readonly Func<T, bool> _Match;
-        private readonly Func<T, bool> _FurtherMatch;
 
         /// <summary>
         /// 初始化 <see cref="Enumerator"/> 的新实例。
@@ -84,7 +72,6 @@ public readonly ref struct TOIterator<T> where T : class
         {
             _Enumerator = iterator._Span.GetEnumerator();
             _Match = iterator._Match;
-            _FurtherMatch = iterator._FurtherMatch;
         }
 
         /// <summary>
@@ -101,7 +88,7 @@ public readonly ref struct TOIterator<T> where T : class
         {
             while (_Enumerator.MoveNext())
             {
-                if (_Match(Current) && (_FurtherMatch is null || _FurtherMatch(Current)))
+                if (_Match(Current))
                     return true;
             }
             return false;
@@ -277,7 +264,6 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
 
     private readonly ReadOnlySpan<T> _Span;
     private readonly Func<T, bool> _Match;
-    private readonly Func<T, bool> _FurtherMatch;
     private readonly HashSet<T> _Exclusions;
 
     /// <summary>
@@ -290,7 +276,6 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
     {
         _Span = span;
         _Match = match;
-        _FurtherMatch = null;
         _Exclusions = exceptions;
     }
 
@@ -304,18 +289,7 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
     {
         _Span = span;
         _Match = match;
-        _FurtherMatch = null;
         _Exclusions = [.. exceptions];
-    }
-
-    // 分开保存筛选条件，避免工厂组合谓词时分配捕获闭包。
-    internal TOExclusiveIterator(ReadOnlySpan<T> span, Func<T, bool> match, Func<T, bool> furtherMatch, HashSet<T> exceptions)
-    {
-        _Span = span;
-        _Match = match;
-        // 保留空附加条件在主条件通过后才抛错的延迟语义。
-        _FurtherMatch = furtherMatch ?? (static _ => throw new NullReferenceException());
-        _Exclusions = exceptions;
     }
 
     /// <summary>
@@ -331,7 +305,6 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
     {
         private ReadOnlySpan<T>.Enumerator _Enumerator;
         private readonly Func<T, bool> _Match;
-        private readonly Func<T, bool> _FurtherMatch;
         private readonly HashSet<T> _Exceptions;
 
         /// <summary>
@@ -342,7 +315,6 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
         {
             _Enumerator = iterator._Span.GetEnumerator();
             _Match = iterator._Match;
-            _FurtherMatch = iterator._FurtherMatch;
             _Exceptions = iterator._Exclusions;
         }
 
@@ -360,7 +332,7 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
         {
             while (_Enumerator.MoveNext())
             {
-                if (_Match(Current) && (_FurtherMatch is null || _FurtherMatch(Current)) && !_Exceptions.Contains(Current))
+                if (_Match(Current) && !_Exceptions.Contains(Current))
                     return true;
             }
             return false;

@@ -41,7 +41,6 @@ public class VerletSimulatedSegment
             throw new ArgumentOutOfRangeException(nameof(gravity));
         if (!float.IsFinite(inertia) || inertia < 0f || inertia > 1f)
             throw new ArgumentOutOfRangeException(nameof(inertia));
-        Vector2 gravityOffset = Vector2.UnitY * gravity;
         foreach (VerletSimulatedSegment segment in segments)
         {
             if (!segment.Locked)
@@ -49,7 +48,7 @@ public class VerletSimulatedSegment
                 Vector2 positionBeforeUpdate = segment.Position;
 
                 segment.Position += (segment.Position - segment.OldPosition) * inertia;
-                segment.Position += gravityOffset;
+                segment.Position += Vector2.UnitY * gravity;
 
                 segment.OldPosition = positionBeforeUpdate;
             }
@@ -63,20 +62,20 @@ public class VerletSimulatedSegment
             {
                 VerletSimulatedSegment pointA = segments[j];
                 VerletSimulatedSegment pointB = segments[j + 1];
-                if (pointA.Locked && pointB.Locked)
-                    continue;
                 Vector2 segmentCenter = (pointA.Position + pointB.Position) / 2f;
                 Vector2 difference = pointA.Position - pointB.Position;
                 Vector2 segmentDirection = difference == Vector2.Zero || float.IsNaN(difference.X) || float.IsNaN(difference.Y)
                     ? Vector2.UnitY
                     : Vector2.Normalize(difference);
 
-                Vector2 halfOffset = segmentDirection * segmentDistance / 2f;
                 if (!pointA.Locked)
-                    pointA.Position = segmentCenter + halfOffset;
+                    pointA.Position = segmentCenter + segmentDirection * segmentDistance / 2f;
 
                 if (!pointB.Locked)
-                    pointB.Position = segmentCenter - halfOffset;
+                    pointB.Position = segmentCenter - segmentDirection * segmentDistance / 2f;
+
+                segments[j] = pointA;
+                segments[j + 1] = pointB;
             }
         }
 

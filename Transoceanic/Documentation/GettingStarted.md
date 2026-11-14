@@ -73,18 +73,10 @@ EnableSync 只启用框架实体数据的 ExtraAI 段，不会自动同步任意
 - 实体绑定异常：检查是否跨实体重入共享 Behavior；不要禁用绑定保护。
 - 服务端粒子：定义完成初始化后可以构造并提交，框架会跳过服务端提交、更新和绘制；直接创建 GPU 资源仍须先检查 Main.dedServ。
 - 联机 ExtraAI 错位：核对所有端的同构建和 Load 阶段无条件启用，不按本地配置切换。
-- 找不到测试脚本：测试通过独立验证资料包提供，见验证文档；不是 Git 源码包缺失。
+- 自动化测试和审计由仓库外独立资料包提供，其使用方式见 [构建与交付](BuildAndDelivery.md)。
 
 ## 选择加载入口
 
 仅安装独立钩子、初始化常量数据或请求自身资产时，使用 tML 原生 Load：ModType/ModSystem 重写无参 Load，普通服务实现 ILoadable.Load(Mod mod)。内容自动加载早于 Mod.Load，使用 tML 提供的 Mod，不依赖主 Mod.Load 才赋值的静态单例。
 
 需要完整内容 ID、跨模组集合或其他加载器结果时，继续使用 PostSetupContent 等正确阶段；LoadPriority=0 不表示可以提前。自有引用在初始化前登记 TOCleanup，On/IL 钩子交由 tML 管理。
-
-## 高频手写 Behavior 调度
-
-生成的全局和玩家 Handler 自动缓存方法分组。消费方手写扩展回调可通过 BehaviorQueries.GetNPCDispatch、GetProjectileDispatch、GetItemDispatch、GetPlayerDispatch 获取句柄，保存到静态只读字段；再调用句柄的 Enumerate 或 Enumerate<T>。需要绑定实体时使用带实体参数的重载。
-
-句柄只缓存方法分组，不缓存当前适用的行为、实体或 ShouldProcess 结果。每次枚举仍保留优先级和绑定保护；布尔结果仍由调用方按业务规则合并。框架清理时句柄变为空分组，重新填充后原句柄自动读取新内容，因此不要自行缓存枚举器或行为数组。接口仅在游戏主线程使用，不提供线程同步。
-
-单实体集合对连续相同实体类型的查询复用类型分组；每次查询仍重新绑定实体并检查 ShouldProcess，清理和填充会使类型缓存失效。

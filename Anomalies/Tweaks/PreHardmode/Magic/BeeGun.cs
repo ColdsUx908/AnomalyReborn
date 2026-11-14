@@ -3,10 +3,10 @@ using Anomalies.Tweaks.PreHardmode.Projectiles;
 namespace Anomalies.Tweaks.PreHardmode.Magic;
 
 /// <summary>
-/// èœœèœ‚æªä¿®æ”¹ï¼š
+/// ÃÛ·äÇ¹ĞŞ¸Ä£º
 /// <list type="bullet">
-/// <item/><description/>åŸºç¡€ä¼¤å®³ç”± 9 é™ä½è‡³ 7ã€‚
-/// <item/><description/>å¦è§ <see cref="BeeBehavior"/>ã€‚
+/// <item/><description/>»ù´¡ÉËº¦ÓÉ 9 ½µµÍÖÁ 7¡£
+/// <item/><description/>Áí¼û <see cref="BeeBehavior"/>¡£
 /// </list>
 /// </summary>
 public sealed class BeeGun : AnomalyItemBehavior<BeeGun>
