@@ -2,28 +2,28 @@ namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
 internal static class LegendStarburstCircleAssets
 {
-    private const string Path = "Anomalies/Bosses/Skeletron/LegendaryNight/Attacks/Starburst/Textures/";
-    [LoadTexture(Path + "AoeDisc")]
-    private static Asset<Texture2D> _AoeDisc;
-    [LoadTexture(Path + "GlowDot")]
+    private const string TexturePath = "Anomalies/Bosses/Skeletron/LegendaryNight/Attacks/Starburst/Textures/";
+    [LoadTexture(TexturePath + "AoeDisc")]
+    private static Asset<Texture2D> _ExplosionDisc;
+    [LoadTexture(TexturePath + "GlowDot")]
     private static Asset<Texture2D> _GlowDot;
-    [LoadTexture(Path + "HShotA")]
-    private static Asset<Texture2D> _HShotA;
-    [LoadTexture(Path + "ShockShell")]
+    [LoadTexture(TexturePath + "ShockShell")]
     private static Asset<Texture2D> _ShockShell;
-    [LoadTexture(Path + "ShotLine")]
+    [LoadTexture(TexturePath + "ShotLine")]
     private static Asset<Texture2D> _ShotLine;
-    [LoadTexture(Path + "SparkTail")]
+    [LoadTexture(TexturePath + "SparkTail")]
     private static Asset<Texture2D> _SparkTail;
-    [LoadTexture(Path + "Star4")]
+    [LoadTexture(TexturePath + "Star4")]
     private static Asset<Texture2D> _Star4;
-    [LoadTexture(Path + "StarFlare")]
+    [LoadTexture(TexturePath + "StarFlare")]
     private static Asset<Texture2D> _StarFlare;
+    [LoadTexture(TexturePath + "HShotA")]
+    private static Asset<Texture2D> _WarningFlare;
 
-    public static bool IsLoaded => !Main.dedServ && _AoeDisc?.IsLoaded == true && _GlowDot?.IsLoaded == true
-        && _HShotA?.IsLoaded == true && _ShockShell?.IsLoaded == true && _ShotLine?.IsLoaded == true
+    public static bool IsLoaded => !Main.dedServ && _ExplosionDisc?.IsLoaded == true && _GlowDot?.IsLoaded == true
+        && _WarningFlare?.IsLoaded == true && _ShockShell?.IsLoaded == true && _ShotLine?.IsLoaded == true
         && _SparkTail?.IsLoaded == true && _Star4?.IsLoaded == true && _StarFlare?.IsLoaded == true;
 
     public static LegendStarburstCircleVisuals.Textures Textures => new(_GlowDot.Value, _Star4.Value,
-        _StarFlare.Value, _ShotLine.Value, _AoeDisc.Value, _ShockShell.Value, _HShotA.Value, _SparkTail.Value);
+        _StarFlare.Value, _ShotLine.Value, _ExplosionDisc.Value, _ShockShell.Value, _WarningFlare.Value, _SparkTail.Value);
 }

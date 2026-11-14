@@ -1,38 +1,26 @@
 using Anomalies.Assets.Effects;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
+using Transoceanic.Graphics.Drawing;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
-/// <summary>普通圆形/圆环星爆的独立短时场景模糊；由当前有效实体推导，停止测试后自动失活。</summary>
+/// <summary>普通圆形/圆环星爆的短时场景模糊；由当前有效实体推导，攻击结束后自动失活。</summary>
 public sealed class LegendStarburstPostProcessing : ModSystem
 {
     private const string FilterKey = "Anomalies:LegendStarburstRadialBlur";
     private static Filter _Filter;
-    private static StarburstShaderData _Data;
-
-    public override void Load()
-    {
-        if (Main.dedServ)
-            return;
-        TOCleanup.Register(Clear);
-    }
+    private static AnomalyScreenShaderData _Data;
 
     public override void PostSetupContent()
     {
-        if (Main.dedServ || !AnomalyClientConfig.Instance.EnableShaders
-            || AnomalyEffects.ScreenFilters.LegendStarburstRadialBlur is not Filter filter)
+        Filter filter = AnomalyEffects.ScreenFilters.LegendStarburstRadialBlur;
+        if (Main.dedServ || filter?.GetShader() is not AnomalyScreenShaderData data)
             return;
-        // Replace only this dedicated filter, retaining the unified asset owner.
-        // The specialized Apply needs the Asset constructor. This one-time request reuses the
-        // same repository-owned asset as AnomalyEffects, without a second static asset cache.
-        Asset<Effect> asset = Mod.Assets.Request<Effect>("Assets/Effects_Compiled/ScreenFilters/LegendStarburstRadialBlur");
-        _Data = new StarburstShaderData(asset);
-        _Filter = new Filter(_Data, EffectPriority.VeryHigh);
-        filter.Deactivate();
-        Filters.Scene[FilterKey] = _Filter;
-        AnomalyEffects.ScreenFilters.LegendStarburstRadialBlur = _Filter;
-        _Filter.Load();
+        TOCleanup.Register(Clear);
+        _Filter = filter;
+        _Data = data;
+        data.BeforeApply = ApplyParameters;
     }
 
     public override void PostUpdateEverything()
@@ -43,7 +31,7 @@ public sealed class LegendStarburstPostProcessing : ModSystem
         {
             // Arm capture at age zero, before the first nonzero blur sample. FilterManager's
             // scene fade must not gate this short impulse or omit frames after reactivation.
-            _Data.UseIntensity(LegendStarburstCircleVisuals.BlurStrength(frame.Age));
+            _Data.UseIntensity(LegendStarburstVisuals.BlurStrength(frame.Age));
             if (!_Filter.IsActive())
                 Filters.Scene.Activate(FilterKey, frame.Center);
             _Filter.Opacity = 1f;
@@ -56,7 +44,7 @@ public sealed class LegendStarburstPostProcessing : ModSystem
     public override void ModifyScreenPosition()
     {
         if (TryGetBurst(out LegendStarburstVisuals.Burst frame))
-            Main.screenPosition -= LegendStarburstCircleVisuals.ShakeOffset(frame.Age);
+            Main.screenPosition -= LegendStarburstVisuals.ShakeOffset(frame.Age);
     }
 
     private static bool TryGetBurst(out LegendStarburstVisuals.Burst frame)
@@ -67,8 +55,8 @@ public sealed class LegendStarburstPostProcessing : ModSystem
         bool found = false;
         foreach (Projectile projectile in Projectile.ActiveProjectiles)
             if (projectile.ModProjectile is LegendStarburst burst
-                && burst.TryGetVisualFrame(out _, out LegendStarburstVisuals.Burst candidate)
-                && candidate.Age < LegendStarburstCircleVisuals.BlurDuration
+                && burst.TryGetVisualFrame(out LegendStarburstVisuals.Burst candidate)
+                && candidate.Age < LegendStarburstVisuals.BlurDuration
                 && (!found || candidate.Age < frame.Age))
             {
                 // The newest impact owns both camera and blur, including its zero-strength onset.
@@ -95,24 +83,23 @@ public sealed class LegendStarburstPostProcessing : ModSystem
     private static void Clear()
     {
         Deactivate();
+        if (_Data is not null)
+            _Data.BeforeApply = null;
         _Data = null;
         _Filter = null;
     }
 
-    private sealed class StarburstShaderData(Asset<Effect> effect) : ScreenShaderData(effect, "Pass0")
+    private static void ApplyParameters(ScreenShaderData data)
     {
-        public override void Apply()
+        // Read the same live music age as drawing, after the camera shake and zoom.
+        if (AnomalyClientConfig.Instance.EnableShaders && TryGetBurst(out LegendStarburstVisuals.Burst frame))
         {
-            // Read the same live music age as drawing, after the camera shake and zoom.
-            if (AnomalyClientConfig.Instance.EnableShaders && TryGetBurst(out LegendStarburstVisuals.Burst frame))
-            {
-                Vector2 screen = Vector2.Transform(frame.Center - Main.screenPosition, Main.GameViewMatrix.TransformationMatrix);
-                UseDirection(screen / new Vector2(Main.screenWidth, Main.screenHeight));
-                UseIntensity(LegendStarburstCircleVisuals.BlurStrength(frame.Age));
-            }
-            else
-                UseIntensity(0f);
-            base.Apply();
+            WorldView2D view = new(Main.screenPosition, Main.GameViewMatrix.TransformationMatrix,
+                new Vector2(Main.screenWidth, Main.screenHeight));
+            data.UseDirection(view.WorldToUv(frame.Center));
+            data.UseIntensity(LegendStarburstVisuals.BlurStrength(frame.Age));
         }
+        else
+            data.UseIntensity(0f);
     }
 }

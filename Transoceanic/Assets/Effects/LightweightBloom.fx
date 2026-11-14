@@ -33,7 +33,16 @@ float4 Main(float2 uv : TEXCOORD0, uniform float mode) : COLOR0
 
 technique Technique1
 {
-    pass Pass0 { PixelShader = compile ps_3_0 Main(0.0); }
-    pass Halo { PixelShader = compile ps_3_0 Main(1.0); }
-    pass Downsample { PixelShader = compile ps_3_0 Main(2.0); }
+    pass Pass0
+    {
+        PixelShader = compile ps_3_0 Main(0.0);
+    }
+    pass Halo
+    {
+        PixelShader = compile ps_3_0 Main(1.0);
+    }
+    pass Downsample
+    {
+        PixelShader = compile ps_3_0 Main(2.0);
+    }
 }

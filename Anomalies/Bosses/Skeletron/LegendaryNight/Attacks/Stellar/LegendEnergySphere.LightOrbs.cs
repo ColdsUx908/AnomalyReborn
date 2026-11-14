@@ -16,9 +16,9 @@ public sealed partial class LegendEnergySphere
         // 仅服务器进行拦截判定，客户端只同步奖励和下次颜色。
         public bool HasAcceptedOrb;
 
-        public bool ApplyCollision(int color)
+        public bool ApplyCollision(int color, bool hasAlternativeColor)
         {
-            if (HasAcceptedOrb && (color == 1) != ExpectsPlatinum)
+            if (hasAlternativeColor && HasAcceptedOrb && (color == 1) != ExpectsPlatinum)
             {
                 DamageStacks--;
                 RegenerationStacks--;
@@ -70,7 +70,18 @@ public sealed partial class LegendEnergySphere
     {
         if (!TONetworkEnvironment.NotClient)
             return false;
-        bool correct = _PlayerBonuses[playerIndex].ApplyCollision(color);
+        // 仅统计同一恒星仍可拦截的异色球；单色时正常奖励，不触发错色结算。
+        bool hasAlternativeColor = false;
+        foreach (Projectile projectile in Projectile.ActiveProjectiles)
+        {
+            if (projectile.ModProjectile is LegendLightOrb orb && orb.SphereProjectile == Projectile
+                && orb.AvailableForInterception && (int)projectile.ai[0] != color)
+            {
+                hasAlternativeColor = true;
+                break;
+            }
+        }
+        bool correct = _PlayerBonuses[playerIndex].ApplyCollision(color, hasAlternativeColor);
         //if (!correct)
         //    SpawnLasers(PunishmentLaserCount, punishment: true);
         Projectile.netUpdate = true;

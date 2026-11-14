@@ -9,112 +9,124 @@ public sealed partial class LegendaryNightOverlay
 
     private void DrawMagicCircle(SpriteBatch spriteBatch)
     {
-        DrawMechanic6ContractionWarning(spriteBatch);
-        foreach (Projectile projectile in Projectile.ActiveProjectiles)
-            if (projectile.ModProjectile is LegendStarburst burst && burst.Head?.NPC == Phase2Arena.MasterBehavior?.NPC)
-                burst.Draw(spriteBatch);
-        if (!UseImpactFlame)
-            DrawMechanic2HalfField(spriteBatch);
-        for (int i = 0; i < 3; i++)
+        SkeletronLegendHead head = Phase2Arena.MasterBehavior;
+        NPC owner = head?.NPC;
+        LegendStarburstVisuals.Burst[] frames = System.Buffers.ArrayPool<LegendStarburstVisuals.Burst>.Shared.Rent(Main.maxProjectiles);
+        try
         {
-            (Vector2 center, float radius, float rotation) = Phase2Arena.GetMagicCircle(i);
-            DrawMagicCirclePart(spriteBatch, center, radius, rotation, true, i);
-        }
-        DrawMagicCirclePart(spriteBatch, Phase2Arena.Projectile.Center, Phase2Arena.Radius, 0f, false);
-        DrawCircleStarbursts(spriteBatch);
-        DrawRingStarbursts(spriteBatch);
-        if (Phase2Arena.MasterBehavior is SkeletronLegendHead { Mechanic7Active: true } head)
-            for (int i = 0; i < 8; i++)
+            int count = 0;
+            float circleRadius = 0f;
+            float ringRadius = 0f;
+            DrawMechanic6ContractionWarning(spriteBatch);
+            foreach (Projectile projectile in Projectile.ActiveProjectiles)
             {
-                (Vector2 center, float radius, float rotation) = Phase2Arena.GetMechanic7Circle(i);
-                DrawMagicCirclePart(spriteBatch, center, radius, rotation, true,
-                    opacityMultiplier: SkeletronLegendHead.Mechanic7Parameters.CircleOpacity(head.Phase2MusicElapsedTime));
+                if (projectile.ModProjectile is not LegendStarburst burst || burst.Head?.NPC != owner)
+                    continue;
+                burst.Draw(spriteBatch);
+                if (!burst.TryGetVisualFrame(out LegendStarburstVisuals.Burst frame))
+                    continue;
+                frames[count++] = frame;
+                if (frame.InnerRadius > 0f)
+                    ringRadius = Math.Max(ringRadius, frame.OuterRadius);
+                else
+                    circleRadius = Math.Max(circleRadius, frame.OuterRadius);
             }
+            if (!UseImpactFlame)
+                DrawMechanic2HalfField(spriteBatch);
+            for (int i = 0; i < 3; i++)
+            {
+                (Vector2 center, float radius, float rotation) = Phase2Arena.GetMagicCircle(i);
+                DrawMagicCirclePart(spriteBatch, center, radius, rotation, true, i);
+            }
+            DrawMagicCirclePart(spriteBatch, Phase2Arena.Projectile.Center, Phase2Arena.Radius, 0f, false);
+            if (head is not null)
+                DrawStarbursts(spriteBatch, head, frames, count, circleRadius, ringRadius);
+            if (head is { Mechanic7Active: true })
+                for (int i = 0; i < 8; i++)
+                {
+                    (Vector2 center, float radius, float rotation) = Phase2Arena.GetMechanic7Circle(i);
+                    DrawMagicCirclePart(spriteBatch, center, radius, rotation, true,
+                        opacityMultiplier: SkeletronLegendHead.Mechanic7Parameters.CircleOpacity(head.Phase2MusicElapsedTime));
+                }
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<LegendStarburstVisuals.Burst>.Shared.Return(frames);
+        }
     }
 
-    private void DrawCircleStarbursts(SpriteBatch spriteBatch)
+    private void DrawStarbursts(SpriteBatch spriteBatch, SkeletronLegendHead head,
+        LegendStarburstVisuals.Burst[] frames, int count, float circleRadius, float ringRadius)
     {
-        if (!LegendStarburstCircleAssets.IsLoaded || Phase2Arena.MasterBehavior is not SkeletronLegendHead head)
-            return;
-        NPC owner = head.NPC;
-        bool warning = TryGetCircleWarning(head, out LegendStarburstVisuals.Burst warningFrame);
         bool bloom = AnomalyClientConfig.Instance.EnableShaders && LightweightBloom.IsAvailable;
         BlendState blend = bloom || !Main.dayTime ? LightweightBloom.AdditiveBlend : BlendState.AlphaBlend;
-        if (warning)
+        WorldView2D view = new(Main.screenPosition, Main.GameViewMatrix.TransformationMatrix,
+            new Vector2(Main.screenWidth, Main.screenHeight));
+        if (LegendStarburstCircleAssets.IsLoaded)
         {
-            // 预告星保留自身光晕，不跟随后续爆区的放大倍率。
-            BloomSettings warningSettings = BloomSettings.Default with
+            LegendStarburstCircleVisuals.Textures textures = LegendStarburstCircleAssets.Textures;
+            if (TryGetStarburstWarning(head, out LegendStarburstVisuals.Burst warning))
             {
-                AdditiveBody = !Main.dayTime,
-                BodyPasses = Main.dayTime ? 2 : 1
-            };
-            LightweightBloom.Draw(spriteBatch, bloom, warningSettings, () =>
+                // 预告星保留固定像素光晕，不跟随爆区放大。
+                BloomSettings settings = LegendStarburstVisuals.WithBody(BloomSettings.Default, Main.dayTime);
+                StarburstLayer layer = new(null, 0, warning, false, view, blend, textures, default, null);
+                LightweightBloom.Draw(spriteBatch, bloom, settings, layer);
+            }
+            if (circleRadius > 0f)
             {
-                LegendStarburstVisuals.View warningView = new(Main.screenPosition,
-                    Main.GameViewMatrix.TransformationMatrix, new Vector2(Main.screenWidth, Main.screenHeight));
-                LegendStarburstCircleVisuals.Draw(spriteBatch, LegendStarburstCircleAssets.Textures,
-                    warningView, warningFrame, blend);
-            });
+                BloomSettings settings = LegendStarburstVisuals.GetBloomSettings(circleRadius, view, Main.dayTime, false);
+                StarburstLayer layer = new(frames, count, default, false, view, blend, textures, default, null);
+                LightweightBloom.Draw(spriteBatch, bloom, settings, layer);
+            }
         }
-        float outerRadius = 0f;
-        foreach (Projectile projectile in Projectile.ActiveProjectiles)
-            if (projectile.ModProjectile is LegendStarburst burst && burst.Head?.NPC == owner
-                && burst.TryGetCircleFrame(out _, out LegendStarburstVisuals.Burst frame))
-                outerRadius = Math.Max(outerRadius, frame.OuterRadius);
-        if (outerRadius <= 0f)
-            return;
-        // 同一场地的普通圆形星爆半径相同，共用一次捕获；法阵不进入该光晕层。
-        BloomSettings settings = LegendStarburstCircleVisuals.GetBloomSettings(outerRadius,
-            Main.GameViewMatrix.TransformationMatrix, Main.dayTime);
-        LightweightBloom.Draw(spriteBatch, bloom, settings, () =>
+        if (ringRadius > 0f && LegendStarburstRingAssets.IsLoaded)
         {
-            foreach (Projectile projectile in Projectile.ActiveProjectiles)
-                if (projectile.ModProjectile is LegendStarburst burst && burst.Head?.NPC == owner
-                    && burst.TryGetCircleFrame(out LegendStarburstVisuals.View view, out LegendStarburstVisuals.Burst frame))
-                    LegendStarburstCircleVisuals.Draw(spriteBatch, LegendStarburstCircleAssets.Textures, view, frame, blend);
-        });
+            BloomSettings settings = LegendStarburstVisuals.GetBloomSettings(ringRadius, view, Main.dayTime, true);
+            StarburstLayer layer = new(frames, count, default, true, view, blend, default,
+                LegendStarburstRingAssets.Textures, AnomalyEffects.Overlays.LegendStarburstRingMark.Asset.Value);
+            LightweightBloom.Draw(spriteBatch, bloom, settings, layer);
+        }
     }
 
-    private void DrawRingStarbursts(SpriteBatch spriteBatch)
+    private readonly record struct StarburstLayer(LegendStarburstVisuals.Burst[] Frames, int Count,
+        LegendStarburstVisuals.Burst Warning, bool Ring, WorldView2D View, BlendState Blend,
+        LegendStarburstCircleVisuals.Textures CircleTextures, LegendStarburstRingVisuals.Textures RingTextures,
+        Effect RingEffect) : IBloomLayer
     {
-        if (!LegendStarburstRingAssets.IsLoaded || Phase2Arena.MasterBehavior is not SkeletronLegendHead head)
-            return;
-        float outerRadius = 0f;
-        foreach (Projectile projectile in Projectile.ActiveProjectiles)
-            if (projectile.ModProjectile is LegendStarburst burst && burst.Head?.NPC == head.NPC
-                && burst.TryGetRingFrame(out _, out LegendStarburstVisuals.Burst frame))
-                outerRadius = Math.Max(outerRadius, frame.OuterRadius);
-        if (outerRadius <= 0f)
-            return;
-        bool bloom = LightweightBloom.IsAvailable;
-        BlendState blend = bloom || !Main.dayTime ? LightweightBloom.AdditiveBlend : BlendState.AlphaBlend;
-        BloomSettings settings = LegendStarburstRingVisuals.GetBloomSettings(outerRadius,
-            Main.GameViewMatrix.TransformationMatrix, Main.dayTime);
-        LightweightBloom.Draw(spriteBatch, bloom, settings, () =>
+        public void Draw(SpriteBatch spriteBatch)
         {
-            foreach (Projectile projectile in Projectile.ActiveProjectiles)
-                if (projectile.ModProjectile is LegendStarburst burst && burst.Head?.NPC == head.NPC
-                    && burst.TryGetRingFrame(out LegendStarburstVisuals.View view, out LegendStarburstVisuals.Burst frame))
-                    LegendStarburstRingVisuals.Draw(spriteBatch, AnomalyEffects.Overlays.LegendStarburstRingMark.Asset.Value,
-                        LegendStarburstRingAssets.Textures, view, frame, blend);
-        });
+            if (Frames is null)
+            {
+                LegendStarburstCircleVisuals.DrawWarning(spriteBatch, CircleTextures, View, Warning, Blend);
+                return;
+            }
+            for (int i = 0; i < Count; i++)
+            {
+                LegendStarburstVisuals.Burst frame = Frames[i];
+                if ((frame.InnerRadius > 0f) != Ring)
+                    continue;
+                if (Ring)
+                    LegendStarburstRingVisuals.Draw(spriteBatch, RingEffect, RingTextures, View, frame, Blend);
+                else
+                    LegendStarburstCircleVisuals.Draw(spriteBatch, CircleTextures, View, frame, Blend, drawWarning: false);
+            }
+        }
     }
 
-    private bool TryGetCircleWarning(SkeletronLegendHead head, out LegendStarburstVisuals.Burst frame)
+    private bool TryGetStarburstWarning(SkeletronLegendHead head, out LegendStarburstVisuals.Burst frame)
     {
         frame = default;
         if (!head.StarburstActive || head.CurrentBehavior == SkeletronLegendHead.Behavior.Despawn)
             return false;
         // 预告早于实体的 12 帧红圈窗口，由音乐时钟直接恢复；不提前生成伤害实体。
-        for (int index = 0; index < LegendaryNightStarburstParameters.StarburstCount; index += 2)
+        for (int index = 0; index < LegendaryNightStarburstParameters.StarburstCount; index++)
         {
             int age = head.Phase2MusicElapsedTime - LegendaryNightStarburstTimeline.GetStarburstTime(index);
             if (!LegendStarburstCircleVisuals.IsWarningVisible(age))
                 continue;
-            // 与服务器起爆共用解析预测点，蓄势期间不随两阵中点漂移。
-            Vector2 warningCenter = Phase2Arena.PredictStarburstPosition(index);
-            frame = new(warningCenter, Phase2Arena.Radius * 1.5f, 0f,
-                Phase2Arena.SmallCircleRadius, 0f, 0f, age, index);
+            // 奇偶次星爆共用预告，跟随当前实际绘制的慢法阵；不改变伤害实体的预测爆点。
+            (Vector2 Center, float Radius, float Rotation) slowCircle = Phase2Arena.GetMagicCircle(1);
+            frame = new(slowCircle.Center, Phase2Arena.Radius * 1.5f, 0f, slowCircle.Radius, age);
             return true;
         }
         return false;

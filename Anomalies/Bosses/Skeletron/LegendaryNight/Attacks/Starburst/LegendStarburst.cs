@@ -197,31 +197,16 @@ public sealed class LegendStarburst : AnomalyModProjectile
 
     internal bool UsesRingVisuals => !IsStepped && IsRing && LegendStarburstRingAssets.IsLoaded;
 
-    internal bool TryGetRingFrame(out LegendStarburstVisuals.View view, out LegendStarburstVisuals.Burst burst)
+    internal bool TryGetVisualFrame(out LegendStarburstVisuals.Burst burst)
     {
-        view = default;
         burst = default;
-        if (!UsesRingVisuals || !LegendStarburstRingVisuals.IsVisible(Age)
-            || Arena is not LegendaryNightPhase2Arena arena || !IsActive(Head))
+        int age = Age;
+        bool visible = UsesCircleVisuals ? LegendStarburstCircleVisuals.IsVisible(age)
+            : UsesRingVisuals && LegendStarburstRingVisuals.IsVisible(age);
+        if (!visible || Arena is not LegendaryNightPhase2Arena arena || !IsActive(Head))
             return false;
         Vector2 radii = GetRadii(arena);
-        view = new(Main.screenPosition, Main.GameViewMatrix.TransformationMatrix, new Vector2(Main.screenWidth, Main.screenHeight));
-        burst = new(GetCenter(arena), radii.X, radii.Y, arena.SmallCircleRadius, 0f, 0f, Age, Index);
-        return true;
-    }
-
-    internal bool TryGetVisualFrame(out LegendStarburstVisuals.View view, out LegendStarburstVisuals.Burst burst) =>
-        TryGetCircleFrame(out view, out burst) || TryGetRingFrame(out view, out burst);
-
-    internal bool TryGetCircleFrame(out LegendStarburstVisuals.View view, out LegendStarburstVisuals.Burst burst)
-    {
-        view = default;
-        burst = default;
-        if (!UsesCircleVisuals || !LegendStarburstCircleVisuals.IsVisible(Age)
-            || Arena is not LegendaryNightPhase2Arena arena || !IsActive(Head))
-            return false;
-        view = new(Main.screenPosition, Main.GameViewMatrix.TransformationMatrix, new Vector2(Main.screenWidth, Main.screenHeight));
-        burst = new(GetCenter(arena), GetRadii(arena).X, 0f, arena.SmallCircleRadius, 0f, 0f, Age, Index);
+        burst = new(GetCenter(arena), radii.X, radii.Y, arena.SmallCircleRadius, age);
         return true;
     }
 
@@ -230,7 +215,7 @@ public sealed class LegendStarburst : AnomalyModProjectile
         bool warning = IsWarningTime;
         if (!warning && UsesRingVisuals)
             return;
-        // A is submitted together with other circular bursts after the magic-circle lines.
+        // 圆形星爆在法阵线条之后统一提交。
         if (!warning && UsesCircleVisuals)
         {
             // Keep the full hazard boundary readable while the gold wave expands from its center.

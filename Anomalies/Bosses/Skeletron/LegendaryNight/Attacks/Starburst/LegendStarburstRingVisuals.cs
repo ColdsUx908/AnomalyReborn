@@ -1,12 +1,18 @@
-using Transoceanic.Graphics.Rendering;
+using Transoceanic.Graphics.Drawing;
+using Transoceanic.Primitives.Mathematics;
+using static Anomalies.Bosses.Skeletron.LegendaryNight.LegendStarburstVisuals;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
-/// <summary>普通圆环的旧标记版：内孔守护星、外扩亮环和依次绽放的星芒；游戏和 FNA 预览共用。</summary>
+/// <summary>普通圆环星爆：内孔守护星、外扩亮环和依次绽放的星芒；游戏和 FNA 预览共用。</summary>
 internal static class LegendStarburstRingVisuals
 {
     public const int EndAge = 84;
     public const int ExpansionDuration = 9;
+    private const int PopCount = 28;
+    private const int SparkCount = 44;
+    private const int OuterStarCount = 34;
+    private const int LingerCount = 18;
     public const float ReferenceRadius = 750.4f;
     private static readonly Color _Gold = new(255, 185, 55);
     private static readonly Color _Light = new(255, 222, 120);
@@ -25,49 +31,35 @@ internal static class LegendStarburstRingVisuals
 
     static LegendStarburstRingVisuals()
     {
-        // HTML ringFx consumes one continuous mulberry(91) sequence in this order.
-        RandomSequence random = new(91);
-        _Pops = new Pop[28];
+        // 全部粒子依次消耗同一种子序列；调整顺序会改变既有配方。
+        Mulberry32Random random = new(91);
+        _Pops = new Pop[PopCount];
         for (int i = 0; i < _Pops.Length; i++)
-            _Pops[i] = new((i + random.Next() * 0.9f) / 28f * MathHelper.TwoPi,
-                Lerp(0.12f, 0.92f, random.Next()), random.Next() * 4f, Lerp(16f, 24f, random.Next()),
-                Lerp(0.8f, 1.25f, random.Next()), (random.Next() - 0.5f) * 0.5f);
-        _Sparks = new Spark[44];
+            _Pops[i] = new((i + random.NextSingle() * 0.9f) / (float)PopCount * MathHelper.TwoPi,
+                Lerp(0.12f, 0.92f, random.NextSingle()), random.NextSingle() * 4f, Lerp(16f, 24f, random.NextSingle()),
+                Lerp(0.8f, 1.25f, random.NextSingle()), (random.NextSingle() - 0.5f) * 0.5f);
+        _Sparks = new Spark[SparkCount];
         for (int i = 0; i < _Sparks.Length; i++)
-            _Sparks[i] = new(random.Next() * MathHelper.TwoPi, Lerp(0.05f, 0.7f, random.Next()),
-                Lerp(0.35f, 0.7f, random.Next()), random.Next() * 8f, Lerp(22f, 36f, random.Next()),
-                Lerp(7f, 14f, random.Next()), random.Next() < 0.3f, random.Next() * MathHelper.Pi);
-        _OuterStars = new OuterStar[34];
+            _Sparks[i] = new(random.NextSingle() * MathHelper.TwoPi, Lerp(0.05f, 0.7f, random.NextSingle()),
+                Lerp(0.35f, 0.7f, random.NextSingle()), random.NextSingle() * 8f, Lerp(22f, 36f, random.NextSingle()),
+                Lerp(7f, 14f, random.NextSingle()), random.NextSingle() < 0.3f, random.NextSingle() * MathHelper.Pi);
+        _OuterStars = new OuterStar[OuterStarCount];
         for (int i = 0; i < _OuterStars.Length; i++)
-            _OuterStars[i] = new((i + random.Next() * 0.8f) / 34f * MathHelper.TwoPi,
-                Lerp(0.9f, 1.06f, random.Next()), Lerp(10f, 20f, random.Next()), random.Next() * 6f);
-        _Lingers = new Linger[18];
+            _OuterStars[i] = new((i + random.NextSingle() * 0.8f) / (float)OuterStarCount * MathHelper.TwoPi,
+                Lerp(0.9f, 1.06f, random.NextSingle()), Lerp(10f, 20f, random.NextSingle()), random.NextSingle() * 6f);
+        _Lingers = new Linger[LingerCount];
         for (int i = 0; i < _Lingers.Length; i++)
-            _Lingers[i] = new(random.Next() * MathHelper.TwoPi, Lerp(0.15f, 0.9f, random.Next()),
-                Lerp(28f, 44f, random.Next()), Lerp(10f, 18f, random.Next()), random.Next() < 0.3f,
-                (random.Next() - 0.5f) * 0.4f);
+            _Lingers[i] = new(random.NextSingle() * MathHelper.TwoPi, Lerp(0.15f, 0.9f, random.NextSingle()),
+                Lerp(28f, 44f, random.NextSingle()), Lerp(10f, 18f, random.NextSingle()), random.NextSingle() < 0.3f,
+                (random.NextSingle() - 0.5f) * 0.4f);
     }
 
     public static bool IsVisible(float age) => age >= 0f && age < EndAge;
     public static float Front(float age, float innerRadius, float outerRadius) =>
         Lerp(innerRadius, outerRadius, OutExpo(Clamp(age / ExpansionDuration)));
 
-    public static BloomSettings GetBloomSettings(float outerRadius, in Matrix transform, bool dayTime)
-    {
-        float cameraScale = new Vector2(transform.M11, transform.M12).Length();
-        float haloScale = 1.5f * cameraScale * outerRadius / ReferenceRadius;
-        BloomSettings defaults = BloomSettings.Default;
-        return defaults with
-        {
-            NearRadius = defaults.NearRadius * haloScale,
-            FarRadius = defaults.FarRadius * haloScale,
-            AdditiveBody = !dayTime,
-            BodyPasses = dayTime ? 2 : 1
-        };
-    }
-
     public static void Draw(SpriteBatch batch, Effect effect, in Textures textures,
-        in LegendStarburstVisuals.View view, in LegendStarburstVisuals.Burst burst, BlendState blend)
+        in WorldView2D view, in LegendStarburstVisuals.Burst burst, BlendState blend)
     {
         if (!IsVisible(burst.Age) || burst.OuterRadius <= burst.InnerRadius || burst.InnerRadius <= 0f)
             return;
@@ -118,17 +110,15 @@ internal static class LegendStarburstRingVisuals
 
         void Sprite(Texture2D texture, Color color, Vector2 position, float width, float height, float rotation, float alpha)
         {
-            if (alpha <= 0.002f || width <= 0f || height <= 0f)
-                return;
-            batch.Draw(texture, center + position * scale, null, color * Math.Min(alpha, 1f), rotation,
-                new Vector2(texture.Width, texture.Height) * 0.5f,
-                new Vector2(width / texture.Width, height / texture.Height) * scale, SpriteEffects.None, 0f);
+            SpriteDrawing.DrawSized(batch, texture, center + position * scale,
+                new Vector2(width, height), color, rotation, alpha, scale);
         }
         void Glow(Texture2D texture, Color color, Vector2 position, float size, float rotation, float intensity)
         {
-            for (float k = intensity; k > 0.002f; k -= 1f)
-                Sprite(texture, color, position, size, size, rotation, k);
+            SpriteDrawing.DrawGlow(batch, texture, center + position * scale,
+                new Vector2(size), color, rotation, intensity, scale);
         }
+
         void Star(Vector2 position, float size, float rotation, float intensity, float diagonal)
         {
             Glow(images.StarFlare, _Light, position, size, rotation, intensity);
@@ -244,27 +234,5 @@ internal static class LegendStarburstRingVisuals
         }
     }
 
-    private struct RandomSequence(uint seed)
-    {
-        private uint _State = seed;
-        public float Next()
-        {
-            unchecked
-            {
-                uint t = _State += 0x6D2B79F5;
-                t = (t ^ (t >> 15)) * (1u | t);
-                t ^= t + (t ^ (t >> 7)) * (61u | t);
-                return (float)((t ^ (t >> 14)) / 4294967296.0);
-            }
-        }
-    }
     private static Vector2 Direction(float angle) => new(MathF.Cos(angle), MathF.Sin(angle));
-    private static float Clamp(float t) => Math.Clamp(t, 0f, 1f);
-    private static float Lerp(float a, float b, float t) => a + (b - a) * t;
-    private static float Smooth(float t) => t * t * (3f - 2f * t);
-    private static float OutCubic(float t) => 1f - MathF.Pow(1f - t, 3f);
-    private static float OutQuart(float t) => 1f - MathF.Pow(1f - t, 4f);
-    private static float OutExpo(float t) => t >= 1f ? 1f : 1f - MathF.Pow(2f, -10f * t);
-    private static float Bell(float t, float rise) => t <= 0f || t >= 1f ? 0f
-        : t < rise ? Smooth(t / rise) : MathF.Pow(1f - (t - rise) / (1f - rise), 1.6f);
 }

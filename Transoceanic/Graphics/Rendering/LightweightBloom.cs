@@ -23,25 +23,38 @@ public readonly record struct BloomSettings(float NearRadius, float FarRadius, f
 /// <summary>主动提交图层的轻量 Bloom。滤波核心只依赖 FNA，可在独立预览中复用。</summary>
 public static partial class LightweightBloom
 {
-    private static BlendState _ScreenBlend;
-    private static BlendState _AdditiveBlend;
-
     /// <summary>预乘颜色的加色混合，同时累加覆盖度；适用于透明特效层的捕获。</summary>
-    public static BlendState AdditiveBlend => _AdditiveBlend ??= new BlendState
+    public static BlendState AdditiveBlend
     {
-        ColorSourceBlend = Blend.One,
-        ColorDestinationBlend = Blend.One,
-        AlphaSourceBlend = Blend.One,
-        AlphaDestinationBlend = Blend.One
-    };
+        get => field ??= new BlendState
+        {
+            ColorSourceBlend = Blend.One,
+            ColorDestinationBlend = Blend.One,
+            AlphaSourceBlend = Blend.One,
+            AlphaDestinationBlend = Blend.One
+        };
+        private set
+        {
+            field?.Dispose();
+            field = value;
+        }
+    }
 
-    private static BlendState ScreenBlend => _ScreenBlend ??= new BlendState
+    private static BlendState ScreenBlend
     {
-        ColorSourceBlend = Blend.One,
-        ColorDestinationBlend = Blend.InverseSourceColor,
-        AlphaSourceBlend = Blend.Zero,
-        AlphaDestinationBlend = Blend.One
-    };
+        get => field ??= new BlendState
+        {
+            ColorSourceBlend = Blend.One,
+            ColorDestinationBlend = Blend.InverseSourceColor,
+            AlphaSourceBlend = Blend.Zero,
+            AlphaDestinationBlend = Blend.One
+        };
+        set
+        {
+            field?.Dispose();
+            field = value;
+        }
+    }
 
     /// <summary>
     /// 将源图层滤波到 caller-owned 的 scratch/result；结果不与场景混合。
@@ -51,6 +64,12 @@ public static partial class LightweightBloom
     public static void Blur(SpriteBatch spriteBatch, Effect effect, Texture2D source,
         RenderTarget2D scratch, RenderTarget2D result, float radius)
     {
+        ValidateBatch(spriteBatch);
+        GraphicsDevice device = spriteBatch.GraphicsDevice;
+        ValidateResource(device, effect, nameof(effect));
+        ValidateResource(device, source, nameof(source));
+        ValidateResource(device, scratch, nameof(scratch));
+        ValidateResource(device, result, nameof(result));
         if (ReferenceEquals(source, scratch) || ReferenceEquals(source, result) || ReferenceEquals(scratch, result)
             || scratch.Width != result.Width || scratch.Height != result.Height)
             throw new ArgumentException("Bloom requires distinct, equally sized scratch/result targets.");
@@ -99,6 +118,20 @@ public static partial class LightweightBloom
     public static void Composite(SpriteBatch spriteBatch, Effect effect, Texture2D source,
         Texture2D near, Texture2D far, Rectangle destination, in BloomSettings settings)
     {
+        ValidateBatch(spriteBatch);
+        GraphicsDevice device = spriteBatch.GraphicsDevice;
+        ValidateResource(device, effect, nameof(effect));
+        ValidateResource(device, source, nameof(source));
+        if (near is not null)
+            ValidateResource(device, near, nameof(near));
+        if (far is not null && settings.WideHalo)
+            ValidateResource(device, far, nameof(far));
+        foreach (RenderTargetBinding binding in device.GetRenderTargets())
+            if (ReferenceEquals(binding.RenderTarget, source) || ReferenceEquals(binding.RenderTarget, near)
+                || settings.WideHalo && ReferenceEquals(binding.RenderTarget, far))
+                throw new ArgumentException("Bloom cannot composite a texture into itself.");
+        if (destination.Width <= 0 || destination.Height <= 0)
+            return;
         if (far is not null && settings.WideHalo)
             for (int i = 0; i < Math.Clamp(settings.FarPasses, 1, 3); i++)
                 DrawHalo(far, settings.FarStrength);
@@ -127,9 +160,22 @@ public static partial class LightweightBloom
     /// <summary>释放工具自己持有的混合状态；游戏卸载时自动调用，独立宿主退出时可调用。</summary>
     public static void ReleaseResources()
     {
-        _ScreenBlend?.Dispose();
-        _AdditiveBlend?.Dispose();
-        _ScreenBlend = null;
-        _AdditiveBlend = null;
+        ScreenBlend = null;
+        AdditiveBlend = null;
+    }
+
+    private static void ValidateResource(GraphicsDevice device, GraphicsResource resource, string parameterName)
+    {
+        ArgumentNullException.ThrowIfNull(resource, parameterName);
+        ObjectDisposedException.ThrowIf(resource.IsDisposed, resource);
+        if (!ReferenceEquals(device, resource.GraphicsDevice))
+            throw new ArgumentException("Bloom resources must belong to the SpriteBatch graphics device.", parameterName);
+    }
+
+    private static void ValidateBatch(SpriteBatch spriteBatch)
+    {
+        ArgumentNullException.ThrowIfNull(spriteBatch);
+        if (new Transoceanic.Runtime.Publicizing.Wrappers.SpriteBatch_Publicizer(spriteBatch).beginCalled)
+            throw new InvalidOperationException("Bloom requires an inactive SpriteBatch.");
     }
 }

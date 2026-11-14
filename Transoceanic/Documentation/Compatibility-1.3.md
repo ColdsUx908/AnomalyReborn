@@ -33,6 +33,9 @@ Transoceanic 保持 side = NoSync。不需要 Ocean 同步的单端数学/视觉
 
 ## 几何与数学边界
 
+- Mulberry32Random 以固定 32 位溢出推进序列，结构体复制保留位置；NextSingle 将整数除以 2^32 再转换为 float，舍入允许得到 1。BinaryExponentialEaseOut 默认夹取进度，终点精确返回 1；与幂次缓出不是同一条曲线。
+- WorldView2D 的 Resolution 由调用方保证有限且为正；像素/UV 转换不夹取，也不附加长宽比修正。Bloom 的线程、批次、设备、别名和异常状态契约见[图形资源](Graphics.md)。
+
 - 调用几何算法时坐标、尺寸应为有限值，宽高与半径非负；直接写入结构体公开字段的调用方负责维持约束。Circle 构造拒绝非有限或负半径；Annulus 构造拒绝非有限半径、负内半径及内半径大于外半径。Sector 构造校验半径、角度及半张角。
 - RotatedRectangle.FromLineSegment 的 width 是完整宽度，端点是两条短边的中点。零位移形成零长度退化矩形，零宽度形成线段，不隐式扩展成圆或方形。
 - 旋转矩形碰撞的边界接触计为相交，其 AABB 预筛必须保留接触与退化输入；普通 FloatRectangle.Collides 仍使用严格面积重叠，两个接口不承诺相同边界语义。

@@ -128,9 +128,14 @@ public sealed class AnomalyEffects : ILoadable
     private static Filter LoadAndRegisterScreenFilter(Mod mod, string name, string passName)
     {
         Asset<Effect> asset = mod.Assets.Request<Effect>($"Assets/Effects_Compiled/ScreenFilters/{name}");
-        Filter filter = new(new ScreenShaderData(asset, passName), EffectPriority.VeryHigh);
+        AnomalyScreenShaderData data = new(asset, passName);
+        Filter filter = new(data, EffectPriority.VeryHigh);
         // 必须先于 Load 登记：Load 失败时尚未返回给 ScreenFilters 字段。
-        TOCleanup.Register(() => filter.Deactivate());
+        TOCleanup.Register(() =>
+        {
+            data.BeforeApply = null;
+            filter.Deactivate();
+        });
         Filters.Scene[$"Anomalies:{name}"] = filter;
         filter.Load();
         return filter;

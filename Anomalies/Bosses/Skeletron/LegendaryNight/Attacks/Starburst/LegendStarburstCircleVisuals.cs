@@ -1,20 +1,26 @@
-using Transoceanic.Graphics.Rendering;
+using Transoceanic.Graphics.Drawing;
+using Transoceanic.Primitives.Mathematics;
+using static Anomalies.Bosses.Skeletron.LegendaryNight.LegendStarburstVisuals;
 
 namespace Anomalies.Bosses.Skeletron.LegendaryNight;
 
-/// <summary>GoldenShockwavePreview 的 A 星芒环爆；只依赖 FNA，游戏与离线预览共用。</summary>
+/// <summary>普通圆形星爆的金色冲击波、预告星和余辉；游戏与独立图形宿主共用。</summary>
 internal static class LegendStarburstCircleVisuals
 {
     public const int StartAge = 0;
     public const int EndAge = 84;
     public const int ExpansionDuration = 7;
-    public const int BlurDuration = 20;
-    public const int ShakeDuration = 14;
     public const int WarningDuration = 30;
-    public const float WarningStarSize = 3f;
+    public const int WarningFadeDuration = 2;
     private const int RingExpansionDuration = 20;
-    // 与 HTML A 方案共用 350 世界像素的设计坐标，所有爆炸层只缩放一次。
-    private const float ReferenceRadius = 350f;
+    private const int RimSegmentCount = 40;
+    private const int WaveSegmentCount = 46;
+    private const int RayCount = 18;
+    private const int SparkCount = 46;
+    private const int TwinkleCount = 22;
+    private const int RimStarCount = 30;
+    // 使用 350 世界像素的设计半径，所有爆炸层只缩放一次。
+    internal const float ReferenceRadius = 350f;
     private const float RingMaxRadius = ReferenceRadius;
     private static readonly Color _Deep = new(240, 160, 40);
     private static readonly Color _Gold = new(255, 185, 55);
@@ -22,11 +28,11 @@ internal static class LegendStarburstCircleVisuals
     private static readonly Color _Pale = new(255, 244, 205);
 
     public readonly record struct Textures(Texture2D GlowDot, Texture2D Star4, Texture2D StarFlare,
-        Texture2D ShotLine, Texture2D AoeDisc, Texture2D ShockShell, Texture2D HShotA, Texture2D SparkTail);
+        Texture2D ShotLine, Texture2D ExplosionDisc, Texture2D ShockShell, Texture2D WarningFlare, Texture2D SparkTail);
 
     private readonly record struct Ray(float Angle, float Length, float Delay, float Life, float Width);
     private readonly record struct Spark(float Angle, float Distance, float Delay, float Life, float Size,
-        bool Star, float Rotation, float Spin, float Phase);
+        bool Star, float Rotation, float Spin);
     private readonly record struct Twinkle(float Angle, float Radius, float Life, float Size, float Rotation,
         bool Big, float Drift, float Born, float TravelScale);
     private readonly record struct RimStar(float Angle, float Distance, float Size, float Delay);
@@ -38,45 +44,15 @@ internal static class LegendStarburstCircleVisuals
 
     public static bool IsVisible(float age) => age >= StartAge && age < EndAge;
 
-    public static bool IsWarningVisible(float age) => age > -WarningDuration && age < 0f;
+    public static bool IsWarningVisible(float age) => age > -WarningDuration && age < WarningFadeDuration;
 
     private static float RingRadius(float age) => 20f + (RingMaxRadius - 20f)
         * (1f - MathF.Pow(2f, -10f * Clamp(age / RingExpansionDuration))) / (1f - MathF.Pow(2f, -10f));
 
-    public static float BlurStrength(float age) => age < 0f || age >= BlurDuration ? 0f
-        : 0.12f * Smooth(Clamp(age / 1.5f)) * MathF.Pow(1f - age / BlurDuration, 2f);
-
     public static float Expansion(float age) => OutExpo(Clamp(age / ExpansionDuration));
 
-    /// <summary>将 HTML 的 1280 输出基准与爆区比例换算成最终屏幕像素光晕。</summary>
-    public static BloomSettings GetBloomSettings(float outerRadius, in Matrix transform, bool dayTime)
-    {
-        float cameraScale = new Vector2(transform.M11, transform.M12).Length();
-        // HTML: (输出宽度 / 1280) × 镜头缩放 × (爆区 / 350) / 1.1。
-        // 世界坐标按 1920 视野映射，所以以 1920/1280 还原到最终屏幕像素。
-        float haloScale = 1.5f * cameraScale * (outerRadius / ReferenceRadius) / 1.1f;
-        BloomSettings defaults = BloomSettings.Default;
-        return defaults with
-        {
-            NearRadius = defaults.NearRadius * haloScale,
-            FarRadius = defaults.FarRadius * haloScale,
-            AdditiveBody = !dayTime,
-            BodyPasses = dayTime ? 2 : 1
-        };
-    }
-
-
-    /// <summary>HTML 整套技能的世界像素偏移；相机、爆点和背景共用同一年龄。</summary>
-    public static Vector2 ShakeOffset(float age)
-    {
-        if (age < 0f || age >= ShakeDuration)
-            return Vector2.Zero;
-        float amplitude = 9f * (1f - age / ShakeDuration);
-        return new Vector2(MathF.Sin(age * 2.7f), MathF.Cos(age * 3.3f) * 0.7f) * amplitude;
-    }
-
-    public static void Draw(SpriteBatch batch, in Textures textures, in LegendStarburstVisuals.View view,
-        in LegendStarburstVisuals.Burst burst, BlendState blend)
+    public static void Draw(SpriteBatch batch, in Textures textures, in WorldView2D view,
+        in LegendStarburstVisuals.Burst burst, BlendState blend, bool drawWarning = true)
     {
         if (!IsVisible(burst.Age) && !IsWarningVisible(burst.Age))
             return;
@@ -87,7 +63,8 @@ internal static class LegendStarburstCircleVisuals
         Textures images = textures;
         batch.Begin(SpriteSortMode.Deferred, blend, SamplerState.LinearClamp,
             DepthStencilState.None, RasterizerState.CullNone, null, view.Transform);
-        DrawWarningStar(burst.SigilRadius);
+        if (drawWarning)
+            DrawWarningStar(batch, images, center, age, burst.SigilRadius);
         if (age >= 0f)
         {
             DrawAoe();
@@ -99,56 +76,18 @@ internal static class LegendStarburstCircleVisuals
         }
         batch.End();
 
-        void DrawWarningStar(float sigilRadius)
-        {
-            if (age >= 2f || images.HShotA is null)
-                return;
-            float elapsed = age + WarningDuration;
-            float time = Math.Min(elapsed, WarningDuration);
-            float t = time / WarningDuration;
-            float remaining = MathF.Pow(1f - t, 2.7f);
-            float rotation = 0.01f + 1.49f * t;
-            float pulse = 1f + (1f - MathF.Abs(time % 20f - 10f) / 10f);
-            float envelope = Smooth(Clamp(elapsed / 2f)) * (1f - Smooth(Clamp(age / 2f)));
-            float baseScale = sigilRadius / 112f * 0.55f;
-            float starScale = baseScale * 5;
-            float width = 720f * 1.8f * remaining * starScale;
-            float height = 360f * 0.1f * (1f - t) * starScale;
-            for (int i = 0; i < 2; i++)
-            {
-                DrawGlow(images.HShotA, _Gold, width, height, rotation + i * MathHelper.PiOver2, 3.5f * pulse * envelope);
-                DrawGlow(images.HShotA, _Pale, width * 0.72f, height * 0.55f,
-                    rotation + i * MathHelper.PiOver2, 1.3f * pulse * envelope);
-            }
-            float core = Lerp(22f * baseScale, 38f * starScale, remaining);
-            DrawGlow(images.GlowDot, _Light, core, core, 0f, pulse * envelope);
-
-            void DrawGlow(Texture2D texture, Color color, float spriteWidth, float spriteHeight, float spriteRotation, float intensity)
-            {
-                if (spriteWidth <= 0f || spriteHeight <= 0f)
-                    return;
-                for (float k = intensity; k > 0.002f; k -= 1f)
-                    batch.Draw(texture, center, null, color * Math.Min(k, 1f), spriteRotation,
-                        new Vector2(texture.Width, texture.Height) * 0.5f,
-                        new Vector2(spriteWidth / texture.Width, spriteHeight / texture.Height), SpriteEffects.None, 0f);
-            }
-        }
-
         void Sprite(Texture2D texture, Color color, float x, float y, float width, float height,
             float rotation = 0f, float alpha = 1f)
         {
-            if (alpha <= 0.002f || width <= 0f || height <= 0f)
-                return;
-            float unit = scale;
-            batch.Draw(texture, center + new Vector2(x, y) * unit, null, color * Math.Min(alpha, 1f),
-                rotation, new Vector2(texture.Width, texture.Height) * 0.5f,
-                new Vector2(width / texture.Width, height / texture.Height) * unit, SpriteEffects.None, 0f);
+            SpriteDrawing.DrawSized(batch, texture, center + new Vector2(x, y) * scale,
+                new Vector2(width, height), color, rotation, alpha, scale);
         }
         void Glow(Texture2D texture, Color color, float x, float y, float size, float rotation, float intensity)
         {
-            for (float k = intensity; k > 0.002f; k -= 1f)
-                Sprite(texture, color, x, y, size, size, rotation, Math.Min(1f, k));
+            SpriteDrawing.DrawGlow(batch, texture, center + new Vector2(x, y) * scale,
+                new Vector2(size), color, rotation, intensity, scale);
         }
+
         void Star(float x, float y, float size, float rotation, float intensity, float diagonal)
         {
             Glow(images.StarFlare, _Light, x, y, size, rotation, intensity);
@@ -169,15 +108,15 @@ internal static class LegendStarburstCircleVisuals
                 return;
             float radius = ReferenceRadius * Expansion(age);
             float body = Bell(Clamp(age / 30f), 0.08f);
-            Sprite(images.AoeDisc, Color.White, 0, 0, radius * 2f, radius * 2f, alpha: body);
+            Sprite(images.ExplosionDisc, Color.White, 0, 0, radius * 2f, radius * 2f, alpha: body);
             Glow(images.GlowDot, _Deep, 0, 0, radius * 1.6f, 0f, 0.55f * body);
             float rim = MathF.Pow(1f - Clamp((age - 8f) / 16f), 1.5f) * Smooth(Clamp(age / 2f));
-            for (int i = 0; i < 40; i++)
+            for (int i = 0; i < RimSegmentCount; i++)
             {
-                float angle = i / 40f * MathHelper.TwoPi;
+                float angle = i / (float)RimSegmentCount * MathHelper.TwoPi;
                 float flicker = 0.8f + 0.2f * MathF.Sin(i * 1.9f + age * 1.1f);
                 Sprite(images.ShotLine, _Light, MathF.Cos(angle) * radius, MathF.Sin(angle) * radius,
-                    MathHelper.TwoPi * radius / 40f * 2.1f, 22f, angle + MathHelper.PiOver2, rim * flicker);
+                    MathHelper.TwoPi * radius / (float)RimSegmentCount * 2.1f, 22f, angle + MathHelper.PiOver2, rim * flicker);
             }
             foreach (RimStar star in _RimStars)
             {
@@ -210,12 +149,12 @@ internal static class LegendStarburstCircleVisuals
                 * (1f - Smooth(Clamp((a - RingExpansionDuration) / (34f - RingExpansionDuration))))
                 * Smooth(Clamp(a / 3f));
             Sprite(images.ShockShell, _Gold, 0, 0, radius * 2.04f, radius * 2.04f, alpha: fade);
-            for (int i = 0; i < 46; i++)
+            for (int i = 0; i < WaveSegmentCount; i++)
             {
-                float angle = i / 46f * MathHelper.TwoPi + 0.15f * t;
+                float angle = i / (float)WaveSegmentCount * MathHelper.TwoPi + 0.15f * t;
                 float shimmer = 0.75f + 0.25f * MathF.Sin(i * 2.3f + a * 0.9f);
                 Sprite(images.ShotLine, _Gold, MathF.Cos(angle) * radius, MathF.Sin(angle) * radius,
-                    MathHelper.TwoPi * radius / 46f * 2.1f, 30f * Lerp(1f, 0.35f, t),
+                    MathHelper.TwoPi * radius / (float)WaveSegmentCount * 2.1f, 30f * Lerp(1f, 0.35f, t),
                     angle + MathHelper.PiOver2, fade * shimmer);
             }
         }
@@ -286,41 +225,84 @@ internal static class LegendStarburstCircleVisuals
         }
     }
 
+    public static void DrawWarning(SpriteBatch batch, in Textures textures, in WorldView2D view,
+        in LegendStarburstVisuals.Burst burst, BlendState blend)
+    {
+        if (!IsWarningVisible(burst.Age))
+            return;
+        batch.Begin(SpriteSortMode.Deferred, blend, SamplerState.LinearClamp,
+            DepthStencilState.None, RasterizerState.CullNone, null, view.Transform);
+        DrawWarningStar(batch, textures, burst.Center - view.ScreenPosition, burst.Age, burst.SigilRadius);
+        batch.End();
+    }
+
+    private static void DrawWarningStar(SpriteBatch batch, Textures images, Vector2 center, float age, float sigilRadius)
+    {
+        if (age >= WarningFadeDuration || images.WarningFlare is null)
+            return;
+        float elapsed = age + WarningDuration;
+        float time = Math.Min(elapsed, WarningDuration);
+        float t = time / WarningDuration;
+        float remaining = MathF.Pow(1f - t, 2.7f);
+        float rotation = 0.01f + 1.49f * t;
+        float pulse = 1f + (1f - MathF.Abs(time % 20f - 10f) / 10f);
+        float envelope = Smooth(Clamp(elapsed / 2f)) * (1f - Smooth(Clamp(age / WarningFadeDuration)));
+        float baseScale = sigilRadius / 112f * 0.55f;
+        float starScale = baseScale * 5;
+        float width = 720f * 1.8f * remaining * starScale;
+        float height = 360f * 0.1f * (1f - t) * starScale;
+        for (int i = 0; i < 2; i++)
+        {
+            DrawGlow(images.WarningFlare, _Gold, width, height, rotation + i * MathHelper.PiOver2, 3.5f * pulse * envelope);
+            DrawGlow(images.WarningFlare, _Pale, width * 0.72f, height * 0.55f,
+                rotation + i * MathHelper.PiOver2, 1.3f * pulse * envelope);
+        }
+        float core = Lerp(22f * baseScale, 38f * starScale, remaining);
+        DrawGlow(images.GlowDot, _Light, core, core, 0f, pulse * envelope);
+
+        void DrawGlow(Texture2D texture, Color color, float spriteWidth, float spriteHeight, float spriteRotation, float intensity)
+        {
+            SpriteDrawing.DrawGlow(batch, texture, center, new Vector2(spriteWidth, spriteHeight),
+                color, spriteRotation, intensity);
+        }
+    }
+
     private static Ray[] MakeRays()
     {
-        RandomSequence random = new(11);
-        Ray[] result = new Ray[18];
+        Mulberry32Random random = new(11);
+        Ray[] result = new Ray[RayCount];
         for (int i = 0; i < result.Length; i++)
-            result[i] = new((i + random.Next() * 0.7f) / 18f * MathHelper.TwoPi, Lerp(160, 300, random.Next()),
-                random.Next() * 3f, Lerp(14, 22, random.Next()), Lerp(0.7f, 1.2f, random.Next()));
+            result[i] = new((i + random.NextSingle() * 0.7f) / (float)RayCount * MathHelper.TwoPi, Lerp(160, 300, random.NextSingle()),
+                random.NextSingle() * 3f, Lerp(14, 22, random.NextSingle()), Lerp(0.7f, 1.2f, random.NextSingle()));
         return result;
     }
     private static Spark[] MakeSparks()
     {
-        RandomSequence random = new(12);
-        Spark[] result = new Spark[46];
+        Mulberry32Random random = new(12);
+        Spark[] result = new Spark[SparkCount];
         for (int i = 0; i < result.Length; i++)
         {
-            result[i] = new(random.Next() * MathHelper.TwoPi, Lerp(90, 360, MathF.Pow(random.Next(), 0.7f)),
-                random.Next() * 4f, Lerp(28, 46, random.Next()), Lerp(8, 16, random.Next()), random.Next() < 0.25f,
-                random.Next() * MathHelper.Pi, (random.Next() - 0.5f) * 0.12f, random.Next() * 6.28f);
-            _ = random.Next(); // HTML consumes a random value for rise, even when its amplitude is zero.
+            result[i] = new(random.NextSingle() * MathHelper.TwoPi, Lerp(90, 360, MathF.Pow(random.NextSingle(), 0.7f)),
+                random.NextSingle() * 4f, Lerp(28, 46, random.NextSingle()), Lerp(8, 16, random.NextSingle()), random.NextSingle() < 0.25f,
+                random.NextSingle() * MathHelper.Pi, (random.NextSingle() - 0.5f) * 0.12f);
+            _ = random.NextSingle(); // 保留未使用相位占用的配方样本。
+            _ = random.NextSingle(); // 保留零幅度上升量占用的配方样本。
         }
         return result;
     }
     private static Twinkle[] MakeTwinkles()
     {
-        RandomSequence random = new(13);
-        Twinkle[] result = new Twinkle[22];
+        Mulberry32Random random = new(13);
+        Twinkle[] result = new Twinkle[TwinkleCount];
         for (int i = 0; i < result.Length; i++)
         {
-            float angle = random.Next() * MathHelper.TwoPi;
-            float radius = Lerp(80, 330, random.Next());
-            float life = Lerp(26, 44, random.Next());
-            float size = Lerp(10, 18, random.Next());
-            float rotation = (random.Next() - 0.5f) * 0.4f;
-            bool big = random.Next() < 0.25f;
-            float drift = Lerp(4, 14, random.Next());
+            float angle = random.NextSingle() * MathHelper.TwoPi;
+            float radius = Lerp(80, 330, random.NextSingle());
+            float life = Lerp(26, 44, random.NextSingle());
+            float size = Lerp(10, 18, random.NextSingle());
+            float rotation = (random.NextSingle() - 0.5f) * 0.4f;
+            bool big = random.NextSingle() < 0.25f;
+            float drift = Lerp(4, 14, random.NextSingle());
             float travelScale = StarTravelScale(radius + drift + 10f, size * (big ? 3.2f : 1.8f));
             float born = 36f;
             for (float f = 0; f <= 34f; f += 0.5f)
@@ -335,37 +317,15 @@ internal static class LegendStarburstCircleVisuals
     }
     private static RimStar[] MakeRimStars()
     {
-        RandomSequence random = new(77);
-        RimStar[] result = new RimStar[30];
+        Mulberry32Random random = new(77);
+        RimStar[] result = new RimStar[RimStarCount];
         for (int i = 0; i < result.Length; i++)
-            result[i] = new((i + random.Next() * 0.8f) / 30f * MathHelper.TwoPi,
-                Lerp(0.78f, 0.98f, random.Next()), Lerp(10, 20, random.Next()), random.Next() * 6f);
+            result[i] = new((i + random.NextSingle() * 0.8f) / (float)RimStarCount * MathHelper.TwoPi,
+                Lerp(0.78f, 0.98f, random.NextSingle()), Lerp(10, 20, random.NextSingle()), random.NextSingle() * 6f);
         return result;
-    }
-    private struct RandomSequence(uint seed)
-    {
-        private uint _State = seed;
-        public float Next()
-        {
-            unchecked
-            {
-                uint t = _State += 0x6D2B79F5;
-                t = (t ^ (t >> 15)) * (1u | t);
-                t ^= t + (t ^ (t >> 7)) * (61u | t);
-                return (float)((t ^ (t >> 14)) / 4294967296.0);
-            }
-        }
     }
     // 按整段轨迹留出旋转星芒的包围半径，避免逐帧夹位置造成圆周停滞。
     private static float StarTravelScale(float travel, float size) => Math.Min(1f,
         Math.Max(0f, ReferenceRadius - size * MathF.Sqrt(0.5f) - 6f) / Math.Max(travel, 0.001f));
 
-    private static float Clamp(float t) => Math.Clamp(t, 0f, 1f);
-    private static float Lerp(float a, float b, float t) => a + (b - a) * t;
-    private static float Smooth(float t) => t * t * (3f - 2f * t);
-    private static float OutCubic(float t) => 1f - MathF.Pow(1f - t, 3f);
-    private static float OutQuart(float t) => 1f - MathF.Pow(1f - t, 4f);
-    private static float OutExpo(float t) => t >= 1f ? 1f : 1f - MathF.Pow(2f, -10f * t);
-    private static float Bell(float t, float rise) => t <= 0f || t >= 1f ? 0f
-        : t < rise ? Smooth(t / rise) : MathF.Pow(1f - (t - rise) / (1f - rise), 1.6f);
 }
