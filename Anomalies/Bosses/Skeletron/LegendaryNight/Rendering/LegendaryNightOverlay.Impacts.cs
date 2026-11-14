@@ -44,7 +44,8 @@ public sealed partial class LegendaryNightOverlay
                     AddCoinImpact(judgment);
                     break;
                 // Each owner lookup creates a new behavior wrapper around the same NPC.
-                case LegendStarburst burst when head is not null && burst.Head?.NPC == head.NPC
+                // 普通星爆的独立圆形/圆环绘制不并入共享火焰。
+                case LegendStarburst burst when head is not null && burst.Head?.NPC == head.NPC && !burst.UsesCircleVisuals && !burst.UsesRingVisuals
                     && burst.TryGetImpact(out Vector2 center, out Vector2 radii, out float opacity):
                     AddRing(center, radii.X, radii.Y, opacity * (PeakFlameStrength / LegendStarburst.ImpactMaxOpacity));
                     break;

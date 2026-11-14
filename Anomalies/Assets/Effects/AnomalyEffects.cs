@@ -42,6 +42,7 @@ public sealed class AnomalyEffects : ILoadable
         public static MiscShaderContainer LegendImpactFlame;
         public static MiscShaderContainer LegendaryNightArenaEdge;
         public static MiscShaderContainer LegendaryNightArenaMist;
+        public static MiscShaderContainer LegendStarburstRingMark;
         public static MiscShaderContainer LegendStellarExplosion;
         public static MiscShaderContainer LegendStellarPhotosphere;
         public static MiscShaderContainer LegendStellarSphere;
@@ -81,6 +82,7 @@ public sealed class AnomalyEffects : ILoadable
     public static class ScreenFilters
     {
         public static Filter BrainOfCthulhuForcefield;
+        public static Filter LegendStarburstRadialBlur;
         public static Filter RadialBlur;
     }
 
@@ -99,6 +101,7 @@ public sealed class AnomalyEffects : ILoadable
         HandleType(typeof(Primitives));
         HandleType(typeof(Texts));
         ScreenFilters.BrainOfCthulhuForcefield = LoadAndRegisterScreenFilter(mod, "BrainOfCthulhuForcefield", "Pass0");
+        ScreenFilters.LegendStarburstRadialBlur = LoadAndRegisterScreenFilter(mod, "LegendStarburstRadialBlur", "Pass0");
         ScreenFilters.RadialBlur = LoadAndRegisterScreenFilter(mod, "RadialBlur", "Pass0");
 
         void HandleType(Type type, bool isRoot = false)

@@ -26,14 +26,20 @@ public sealed class LegendStarburst : AnomalyModProjectile
     private bool IsStepped => Step != 0;
     private int ImpactTime => IsStepped ? GetStepImpactTime(Index, Step) : GetStarburstTime(Index);
     private int Age => (Head?.Phase2MusicElapsedTime ?? 0) - ImpactTime;
-    private bool IsWarningTime => Age < -ImpactFadeIn;
+    private bool IsWarningTime => Age < (UsesCircleVisuals || UsesRingVisuals ? 0 : -ImpactFadeIn);
     private int WarningDuration => (IsStepped ? ImpactTime - GetStepSpawnTime(Index, Step) : StarburstWarningDuration) - ImpactFadeIn;
     private bool IsRing => IsStepped ? Step > 1 : Index % 2 == 1;
+    private int VisualEndAge => IsStepped ? ImpactEndAge : GetNormalEndAge(Index);
+
+    private static int GetNormalEndAge(int index) => index % 2 == 0
+        ? LegendStarburstCircleVisuals.EndAge : LegendStarburstRingVisuals.EndAge;
     private float Opacity
     {
         get
         {
             int age = Age;
+            if ((UsesCircleVisuals || UsesRingVisuals) && age < 0)
+                return 0.22f * MathHelper.Clamp(1f + age / (float)StarburstWarningDuration, 0f, 1f);
             if (age < -ImpactFadeIn)
             {
                 if (IsStepped && !HasStepWarning(Index, Step))
@@ -97,7 +103,7 @@ public sealed class LegendStarburst : AnomalyModProjectile
     }
     public override void AI()
     {
-        if (!IsActive(Head) || Arena is not LegendaryNightPhase2Arena arena || Age >= ImpactEndAge)
+        if (!IsActive(Head) || Arena is not LegendaryNightPhase2Arena arena || Age >= VisualEndAge)
         {
             if (TONetworkEnvironment.NotClient)
                 Projectile.Kill();
@@ -140,7 +146,8 @@ public sealed class LegendStarburst : AnomalyModProjectile
         if (head.StarburstActive)
         {
             int index = GetStarburstIndex(time);
-            if (index >= 0 && time < GetStarburstTime(index) + ImpactEndAge)
+            int endAge = GetNormalEndAge(index);
+            if (index >= 0 && time < GetStarburstTime(index) + endAge)
                 EnsureBurst(index, 0, arena.PredictStarburstPosition(index));
         }
 
@@ -186,9 +193,54 @@ public sealed class LegendStarburst : AnomalyModProjectile
         return radii.X > radii.Y;
     }
 
+    internal bool UsesCircleVisuals => !IsStepped && !IsRing && LegendStarburstCircleAssets.IsLoaded;
+
+    internal bool UsesRingVisuals => !IsStepped && IsRing && LegendStarburstRingAssets.IsLoaded;
+
+    internal bool TryGetRingFrame(out LegendStarburstVisuals.View view, out LegendStarburstVisuals.Burst burst)
+    {
+        view = default;
+        burst = default;
+        if (!UsesRingVisuals || !LegendStarburstRingVisuals.IsVisible(Age)
+            || Arena is not LegendaryNightPhase2Arena arena || !IsActive(Head))
+            return false;
+        Vector2 radii = GetRadii(arena);
+        view = new(Main.screenPosition, Main.GameViewMatrix.TransformationMatrix, new Vector2(Main.screenWidth, Main.screenHeight));
+        burst = new(GetCenter(arena), radii.X, radii.Y, arena.SmallCircleRadius, 0f, 0f, Age, Index);
+        return true;
+    }
+
+    internal bool TryGetVisualFrame(out LegendStarburstVisuals.View view, out LegendStarburstVisuals.Burst burst) =>
+        TryGetCircleFrame(out view, out burst) || TryGetRingFrame(out view, out burst);
+
+    internal bool TryGetCircleFrame(out LegendStarburstVisuals.View view, out LegendStarburstVisuals.Burst burst)
+    {
+        view = default;
+        burst = default;
+        if (!UsesCircleVisuals || !LegendStarburstCircleVisuals.IsVisible(Age)
+            || Arena is not LegendaryNightPhase2Arena arena || !IsActive(Head))
+            return false;
+        view = new(Main.screenPosition, Main.GameViewMatrix.TransformationMatrix, new Vector2(Main.screenWidth, Main.screenHeight));
+        burst = new(GetCenter(arena), GetRadii(arena).X, 0f, arena.SmallCircleRadius, 0f, 0f, Age, Index);
+        return true;
+    }
+
     internal void Draw(SpriteBatch spriteBatch)
     {
         bool warning = IsWarningTime;
+        if (!warning && UsesRingVisuals)
+            return;
+        // A is submitted together with other circular bursts after the magic-circle lines.
+        if (!warning && UsesCircleVisuals)
+        {
+            // Keep the full hazard boundary readable while the gold wave expands from its center.
+            // This is a fading warning outline, not a second early explosion or damage change.
+            if (Age < LegendStarburstCircleVisuals.ExpansionDuration && IsActive(Head)
+                && Arena is LegendaryNightPhase2Arena circleArena)
+                AnomalyDrawUtils.DrawGlowingCircle(spriteBatch, GetCenter(circleArena), GetRadii(circleArena).X,
+                    Color.Red, 0.22f * (1f - LegendStarburstCircleVisuals.Expansion(Age)), 3f);
+            return;
+        }
         if (Arena is not LegendaryNightPhase2Arena arena || (IsStepped && !IsActive(Head))
             || Opacity <= 0f || (!warning && LegendaryNightOverlay.UseImpactFlame))
             return;
