@@ -87,18 +87,6 @@ public class AfterimageParticle : Particle
         if (Main.dedServ)
             return;
 
-        Draw(spriteBatch, new ParticleHandler.DrawView());
-    }
-
-    internal void Draw(SpriteBatch spriteBatch, ParticleHandler.DrawView view)
-    {
-        // 半宽与半高之和包围任意旋转后的精灵，保留负缩放及额外绘制偏移。
-        float halfExtent = (Frame is Rectangle frame
-            ? Math.Abs((float)frame.Width) + Math.Abs((float)frame.Height)
-            : Texture.Width + (float)Texture.Height) * 0.5f * Math.Abs(Scale);
-        float fluff = Math.Max(halfExtent, DrawScreenCheckFluff);
-        if (float.IsFinite(fluff) && !view.IsOnScreen(Center + DrawOffset, fluff))
-            return;
         Color color = Color * Opacity;
         if (AffectedByLight)
             color.MultiplyWithWorldLight(Center);

@@ -45,6 +45,24 @@ Developer: {
 }
 
 Contributor: {
+	MeguminExplosion: {
+		DisplayName: 慧慧的法杖
+		Tooltip:
+			'''
+			以红魔之名咏唱，让赤金之光贯穿天地
+			按住施放爆裂魔法，移动鼠标引导光束与多重法阵
+			吾名慧慧！Explosion！
+			'''
+	}
+
+	MeguminCasting.DisplayName: 爆裂魔法·吟唱
+	MeguminBlast.DisplayName: 爆裂魔法
+
+	MeguminExhaustion: {
+		DisplayName: 魔力耗竭
+		Description: 爆裂魔法耗尽了你的力量，暂时无法再次施放，移动速度降低
+	}
+
 	ImmaculateWhite: {
 		DisplayName: 纯白
 		Tooltip: 发射纯白之光，高速追踪敌人

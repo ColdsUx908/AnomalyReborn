@@ -15,6 +15,15 @@ internal sealed class NPCMisc : GlobalNPCBehavior
 
     /// <inheritdoc/>
     /// <remarks>
+    /// 返回 true，允许继续执行 NPC AI。
+    /// </remarks>
+    public override bool PreAI(NPC npc)
+    {
+        return true;
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>
     /// 按开关让 NPC 朝速度旋转，并更新残影、移除超期残影。
     /// </remarks>
     public override void PostAI(NPC npc)
@@ -39,11 +48,10 @@ internal sealed class NPCMisc : GlobalNPCBehavior
     {
         if (Main.dedServ || npc.Ocean.ActiveAfterimages is not List<AfterimageParticle> afterimages)
             return true;
-        ParticleHandler.DrawView view = new();
         foreach (AfterimageParticle afterimage in afterimages)
         {
             if (afterimage.UseDefaultDraw)
-                afterimage.Draw(spriteBatch, view);
+                afterimage.Draw(spriteBatch);
         }
 
         return true;

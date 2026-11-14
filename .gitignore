@@ -363,15 +363,12 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # Extra Projects
-/CelessTest/*
-/Design/*
-/Validation/
 /AnomalyReborn.slnx
 /tModLoader.targets
 /Tools/*
 /Backup/*
 
-# Tests and change records are distributed separately from Git.
+# Generated framework API documentation
 /Transoceanic/Transoceanic.xml
 
 # Local shader compiler cache

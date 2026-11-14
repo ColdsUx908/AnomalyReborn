@@ -8,6 +8,7 @@
 - 修改具体模块前，阅读其目录内的设计文档和 README。例如落日遗逢遵循 `Anomalies/SpecialContents/Developer/EventideReunion/DESIGN_GUIDELINES.md`，Boss 可参考各自 README。
 - 修改 Behavior 或 Handler 生成逻辑前，阅读 `Validation/docs/behavior-generation.md`；修改同步或着色器时，参考 `Validation/docs/network-sync-review.md`、`Validation/docs/mod-entity-sync-audit.md`、`Validation/docs/shader-aspect-ratio-audit.md`。审计文档记录历史状态，其中的路径、测试及结论须以当前源码核实。
 - 先检查工作区差异，保留已有修改。围绕任务进行改动，不附带全仓库格式化或无关重构。
+- 本文的 `Validation/...` 路径均相对于 Git 工作区之外的独立验证资料包。测试、审计和改动记录不得放回仓库，也不使用 Git 忽略规则隐藏它们；资料包的源码引用和输出目录须按外部布局配置。
 
 ## 本地开发者身份
 
@@ -24,8 +25,8 @@
 | `TransoceanicCodeAssist/` | Roslyn 分析器与源生成器 |
 | `AnomaliesMusic/` | 音乐资源模组 |
 | `Tools/` | 离线着色器编译、噪声与纹理生成工具；当前由 Git 忽略，使用前检查本地是否具备 |
-| `Validation/Tests/` | 全部测试源码与验证脚本，通过独立验证资料包提供 |
-| `Validation/docs/` | 实现说明、专项审计与改动记录，通过独立验证资料包提供 |
+| 外部资料包的 `Validation/Tests/` | 自动化测试源码与验证脚本，不在 Git 工作区内 |
+| 外部资料包的 `Validation/docs/` | 专项审计、验证覆盖与改动记录，不在 Git 工作区内 |
 
 - 主模组与框架使用 .NET 8、C# `preview`；代码辅助项目面向 `netstandard2.0`，Tools 下 EffectCompiler 面向 `net461`、C# 7.3，不要统一改写目标框架或语言版本。当前扩展成员与 `field` 语法需要支持它们的 SDK（框架文档的验证环境使用 .NET SDK 10）。
 - 模组项目导入仓库外的 `../../tModLoader.targets`，Anomalies 还引用相邻 CalamityMod 的 DLL。完整解决方案包含相邻仓库源码项目，公共解决方案为 `AnomalyRebornPublic.slnx`。
@@ -121,38 +122,41 @@
 
 ## 验证与交付
 
-- 新增测试统一放在 `Validation/Tests/`，不在内容目录散放测试源码。按设计规范第 4 节，Tests 测试和 docs 改动记录不作为 Git 项目成员，不添加忽略例外；已有跟踪文件不能仅靠 `.gitignore` 取消跟踪，调整索引时保留本地文件。
+- 新增自动化测试统一放在仓库外资料包的 `Validation/Tests/`，审计与改动记录放在外部 `Validation/docs/`。不得通过 `.gitignore`、`.git/info/exclude` 或全局忽略项排除它们；已跟踪的资料迁出后同步移出索引，并保存外部原件及迁移清单。`Anomalies/Testing/` 中的 `DEBUG` 物品沿用明确的产品内容例外。
 - 使用与源码构建对应的独立验证资料包，包含测试源码、项目、脚本、必要审计资料及改动记录；未取得时明确报告相应验证不可用。开始工作前所列 docs 若缺失，按此约定处理，不把缺失认定为产品源码缺陷。
 - 框架接入、API、迁移和验证说明从 `Transoceanic/README.md` 导航；面向框架使用者的文档放在该项目内，随源码维护。生成的 `Transoceanic/Transoceanic.xml` 是构建产物，不纳入 Git。
 
-以下命令均从仓库根目录运行，按修改范围选择；本地工具与验证资料须先具备。测试板块及入口见独立验证资料包的 `Validation/Tests/README.md`。
+以下产品构建命令从仓库根目录运行。外部测试命令使用指向仓库外资料包根目录的 `$validationRoot`；先按资料包说明配置被测源码、构建产物及输出路径，再选择对应入口。测试板块及入口见资料包中的 `Validation/Tests/README.md`。
 
 ```powershell
+# 在本地环境设置 ANOMALY_VALIDATION_ROOT，指向仓库外资料包根目录。
+$validationRoot = $env:ANOMALY_VALIDATION_ROOT
+
 # 主模组 C# 构建；BuildMod=false 避免模组打包
 dotnet build Anomalies/Anomalies.csproj -p:BuildMod=false -m:1
 
 # 框架命名空间、构建、XML 文档和框架测试，同时检查消费项目
-pwsh -File Validation/Tests/Transoceanic/Verify.ps1 -IncludeConsumers
+pwsh -File "$validationRoot/Validation/Tests/Transoceanic/Verify.ps1" -IncludeConsumers
 
 # Behavior / Handler 生成及 CanHit 路由
-dotnet run --project Validation/Tests/Transoceanic/Behaviors/BehaviorGenerator.Tests.csproj
+dotnet run --project "$validationRoot/Validation/Tests/Transoceanic/Behaviors/BehaviorGenerator.Tests.csproj"
 
 # 世界吞噬者链拓扑
-dotnet run --project Validation/Tests/Anomalies/Bosses/EaterofWorlds.Topology/EaterofWorlds.Topology.csproj
+dotnet run --project "$validationRoot/Validation/Tests/Anomalies/Bosses/EaterofWorlds.Topology/EaterofWorlds.Topology.csproj"
 
 # 编译当前配置指向的着色器树；统一 PreBuild 入口当前禁用
 & ./Anomalies/PreBuild/EffectCompiler/EffectCompiler.exe
 
 # 修改编译器源码时先构建；部署方法见 Tools/EffectCompiler/README.md
 dotnet build Tools/EffectCompiler/EffectCompiler.csproj -c Release
-pwsh -NoProfile -File Validation/Tests/Tools/EffectCompiler/Verify.ps1
+pwsh -NoProfile -File "$validationRoot/Validation/Tests/Tools/EffectCompiler/Verify.ps1"
 
 # 全部噪声验证（含所有配方的统一周期边界检查）
-pwsh -NoProfile -File Validation/Tests/Tools/NoiseGenerator/Verify-All.ps1
+pwsh -NoProfile -File "$validationRoot/Validation/Tests/Tools/NoiseGenerator/Verify-All.ps1"
 
 # Boss 模块依赖与逐模块排除编译（需要已还原依赖）
-python Validation/Tests/Anomalies/Bosses/BossIsolation/verify_dependencies.py
-pwsh -File Validation/Tests/Anomalies/Bosses/BossIsolation/Verify.ps1
+python "$validationRoot/Validation/Tests/Anomalies/Bosses/BossIsolation/verify_dependencies.py"
+pwsh -File "$validationRoot/Validation/Tests/Anomalies/Bosses/BossIsolation/Verify.ps1"
 ```
 
 - 修改框架须验证消费方；生成器修改须运行 Behavior 测试，不能假设框架验证脚本包含它。
@@ -163,3 +167,7 @@ pwsh -File Validation/Tests/Anomalies/Bosses/BossIsolation/Verify.ps1
 - 已还原依赖时可用 `--no-restore`；缺少还原产物时先解决依赖，不把环境失败当作代码验证通过。
 - 编译和静态测试不能替代游戏内战斗、多人同步、动态资源加载与视觉验证。只报告实际执行的检查及结果，明确尚未验证的部分。
 - 纯文档修改检查内容、引用路径及差异即可；代码修改运行与风险相称的验证。交付说明修改内容、验证结果及剩余限制。
+## 备份位置（用户约定）
+
+- 模组源码、历史版本和安装包备份统一保存到 `D:\异象开发\Backup`，按日期和任务建立子目录，并保存原路径与迁移清单。
+- `D:\documents\My Games\Terraria\tModLoader\ModSources` 下只保留一个异象项目文件夹 `AnomalyReborn-master`。后续验证尽量使用该项目及独立的构建输出；需要额外源码快照时放入上述 Backup 路径，不再在 ModSources 并列积累异象版本。

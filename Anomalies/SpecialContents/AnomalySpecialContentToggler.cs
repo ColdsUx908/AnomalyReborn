@@ -19,5 +19,7 @@ public static class AnomalySpecialContentToggler
 
     public static bool ImmaculateWhite { get; private set; } = true;
 
+    public static bool MeguminExplosion { get; private set; } = true;
+
     public static bool VacuousBlack { get; private set; } = true;
 }

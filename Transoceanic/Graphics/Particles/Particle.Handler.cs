@@ -45,11 +45,10 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
 
         try
         {
-            DrawView view = new();
             //提前分类粒子以减少spriteBatch状态切换次数
             foreach (Particle particle in _Particles)
             {
-                if (particle is null || !view.IsOnScreen(particle))
+                if (particle is null || !IsOnScreen(particle))
                     continue;
 
                 BlendState blendState = particle.DrawBlendState;
@@ -116,7 +115,7 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
         if (Main.dedServ)
             return;
 
-        if (!new DrawView().IsOnScreen(particle, drawOffset))
+        if (!IsOnScreen(particle, drawOffset))
             return;
         DrawVisibleParticle(spriteBatch, particle, drawOffset);
     }
@@ -140,39 +139,16 @@ public sealed class ParticleHandler : ModSystem, IContentLoader
     /// 按缩放后的摄像机视野检查粒子中心；可见区域扩大为两倍宽高，再加粒子额外边距。
     /// drawOffset 与粒子中心相加，支持局部 ParticleSet 的世界基准位置。
     /// </summary>
-    internal static bool IsOnScreen(Particle particle, Vector2 drawOffset = default) => new DrawView().IsOnScreen(particle, drawOffset);
-
-    // 每批绘制只读取一次摄像机，仍逐粒子读取可变的中心和额外边距。
-    internal readonly struct DrawView
+    internal static bool IsOnScreen(Particle particle, Vector2 drawOffset = default)
     {
-        private readonly Vector2 _Size;
-        private readonly Vector2 _Position;
-
-        public DrawView()
-        {
-            _Size = Main.Camera.ScaledSize;
-            _Position = Main.Camera.ScaledPosition;
-        }
-
-        internal bool IsOnScreen(Particle particle, Vector2 drawOffset = default)
-        {
-            return IsOnScreen(particle.Center + drawOffset, particle.DrawScreenCheckFluff);
-        }
-
-        internal bool IsOnScreen(Vector2 center, float screenCheckFluff)
-        {
-            float fluff = Math.Max(0f, screenCheckFluff);
-            float marginX = _Size.X * 0.5f + fluff;
-            float marginY = _Size.Y * 0.5f + fluff;
-            return center.X >= _Position.X - marginX && center.X <= _Position.X + _Size.X + marginX
-                && center.Y >= _Position.Y - marginY && center.Y <= _Position.Y + _Size.Y + marginY;
-        }
-    }
-
-    internal static void DrawParticle(SpriteBatch spriteBatch, Particle particle, Vector2 drawOffset, DrawView view)
-    {
-        if (view.IsOnScreen(particle, drawOffset))
-            DrawVisibleParticle(spriteBatch, particle, drawOffset);
+        Vector2 size = Main.Camera.ScaledSize;
+        Vector2 position = Main.Camera.ScaledPosition;
+        Vector2 center = particle.Center + drawOffset;
+        float fluff = Math.Max(0f, particle.DrawScreenCheckFluff);
+        float marginX = size.X * 0.5f + fluff;
+        float marginY = size.Y * 0.5f + fluff;
+        return center.X >= position.X - marginX && center.X <= position.X + size.X + marginX
+            && center.Y >= position.Y - marginY && center.Y <= position.Y + size.Y + marginY;
     }
 
     /// <summary>

@@ -142,17 +142,12 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>, ICollidableWithRe
     {
         get
         {
+            Vector2 center = Center;
             (float sin, float cos) = MathF.SinCos(Rotation);
-            return GetVertices(sin, cos);
+            Vector2 widthRotated = new Vector2(cos, sin) * (Source.Width / 2f);
+            Vector2 heightRotated = new Vector2(-sin, cos) * (Source.Height / 2f);
+            return (center - widthRotated - heightRotated, center + widthRotated - heightRotated, center - widthRotated + heightRotated, center + widthRotated + heightRotated);
         }
-    }
-
-    internal readonly (Vector2 TopLeft, Vector2 TopRight, Vector2 BottomLeft, Vector2 BottomRight) GetVertices(float sin, float cos)
-    {
-        Vector2 center = Center;
-        Vector2 widthRotated = new Vector2(cos, sin) * (Source.Width / 2f);
-        Vector2 heightRotated = new Vector2(-sin, cos) * (Source.Height / 2f);
-        return (center - widthRotated - heightRotated, center + widthRotated - heightRotated, center - widthRotated + heightRotated, center + widthRotated + heightRotated);
     }
 
     /// <summary>
@@ -177,18 +172,17 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>, ICollidableWithRe
     {
         get
         {
+            float width = Source.Width;
+            float height = Source.Height;
             (float sin, float cos) = MathF.SinCos(Rotation);
-            return GetAABB(sin, cos);
-        }
-    }
 
-    internal readonly FloatRectangle GetAABB(float sin, float cos)
-    {
-        float width = Source.Width;
-        float height = Source.Height;
-        float extentX = MathF.Abs(cos * width) + MathF.Abs(-sin * height);
-        float extentY = MathF.Abs(sin * width) + MathF.Abs(cos * height);
-        return FloatRectangle.FromCenter(Center, extentX, extentY);
+            // 计算半宽度和半高度在全局 X、Y 轴上的投影绝对值之和，得到包围盒的半尺寸
+            float extentX = MathF.Abs(cos * width) + MathF.Abs(-sin * height);
+            float extentY = MathF.Abs(sin * width) + MathF.Abs(cos * height);
+
+            Vector2 center = Center;
+            return FloatRectangle.FromCenter(center, extentX, extentY);
+        }
     }
 
     /// <summary>
@@ -237,19 +231,19 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>, ICollidableWithRe
     /// </summary>
     public readonly bool Collides(RotatedRectangle other)
     {
-        // 每个矩形的旋转只求值一次，顶点和分离轴复用同一结果。
-        (float sinA, float cosA) = MathF.SinCos(Rotation);
-        (float sinB, float cosB) = MathF.SinCos(other.Rotation);
-        (Vector2 aPoint1, Vector2 aPoint2, Vector2 aPoint3, Vector2 aPoint4) = GetVertices(sinA, cosA);
-        (Vector2 bPoint1, Vector2 bPoint2, Vector2 bPoint3, Vector2 bPoint4) = other.GetVertices(sinB, cosB);
+        //SAT检测
+        (Vector2 aPoint1, Vector2 aPoint2, Vector2 aPoint3, Vector2 aPoint4) = Vertices;
+        (Vector2 bPoint1, Vector2 bPoint2, Vector2 bPoint3, Vector2 bPoint4) = other.Vertices;
         ReadOnlySpan<Vector2> aPoints = [aPoint1, aPoint2, aPoint3, aPoint4];
         ReadOnlySpan<Vector2> bPoints = [bPoint1, bPoint2, bPoint3, bPoint4];
 
+        (float sinA, float cosA) = MathF.SinCos(Rotation);
         if (!TOMathUtils.Geometry.OverlapOnAxis(new Vector2(cosA, sinA), aPoints, bPoints))
             return false;
         if (!TOMathUtils.Geometry.OverlapOnAxis(new Vector2(-sinA, cosA), aPoints, bPoints))
             return false;
 
+        (float sinB, float cosB) = MathF.SinCos(other.Rotation);
         if (!TOMathUtils.Geometry.OverlapOnAxis(new Vector2(cosB, sinB), aPoints, bPoints))
             return false;
         if (!TOMathUtils.Geometry.OverlapOnAxis(new Vector2(-sinB, cosB), aPoints, bPoints))

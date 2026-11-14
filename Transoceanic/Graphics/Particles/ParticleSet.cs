@@ -26,7 +26,6 @@ public abstract class ParticleSet
     private readonly List<Particle> _Particles = [];
     private readonly List<Particle> _PendingParticles = [];
     private readonly HashSet<Particle> _OwnedParticles = new(ReferenceEqualityComparer.Instance);
-    private readonly Predicate<Particle> _RemoveExpired;
     private bool _Updating;
     private int _Generation;
 
@@ -52,7 +51,6 @@ public abstract class ParticleSet
     public ParticleSet(int setLifetime, float particleSpawnRate)
     {
         Particles = _Particles.AsReadOnly();
-        _RemoveExpired = RemoveExpired;
         SetLifetime = setLifetime;
         ParticleSpawnRate = particleSpawnRate;
     }
@@ -124,21 +122,19 @@ public abstract class ParticleSet
         {
             try
             {
-                _Particles.RemoveAll(_RemoveExpired);
+                _Particles.RemoveAll(particle =>
+                {
+                    bool expired = (particle.Timer >= particle.Lifetime && particle.AutoKillByLifeTime) || particle.Dead;
+                    if (expired)
+                        _OwnedParticles.Remove(particle);
+                    return expired;
+                });
             }
             finally
             {
                 _Updating = false;
             }
         }
-    }
-
-    private bool RemoveExpired(Particle particle)
-    {
-        bool expired = (particle.Timer >= particle.Lifetime && particle.AutoKillByLifeTime) || particle.Dead;
-        if (expired)
-            _OwnedParticles.Remove(particle);
-        return expired;
     }
 
     /// <summary>
@@ -154,9 +150,8 @@ public abstract class ParticleSet
         _Updating = true;
         try
         {
-            ParticleHandler.DrawView view = new();
             foreach (Particle particle in _Particles)
-                ParticleHandler.DrawParticle(Main.spriteBatch, particle, basePosition, view);
+                ParticleHandler.DrawParticle(Main.spriteBatch, particle, basePosition);
         }
         finally
         {

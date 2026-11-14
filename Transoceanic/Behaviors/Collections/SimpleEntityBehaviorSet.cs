@@ -353,51 +353,11 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
     /// 内部存储结构，以方法名为键，存储按优先级降序排列的行为数组。
     /// </summary>
     private readonly Dictionary<string, TBehavior[]> _Data = [];
-    // 生成的 Handler 持有分组句柄；清理和重新填充时更新同一对象，避免缓存过期。
-    /// <summary>可缓存的方法分组句柄；集合清理或重新填充时自动刷新，枚举仍动态检查 ShouldProcess。</summary>
-    /// <remarks>仅在游戏主线程使用；句柄不锁定实体，也不缓存筛选结果。</remarks>
-    public sealed class DispatchGroup
-    {
-        internal DispatchGroup() { }
-
-        internal TBehavior[] Behaviors = [];
-
-        /// <summary>枚举当前适用行为，保持方法分组和优先级。</summary>
-        public BehaviorProcesser Enumerate() => new(Behaviors);
-
-        /// <summary>枚举当前适用行为，并在枚举期间绑定指定实体。</summary>
-        public ConnectedBehaviorProcesser Enumerate(TEntity entity) => new(Behaviors, entity);
-
-        /// <summary>枚举指定派生类型的当前适用行为。</summary>
-        public TypedBehaviorProcesser<T> Enumerate<T>() where T : TBehavior => new(Behaviors);
-
-        /// <summary>枚举指定派生类型的当前适用行为，并绑定指定实体。</summary>
-        public TypedConnectedBehaviorProcesser<T> Enumerate<T>(TEntity entity) where T : TBehavior => new(Behaviors, entity);
-    }
-
-    private readonly Dictionary<string, DispatchGroup> _DispatchGroups = [];
-
-    internal DispatchGroup GetDispatch(string methodName)
-    {
-        if (!_DispatchGroups.TryGetValue(methodName, out DispatchGroup group))
-        {
-            group = new DispatchGroup();
-            if (_Data.TryGetValue(methodName, out TBehavior[] behaviors))
-                group.Behaviors = behaviors;
-            _DispatchGroups.Add(methodName, group);
-        }
-        return group;
-    }
 
     /// <summary>
     /// 清除集合中所有行为数据。
     /// </summary>
-    public void Clear()
-    {
-        _Data.Clear();
-        foreach (DispatchGroup group in _DispatchGroups.Values)
-            group.Behaviors = [];
-    }
+    public void Clear() => _Data.Clear();
 
     /// <summary>
     /// 使用指定的行为集合填充集合。行为将按覆写的方法名进行分组。
@@ -500,7 +460,5 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
                 tempData.AddBetter(method, behavior);
         }
         _Data.AddRange(tempData.ToDictionary(kv => kv.Key, kv => kv.Value.Distinct().OrderByDescending(b => b.Priority).ToArray()));
-        foreach (KeyValuePair<string, DispatchGroup> entry in _DispatchGroups)
-            entry.Value.Behaviors = _Data.TryGetValue(entry.Key, out TBehavior[] group) ? group : [];
     }
 }

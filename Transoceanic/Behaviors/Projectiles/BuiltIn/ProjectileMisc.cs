@@ -15,6 +15,15 @@ internal sealed class ProjectileMisc : GlobalProjectileBehavior
 
     /// <inheritdoc/>
     /// <remarks>
+    /// 返回 true，允许继续执行弹幕 AI。
+    /// </remarks>
+    public override bool PreAI(Projectile projectile)
+    {
+        return true;
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>
     /// 按开关让弹幕朝速度旋转，并更新残影、移除超期残影。
     /// </remarks>
     public override void PostAI(Projectile projectile)
@@ -39,11 +48,10 @@ internal sealed class ProjectileMisc : GlobalProjectileBehavior
         if (Main.dedServ || projectile.Ocean.ActiveAfterimages is not List<AfterimageParticle> afterimages)
             return true;
         SpriteBatch spriteBatch = Main.spriteBatch;
-        ParticleHandler.DrawView view = new();
         foreach (AfterimageParticle afterimage in afterimages)
         {
             if (afterimage.UseDefaultDraw)
-                afterimage.Draw(spriteBatch, view);
+                afterimage.Draw(spriteBatch);
         }
 
         return true;

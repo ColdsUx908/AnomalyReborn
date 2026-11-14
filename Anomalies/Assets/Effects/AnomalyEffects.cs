@@ -42,7 +42,6 @@ public sealed class AnomalyEffects : ILoadable
         public static MiscShaderContainer LegendImpactFlame;
         public static MiscShaderContainer LegendaryNightArenaEdge;
         public static MiscShaderContainer LegendaryNightArenaMist;
-        public static MiscShaderContainer LegendStarburstRingMark;
         public static MiscShaderContainer LegendStellarExplosion;
         public static MiscShaderContainer LegendStellarPhotosphere;
         public static MiscShaderContainer LegendStellarSphere;
@@ -68,6 +67,11 @@ public sealed class AnomalyEffects : ILoadable
         public static MiscShaderContainer LegendStellarLaser;
         public static MiscShaderContainer LegendStellarLaserWarning;
         public static MiscShaderContainer LegendStellarLightOrb;
+#if SPECIAL_CONTENTS
+        public static MiscShaderContainer MeguminCircle;
+        public static MiscShaderContainer MeguminInferno;
+        public static MiscShaderContainer MeguminLaser;
+#endif
         public static MiscShaderContainer SkeletronForwardBeam;
     }
 
@@ -77,12 +81,14 @@ public sealed class AnomalyEffects : ILoadable
         public static MiscShaderContainer AnomalyUltramundaneTitle;
         public static MiscShaderContainer EventideReunion;
         public static MiscShaderContainer LegendaryNightGold;
+#if SPECIAL_CONTENTS
+        public static MiscShaderContainer MeguminStaff;
+#endif
     }
 
     public static class ScreenFilters
     {
         public static Filter BrainOfCthulhuForcefield;
-        public static Filter LegendStarburstRadialBlur;
         public static Filter RadialBlur;
     }
 
@@ -101,7 +107,6 @@ public sealed class AnomalyEffects : ILoadable
         HandleType(typeof(Primitives));
         HandleType(typeof(Texts));
         ScreenFilters.BrainOfCthulhuForcefield = LoadAndRegisterScreenFilter(mod, "BrainOfCthulhuForcefield", "Pass0");
-        ScreenFilters.LegendStarburstRadialBlur = LoadAndRegisterScreenFilter(mod, "LegendStarburstRadialBlur", "Pass0");
         ScreenFilters.RadialBlur = LoadAndRegisterScreenFilter(mod, "RadialBlur", "Pass0");
 
         void HandleType(Type type, bool isRoot = false)
@@ -128,14 +133,9 @@ public sealed class AnomalyEffects : ILoadable
     private static Filter LoadAndRegisterScreenFilter(Mod mod, string name, string passName)
     {
         Asset<Effect> asset = mod.Assets.Request<Effect>($"Assets/Effects_Compiled/ScreenFilters/{name}");
-        AnomalyScreenShaderData data = new(asset, passName);
-        Filter filter = new(data, EffectPriority.VeryHigh);
+        Filter filter = new(new ScreenShaderData(asset, passName), EffectPriority.VeryHigh);
         // 必须先于 Load 登记：Load 失败时尚未返回给 ScreenFilters 字段。
-        TOCleanup.Register(() =>
-        {
-            data.BeforeApply = null;
-            filter.Deactivate();
-        });
+        TOCleanup.Register(() => filter.Deactivate());
         Filters.Scene[$"Anomalies:{name}"] = filter;
         filter.Load();
         return filter;
